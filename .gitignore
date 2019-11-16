@@ -4,3 +4,5 @@ dist
 src/**/*.json
 .vscode
 interface-example
+deals-service.json
+fake-service.json

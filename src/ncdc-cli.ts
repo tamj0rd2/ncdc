@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import { readFileSync } from 'fs'
 import chalk from 'chalk'
 import Ajv from 'ajv'
+import axios from 'axios'
 
 const handleError = (message: string, err: Error | string): never => {
   console.error(chalk.bold(message))
@@ -9,7 +10,16 @@ const handleError = (message: string, err: Error | string): never => {
   process.exit(1)
 }
 
-const tryParseJson = (path: string): object => {
+const tryParseJson = async (path: string): Promise<object> => {
+  if (path.toLowerCase().startsWith('http')) {
+    try {
+      const { data } = await axios.get<object>(path)
+      return data
+    } catch (err) {
+      return handleError(`Encountered an error when requesting ${path}`, err)
+    }
+  }
+
   let rawFile: string
 
   try {
@@ -29,7 +39,7 @@ interface CLI extends Command {
   allErrors: boolean
 }
 
-export default function run(): void {
+export default async function run(): Promise<void> {
   // parse arguments
   let jsonPath = ''
   let schemaPath = ''
@@ -47,8 +57,8 @@ export default function run(): void {
     .parse(process.argv)
 
   // validate
-  const json = tryParseJson(jsonPath)
-  const schema = tryParseJson(schemaPath)
+  const json = await tryParseJson(jsonPath)
+  const schema = await tryParseJson(schemaPath)
 
   const validator = new Ajv({ allErrors: program.allErrors })
   const isValid = validator.validate(schema, json)

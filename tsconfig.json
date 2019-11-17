@@ -10,7 +10,9 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "dist"
+    "strictNullChecks": true,
+    "outDir": "dist",
+    "sourceMap": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

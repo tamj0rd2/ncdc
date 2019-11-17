@@ -107,7 +107,7 @@ export default async function run(): Promise<void> {
           process.exit(1)
         }
 
-        if (!config.tests || !config.tests.length) {
+        if (!config.configItems || !config.configItems.length) {
           console.log('No tests to run')
           process.exit(0)
         }
@@ -124,7 +124,7 @@ export default async function run(): Promise<void> {
             ),
           )
 
-          config.tests.forEach(async testConfig => {
+          config.configItems.forEach(async testConfig => {
             tester.test(testConfig).then(problems => {
               if (problems.length) {
                 console.error(chalk.red.bold('FAILED:'), chalk.red(testConfig.name))

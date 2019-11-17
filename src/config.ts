@@ -13,53 +13,52 @@ interface ResponseConfig {
   type?: string
 }
 
-export interface TestConfig {
+export interface ConfigItem {
   name: string
   request: RequestConfig | string
   response: ResponseConfig
 }
 
 export default class NConfig {
-  public constructor(public readonly tests: TestConfig[] = []) {}
+  public constructor(public readonly configItems: ConfigItem[] = []) {}
 
-  public static fromJSON(obj: any): NConfig | never {
-    NConfig.configSchema.validateSync(obj, { strict: true })
-    return new NConfig(obj.tests)
+  public static fromJSON(configItems: any[]): NConfig | never {
+    NConfig.configSchema.validateSync(configItems, { strict: true })
+    return new NConfig(configItems)
   }
 
   public static configSchema = yup
-    .object({
-      tests: yup.array().of(
-        yup
-          .object({
-            name: yup.string().required(),
-            request: yup.lazy(val => {
-              return typeof val === 'object'
-                ? yup
-                    .object({
-                      endpoint: yup.string().required(),
-                      method: yup
-                        .string()
-                        .required()
-                        .oneOf(['GET']),
-                    })
-                    .noUnknown(true)
-                    .required()
-                : yup.string().required()
-            }),
-            response: yup
-              .object({
-                code: yup.number(),
-                body: yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object())),
-                type: yup.string(),
-              })
-              .noUnknown(true)
-              .required(),
-          })
-          .noUnknown(true),
-      ),
-    })
-    .noUnknown(true)
+    .array()
+    .of(
+      yup
+        .object({
+          name: yup.string().required(),
+          request: yup.lazy(val => {
+            return typeof val === 'object'
+              ? yup
+                  .object({
+                    endpoint: yup.string().required(),
+                    method: yup
+                      .string()
+                      .required()
+                      .oneOf(['GET']),
+                  })
+                  .noUnknown(true)
+                  .required()
+              : yup.string().required()
+          }),
+          response: yup
+            .object({
+              code: yup.number(),
+              body: yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object())),
+              type: yup.string(),
+            })
+            .noUnknown(true)
+            .required(),
+        })
+        .noUnknown(true),
+    )
+    .required()
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

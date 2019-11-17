@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import * as chalk from 'chalk'
 
 export default class Logger {
   public error(message: string): void {
@@ -10,10 +10,7 @@ export default class Logger {
   }
 
   public logIncorrectStatusCode(testName: string, expected: number, received: number): void {
-    this.logFailed(
-      testName,
-      `Expected status ${chalk.green(expected)} but received ${chalk.red(received)}`,
-    )
+    this.logFailed(testName, `Expected status ${chalk.green(expected)} but received ${chalk.red(received)}`)
   }
 
   public logUnsupportedOperation(testName: string, message: string): void {
@@ -21,10 +18,7 @@ export default class Logger {
   }
 
   public logIncorrectBody(testName: string, expected: string, received: string): void {
-    this.logFailed(
-      testName,
-      `Expected body ${chalk.green(expected)} but received ${chalk.red(received)}`,
-    )
+    this.logFailed(testName, `Expected body ${chalk.green(expected)} but received ${chalk.red(received)}`)
   }
 
   private logFailed(testName: string, message: string): void {

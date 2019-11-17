@@ -2,7 +2,7 @@ import SchemaGenerator from './schema-loader'
 import * as TJS from 'typescript-json-schema'
 import { mockedObj } from './test-helpers'
 import Logger from './logger'
-import path from 'path'
+import * as path from 'path'
 
 jest.mock('typescript-json-schema')
 jest.mock('path')

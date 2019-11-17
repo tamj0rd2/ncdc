@@ -1,6 +1,6 @@
 import { Ajv } from 'ajv'
 import SchemaGenerator from './schema-loader'
-import chalk from 'chalk'
+import * as chalk from 'chalk'
 
 export default class TypeValidator {
   constructor(private readonly compiler: Ajv, private readonly schemaGenerator: SchemaGenerator) {}

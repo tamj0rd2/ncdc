@@ -3,28 +3,19 @@ import { readFileSync } from 'fs'
 import chalk from 'chalk'
 import Ajv from 'ajv'
 import axios from 'axios'
-import { NConfig } from './config'
+import NConfig from './config'
 import CDCTester from './cdc-tester'
 import SchemaGenerator from './schema-loader'
 import TypeValidator from './validator'
 import Logger from './logger'
 
-const handleError = (message: string, err: Error | string): never => {
+const handleError = (message: string, err?: Error | string): never => {
   console.error(chalk.bold(message))
-  console.error(chalk.red(typeof err === 'string' ? err : err.stack))
+  if (err) console.error(chalk.red(typeof err === 'string' ? err : err.stack))
   process.exit(1)
 }
 
-async function tryParseJson<T = object>(path: string): Promise<T> {
-  if (path.toLowerCase().startsWith('http')) {
-    try {
-      const { data } = await axios.get<T>(path)
-      return data
-    } catch (err) {
-      return handleError(`Encountered an error when requesting ${path}`, err)
-    }
-  }
-
+async function tryParseJson(path: string): Promise<any> {
   let rawFile: string
 
   try {
@@ -69,7 +60,7 @@ export default async function run(): Promise<void> {
           return process.exit(1)
         }
 
-        const config = await tryParseJson<NConfig>(argv.configPath as string)
+        const config = NConfig.fromJSON(await tryParseJson(argv.configPath as string))
         serveMocks(config, argv.port)
       },
     )
@@ -107,8 +98,21 @@ export default async function run(): Promise<void> {
       async argv => {
         if (!argv.configPath || !argv.baseUrl) process.exit(1)
 
+        let config: NConfig
+
         try {
-          const config = await tryParseJson<NConfig>(argv.configPath)
+          config = NConfig.fromJSON(await tryParseJson(argv.configPath as string))
+        } catch (err) {
+          console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
+          process.exit(1)
+        }
+
+        if (!config.tests || !config.tests.length) {
+          console.log('No tests to run')
+          process.exit(0)
+        }
+
+        try {
           const logger = new Logger()
           const tester = new CDCTester(
             axios.create({

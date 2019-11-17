@@ -17,8 +17,6 @@ export default class SchemaGenerator {
   }
 
   public load(symbolName: string): TJS.Definition {
-    return (
-      this.cache[symbolName] ?? (this.cache[symbolName] = this.generator.getSchemaForSymbol(symbolName))
-    )
+    return this.cache[symbolName] ?? (this.cache[symbolName] = this.generator.getSchemaForSymbol(symbolName))
   }
 }

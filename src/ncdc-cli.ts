@@ -125,15 +125,16 @@ export default async function run(): Promise<void> {
           )
 
           config.tests.forEach(async testConfig => {
-            const problems = await tester.test(testConfig)
-            if (problems.length) {
-              console.error(chalk.red.bold('FAILED:'), chalk.red(testConfig.name))
-              problems.forEach(problem =>
-                typeof problem === 'string' ? console.log(problem) : console.table(problem),
-              )
-            } else {
-              console.log(chalk.green.bold('PASSED:'), chalk.green(testConfig.name))
-            }
+            tester.test(testConfig).then(problems => {
+              if (problems.length) {
+                console.error(chalk.red.bold('FAILED:'), chalk.red(testConfig.name))
+                problems.forEach(problem =>
+                  typeof problem === 'string' ? console.log(problem) : console.table(problem),
+                )
+              } else {
+                console.log(chalk.green.bold('PASSED:'), chalk.green(testConfig.name))
+              }
+            })
           })
         } catch (err) {
           console.error(chalk.red('Something went wrong'), err.stack ?? err)

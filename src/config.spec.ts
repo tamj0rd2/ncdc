@@ -2,24 +2,22 @@ import NConfig from './config'
 
 describe('config', () => {
   it('validates values properly', () => {
-    const config = {
-      tests: [
-        {
-          name: 'A normal blah',
-          request: {
-            endpoint: '/api/blah',
-            bero: 123,
-            method: 'PERO, PERO',
-          },
-          response: {
-            code: 200,
-            type: 'DealSchema',
-          },
-          unknownthingy: 'hjelo!',
+    const config = [
+      {
+        name: 'A normal blah',
+        request: {
+          endpoint: '/api/blah',
+          hey: 123,
+          method: 'u wot',
         },
-      ],
-    }
+        response: {
+          code: 200,
+          type: 'DealSchema',
+        },
+        woah: {},
+      },
+    ]
 
-    expect(() => NConfig.fromJSON(config)).toThrow()
+    expect(() => new NConfig(config)).toThrow()
   })
 })

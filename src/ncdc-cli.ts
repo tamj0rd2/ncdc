@@ -60,7 +60,7 @@ export default async function run(): Promise<void> {
           return process.exit(1)
         }
 
-        const config = NConfig.fromJSON(await tryParseJson(argv.configPath as string))
+        const config = new NConfig(await tryParseJson(argv.configPath as string))
         serveMocks(config, argv.port)
       },
     )
@@ -101,7 +101,7 @@ export default async function run(): Promise<void> {
         let config: NConfig
 
         try {
-          config = NConfig.fromJSON(await tryParseJson(argv.configPath as string))
+          config = new NConfig(await tryParseJson(argv.configPath as string))
         } catch (err) {
           console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
           process.exit(1)

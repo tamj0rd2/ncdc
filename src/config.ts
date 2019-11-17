@@ -15,38 +15,34 @@ interface ResponseConfig {
 
 export interface ConfigItem {
   name: string
-  request: RequestConfig | string
+  request: RequestConfig
   response: ResponseConfig
 }
 
 export default class NConfig {
-  public constructor(public readonly configItems: ConfigItem[] = []) {}
+  public readonly configItems: ConfigItem[]
 
-  public static fromJSON(configItems: any[]): NConfig | never {
+  public constructor(configItems: any[] = []) {
     NConfig.configSchema.validateSync(configItems, { strict: true })
-    return new NConfig(configItems)
+    this.configItems = configItems
   }
 
-  public static configSchema = yup
+  private static configSchema = yup
     .array()
     .of(
       yup
         .object({
           name: yup.string().required(),
-          request: yup.lazy(val => {
-            return typeof val === 'object'
-              ? yup
-                  .object({
-                    endpoint: yup.string().required(),
-                    method: yup
-                      .string()
-                      .required()
-                      .oneOf(['GET']),
-                  })
-                  .noUnknown(true)
-                  .required()
-              : yup.string().required()
-          }),
+          request: yup
+            .object({
+              endpoint: yup.string().required(),
+              method: yup
+                .string()
+                .required()
+                .oneOf(['GET']),
+            })
+            .noUnknown(true)
+            .required(),
           response: yup
             .object({
               code: yup.number(),

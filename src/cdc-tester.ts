@@ -10,9 +10,10 @@ type Problems = (Problem | TableFormattedProblem)[]
 export default class CDCTester {
   constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
 
-  public async test({ request: requestConfig, response: responseConfig }: ConfigItem): Promise<Problems> {
-    const endpoint = typeof requestConfig === 'string' ? requestConfig : requestConfig.endpoint
-    const method = typeof requestConfig === 'string' ? 'GET' : requestConfig.method
+  public async test({
+    request: { endpoint, method },
+    response: responseConfig,
+  }: ConfigItem): Promise<Problems> {
     const problems: Problems = []
 
     let response: AxiosResponse

@@ -1,7 +1,7 @@
 import mainYargs from 'yargs'
 import yargs from 'yargs'
-import { runTests } from './test-main'
-import { serveMocks } from './serve-main'
+import { runTests } from './cdc/test-main'
+import { serveMocks } from './serve/serve-main'
 
 export default async function run(): Promise<void> {
   // eslint-disable-next-line no-unused-expressions

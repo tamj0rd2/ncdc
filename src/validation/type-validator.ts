@@ -1,5 +1,6 @@
 import { Ajv } from 'ajv'
 import SchemaGenerator from './schema-loader'
+import { GetComparisonMessage } from '../messages'
 
 export default class TypeValidator {
   constructor(
@@ -9,7 +10,7 @@ export default class TypeValidator {
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public getValidationErrors(data: any, expectedType: string): Optional<string | object[]> {
+  public getValidationErrors(data: any, expectedType: string): (string | object[]) | undefined {
     const actualType = typeof data
     switch (expectedType) {
       case 'string':

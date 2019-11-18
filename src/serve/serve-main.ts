@@ -1,4 +1,4 @@
-import { readConfig, MockConfig } from './config'
+import { readConfig, MockConfig } from '../config'
 import chalk from 'chalk'
 
 export const serveMocks = (

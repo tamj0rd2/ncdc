@@ -1,6 +1,6 @@
 import * as TJS from 'typescript-json-schema'
 import { resolve } from 'path'
-import Logger from './logger'
+import Logger from '../logger'
 
 export default class SchemaGenerator {
   private readonly generator: TJS.JsonSchemaGenerator

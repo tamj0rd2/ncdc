@@ -1,11 +1,12 @@
-import { TestConfig, readConfig } from './config'
+import { TestConfig, readConfig } from '../config'
 import chalk from 'chalk'
-import Logger from './logger'
+import Logger from '../logger'
 import CDCTester from './cdc-tester'
 import axios from 'axios'
-import TypeValidator from './validator'
+import TypeValidator from '../validation/type-validator'
 import Ajv from 'ajv'
-import SchemaGenerator from './schema-loader'
+import SchemaGenerator from '../validation/schema-loader'
+import { getComparisonMessage } from '../messages'
 
 export const runTests = (
   configPath: string,
@@ -28,9 +29,6 @@ export const runTests = (
   }
 
   try {
-    const getComparisonMessage = (property: string, expected: any, actual: any): string =>
-      `Expected ${property} to be ${chalk.green(expected)} but received ${chalk.red(actual)}`
-
     const logger = new Logger()
     const tester = new CDCTester(
       axios.create({

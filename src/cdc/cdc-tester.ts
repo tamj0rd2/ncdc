@@ -1,7 +1,8 @@
 import { AxiosInstance, AxiosResponse } from 'axios'
-import { TestConfig } from './config'
-import TypeValidator from './validator'
+import { TestConfig } from '../config'
+import TypeValidator from '../validation/type-validator'
 import chalk from 'chalk'
+import { GetComparisonMessage } from '../messages'
 
 type Problem = string
 type TableFormattedProblem = object[]

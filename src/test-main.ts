@@ -28,6 +28,9 @@ export const runTests = (
   }
 
   try {
+    const getComparisonMessage = (property: string, expected: any, actual: any): string =>
+      `Expected ${property} to be ${chalk.green(expected)} but received ${chalk.red(actual)}`
+
     const logger = new Logger()
     const tester = new CDCTester(
       axios.create({
@@ -36,7 +39,9 @@ export const runTests = (
       new TypeValidator(
         new Ajv({ allErrors: allErrors, verbose: true }),
         new SchemaGenerator(tsconfigPath, logger),
+        getComparisonMessage,
       ),
+      getComparisonMessage,
     )
 
     testConfigs.forEach(async testConfig => {

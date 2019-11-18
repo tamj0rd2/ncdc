@@ -8,7 +8,11 @@ type TableFormattedProblem = object[]
 type Problems = (Problem | TableFormattedProblem)[]
 
 export default class CDCTester {
-  constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
+  constructor(
+    private readonly loader: AxiosInstance,
+    private readonly typeValidator: TypeValidator,
+    private readonly getComparisonMessage: GetComparisonMessage,
+  ) {}
 
   public async test({
     request: { endpoint, method },
@@ -40,26 +44,22 @@ export default class CDCTester {
     }
 
     if (responseConfig.code && response.status !== responseConfig.code) {
-      problems.push(
-        `Expected status ${chalk.green(responseConfig.code)} but received ${chalk.red(response.status)}`,
-      )
+      problems.push(this.getComparisonMessage('status', responseConfig.code, response.status))
     }
 
     if (responseConfig.body && response.data !== responseConfig.body) {
-      problems.push(
-        `Expected body ${chalk.green(responseConfig.body)} but received ${chalk.red(response.data)}`,
-      )
+      problems.push(this.getComparisonMessage('body', responseConfig.body, response.data))
     }
 
     if (responseConfig.type) {
-      const result = this.typeValidator.validate(response.data, responseConfig.type)
+      const result = this.typeValidator.getValidationErrors(response.data, responseConfig.type)
       if (result) problems.push(result)
     }
 
     return problems
   }
 
-  private async getResponse(endpoint: string, method: 'GET'): Promise<AxiosResponse<Response>> {
+  private async getResponse(endpoint: string, method: 'GET'): Promise<AxiosResponse> {
     switch (method) {
       case 'GET':
         return await this.loader.get(endpoint)

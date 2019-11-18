@@ -1,4 +1,4 @@
-import { TestConfig, createTestConfig } from './config'
+import { TestConfig, readConfig } from './config'
 import chalk from 'chalk'
 import Logger from './logger'
 import CDCTester from './cdc-tester'
@@ -16,7 +16,7 @@ export const runTests = (
   let testConfigs: TestConfig[]
 
   try {
-    testConfigs = createTestConfig(configPath)
+    testConfigs = readConfig(configPath)
   } catch (err) {
     console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
     process.exit(1)

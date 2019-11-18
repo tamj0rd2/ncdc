@@ -28,7 +28,11 @@ export default class CDCTester {
       }
 
       if (responseConfig.code !== errorResponse.status) {
-        problems.push(`Received status code ${chalk.red(errorResponse.status)}`)
+        problems.push(
+          `Expected status ${chalk.green(responseConfig.code)} but received ${chalk.red(
+            errorResponse.status,
+          )}`,
+        )
         return problems
       }
 

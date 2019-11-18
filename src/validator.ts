@@ -1,10 +1,11 @@
 import { Ajv } from 'ajv'
 import SchemaGenerator from './schema-loader'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export default class TypeValidator {
   constructor(private readonly compiler: Ajv, private readonly schemaGenerator: SchemaGenerator) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public validate(data: any, expectedType: string): Optional<string | object[]> {
     const actualType = typeof data
     switch (expectedType) {

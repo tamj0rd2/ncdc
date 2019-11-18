@@ -1,5 +1,6 @@
 import * as yup from 'yup'
-import { tryParseJson } from './io'
+import { safeLoad } from 'js-yaml'
+import { readFileSync } from 'fs'
 
 interface RequestConfig {
   endpoint: string
@@ -47,27 +48,20 @@ export type MockConfig = TestConfig & {
   response: { body: string | object; mockBody?: string }
 }
 
-const overallSchema = yup
-  .array()
-  .of(
-    yup
-      .object({
-        name: yup.string().required(),
-        request: requestSchema,
-        response: responseSchema,
-      })
-      .noUnknown(true),
-  )
-  .required()
-
-export const createTestConfig = (configPath: string): TestConfig[] => {
-  const configItems = tryParseJson<TestConfig[]>(configPath)
-  overallSchema.validateSync(configItems, { strict: true })
+export function readConfig<T extends TestConfig>(configPath: string): T[] {
+  const configItems = safeLoad(readFileSync(configPath, 'utf8'))
+  yup
+    .array()
+    .of(
+      yup
+        .object({
+          name: yup.string().required(),
+          request: requestSchema,
+          response: responseSchema,
+        })
+        .noUnknown(true),
+    )
+    .required()
+    .validateSync(configItems, { strict: true })
   return configItems
-}
-
-export const createMockConfig = (configPath: string): MockConfig[] => {
-  const configItems = tryParseJson<MockConfig[]>(configPath)
-  overallSchema.validateSync(configItems, { strict: true })
-  return configItems.filter(x => x.response.body ?? x.response.mockBody)
 }

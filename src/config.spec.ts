@@ -1,10 +1,19 @@
-import { createTestConfig, createMockConfig } from './config'
+import { readConfig, MockConfig } from './config'
+import jsYaml from 'js-yaml'
+import { mockedObj } from './test-helpers'
 
-jest.mock('./io')
+jest.mock('fs')
+jest.mock('js-yaml')
 
-describe('createTestConfig', () => {
+const mockedJsYaml = mockedObj(jsYaml)
+
+describe('Read config', () => {
+  afterEach(() => {
+    jest.resetAllMocks()
+  })
+
   it('throws for invalid test configs', () => {
-    const config = [
+    mockedJsYaml.safeLoad.mockReturnValue([
       {
         name: 'A normal blah',
         request: {
@@ -18,9 +27,9 @@ describe('createTestConfig', () => {
         },
         woah: {},
       },
-    ]
+    ])
 
-    expect(() => createTestConfig(config as any)).toThrow()
+    expect(() => readConfig('path')).toThrow()
   })
 
   it('succeeds for valid test configs', () => {
@@ -29,7 +38,7 @@ describe('createTestConfig', () => {
         name: 'A normal blah',
         request: {
           endpoint: '/api/blah',
-          method: 'u wot',
+          method: 'GET',
         },
         response: {
           code: 200,
@@ -37,20 +46,21 @@ describe('createTestConfig', () => {
         },
       },
     ]
+    mockedJsYaml.safeLoad.mockReturnValue(config)
 
-    expect(() => createTestConfig(config as any)).toThrow()
+    const result = readConfig('path')
+
+    expect(result).toEqual(config)
   })
-})
 
-describe('createMockConfig', () => {
-  it('throws for invalid test configs', () => {
-    const config = [
+  it('throws for invalid mock configs', () => {
+    mockedJsYaml.safeLoad.mockReturnValue([
       {
         name: 'A normal blah',
         request: {
           endpoint: '/api/blah',
           hey: 123,
-          method: 'u wot',
+          method: 'POST',
         },
         response: {
           code: 200,
@@ -58,19 +68,19 @@ describe('createMockConfig', () => {
         },
         woah: {},
       },
-    ]
+    ])
 
-    expect(() => createMockConfig(config as any)).toThrow()
+    expect(() => readConfig<MockConfig>('path')).toThrow()
   })
 
-  it('succeeds for valid test configs', () => {
+  it('succeeds for valid mock configs', () => {
     const config = [
       {
         name: 'A normal blah',
         request: {
           endpoint: '/api/blah',
           mockEndpoint: '/api/blah/.*',
-          method: 'u wot',
+          method: 'GET',
         },
         response: {
           code: 200,
@@ -81,6 +91,10 @@ describe('createMockConfig', () => {
       },
     ]
 
-    expect(() => createMockConfig(config as any)).toThrow()
+    mockedJsYaml.safeLoad.mockReturnValue(config)
+
+    const result = readConfig<MockConfig>('path')
+
+    expect(result).toEqual(config)
   })
 })

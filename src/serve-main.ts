@@ -1,4 +1,4 @@
-import { createMockConfig, MockConfig } from './config'
+import { readConfig, MockConfig } from './config'
 import chalk from 'chalk'
 
 export const serveMocks = (
@@ -10,7 +10,7 @@ export const serveMocks = (
   let mockConfigs: MockConfig[]
 
   try {
-    mockConfigs = createMockConfig(configPath)
+    mockConfigs = readConfig<MockConfig>(configPath).filter(x => x.response.body ?? x.response.mockBody)
   } catch (err) {
     console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
     process.exit(1)

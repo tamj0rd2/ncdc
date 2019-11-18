@@ -1,11 +1,24 @@
 import * as yup from 'yup'
-
-type Endpoint = string
+import { tryParseJson } from './io'
 
 interface RequestConfig {
-  endpoint: Endpoint
+  endpoint: string
   method: 'GET'
 }
+
+const requestSchema = yup
+  .object({
+    endpoint: yup.string().required(),
+    mockEndpoint: yup.string(),
+    method: yup
+      .string()
+      .required()
+      .oneOf(['GET']),
+  })
+  .noUnknown(true)
+  .required()
+
+const stringOrObject = yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object()))
 
 interface ResponseConfig {
   code?: number
@@ -13,51 +26,48 @@ interface ResponseConfig {
   type?: string
 }
 
-export interface ConfigItem {
+const responseSchema = yup
+  .object({
+    code: yup.number(),
+    type: yup.string(),
+    body: stringOrObject,
+    mockBody: stringOrObject,
+  })
+  .noUnknown(true)
+  .required()
+
+export interface TestConfig {
   name: string
   request: RequestConfig
   response: ResponseConfig
 }
 
-export default class NConfig {
-  public readonly configItems: ConfigItem[]
-
-  public constructor(configItems: any[] = []) {
-    NConfig.configSchema.validateSync(configItems, { strict: true })
-    this.configItems = configItems
-  }
-
-  private static configSchema = yup
-    .array()
-    .of(
-      yup
-        .object({
-          name: yup.string().required(),
-          request: yup
-            .object({
-              endpoint: yup.string().required(),
-              method: yup
-                .string()
-                .required()
-                .oneOf(['GET']),
-            })
-            .noUnknown(true)
-            .required(),
-          response: yup
-            .object({
-              code: yup.number(),
-              body: yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object())),
-              type: yup.string(),
-            })
-            .noUnknown(true)
-            .required(),
-        })
-        .noUnknown(true),
-    )
-    .required()
+export type MockConfig = TestConfig & {
+  request: { mockEndpoint?: string }
+  response: { body: string | object; mockBody?: string }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isRequestConfig(x: any): x is RequestConfig {
-  return 'endpoint' in x
+const overallSchema = yup
+  .array()
+  .of(
+    yup
+      .object({
+        name: yup.string().required(),
+        request: requestSchema,
+        response: responseSchema,
+      })
+      .noUnknown(true),
+  )
+  .required()
+
+export const createTestConfig = (configPath: string): TestConfig[] => {
+  const configItems = tryParseJson<TestConfig[]>(configPath)
+  overallSchema.validateSync(configItems, { strict: true })
+  return configItems
+}
+
+export const createMockConfig = (configPath: string): MockConfig[] => {
+  const configItems = tryParseJson<MockConfig[]>(configPath)
+  overallSchema.validateSync(configItems, { strict: true })
+  return configItems.filter(x => x.response.body ?? x.response.mockBody)
 }

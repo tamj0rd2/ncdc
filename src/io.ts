@@ -7,7 +7,7 @@ const handleError = (message: string, err?: Error | string): never => {
   process.exit(1)
 }
 
-export const tryParseJson = (path: string): Promise<any> => {
+export function tryParseJson<T>(path: string): T {
   let rawFile: string
 
   try {

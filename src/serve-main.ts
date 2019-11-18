@@ -1,14 +1,25 @@
-import NConfig from './config'
-import { tryParseJson } from './io'
+import { createMockConfig, MockConfig } from './config'
+import chalk from 'chalk'
 
-export const serveMocks = async (
+export const serveMocks = (
   configPath: string,
   port: number,
   allErrors: boolean,
   tsconfigPath: string,
-): Promise<void> => {
-  const config = new NConfig(await tryParseJson(configPath as string))
-  console.dir(config, { depth: undefined })
-  console.log('port', port)
-  console.log('TODO: Implement serving mock API responses')
+): void => {
+  let mockConfigs: MockConfig[]
+
+  try {
+    mockConfigs = createMockConfig(configPath)
+  } catch (err) {
+    console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
+    process.exit(1)
+  }
+
+  if (!mockConfigs.length) {
+    console.log('No mocks to run')
+    process.exit(0)
+  }
+
+  console.log(mockConfigs)
 }

@@ -1,6 +1,6 @@
 import mainYargs from 'yargs'
 import yargs from 'yargs'
-import { runTests } from './cdc-main'
+import { runTests } from './test-main'
 import { serveMocks } from './serve-main'
 
 export default async function run(): Promise<void> {

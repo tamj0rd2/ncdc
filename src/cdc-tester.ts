@@ -1,5 +1,5 @@
 import { AxiosInstance, AxiosResponse } from 'axios'
-import { ConfigItem } from './config'
+import { TestConfig } from './config'
 import TypeValidator from './validator'
 import chalk from 'chalk'
 
@@ -13,7 +13,7 @@ export default class CDCTester {
   public async test({
     request: { endpoint, method },
     response: responseConfig,
-  }: ConfigItem): Promise<Problems> {
+  }: TestConfig): Promise<Problems> {
     const problems: Problems = []
 
     let response: AxiosResponse

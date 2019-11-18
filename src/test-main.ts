@@ -1,5 +1,4 @@
-import { tryParseJson } from './io'
-import NConfig from './config'
+import { TestConfig, createTestConfig } from './config'
 import chalk from 'chalk'
 import Logger from './logger'
 import CDCTester from './cdc-tester'
@@ -8,22 +7,22 @@ import TypeValidator from './validator'
 import Ajv from 'ajv'
 import SchemaGenerator from './schema-loader'
 
-export const runTests = async (
+export const runTests = (
   configPath: string,
   baseUrl: string,
   allErrors: boolean,
   tsconfigPath: string,
-): Promise<void> => {
-  let config: NConfig
+): void => {
+  let testConfigs: TestConfig[]
 
   try {
-    config = new NConfig(await tryParseJson(configPath as string))
+    testConfigs = createTestConfig(configPath)
   } catch (err) {
     console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
     process.exit(1)
   }
 
-  if (!config.configItems || !config.configItems.length) {
+  if (!testConfigs.length) {
     console.log('No tests to run')
     process.exit(0)
   }
@@ -40,7 +39,7 @@ export const runTests = async (
       ),
     )
 
-    config.configItems.forEach(async testConfig => {
+    testConfigs.forEach(async testConfig => {
       tester.test(testConfig).then(problems => {
         if (problems.length) {
           console.error(chalk.red.bold('FAILED:'), chalk.red(testConfig.name))

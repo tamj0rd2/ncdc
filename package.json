@@ -23,6 +23,7 @@
   "homepage": "https://github.com/tamj0rd2/ncdc#readme",
   "devDependencies": {
     "@types/ajv": "^1.0.0",
+    "@types/express": "^4.17.2",
     "@types/jest": "^24.0.23",
     "@types/js-yaml": "^3.12.1",
     "@types/node": "^12.12.8",
@@ -45,6 +46,7 @@
     "ajv": "^6.10.2",
     "axios": "^0.19.0",
     "chalk": "^3.0.0",
+    "express": "^4.17.1",
     "js-yaml": "^3.13.1",
     "yargs": "^14.2.0",
     "yup": "^0.27.0"

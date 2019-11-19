@@ -1,5 +1,8 @@
 import { readConfig, MockConfig } from '../config'
 import chalk from 'chalk'
+import { startServer } from './server'
+
+const validateMocks = (mockConfigs: MockConfig[]) => {}
 
 export const serveMocks = (
   configPath: string,
@@ -7,6 +10,8 @@ export const serveMocks = (
   allErrors: boolean,
   tsconfigPath: string,
 ): void => {
+  // TODO: integrate nodemon to restart on config change
+
   let mockConfigs: MockConfig[]
 
   try {
@@ -22,4 +27,6 @@ export const serveMocks = (
   }
 
   console.log(mockConfigs)
+  validateMocks(mockConfigs)
+  startServer(port, mockConfigs)
 }

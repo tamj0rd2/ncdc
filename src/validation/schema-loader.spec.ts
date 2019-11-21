@@ -1,7 +1,6 @@
 import SchemaGenerator from './schema-loader'
 import * as TJS from 'typescript-json-schema'
 import { mockedObj } from '../test-helpers'
-import Logger from '../logger'
 import * as path from 'path'
 
 jest.mock('typescript-json-schema')
@@ -22,9 +21,8 @@ describe('SchemaLoader', () => {
     }
     mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
     mockedPath.resolve.mockImplementation(args => args)
-    const mockLogger = mockedObj<Logger>({})
 
-    const schemaLoader = new SchemaGenerator('tsconfig path', mockLogger)
+    const schemaLoader = new SchemaGenerator('tsconfig path')
     const schema = schemaLoader.load('DealSchema')
 
     expect(TJS.programFromConfig).toHaveBeenCalledWith('tsconfig path')
@@ -41,9 +39,8 @@ describe('SchemaLoader', () => {
         .mockReturnValueOnce(someSchema2),
     }
     mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
-    const mockLogger = mockedObj<Logger>({})
 
-    const schemaLoader = new SchemaGenerator('tsconfig path', mockLogger)
+    const schemaLoader = new SchemaGenerator('tsconfig path')
     const schema1 = schemaLoader.load('DealSchema')
     const schema2 = schemaLoader.load('DealSchema')
 

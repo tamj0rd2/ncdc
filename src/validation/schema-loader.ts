@@ -1,16 +1,15 @@
 import * as TJS from 'typescript-json-schema'
 import { resolve } from 'path'
-import Logger from '../logger'
 
 export default class SchemaGenerator {
   private readonly generator: TJS.JsonSchemaGenerator
   private readonly cache: { [symbol: string]: TJS.Definition } = {}
 
-  constructor(tsconfigPath: string, logger: Logger) {
+  constructor(tsconfigPath: string) {
     const program = TJS.programFromConfig(resolve(tsconfigPath))
-    const generator = TJS.buildGenerator(program)
+    const generator = TJS.buildGenerator(program, { required: true })
     if (!generator) {
-      logger.error('Could not build a generator from the given typescript configuration')
+      console.error('Could not build a generator from the given typescript configuration')
       process.exit(1)
     }
     this.generator = generator

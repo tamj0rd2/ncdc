@@ -1,8 +1,33 @@
 import { readConfig, MockConfig } from '../config'
 import chalk from 'chalk'
 import { startServer } from './server'
+import TypeValidator from '../validation/type-validator'
+import ajv from 'ajv'
+import SchemaGenerator from '../validation/schema-loader'
+import { getComparisonMessage } from '../messages'
 
-const validateMocks = (mockConfigs: MockConfig[]) => {}
+const validateMocks = (mockConfigs: MockConfig[], tsconfigPath: string, allErrors: boolean): boolean => {
+  let isValid = true
+  const typeValidator = new TypeValidator(
+    new ajv({ verbose: true, allErrors }),
+    new SchemaGenerator(tsconfigPath),
+    getComparisonMessage,
+  )
+
+  mockConfigs.forEach(config => {
+    if (config.response.type) {
+      const body = config.response.mockBody ?? config.response.body
+      const result = typeValidator.getValidationErrors(body, config.response.type)
+      if (result) {
+        isValid = false
+        console.error(chalk.red.bold('Invalid mock:'), chalk.red(config.name))
+        console.table(result)
+      }
+    }
+  })
+
+  return isValid
+}
 
 export const serveMocks = (
   configPath: string,
@@ -10,7 +35,7 @@ export const serveMocks = (
   allErrors: boolean,
   tsconfigPath: string,
 ): void => {
-  // TODO: integrate nodemon to restart on config change
+  // TODO: integrate nodemon to restart on config or mock file change
 
   let mockConfigs: MockConfig[]
 
@@ -26,7 +51,9 @@ export const serveMocks = (
     process.exit(0)
   }
 
-  console.log(mockConfigs)
-  validateMocks(mockConfigs)
+  if (!validateMocks(mockConfigs, tsconfigPath, allErrors)) {
+    process.exit(1)
+  }
+
   startServer(port, mockConfigs)
 }

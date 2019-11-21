@@ -1,6 +1,5 @@
 import { TestConfig, readConfig } from '../config'
 import chalk from 'chalk'
-import Logger from '../logger'
 import CDCTester from './cdc-tester'
 import axios from 'axios'
 import TypeValidator from '../validation/type-validator'
@@ -29,14 +28,13 @@ export const runTests = (
   }
 
   try {
-    const logger = new Logger()
     const tester = new CDCTester(
       axios.create({
         baseURL: baseUrl,
       }),
       new TypeValidator(
         new Ajv({ allErrors: allErrors, verbose: true }),
-        new SchemaGenerator(tsconfigPath, logger),
+        new SchemaGenerator(tsconfigPath),
         getComparisonMessage,
       ),
       getComparisonMessage,

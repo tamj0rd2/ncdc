@@ -21,7 +21,7 @@ const validateMocks = (mockConfigs: MockConfig[], tsconfigPath: string, allError
       if (result) {
         isValid = false
         console.error(chalk.red.bold('Invalid mock:'), chalk.red(config.name))
-        console.table(result)
+        console.dir(result, { depth: undefined })
       }
     }
   })
@@ -40,20 +40,27 @@ export const serveMocks = (
   let mockConfigs: MockConfig[]
 
   try {
-    mockConfigs = readConfig<MockConfig>(configPath).filter(x => x.response.body ?? x.response.mockBody)
+    mockConfigs = readConfig<MockConfig>(configPath).filter(
+      x => (x.response.body ?? x.response.mockBody) && (x.request.mockEndpoint ?? x.request.endpoint),
+    )
   } catch (err) {
     console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
     process.exit(1)
   }
 
-  if (!mockConfigs.length) {
-    console.log('No mocks to run')
-    process.exit(0)
-  }
+  try {
+    if (!mockConfigs.length) {
+      console.log('No mocks to run')
+      process.exit(0)
+    }
 
-  if (!validateMocks(mockConfigs, tsconfigPath, allErrors)) {
+    if (!validateMocks(mockConfigs, tsconfigPath, allErrors)) {
+      process.exit(1)
+    }
+
+    startServer(port, mockConfigs)
+  } catch (err) {
+    console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
     process.exit(1)
   }
-
-  startServer(port, mockConfigs)
 }

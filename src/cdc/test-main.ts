@@ -16,14 +16,14 @@ export const runTests = (
   let testConfigs: TestConfig[]
 
   try {
-    testConfigs = readConfig(configPath)
+    testConfigs = readConfig(configPath).filter(x => x.request.endpoint)
   } catch (err) {
-    console.error(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
+    console.error(chalk.bold.red('Config error:'), chalk.red(err.message))
     process.exit(1)
   }
 
   if (!testConfigs.length) {
-    console.log('No tests to run')
+    console.log('No tests to run. You must specify an endpoint')
     process.exit(0)
   }
 
@@ -33,7 +33,7 @@ export const runTests = (
         baseURL: baseUrl,
       }),
       new TypeValidator(
-        new Ajv({ allErrors: allErrors, verbose: true }),
+        new Ajv({ allErrors: allErrors, verbose: true, inlineRefs: true }),
         new SchemaGenerator(tsconfigPath),
         getComparisonMessage,
       ),
@@ -44,9 +44,16 @@ export const runTests = (
       tester.test(testConfig).then(problems => {
         if (problems.length) {
           console.error(chalk.red.bold('FAILED:'), chalk.red(testConfig.name))
-          problems.forEach(problem =>
-            typeof problem === 'string' ? console.log(problem) : console.table(problem),
-          )
+          problems.forEach(problem => {
+            if (typeof problem === 'string') return console.log(problem)
+
+            const { data, dataPath, expectedType, actualType } = problem
+            console.log(chalk.blue('Data path:'), dataPath)
+            console.log(chalk.blue('Expected type:'))
+            console.dir(expectedType, { depth: undefined })
+            console.log(chalk.blue(`Data (${actualType}):`))
+            console.dir(data, { depth: undefined })
+          })
         } else {
           console.log(chalk.green.bold('PASSED:'), chalk.green(testConfig.name))
         }

@@ -9,7 +9,7 @@ interface RequestConfig {
 
 const requestSchema = yup
   .object({
-    endpoint: yup.string().required(),
+    endpoint: yup.string(),
     mockEndpoint: yup.string(),
     method: yup
       .string()

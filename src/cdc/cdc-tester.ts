@@ -1,12 +1,10 @@
 import { AxiosInstance, AxiosResponse } from 'axios'
 import { TestConfig } from '../config'
-import TypeValidator from '../validation/type-validator'
+import TypeValidator, { TypeProblem } from '../validation/type-validator'
 import chalk from 'chalk'
 import { GetComparisonMessage } from '../messages'
 
-type Problem = string
-type TableFormattedProblem = object[]
-type Problems = (Problem | TableFormattedProblem)[]
+type Problems = (string | TypeProblem)[]
 
 export default class CDCTester {
   constructor(
@@ -54,7 +52,7 @@ export default class CDCTester {
 
     if (responseConfig.type) {
       const result = this.typeValidator.getValidationErrors(response.data, responseConfig.type)
-      if (result) problems.push(result)
+      if (result) typeof result === 'string' ? problems.push(result) : problems.push(...result)
     }
 
     return problems

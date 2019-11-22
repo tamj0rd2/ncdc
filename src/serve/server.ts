@@ -25,12 +25,12 @@ export const startServer = (port: number, routes: MockConfig[]): void => {
     next()
   })
 
-  routes.forEach(({ request, response }) => {
+  routes.forEach(({ name, request, response }) => {
     if (request.method === 'GET') {
       const endpoint = (request.mockEndpoint ?? request.endpoint).split('?')[0]
       const chosenResponse = response.mockBody ?? response.body
       app.get(new RegExp(endpoint), (_, res) => res.send(chosenResponse))
-      console.log(`Registered http://localhost:${port}${endpoint} with response: ${chosenResponse}`)
+      console.log(`Registered http://localhost:${port}${endpoint} from config: ${name}`)
     }
   })
   console.log()

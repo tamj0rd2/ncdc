@@ -2,6 +2,16 @@ import { Ajv } from 'ajv'
 import SchemaGenerator from './schema-loader'
 import { GetComparisonMessage } from '../messages'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Data = any
+
+export interface TypeProblem {
+  dataPath: string
+  expectedType: string
+  actualType: string
+  data: Data
+}
+
 export default class TypeValidator {
   constructor(
     private readonly validator: Ajv,
@@ -9,8 +19,7 @@ export default class TypeValidator {
     private readonly getComparisonMessage: GetComparisonMessage,
   ) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public getValidationErrors(data: any, expectedType: string): (string | object[]) | undefined {
+  public getValidationErrors(data: Data, expectedType: string): (string | TypeProblem[]) | undefined {
     const actualType = typeof data
     switch (expectedType) {
       case 'string':
@@ -31,11 +40,11 @@ export default class TypeValidator {
         const isValid = validator(data)
 
         if (isValid || !validator.errors) return
-        return validator.errors.map(({ dataPath, schema, data }) => ({
-          'Data path': dataPath,
-          'Expected type': schema,
-          'Actual type': actualType,
-          Data: data,
+        return validator.errors.map(({ dataPath, schema: expectedType, data }) => ({
+          dataPath,
+          expectedType,
+          actualType,
+          data,
         }))
       }
     }

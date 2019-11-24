@@ -1,10 +1,9 @@
 import { AxiosInstance, AxiosResponse } from 'axios'
 import { TestConfig } from '../config'
-import TypeValidator, { TypeProblem } from '../validation/type-validator'
+import TypeValidator from '../validation/type-validator'
 import chalk from 'chalk'
 import { GetComparisonMessage } from '../messages'
-
-type Problems = (string | TypeProblem)[]
+import { Problems } from '../types'
 
 export default class CDCTester {
   constructor(

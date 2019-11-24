@@ -35,7 +35,7 @@
     "eslint-plugin-jest": "^23.0.4",
     "eslint-plugin-prettier": "^3.1.1",
     "jest": "^24.9.0",
-    "nodemon": "^1.19.4",
+    "nodemon": "^2.0.1",
     "prettier": "^1.19.1",
     "source-map-support": "^0.5.16",
     "ts-jest": "^24.1.0",

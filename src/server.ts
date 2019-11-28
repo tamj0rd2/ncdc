@@ -30,7 +30,7 @@ const configureServer = (serverRoot: string, mockConfigs: MockConfig[]): Express
     const endpoint = (request.mockEndpoint ?? request.endpoint).split('?')[0]
 
     if (request.method === 'GET') {
-      app.get(new RegExp(endpoint), (_, res) => res.send(response.body))
+      app.get(endpoint, (_, res) => res.send(response.body))
       console.log(`Registered ${serverRoot}${endpoint} from config: ${chalk.blue(name)}`)
     }
   })

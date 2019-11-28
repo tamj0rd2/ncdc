@@ -11,38 +11,34 @@ export default class TypeValidator {
   ) {}
 
   public getValidationErrors(data: Data, expectedType: string): DetailedProblem[] {
-    const actualType = typeof data
     switch (expectedType) {
       case 'string':
-        if (actualType !== 'string') return this.mapSimpleProblem('string', data)
-        break
+        return this.mapSimpleProblem('string', data)
       case 'number':
-        if (actualType !== 'number') return this.mapSimpleProblem('number', data)
-        break
+        return this.mapSimpleProblem('number', data)
       case 'boolean':
-        if (actualType !== 'boolean') return this.mapSimpleProblem('boolean', data)
-        break
+        return this.mapSimpleProblem('boolean', data)
       case 'object':
-        if (actualType !== 'object') return this.mapSimpleProblem('object', data)
-        break
+        return this.mapSimpleProblem('object', data)
+      default:
+        const jsonSchema = this.schemaGenerator.load(expectedType)
+        const validator = this.validator.compile(jsonSchema)
+        const isValid = validator(data)
+
+        if (isValid || !validator.errors) return []
+        return validator.errors.map(
+          (error): DetailedProblem => ({
+            dataPath: error.dataPath,
+            data: error.data,
+            message: error.message,
+            parentSchema: error.parentSchema,
+          }),
+        )
     }
-
-    const jsonSchema = this.schemaGenerator.load(expectedType)
-    const validator = this.validator.compile(jsonSchema)
-    const isValid = validator(data)
-
-    if (isValid || !validator.errors) return []
-    return validator.errors.map(
-      (error): DetailedProblem => ({
-        dataPath: error.dataPath,
-        data: error.data,
-        message: error.message,
-        parentSchema: error.parentSchema,
-      }),
-    )
   }
 
-  private mapSimpleProblem(type: string, data: Data): DetailedProblem[] {
-    return [this.mapToProblem('type', type, typeof data, data)]
+  private mapSimpleProblem(expectedType: string, data: Data): DetailedProblem[] {
+    const actualType = typeof data
+    return actualType === expectedType ? [] : [this.mapToProblem('type', expectedType, actualType, data)]
   }
 }

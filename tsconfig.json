@@ -12,7 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": true,
     "outDir": "dist",
-    "sourceMap": true
+    "inlineSourceMap": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

@@ -1,7 +1,7 @@
 import { Ajv } from 'ajv'
 import SchemaGenerator from './schema-loader'
 import { GetComparisonMessage } from '../messages'
-import { Data, Problems } from '../types'
+import { Data, Problems, DetailedProblem } from '../types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default class TypeValidator {
@@ -32,12 +32,14 @@ export default class TypeValidator {
         const isValid = validator(data)
 
         if (isValid || !validator.errors) return
-        return validator.errors.map(({ dataPath, schema: expectedType, data }) => ({
-          dataPath,
-          expectedType,
-          actualType,
-          data,
-        }))
+        return validator.errors.map(
+          (error): DetailedProblem => ({
+            dataPath: error.dataPath,
+            data: error.data,
+            message: error.message,
+            parentSchema: error.parentSchema,
+          }),
+        )
       }
     }
   }

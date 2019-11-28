@@ -33,6 +33,7 @@ const responseSchema = yup
     type: yup.string(),
     body: stringOrObject,
     mockBody: stringOrObject,
+    mockPath: yup.string(),
   })
   .noUnknown(true)
   .required()
@@ -45,11 +46,26 @@ export interface TestConfig {
 
 export type MockConfig = TestConfig & {
   request: { mockEndpoint?: string }
-  response: { body: string | object; mockBody?: string }
+  response: {
+    body: string | object
+    mockBody?: string
+    mockPath?: string
+  }
 }
 
-export function readConfig<T extends TestConfig>(configPath: string): T[] {
-  const configItems = safeLoad(readFileSync(configPath, 'utf8'))
+export function readConfig<T extends TestConfig>(configPath: string, mockMode = false): T[] {
+  const loaded: T[] = safeLoad(readFileSync(configPath, 'utf8'))
+  const configItems = loaded.map(config => {
+    if (mockMode) {
+      const mockConfig = config as MockConfig
+      const mockPath = mockConfig.response.mockPath
+      if (mockPath) {
+        mockConfig.response.mockBody = JSON.parse(readFileSync(mockPath, 'utf-8'))
+      }
+    }
+    return config
+  })
+
   yup
     .array()
     .of(

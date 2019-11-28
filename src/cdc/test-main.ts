@@ -47,12 +47,10 @@ export const runTests = (
           problems.forEach(problem => {
             if (typeof problem === 'string') return console.log(problem)
 
-            const { data, dataPath, expectedType, actualType } = problem
-            console.log(chalk.blue('Data path:'), dataPath)
-            console.log(chalk.blue('Expected type:'))
-            console.dir(expectedType, { depth: undefined })
-            console.log(chalk.blue(`Data (${actualType}):`))
-            console.dir(data, { depth: undefined })
+            // TODO: fix this shit
+            throw new Error('>:D')
+            // const { data, dataPath, schemaPath, params, parentSchema, message } = problem
+            // console.log(chalk.blue(dataPath), message)
           })
         } else {
           console.log(chalk.green.bold('PASSED:'), chalk.green(testConfig.name))

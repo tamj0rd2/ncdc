@@ -5,6 +5,21 @@ import TypeValidator from './validation/type-validator'
 import { CustomError } from './errors'
 import { Problems } from './types'
 
+function rTrunc<T extends { [index: string]: any }>(obj: T): T {
+  for (const key in obj) {
+    switch (typeof obj[key]) {
+      case 'string':
+        if (obj[key].length > 30) obj[key] = `${obj[key].substring(0, 30)}...` as any
+        break
+      case 'object':
+        rTrunc(obj[key])
+        break
+    }
+  }
+
+  return obj
+}
+
 export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
@@ -12,11 +27,11 @@ export default class Main {
     let mockConfigs: MockConfig[]
 
     try {
-      mockConfigs = readConfig<MockConfig>(this.configPath).filter(
+      mockConfigs = readConfig<MockConfig>(this.configPath, true).filter(
         x => x.response.body ?? x.response.mockBody,
       )
     } catch (err) {
-      throw new CustomError(`${chalk.bold.red('Config error:')} ${chalk.red(err.message)}`)
+      throw new CustomError(`${chalk.bold('Config error:')} ${err.message}`)
     }
 
     if (!mockConfigs.length) {
@@ -36,25 +51,21 @@ export default class Main {
       }
     })
 
-    if (!mocksAreValid) {
-      throw new CustomError('Some mock configurations were invalid', 1)
-    }
-
-    return startServer(port, mockConfigs)
+    if (mocksAreValid) startServer(port, mockConfigs)
   }
 
-  private logValidationResults = ({ name }: TestConfig) => (problems: Problems): void => {
-    if (problems.length) {
+  private logValidationResults = ({ name }: TestConfig) => (allProblems: Problems): void => {
+    if (allProblems.length) {
       console.error(chalk.red.bold('FAILED:'), chalk.red(name))
-      return problems.forEach(problem => {
+      return allProblems.forEach(problem => {
         if (typeof problem === 'string') return console.log(problem)
 
-        const { data, dataPath, expectedType, actualType } = problem
-        console.log(chalk.blue('Data path:'), dataPath)
-        console.log(chalk.blue('Expected type:'))
-        console.dir(expectedType, { depth: undefined })
-        console.log(chalk.blue(`Data (${actualType}):`))
-        console.dir(data, { depth: undefined })
+        const { dataPath, message, data, parentSchema } = problem
+        console.log(chalk.blue(dataPath || '<root>'), message)
+        console.log(chalk.blue('Data:'))
+        console.dir(rTrunc(data), { depth: dataPath ? 4 : 0 })
+        console.log(chalk.blue('Schema:'))
+        console.dir(parentSchema, { depth: dataPath ? 4 : 2 })
         console.log()
       })
     }

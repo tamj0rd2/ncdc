@@ -2,12 +2,17 @@ import mainYargs from 'yargs'
 import yargs from 'yargs'
 import { runTests } from './cdc/test-main'
 import Main from './main'
-import { CustomError } from './errors'
 import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-loader'
 import { getComparisonMessage } from './messages'
 import chalk from 'chalk'
+import { CustomError } from './errors'
+
+const handleError = ({ message }: CustomError): never => {
+  console.error(chalk.red(message))
+  process.exit(1)
+}
 
 const createMain = (configPath: string, allErrors: boolean, tsconfigPath: string): Main => {
   try {
@@ -20,8 +25,7 @@ const createMain = (configPath: string, allErrors: boolean, tsconfigPath: string
       configPath,
     )
   } catch (err) {
-    console.error(chalk.red('Something went wrong'), err.stack ?? err)
-    process.exit(1)
+    return handleError(err)
   }
 }
 
@@ -66,7 +70,7 @@ export default async function run(): Promise<void> {
         createMain(configPath, allErrors, tsconfigPath)
           .serve(port)
           .then(() => process.exit(0))
-          .catch(({ exitCode }: CustomError) => process.exit(exitCode))
+          .catch(handleError)
       },
     )
     .command(

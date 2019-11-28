@@ -2,8 +2,10 @@ import { MockConfig, readConfig, TestConfig } from './config'
 import chalk from 'chalk'
 import { startServer } from './server'
 import TypeValidator from './validation/type-validator'
-import { CustomError } from './errors'
 import { DetailedProblem } from './types'
+import CDCTester from './cdc/cdc-tester'
+import { mapToProblem } from './messages'
+import axios from 'axios'
 
 function rTrunc<T extends { [index: string]: any }>(obj: T): T {
   for (const key in obj) {
@@ -34,23 +36,14 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
 }
 
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
+  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
   public async serve(port: number): Promise<void> {
-    let mockConfigs: MockConfig[]
+    const mockConfigs = readConfig<MockConfig>(this.configPath, true).filter(
+      x => x.response.body ?? x.response.mockBody ?? x.response.mockPath,
+    )
 
-    try {
-      mockConfigs = readConfig<MockConfig>(this.configPath, true).filter(
-        x => x.response.body ?? x.response.mockBody,
-      )
-    } catch (err) {
-      throw new CustomError(`${chalk.bold('Config error:')} ${err.message}`)
-    }
-
-    if (!mockConfigs.length) {
-      console.log('No mocks to run')
-      return
-    }
+    if (!mockConfigs.length) return console.log('No mocks to run')
 
     let mocksAreValid = true
     mockConfigs.forEach(config => {
@@ -64,15 +57,32 @@ export default class Main {
       }
     })
 
-    if (mocksAreValid) startServer(port, mockConfigs)
+    if (mocksAreValid) return startServer(port, mockConfigs)
   }
 
-  private logValidationResults = ({ name }: TestConfig) => (problems: DetailedProblem[]): void => {
-    if (problems.length) {
-      console.error(chalk.red.bold('FAILED:'), chalk.red(name))
-    } else {
-      console.log(chalk.green.bold('PASSED:'), chalk.green(name))
-    }
+  public async test(baseUrl: string): Promise<void> {
+    const testConfigs = readConfig(this.configPath).filter(x => x.request.endpoint)
+
+    if (!testConfigs.length) return console.log('No tests to run')
+
+    const tester = new CDCTester(
+      axios.create({
+        baseURL: baseUrl,
+      }),
+      this.typeValidator,
+      mapToProblem,
+    )
+
+    await Promise.all(
+      testConfigs.map(testConfig => tester.test(testConfig).then(this.logValidationResults(testConfig))),
+    )
+  }
+
+  private logValidationResults = ({ name }: TestConfig) => (problems: string | DetailedProblem[]): void => {
+    if (!problems.length) return console.log(chalk.green.bold('PASSED:'), chalk.green(name))
+
+    console.error(chalk.red.bold('FAILED:'), chalk.red(name))
+    if (typeof problems === 'string') return console.log(problems + `\r\n`)
 
     groupBy(problems, x => x.dataPath).forEach((groupedProblems, dataPath) => {
       groupedProblems.forEach(({ message }) => console.log(chalk.blue('<root>' + dataPath), message))

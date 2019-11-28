@@ -1,6 +1,8 @@
 import * as yup from 'yup'
 import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
+import { CustomError } from './errors'
+import chalk from 'chalk'
 
 interface RequestConfig {
   endpoint: string
@@ -66,18 +68,22 @@ export function readConfig<T extends TestConfig>(configPath: string, mockMode = 
     return config
   })
 
-  yup
-    .array()
-    .of(
-      yup
-        .object({
-          name: yup.string().required(),
-          request: requestSchema,
-          response: responseSchema,
-        })
-        .noUnknown(true),
-    )
-    .required()
-    .validateSync(configItems, { strict: true })
-  return configItems
+  try {
+    yup
+      .array()
+      .of(
+        yup
+          .object({
+            name: yup.string().required(),
+            request: requestSchema,
+            response: responseSchema,
+          })
+          .noUnknown(true),
+      )
+      .required()
+      .validateSync(configItems, { strict: true })
+    return configItems
+  } catch (err) {
+    throw new CustomError(`${chalk.bold('Config error:')} ${err.message}`)
+  }
 }

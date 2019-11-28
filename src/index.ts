@@ -1,6 +1,5 @@
 import mainYargs from 'yargs'
 import yargs from 'yargs'
-import { runTests } from './cdc/test-main'
 import Main from './main'
 import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
@@ -88,7 +87,11 @@ export default async function run(): Promise<void> {
           }),
       async ({ configPath, baseUrl, allErrors, tsconfigPath }) => {
         if (!configPath || !baseUrl) process.exit(1)
-        runTests(configPath, baseUrl, allErrors, tsconfigPath)
+
+        createMain(configPath, allErrors, tsconfigPath)
+          .test(baseUrl)
+          .then(() => process.exit(0))
+          .catch(handleError)
       },
     )
     .example(

@@ -2,21 +2,21 @@ import { AxiosInstance, AxiosResponse } from 'axios'
 import { TestConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
 import chalk from 'chalk'
-import { GetComparisonMessage } from '../messages'
-import { Problems } from '../types'
+import { MapToProblem } from '../messages'
+import { DetailedProblem } from '../types'
 
 export default class CDCTester {
   constructor(
     private readonly loader: AxiosInstance,
     private readonly typeValidator: TypeValidator,
-    private readonly getComparisonMessage: GetComparisonMessage,
+    private readonly mapToProblem: MapToProblem,
   ) {}
 
   public async test({
     request: { endpoint, method },
     response: responseConfig,
-  }: TestConfig): Promise<Problems> {
-    const problems: Problems = []
+  }: TestConfig): Promise<DetailedProblem[] | string> {
+    const problems: DetailedProblem[] = []
 
     let response: AxiosResponse
     try {
@@ -25,28 +25,24 @@ export default class CDCTester {
       const errorResponse = err.response as AxiosResponse
 
       if (!errorResponse) {
-        problems.push(`No response from ${chalk.underline(endpoint)}`)
-        return problems
+        return `No response from ${chalk.underline(endpoint)}`
       }
 
       if (responseConfig.code !== errorResponse.status) {
-        problems.push(
-          `Expected status ${chalk.green(responseConfig.code)} but received ${chalk.red(
-            errorResponse.status,
-          )}`,
-        )
-        return problems
+        return `Expected status ${chalk.green(responseConfig.code)} but received ${chalk.red(
+          errorResponse.status,
+        )}`
       }
 
       response = errorResponse
     }
 
     if (responseConfig.code && response.status !== responseConfig.code) {
-      problems.push(this.getComparisonMessage('status', responseConfig.code, response.status))
+      problems.push(this.mapToProblem('status', responseConfig.code, response.status))
     }
 
     if (responseConfig.body && response.data !== responseConfig.body) {
-      problems.push(this.getComparisonMessage('body', responseConfig.body, response.data))
+      problems.push(this.mapToProblem('body', responseConfig.body, response.data))
     }
 
     if (responseConfig.type) {

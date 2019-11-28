@@ -1,7 +1,15 @@
 import chalk from 'chalk'
+import { Data, DetailedProblem } from './types'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getComparisonMessage = (property: string, expected: any, actual: any): string =>
-  `Expected ${property} to be ${chalk.green(expected)} but received ${chalk.red(actual)}`
+export const mapToProblem = (
+  property: string,
+  expected: Data,
+  actual: Data,
+  data?: Data,
+): DetailedProblem => ({
+  data: data ?? actual,
+  dataPath: '',
+  message: `${property} should be ${chalk.green(expected)} but got ${chalk.red(actual)}`,
+})
 
-export type GetComparisonMessage = typeof getComparisonMessage
+export type MapToProblem = typeof mapToProblem

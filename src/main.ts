@@ -3,13 +3,13 @@ import chalk from 'chalk'
 import { startServer } from './server'
 import TypeValidator from './validation/type-validator'
 import { CustomError } from './errors'
-import { Problems } from './types'
+import { DetailedProblem } from './types'
 
 function rTrunc<T extends { [index: string]: any }>(obj: T): T {
   for (const key in obj) {
     switch (typeof obj[key]) {
       case 'string':
-        if (obj[key].length > 30) obj[key] = `${obj[key].substring(0, 30)}...` as any
+        if (obj[key].length > 30) obj[key] = `${obj[key].substring(0, 50)}...` as any
         break
       case 'object':
         rTrunc(obj[key])
@@ -20,8 +20,21 @@ function rTrunc<T extends { [index: string]: any }>(obj: T): T {
   return obj
 }
 
+function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
+  return items.reduce((map, item) => {
+    const key = getKey(item)
+    const collection = map.get(key)
+    if (collection) {
+      collection.push(item)
+    } else {
+      map.set(key, [item])
+    }
+    return map
+  }, new Map<string, T[]>())
+}
+
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
+  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
 
   public async serve(port: number): Promise<void> {
     let mockConfigs: MockConfig[]
@@ -54,22 +67,26 @@ export default class Main {
     if (mocksAreValid) startServer(port, mockConfigs)
   }
 
-  private logValidationResults = ({ name }: TestConfig) => (allProblems: Problems): void => {
-    if (allProblems.length) {
+  private logValidationResults = ({ name }: TestConfig) => (problems: DetailedProblem[]): void => {
+    if (problems.length) {
       console.error(chalk.red.bold('FAILED:'), chalk.red(name))
-      return allProblems.forEach(problem => {
-        if (typeof problem === 'string') return console.log(problem)
-
-        const { dataPath, message, data, parentSchema } = problem
-        console.log(chalk.blue(dataPath || '<root>'), message)
-        console.log(chalk.blue('Data:'))
-        console.dir(rTrunc(data), { depth: dataPath ? 4 : 0 })
-        console.log(chalk.blue('Schema:'))
-        console.dir(parentSchema, { depth: dataPath ? 4 : 2 })
-        console.log()
-      })
+    } else {
+      console.log(chalk.green.bold('PASSED:'), chalk.green(name))
     }
 
-    console.log(chalk.green.bold('PASSED:'), chalk.green(name))
+    groupBy(problems, x => x.dataPath).forEach((groupedProblems, dataPath) => {
+      groupedProblems.forEach(({ message }) => console.log(chalk.blue('<root>' + dataPath), message))
+      const { data, parentSchema } = groupedProblems[0]
+
+      console.log(chalk.yellow('Data:'))
+      console.dir(rTrunc(data), { depth: dataPath ? 4 : 0 })
+      if (!!dataPath) {
+        console.log(chalk.yellow('Schema:'))
+        console.dir(parentSchema)
+      }
+      console.log()
+    })
+
+    console.log()
   }
 }

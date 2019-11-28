@@ -5,7 +5,7 @@ import Main from './main'
 import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-loader'
-import { getComparisonMessage } from './messages'
+import { mapToProblem } from './messages'
 import chalk from 'chalk'
 import { CustomError } from './errors'
 
@@ -20,7 +20,7 @@ const createMain = (configPath: string, allErrors: boolean, tsconfigPath: string
       new TypeValidator(
         new ajv({ verbose: true, allErrors }),
         new SchemaGenerator(tsconfigPath),
-        getComparisonMessage,
+        mapToProblem,
       ),
       configPath,
     )

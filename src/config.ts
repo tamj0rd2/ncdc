@@ -55,18 +55,8 @@ export type MockConfig = TestConfig & {
   }
 }
 
-export function readConfig<T extends TestConfig>(configPath: string, mockMode = false): T[] {
-  const loaded: T[] = safeLoad(readFileSync(configPath, 'utf8'))
-  const configItems = loaded.map(config => {
-    if (mockMode) {
-      const mockConfig = config as MockConfig
-      const mockPath = mockConfig.response.mockPath
-      if (mockPath) {
-        mockConfig.response.mockBody = JSON.parse(readFileSync(mockPath, 'utf-8'))
-      }
-    }
-    return config
-  })
+export function readConfig<T extends TestConfig>(configPath: string): T[] {
+  const configItems: T[] = safeLoad(readFileSync(configPath, 'utf8'))
 
   try {
     yup

@@ -2,10 +2,11 @@ import { MockConfig, readConfig, TestConfig } from './config'
 import chalk from 'chalk'
 import { startServer } from './server'
 import TypeValidator from './validation/type-validator'
-import { DetailedProblem } from './types'
+import { DetailedProblem, Data } from './types'
 import CDCTester from './cdc/cdc-tester'
 import { mapToProblem } from './messages'
 import axios from 'axios'
+import { readFileSync } from 'fs'
 
 function rTrunc<T extends { [index: string]: any }>(obj: T): T {
   for (const key in obj) {
@@ -39,8 +40,8 @@ export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
   public async serve(port: number): Promise<void> {
-    const mockConfigs = readConfig<MockConfig>(this.configPath, true).filter(
-      x => x.response.body ?? x.response.mockBody ?? x.response.mockPath,
+    const mockConfigs = readConfig<MockConfig>(this.configPath).filter(
+      x => x.response.mockPath || x.response.mockBody || x.response.body,
     )
 
     if (!mockConfigs.length) return console.log('No mocks to run')
@@ -48,9 +49,15 @@ export default class Main {
     let mocksAreValid = true
     mockConfigs.forEach(config => {
       if (config.response.type) {
-        const body = config.response.mockBody ?? config.response.body
-        const problems = this.typeValidator.getValidationErrors(body, config.response.type)
-        if (problems) {
+        if (config.response.mockPath) {
+          // TODO: it would be cool to make this async
+          config.response.body = JSON.parse(readFileSync(config.response.mockPath, 'utf-8'))
+        } else {
+          config.response.body = config.response.mockBody ?? config.response.body
+        }
+
+        const problems = this.typeValidator.getValidationErrors(config.response.body, config.response.type)
+        if (problems.length) {
           mocksAreValid = false
           this.logValidationResults(config)(problems)
         }
@@ -74,13 +81,19 @@ export default class Main {
     )
 
     await Promise.all(
-      testConfigs.map(testConfig => tester.test(testConfig).then(this.logValidationResults(testConfig))),
+      testConfigs.map(testConfig =>
+        tester.test(testConfig).then(problems => {
+          if (!problems.length) {
+            console.log(chalk.green.bold('PASSED:'), chalk.green(testConfig.name))
+          } else {
+            this.logValidationResults(testConfig)
+          }
+        }),
+      ),
     )
   }
 
   private logValidationResults = ({ name }: TestConfig) => (problems: string | DetailedProblem[]): void => {
-    if (!problems.length) return console.log(chalk.green.bold('PASSED:'), chalk.green(name))
-
     console.error(chalk.red.bold('FAILED:'), chalk.red(name))
     if (typeof problems === 'string') return console.log(problems + `\r\n`)
 

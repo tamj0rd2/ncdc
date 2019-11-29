@@ -1,4 +1,4 @@
-import { readConfig, MockConfig } from './config'
+import readConfig, { MockConfig } from './config'
 import jsYaml from 'js-yaml'
 import { mockedObj } from './test-helpers'
 

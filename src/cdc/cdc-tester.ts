@@ -6,6 +6,8 @@ import { MapToProblem } from '../messages'
 import { DetailedProblem, SupportedMethod } from '../types'
 import { CustomError } from '../errors'
 
+export type Problems = string | DetailedProblem[]
+
 export default class CDCTester {
   constructor(
     private readonly loader: AxiosInstance,
@@ -17,7 +19,7 @@ export default class CDCTester {
     responseConfig: ResponseConfig,
     endpoint: string,
     method: SupportedMethod,
-  ): Promise<DetailedProblem[] | string> {
+  ): Promise<Problems> {
     const problems: DetailedProblem[] = []
 
     let response: AxiosResponse

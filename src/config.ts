@@ -66,7 +66,7 @@ export interface MockConfig extends TestConfig {
   response: MockResponseConfig
 }
 
-export function readConfig<T extends TestConfig>(configPath: string): T[] {
+export default function readConfig<T extends TestConfig>(configPath: string): T[] {
   const configItems: T[] = safeLoad(readFileSync(configPath, 'utf8'))
 
   try {

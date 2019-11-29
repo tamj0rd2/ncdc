@@ -8,7 +8,7 @@ import { mapToProblem } from './messages'
 import chalk from 'chalk'
 import { CustomError } from './errors'
 
-const handleError = ({ message }: CustomError): never => {
+const handleError = ({ stack, message }: CustomError): never => {
   console.error(chalk.red(message))
   process.exit(1)
 }

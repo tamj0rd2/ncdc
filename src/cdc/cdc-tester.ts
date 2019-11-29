@@ -1,9 +1,10 @@
 import { AxiosInstance, AxiosResponse } from 'axios'
-import { TestConfig } from '../config'
+import { ResponseConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
 import chalk from 'chalk'
 import { MapToProblem } from '../messages'
-import { DetailedProblem } from '../types'
+import { DetailedProblem, SupportedMethod } from '../types'
+import { CustomError } from '../errors'
 
 export default class CDCTester {
   constructor(
@@ -12,10 +13,11 @@ export default class CDCTester {
     private readonly mapToProblem: MapToProblem,
   ) {}
 
-  public async test({
-    request: { endpoint, method },
-    response: responseConfig,
-  }: TestConfig): Promise<DetailedProblem[] | string> {
+  public async test(
+    responseConfig: ResponseConfig,
+    endpoint: string,
+    method: SupportedMethod,
+  ): Promise<DetailedProblem[] | string> {
     const problems: DetailedProblem[] = []
 
     let response: AxiosResponse
@@ -23,15 +25,18 @@ export default class CDCTester {
       response = await this.getResponse(endpoint, method)
     } catch (err) {
       const errorResponse = err.response as AxiosResponse
+      const fullAddress = err.config.baseURL + endpoint
 
       if (!errorResponse) {
-        return `No response from ${chalk.underline(endpoint)}`
+        throw new CustomError(`No response from ${chalk.blue(fullAddress)}`)
       }
 
       if (responseConfig.code !== errorResponse.status) {
-        return `Expected status ${chalk.green(responseConfig.code)} but received ${chalk.red(
-          errorResponse.status,
-        )}`
+        throw new CustomError(
+          `Expected status ${chalk.green(responseConfig.code)} from ${chalk.blue(
+            fullAddress,
+          )} but got ${chalk.red(errorResponse.status)}`,
+        )
       }
 
       response = errorResponse
@@ -53,7 +58,7 @@ export default class CDCTester {
     return problems
   }
 
-  private async getResponse(endpoint: string, method: 'GET'): Promise<AxiosResponse> {
+  private async getResponse(endpoint: string, method: SupportedMethod): Promise<AxiosResponse> {
     switch (method) {
       case 'GET':
         return await this.loader.get(endpoint)

@@ -3,30 +3,45 @@ import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 import { CustomError } from './errors'
 import chalk from 'chalk'
+import { SupportedMethod } from './types'
 
-interface RequestConfig {
+export interface RequestConfig {
   endpoint: string
-  method: 'GET'
+  method: SupportedMethod
+  params?: (string | string[])[]
+}
+
+interface MockRequestConfig extends RequestConfig {
+  mockEndpoint?: string
 }
 
 const requestSchema = yup
   .object({
     endpoint: yup.string(),
-    mockEndpoint: yup.string(),
+    params: yup
+      .array()
+      .of(yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.array().of(yup.string())))),
     method: yup
       .string()
       .required()
       .oneOf(['GET']),
+    mockEndpoint: yup.string(),
   })
   .noUnknown(true)
   .required()
 
 const stringOrObject = yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object()))
 
-interface ResponseConfig {
+export interface ResponseConfig {
   code?: number
   body?: string | object
   type?: string
+}
+
+interface MockResponseConfig extends ResponseConfig {
+  body: string | object
+  mockBody?: string
+  mockPath?: string
 }
 
 const responseSchema = yup
@@ -46,13 +61,9 @@ export interface TestConfig {
   response: ResponseConfig
 }
 
-export type MockConfig = TestConfig & {
-  request: { mockEndpoint?: string }
-  response: {
-    body: string | object
-    mockBody?: string
-    mockPath?: string
-  }
+export interface MockConfig extends TestConfig {
+  request: MockRequestConfig
+  response: MockResponseConfig
 }
 
 export function readConfig<T extends TestConfig>(configPath: string): T[] {

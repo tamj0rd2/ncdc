@@ -7,6 +7,7 @@ import CDCTester from './cdc/cdc-tester'
 import { mapToProblem } from './messages'
 import axios from 'axios'
 import { readFileSync } from 'fs'
+import { CustomError } from './errors'
 
 function rTrunc<T extends { [index: string]: any }>(obj: T): T {
   for (const key in obj) {
@@ -37,7 +38,7 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
 }
 
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
+  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
 
   public async serve(port: number): Promise<void> {
     const mockConfigs = readConfig<MockConfig>(this.configPath).filter(
@@ -47,19 +48,20 @@ export default class Main {
     if (!mockConfigs.length) return console.log('No mocks to run')
 
     let mocksAreValid = true
-    mockConfigs.forEach(config => {
-      if (config.response.type) {
-        if (config.response.mockPath) {
+    mockConfigs.forEach(({ name, response }) => {
+      if (response.type) {
+        if (response.mockPath) {
           // TODO: it would be cool to make this async
-          config.response.body = JSON.parse(readFileSync(config.response.mockPath, 'utf-8'))
+          response.body = JSON.parse(readFileSync(response.mockPath, 'utf-8'))
         } else {
-          config.response.body = config.response.mockBody ?? config.response.body
+          response.body = response.mockBody ?? response.body
         }
 
-        const problems = this.typeValidator.getValidationErrors(config.response.body, config.response.type)
+        const problems = this.typeValidator.getValidationErrors(response.body, response.type)
         if (problems.length) {
           mocksAreValid = false
-          this.logValidationResults(config)(problems)
+          console.error(chalk.red.bold('FAILED:'), chalk.red(name))
+          this.logValidationErrors(problems)
         }
       }
     })
@@ -67,7 +69,7 @@ export default class Main {
     if (mocksAreValid) return startServer(port, mockConfigs)
   }
 
-  public async test(baseUrl: string): Promise<void> {
+  public async test(baseUrl: string): Promise<any> {
     const testConfigs = readConfig(this.configPath).filter(x => x.request.endpoint)
 
     if (!testConfigs.length) return console.log('No tests to run')
@@ -80,21 +82,57 @@ export default class Main {
       mapToProblem,
     )
 
-    await Promise.all(
-      testConfigs.map(testConfig =>
-        tester.test(testConfig).then(problems => {
+    // TODO: needs a big ol refactor. This stuff can go into the tester
+    const runSingleTest = async (
+      { name, request, response }: TestConfig,
+      endpointOverride?: string,
+      caseIndex?: number,
+    ): Promise<void> => {
+      const endpoint = endpointOverride ?? request.endpoint
+      const displayName = caseIndex ? `${name} [${caseIndex}]` : name
+      const displayEndpoint = chalk.blue(`${baseUrl}${endpoint}`)
+      return tester
+        .test(response, endpoint, request.method)
+        .then(problems => {
           if (!problems.length) {
-            console.log(chalk.green.bold('PASSED:'), chalk.green(testConfig.name))
+            console.log(chalk.green.bold('PASSED:'), chalk.green(displayName), '-', displayEndpoint)
           } else {
-            this.logValidationResults(testConfig)
+            console.error(chalk.red.bold('FAILED:'), chalk.red(displayName), '-', displayEndpoint)
+            this.logValidationErrors(problems)
           }
-        }),
-      ),
-    )
+        })
+        .catch(({ message }: CustomError) =>
+          console.error(chalk.red.bold('FAILED:'), chalk.red(displayName), '-', message),
+        )
+    }
+
+    const runSingleTestSingleWithParams = async (
+      { name, request, response }: TestConfig,
+      params: string | string[],
+      caseIndex: number,
+    ): Promise<void> => {
+      const actualParams = typeof params === 'string' ? [params] : params
+      const paramMatches = request.endpoint.match(/(:[^/?]+)/g)
+      const endpoint =
+        paramMatches?.reduce(
+          (accum, next, i): string => accum.replace(next, actualParams[i]),
+          request.endpoint,
+        ) ?? request.endpoint
+
+      return runSingleTest({ name, request, response }, endpoint, caseIndex)
+    }
+
+    const testTasks = testConfigs.flatMap(testConfig => {
+      return (
+        testConfig.request.params?.map((params, i) => runSingleTestSingleWithParams(testConfig, params, i)) ??
+        runSingleTest(testConfig)
+      )
+    })
+
+    return Promise.all(testTasks)
   }
 
-  private logValidationResults = ({ name }: TestConfig) => (problems: string | DetailedProblem[]): void => {
-    console.error(chalk.red.bold('FAILED:'), chalk.red(name))
+  private logValidationErrors = (problems: string | DetailedProblem[]): void => {
     if (typeof problems === 'string') return console.log(problems + `\r\n`)
 
     groupBy(problems, x => x.dataPath).forEach((groupedProblems, dataPath) => {

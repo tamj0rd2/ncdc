@@ -12,7 +12,7 @@ export default class TypeValidator {
     private readonly mapToProblem: MapToProblem,
   ) {}
 
-  public getValidationErrors(data: Data, expectedType: string): MaybeProblems {
+  public getValidationProblems(data: Data, expectedType: string): MaybeProblems {
     switch (expectedType) {
       case 'string':
         return this.mapSimpleProblem('string', data)

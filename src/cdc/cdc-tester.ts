@@ -53,7 +53,7 @@ export default class CDCTester {
     }
 
     if (responseConfig.type) {
-      const result = this.typeValidator.getValidationErrors(response.data, responseConfig.type)
+      const result = this.typeValidator.getValidationProblems(response.data, responseConfig.type)
       if (result) typeof result === 'string' ? problems.push(result) : problems.push(...result)
     }
 

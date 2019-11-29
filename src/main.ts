@@ -58,7 +58,7 @@ export default class Main {
         }
 
         const problems = this.typeValidator.getValidationErrors(response.body, response.type)
-        if (problems.length) {
+        if (problems) {
           mocksAreValid = false
           console.error(chalk.red.bold('FAILED:'), chalk.red(name))
           this.logValidationErrors(problems)

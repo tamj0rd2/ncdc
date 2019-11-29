@@ -3,6 +3,8 @@ import SchemaGenerator from './schema-loader'
 import { MapToProblem } from '../messages'
 import { Data, DetailedProblem } from '../types'
 
+type MaybeProblems = DetailedProblem[] | undefined
+
 export default class TypeValidator {
   constructor(
     private readonly validator: Ajv,
@@ -10,7 +12,7 @@ export default class TypeValidator {
     private readonly mapToProblem: MapToProblem,
   ) {}
 
-  public getValidationErrors(data: Data, expectedType: string): DetailedProblem[] {
+  public getValidationErrors(data: Data, expectedType: string): MaybeProblems {
     switch (expectedType) {
       case 'string':
         return this.mapSimpleProblem('string', data)
@@ -37,8 +39,8 @@ export default class TypeValidator {
     }
   }
 
-  private mapSimpleProblem(expectedType: string, data: Data): DetailedProblem[] {
+  private mapSimpleProblem(expectedType: string, data: Data): MaybeProblems {
     const actualType = typeof data
-    return actualType === expectedType ? [] : [this.mapToProblem('type', expectedType, actualType, data)]
+    if (actualType !== expectedType) return [this.mapToProblem('type', expectedType, actualType, data)]
   }
 }

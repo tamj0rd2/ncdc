@@ -25,7 +25,7 @@ export default class TypeValidator {
         const validator = this.validator.compile(jsonSchema)
         const isValid = validator(data)
 
-        if (isValid || !validator.errors) return []
+        if (isValid || !validator.errors) return
         return validator.errors.map(
           (error): DetailedProblem => ({
             dataPath: error.dataPath,

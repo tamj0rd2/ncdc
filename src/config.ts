@@ -34,7 +34,7 @@ const stringOrObject = yup.lazy(val => (typeof val === 'string' ? yup.string() :
 
 export interface ResponseConfig {
   code?: number
-  body?: string | object
+  body?: string | object | number
   type?: string
 }
 

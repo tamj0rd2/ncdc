@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosResponse } from 'axios'
+import { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
 import { ResponseConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
 import chalk from 'chalk'
@@ -26,26 +26,26 @@ export default class CDCTester {
     try {
       response = await this.getResponse(endpoint, method)
     } catch (err) {
-      const errorResponse = err.response as AxiosResponse
-      const fullAddress = err.config.baseURL + endpoint
+      const axiosErr = err as AxiosError
+      const fullUri = this.loader.defaults.baseURL + endpoint
 
-      if (!errorResponse) {
-        throw new CustomError(`No response from ${chalk.blue(fullAddress)}`)
+      if (!axiosErr.response) {
+        throw new CustomError(`No response from ${chalk.blue(fullUri)}`)
       }
 
-      if (responseConfig.code !== errorResponse.status) {
+      if (responseConfig.code !== axiosErr.response.status) {
         throw new CustomError(
-          `Expected status ${chalk.green(responseConfig.code)} from ${chalk.blue(
-            fullAddress,
-          )} but got ${chalk.red(errorResponse.status)}`,
+          `Expected status code ${chalk.green(responseConfig.code)} from ${chalk.blue(
+            fullUri,
+          )} but got ${chalk.red(axiosErr.response.status)}`,
         )
       }
 
-      response = errorResponse
+      response = axiosErr.response
     }
 
     if (responseConfig.code && response.status !== responseConfig.code) {
-      problems.push(this.mapToProblem('status', responseConfig.code, response.status))
+      problems.push(this.mapToProblem('status code', responseConfig.code, response.status))
     }
 
     if (responseConfig.body && response.data !== responseConfig.body) {
@@ -54,7 +54,7 @@ export default class CDCTester {
 
     if (responseConfig.type) {
       const result = this.typeValidator.getProblems(response.data, responseConfig.type)
-      if (result) typeof result === 'string' ? problems.push(result) : problems.push(...result)
+      if (result?.length) problems.push(...result)
     }
 
     return problems

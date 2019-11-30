@@ -57,7 +57,7 @@ export default class Main {
           response.body = response.mockBody ?? response.body
         }
 
-        const problems = this.typeValidator.getValidationProblems(response.body, response.type)
+        const problems = this.typeValidator.getProblems(response.body, response.type)
         if (problems) {
           mocksAreValid = false
           console.error(chalk.red.bold('FAILED:'), chalk.red(name))

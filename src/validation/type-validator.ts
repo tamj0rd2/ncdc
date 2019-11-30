@@ -10,7 +10,7 @@ export default class TypeValidator {
     private readonly mapToProblem: MapToProblem,
   ) {}
 
-  public getValidationProblems(data: Data, expectedType: string): Optional<DetailedProblem[]> {
+  public getProblems(data: Data, expectedType: string): Optional<DetailedProblem[]> {
     switch (expectedType) {
       case 'string':
         return this.mapSimpleProblem('string', data)

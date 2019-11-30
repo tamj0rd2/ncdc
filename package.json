@@ -11,6 +11,23 @@
     "test": "jest",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore"
   },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/node_modules/"
+    ],
+    "testEnvironment": "node",
+    "setupFiles": [
+      "./src/test-helpers.ts"
+    ],
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "**/*.ts",
+      "!**/node_modules/**",
+      "!**/dist/**",
+      "!**/bin/**"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tamj0rd2/ncdc.git"
@@ -22,6 +39,7 @@
   },
   "homepage": "https://github.com/tamj0rd2/ncdc#readme",
   "devDependencies": {
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.7.4",
     "@babel/plugin-proposal-optional-chaining": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/preset-typescript": "^7.7.4",

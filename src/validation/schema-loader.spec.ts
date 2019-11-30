@@ -47,4 +47,10 @@ describe('SchemaLoader', () => {
     expect(mockedGenerator.getSchemaForSymbol).toHaveBeenCalledTimes(1)
     expect(schema2).toEqual(someSchema)
   })
+
+  it('throws an error if a generator is not created', () => {
+    mockedTJS.buildGenerator.mockReturnValue(null)
+
+    expect(() => new SchemaGenerator('tsconfig path')).toThrow(/Could not build a generator/)
+  })
 })

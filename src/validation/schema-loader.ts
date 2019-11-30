@@ -1,5 +1,6 @@
 import * as TJS from 'typescript-json-schema'
 import { resolve } from 'path'
+import { CustomError } from '../errors'
 
 export default class SchemaGenerator {
   private readonly generator: TJS.JsonSchemaGenerator
@@ -9,8 +10,7 @@ export default class SchemaGenerator {
     const program = TJS.programFromConfig(resolve(tsconfigPath))
     const generator = TJS.buildGenerator(program, { required: true })
     if (!generator) {
-      console.error('Could not build a generator from the given typescript configuration')
-      process.exit(1)
+      throw new CustomError('Could not build a generator from the given typescript configuration')
     }
     this.generator = generator
   }

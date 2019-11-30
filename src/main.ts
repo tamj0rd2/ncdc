@@ -6,7 +6,6 @@ import CDCTester, { Problems } from './cdc/cdc-tester'
 import { mapToProblem } from './messages'
 import axios from 'axios'
 import { readFileSync } from 'fs'
-import { CustomError } from './errors'
 import { Data } from './types'
 
 function rTrunc<T extends { [index: string]: Data }>(obj: T): T {
@@ -144,6 +143,6 @@ export default class Main {
     }
   }
 
-  private logTestError = (displayName: string) => ({ message }: CustomError): void =>
+  private logTestError = (displayName: string) => ({ message }: Error): void =>
     console.error(chalk.red.bold('FAILED:'), chalk.red(displayName), '-', message)
 }

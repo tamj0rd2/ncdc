@@ -6,9 +6,8 @@ import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-loader'
 import { mapToProblem } from './messages'
 import chalk from 'chalk'
-import { CustomError } from './errors'
 
-const handleError = ({ stack, message }: CustomError): never => {
+const handleError = ({ stack, message }: Error): never => {
   console.error(chalk.red(message))
   process.exit(1)
 }

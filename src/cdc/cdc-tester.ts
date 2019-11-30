@@ -1,10 +1,8 @@
 import { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
 import { ResponseConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
-import chalk from 'chalk'
-import { MapToProblem } from '../messages'
+import { MapToProblem, errorNoResponse, errorBadStatusCode, errorWrongStatusCode } from '../messages'
 import { DetailedProblem, SupportedMethod } from '../types'
-import { CustomError } from '../errors'
 
 export type Problems = string | DetailedProblem[]
 
@@ -29,17 +27,12 @@ export default class CDCTester {
       const axiosErr = err as AxiosError
       const fullUri = this.loader.defaults.baseURL + endpoint
 
-      if (!axiosErr.response) {
-        throw new CustomError(`No response from ${chalk.blue(fullUri)}`)
-      }
+      if (!axiosErr.response) throw new Error(errorNoResponse(fullUri))
 
-      if (responseConfig.code !== axiosErr.response.status) {
-        throw new CustomError(
-          `Expected status code ${chalk.green(responseConfig.code)} from ${chalk.blue(
-            fullUri,
-          )} but got ${chalk.red(axiosErr.response.status)}`,
-        )
-      }
+      if (!responseConfig.code) throw new Error(errorBadStatusCode(fullUri, axiosErr.response.status))
+
+      if (responseConfig.code !== axiosErr.response.status)
+        throw new Error(errorWrongStatusCode(fullUri, responseConfig.code, axiosErr.response.status))
 
       response = axiosErr.response
     }

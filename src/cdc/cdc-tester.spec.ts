@@ -4,11 +4,16 @@ import TypeValidator from '../validation/type-validator'
 import { ResponseConfig } from '../config'
 import { MapToProblem } from '../messages'
 import { DetailedProblem } from '../types'
+import * as _messages from '../messages'
+
+jest.mock('../messages')
 
 describe('CDC Tester', () => {
   const loader = mockObj<AxiosInstance>({ get: jest.fn() })
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
   const mapToProblem: jest.MockedFunction<MapToProblem> = jest.fn()
+  const messages = mockObj(_messages)
+
   let cdcTester: CDCTester
 
   beforeEach(() => {
@@ -42,24 +47,41 @@ describe('CDC Tester', () => {
       const endpoint = '/some/endpoint'
       const baseURL = 'my-site.com'
       loader.defaults = { baseURL }
-      loader.get.mockRejectedValue(new Error('welp'))
 
-      await expect(cdcTester.test({}, endpoint, 'GET')).rejects.toThrowError(
-        `No response from ${baseURL + endpoint}`,
-      )
+      loader.get.mockRejectedValue(new Error('welp'))
+      messages.errorNoResponse.mockReturnValue('error msg')
+
+      await expect(cdcTester.test({}, endpoint, 'GET')).rejects.toThrowError('error msg')
+      expect(messages.errorNoResponse).toBeCalledWith(baseURL + endpoint)
+    })
+
+    it('throws an error when there is a bad status code and no expected code was specified', async () => {
+      const endpoint = 'some/endpoint'
+      const baseURL = 'woah.dude'
+      loader.defaults = { baseURL }
+
+      const response: Partial<AxiosResponse> = { status: 404 }
+      const error: Partial<AxiosError> = { response: response as AxiosResponse }
+
+      loader.get.mockRejectedValue(error)
+      messages.errorBadStatusCode.mockReturnValue('error msg2')
+
+      await expect(cdcTester.test({}, endpoint, 'GET')).rejects.toThrowError('error msg2')
+      expect(messages.errorBadStatusCode).toBeCalledWith(baseURL + endpoint, 404)
     })
 
     it('throws an error when the response code does not match expected', async () => {
       const endpoint = 'some/endpoint'
       const baseURL = 'woah.dude'
       loader.defaults = { baseURL }
+
       const response: Partial<AxiosResponse> = { status: 503 }
       const error: Partial<AxiosError> = { response: response as AxiosResponse }
       loader.get.mockRejectedValue(error)
+      messages.errorWrongStatusCode.mockReturnValue('error msg2')
 
-      await expect(cdcTester.test({ code: 404 }, endpoint, 'GET')).rejects.toThrowError(
-        `Expected status code ${404} from ${baseURL + endpoint} but got ${503}`,
-      )
+      await expect(cdcTester.test({ code: 404 }, endpoint, 'GET')).rejects.toThrowError('error msg2')
+      expect(messages.errorWrongStatusCode).toBeCalledWith(baseURL + endpoint, 404, 503)
     })
 
     it('continues the test if the response code matches', async () => {

@@ -13,3 +13,11 @@ export const mapToProblem = (
 })
 
 export type MapToProblem = typeof mapToProblem
+
+export const errorNoResponse = (uri: string): string => `No response from ${chalk.blue(uri)}`
+
+export const errorBadStatusCode = (uri: string, actual: number): string =>
+  `Received status code ${chalk.red(actual)} from ${chalk.blue(uri)}`
+
+export const errorWrongStatusCode = (uri: string, expected: number, actual: number): string =>
+  `Expected status code ${chalk.green(expected)} from ${chalk.blue(uri)} but got ${chalk.red(actual)}`

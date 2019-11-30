@@ -1,14 +1,13 @@
 import SchemaGenerator from './schema-loader'
 import * as TJS from 'typescript-json-schema'
-import { mockedObj } from '../test-helpers'
 import * as path from 'path'
 
 jest.mock('typescript-json-schema')
 jest.mock('path')
 
 describe('SchemaLoader', () => {
-  const mockedTJS = mockedObj(TJS)
-  const mockedPath = mockedObj(path)
+  const mockedTJS = mockObj(TJS)
+  const mockedPath = mockObj(path)
 
   beforeEach(() => {
     jest.resetAllMocks()

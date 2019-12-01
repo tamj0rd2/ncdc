@@ -11,7 +11,6 @@ export type ProblemContext = ErrorObject | CustomContext
 const is = <T extends ProblemContext>(ctx: ProblemContext, prop: keyof T): ctx is T =>
   (ctx as T)[prop] !== undefined
 
-// TODO: switch to using Public<DetailedProblem> in tests
 export default class Problem {
   private readonly _path?: string
   public readonly message?: string
@@ -40,9 +39,9 @@ export default class Problem {
       return Array.isArray(data)
         ? data.map(this.mapData)
         : Object.keys(data).reduce<DataObject>((accum, key) => {
-          accum[key] = this.mapData(data[key])
-          return accum
-        }, {})
+            accum[key] = this.mapData(data[key])
+            return accum
+          }, {})
     return data
   }
 }

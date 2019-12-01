@@ -1,18 +1,12 @@
-import express, { Express } from 'express'
+import express, { Express, Request } from 'express'
 import { MockConfig } from './config'
-import { IncomingHttpHeaders } from 'http'
 import chalk from 'chalk'
 
-interface RequestLog {
-  method: string
-  path: string
+type RequestLog = Pick<Request, 'method' | 'path' | 'query' | 'headers'> & {
   timestamp: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  query: any
-  headers: IncomingHttpHeaders
 }
 
-const configureServer = (serverRoot: string, mockConfigs: MockConfig[]): Express => {
+export const configureServer = (baseUrl: string, mockConfigs: MockConfig[]): Express => {
   const app = express()
   const root = '/'
   const logPath = '/logs'
@@ -22,7 +16,7 @@ const configureServer = (serverRoot: string, mockConfigs: MockConfig[]): Express
   app.use(({ method, path, query, headers }, _, next) => {
     if (ignoredLogPaths.includes(path)) return next()
     // TODO: it'd be cool to log the name of the configuration too
-    requestLogs.push({ method, path, timestamp: new Date().toJSON(), query, headers })
+    requestLogs.push({ method, path, timestamp: new Date(Date.now()).toJSON(), query, headers })
     next()
   })
 
@@ -31,12 +25,12 @@ const configureServer = (serverRoot: string, mockConfigs: MockConfig[]): Express
 
     if (request.method === 'GET') {
       app.get(endpoint, (_, res) => res.send(response.body))
-      console.log(`Registered ${serverRoot}${endpoint} from config: ${chalk.blue(name)}`)
+      console.log(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
     }
   })
 
-  app.get('/', (_, res) => res.send(mockConfigs))
-  app.get(logPath, (_, res) => res.send(requestLogs.reverse()))
+  app.get(root, (_, res) => res.json(mockConfigs))
+  app.get(logPath, (_, res) => res.json(requestLogs.reverse()))
   return app
 }
 

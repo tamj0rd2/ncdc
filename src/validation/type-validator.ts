@@ -5,7 +5,7 @@ import Problem from '../problem'
 import { shouldBe } from '../messages'
 
 export default class TypeValidator {
-  constructor(private readonly validator: Ajv, private readonly schemaGenerator: SchemaGenerator) { }
+  constructor(private readonly validator: Ajv, private readonly schemaGenerator: SchemaGenerator) {}
 
   public getProblems(data: Data, expectedType: string): Optional<Problem[]> {
     switch (expectedType) {

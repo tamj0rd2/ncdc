@@ -1,0 +1,98 @@
+import { ErrorObject } from 'ajv'
+import { DetailedProblem } from './problem'
+import { Data } from './types'
+
+describe('DetailedProblem', () => {
+  it('can be constructed from an ErrorObject', () => {
+    const errorObj: Partial<ErrorObject> = {
+      dataPath: 'my.property',
+      message: 'Hello',
+      parentSchema: { $schema: 'my schema' },
+      data: { woah: 'dude' },
+    }
+
+    const problem = new DetailedProblem(errorObj as ErrorObject)
+
+    expect(problem.path).toBe('my.property')
+    expect(problem.message).toBe('Hello')
+    expect(problem.data).toStrictEqual({ woah: 'dude' })
+    expect(problem.schema).toStrictEqual({ $schema: 'my schema' })
+  })
+
+  describe('data', () => {
+    it('truncates strings within the data', () => {
+      const longString = 'Hello. I guess this is around 50 characters, right? Yup!'
+      const expectedString = 'Hello. I guess this is around 50 characters, right...'
+      const errorObj: Partial<ErrorObject> = {
+        dataPath: 'my.property',
+        data: {
+          woah: longString,
+          nested: {
+            woah: longString,
+            array: [longString],
+          },
+        },
+      }
+
+      const problem = new DetailedProblem(errorObj as ErrorObject)
+
+      expect(problem.data).toStrictEqual({
+        woah: expectedString,
+        nested: { woah: expectedString, array: [expectedString] },
+      })
+    })
+
+    it('truncates returned data without modifying the original', () => {
+      const longString = 'Hello. I guess this is around 50 characters, right? Yup!'
+      const errorObj: Partial<ErrorObject> = {
+        dataPath: 'my.property',
+        // data: [longString, longString, { blah: longString }],
+        data: {
+          woah: longString,
+          num: 567,
+          nested: {
+            woah: longString,
+            array: [longString, { blah: longString }, 123, false],
+          },
+          isAllGoodMan: true,
+        },
+      }
+
+      new DetailedProblem(errorObj as ErrorObject)
+
+      expect(errorObj.data).toStrictEqual({
+        woah: longString,
+        num: 567,
+        nested: {
+          woah: longString,
+          array: [longString, { blah: longString }, 123, false],
+        },
+        isAllGoodMan: true,
+      })
+    })
+
+    const simpleDataCases: Data[] = [
+      [
+        'Hello. I guess this is around 50 characters, right? Yup!',
+        'Hello. I guess this is around 50 characters, right...',
+      ],
+      ['Under 50!', 'Under 50!'],
+      [
+        2984729831349017481234129348123412341234274982734193,
+        2984729831349017481234129348123412341234274982734193,
+      ],
+      [true, true],
+    ]
+
+    it.each(simpleDataCases)('it truncates "%s" appropriately', (original, expected) => {
+      const errorObj: Partial<ErrorObject> = {
+        dataPath: 'wow',
+        data: original,
+      }
+
+      const problem = new DetailedProblem(errorObj as ErrorObject)
+
+      expect(problem.data).toStrictEqual(expected)
+    })
+  })
+})

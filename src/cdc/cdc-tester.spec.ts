@@ -4,7 +4,7 @@ import TypeValidator from '../validation/type-validator'
 import { ResponseConfig } from '../config'
 import * as _messages from '../messages'
 import * as _problem from '../problem'
-import DetailedProblem from '../problem'
+import Problem from '../problem'
 
 jest.mock('../messages')
 jest.mock('../problem')
@@ -108,8 +108,8 @@ describe('CDC Tester', () => {
   it('returns a problem when the response body does not match expected', async () => {
     loader.get.mockResolvedValue({ data: 'response bro' })
     messages.shouldBe.mockReturnValue('message')
-    const expectedProblem: Partial<DetailedProblem> = { path: 'you did it!' }
-    problemCtor.mockImplementation(() => expectedProblem as DetailedProblem)
+    const expectedProblem: Partial<Problem> = { path: 'you did it!' }
+    problemCtor.mockImplementation(() => expectedProblem as Problem)
 
     const results = await cdcTester.test({ body: 'response yo' }, 'endpoint', 'GET')
 
@@ -119,8 +119,8 @@ describe('CDC Tester', () => {
   })
 
   it('returns a problem when the response type does not match expected', async () => {
-    const expectedProblem: Partial<DetailedProblem> = { path: 'some path' }
-    typeValidator.getProblems.mockReturnValue([expectedProblem as DetailedProblem])
+    const expectedProblem: Partial<Problem> = { path: 'some path' }
+    typeValidator.getProblems.mockReturnValue([expectedProblem as Problem])
     loader.get.mockResolvedValue({ data: 'stuff' })
 
     const results = await cdcTester.test({ type: 'MyType' }, 'endpoint', 'GET')

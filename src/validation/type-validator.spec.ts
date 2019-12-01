@@ -2,7 +2,7 @@ import TypeValidator from './type-validator'
 import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
 import SchemaGenerator from './schema-loader'
 import { Data } from '../types'
-import DetailedProblem from '../problem'
+import Problem from '../problem'
 import * as _problems from '../problem'
 import * as _messages from '../messages'
 
@@ -32,9 +32,9 @@ describe('Type validator', () => {
     ]
 
     it.each(simpleFailCases)('returns a problem when the data is not a valid %s', (expectedType, data) => {
-      const mappedProblem: Public<DetailedProblem> = { path: 'hello' }
+      const mappedProblem: Public<Problem> = { path: 'hello' }
       messages.shouldBe.mockReturnValue('yo')
-      problemCtor.mockImplementation(() => mappedProblem as DetailedProblem)
+      problemCtor.mockImplementation(() => mappedProblem as Problem)
 
       const problems = typeValidator.getProblems(data, expectedType)
 
@@ -91,8 +91,8 @@ describe('Type validator', () => {
       validator.errors = [error1 as ErrorObject, error2 as ErrorObject]
       ajv.compile.mockReturnValue(validator)
       problemCtor
-        .mockImplementationOnce(() => error1 as DetailedProblem)
-        .mockImplementationOnce(() => error2 as DetailedProblem)
+        .mockImplementationOnce(() => error1 as Problem)
+        .mockImplementationOnce(() => error2 as Problem)
 
       const problems = typeValidator.getProblems({}, 'AnotherType')
 

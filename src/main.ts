@@ -5,7 +5,7 @@ import TypeValidator from './validation/type-validator'
 import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
 import { readFileSync } from 'fs'
-import DetailedProblem from './problem'
+import Problem from './problem'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -21,7 +21,7 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
 }
 
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
+  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
 
   public async serve(port: number): Promise<void> {
     const mockConfigs = readConfig<MockConfig>(this.configPath).filter(
@@ -95,7 +95,7 @@ export default class Main {
     return Promise.all(testTasks)
   }
 
-  private logValidationErrors = (problems: DetailedProblem[]): void => {
+  private logValidationErrors = (problems: Problem[]): void => {
     groupBy(problems, x => x.path).forEach((groupedProblems, dataPath) => {
       groupedProblems.forEach(({ message }) => console.log(chalk.blue('<root>' + dataPath), message))
       const { data, schema } = groupedProblems[0]
@@ -113,7 +113,7 @@ export default class Main {
   }
 
   private logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
-    problems: DetailedProblem[],
+    problems: Problem[],
   ): void => {
     const displayEndpoint = chalk.blue(`${baseUrl}${endpoint}`)
     if (!problems.length) {

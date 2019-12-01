@@ -1,5 +1,5 @@
 import { ErrorObject } from 'ajv'
-import DetailedProblem, { ProblemContext } from './problem'
+import Problem, { ProblemContext } from './problem'
 import { Data } from './types'
 
 describe('DetailedProblem', () => {
@@ -11,7 +11,7 @@ describe('DetailedProblem', () => {
       data: { woah: 'dude' },
     }
 
-    const problem = new DetailedProblem(errorObj as ErrorObject)
+    const problem = new Problem(errorObj as ErrorObject)
 
     expect(problem.path).toBe('<root>my.property')
     expect(problem.message).toBe('Hello')
@@ -24,7 +24,7 @@ describe('DetailedProblem', () => {
       dataPath: '',
     }
 
-    const problem = new DetailedProblem(errorObj as ErrorObject)
+    const problem = new Problem(errorObj as ErrorObject)
 
     expect(problem.path).toBe('<root>')
   })
@@ -35,7 +35,7 @@ describe('DetailedProblem', () => {
       data: { woah: 'man' },
     }
 
-    const problem = new DetailedProblem(context)
+    const problem = new Problem(context)
 
     expect(problem.path).toBe('<root>')
     expect(problem.message).toBe('Hello, world!')
@@ -58,7 +58,7 @@ describe('DetailedProblem', () => {
         },
       }
 
-      const problem = new DetailedProblem(errorObj as ErrorObject)
+      const problem = new Problem(errorObj as ErrorObject)
 
       expect(problem.data).toStrictEqual({
         woah: expectedString,
@@ -81,7 +81,7 @@ describe('DetailedProblem', () => {
         },
       }
 
-      new DetailedProblem(errorObj as ErrorObject)
+      new Problem(errorObj as ErrorObject)
 
       expect(errorObj.data).toStrictEqual({
         woah: longString,
@@ -113,7 +113,7 @@ describe('DetailedProblem', () => {
         data: original,
       }
 
-      const problem = new DetailedProblem(errorObj as ErrorObject)
+      const problem = new Problem(errorObj as ErrorObject)
 
       expect(problem.data).toStrictEqual(expected)
     })

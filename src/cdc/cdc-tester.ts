@@ -3,17 +3,17 @@ import { ResponseConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
 import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode, shouldBe } from '../messages'
 import { SupportedMethod } from '../types'
-import DetailedProblem from '../problem'
+import Problem from '../problem'
 
 export default class CDCTester {
-  constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
+  constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) { }
 
   public async test(
     responseConfig: ResponseConfig,
     endpoint: string,
     method: SupportedMethod,
-  ): Promise<DetailedProblem[]> {
-    const problems: DetailedProblem[] = []
+  ): Promise<Problem[]> {
+    const problems: Problem[] = []
 
     let response: AxiosResponse
     try {
@@ -34,18 +34,18 @@ export default class CDCTester {
 
     if (responseConfig.code && response.status !== responseConfig.code) {
       problems.push(
-        new DetailedProblem({
+        new Problem({
           data: response.status,
           message: shouldBe('status code', responseConfig.code, response.status),
         }),
       )
     }
 
-    const blah = new DetailedProblem({ data: '', message: 'yo' })
+    const blah = new Problem({ data: '', message: 'yo' })
 
     if (responseConfig.body && response.data !== responseConfig.body) {
       problems.push(
-        new DetailedProblem({
+        new Problem({
           data: response.data,
           message: shouldBe('body', responseConfig.body, response.data),
         }),

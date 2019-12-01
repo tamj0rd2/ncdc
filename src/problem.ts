@@ -12,7 +12,7 @@ const is = <T extends ProblemContext>(ctx: ProblemContext, prop: keyof T): ctx i
   (ctx as T)[prop] !== undefined
 
 // TODO: switch to using Public<DetailedProblem> in tests
-export default class DetailedProblem {
+export default class Problem {
   private readonly _path?: string
   public readonly message?: string
   public readonly data?: Data
@@ -40,9 +40,9 @@ export default class DetailedProblem {
       return Array.isArray(data)
         ? data.map(this.mapData)
         : Object.keys(data).reduce<DataObject>((accum, key) => {
-            accum[key] = this.mapData(data[key])
-            return accum
-          }, {})
+          accum[key] = this.mapData(data[key])
+          return accum
+        }, {})
     return data
   }
 }

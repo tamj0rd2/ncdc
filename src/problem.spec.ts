@@ -1,5 +1,5 @@
 import { ErrorObject } from 'ajv'
-import { DetailedProblem } from './problem'
+import DetailedProblem, { ProblemContext } from './problem'
 import { Data } from './types'
 
 describe('DetailedProblem', () => {
@@ -13,10 +13,34 @@ describe('DetailedProblem', () => {
 
     const problem = new DetailedProblem(errorObj as ErrorObject)
 
-    expect(problem.path).toBe('my.property')
+    expect(problem.path).toBe('<root>my.property')
     expect(problem.message).toBe('Hello')
     expect(problem.data).toStrictEqual({ woah: 'dude' })
     expect(problem.schema).toStrictEqual({ $schema: 'my schema' })
+  })
+
+  it('maps the path correctly when it is an empty string', () => {
+    const errorObj: Partial<ErrorObject> = {
+      dataPath: '',
+    }
+
+    const problem = new DetailedProblem(errorObj as ErrorObject)
+
+    expect(problem.path).toBe('<root>')
+  })
+
+  it('can be constructed from a custom context', () => {
+    const context: ProblemContext = {
+      message: 'Hello, world!',
+      data: { woah: 'man' },
+    }
+
+    const problem = new DetailedProblem(context)
+
+    expect(problem.path).toBe('<root>')
+    expect(problem.message).toBe('Hello, world!')
+    expect(problem.data).toStrictEqual({ woah: 'man' })
+    expect(problem.schema).toBeUndefined()
   })
 
   describe('data', () => {
@@ -46,7 +70,6 @@ describe('DetailedProblem', () => {
       const longString = 'Hello. I guess this is around 50 characters, right? Yup!'
       const errorObj: Partial<ErrorObject> = {
         dataPath: 'my.property',
-        // data: [longString, longString, { blah: longString }],
         data: {
           woah: longString,
           num: 567,

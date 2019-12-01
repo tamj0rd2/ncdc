@@ -1,23 +1,18 @@
 import { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
 import { ResponseConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
-import { MapToProblem, errorNoResponse, errorBadStatusCode, errorWrongStatusCode } from '../messages'
-import { DetailedProblem, SupportedMethod } from '../types'
-
-export type Problems = string | DetailedProblem[]
+import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode, shouldBe } from '../messages'
+import { SupportedMethod } from '../types'
+import DetailedProblem from '../problem'
 
 export default class CDCTester {
-  constructor(
-    private readonly loader: AxiosInstance,
-    private readonly typeValidator: TypeValidator,
-    private readonly mapToProblem: MapToProblem,
-  ) {}
+  constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
 
   public async test(
     responseConfig: ResponseConfig,
     endpoint: string,
     method: SupportedMethod,
-  ): Promise<Problems> {
+  ): Promise<DetailedProblem[]> {
     const problems: DetailedProblem[] = []
 
     let response: AxiosResponse
@@ -38,11 +33,23 @@ export default class CDCTester {
     }
 
     if (responseConfig.code && response.status !== responseConfig.code) {
-      problems.push(this.mapToProblem('status code', responseConfig.code, response.status))
+      problems.push(
+        new DetailedProblem({
+          data: response.status,
+          message: shouldBe('status code', responseConfig.code, response.status),
+        }),
+      )
     }
 
+    const blah = new DetailedProblem({ data: '', message: 'yo' })
+
     if (responseConfig.body && response.data !== responseConfig.body) {
-      problems.push(this.mapToProblem('body', responseConfig.body, response.data))
+      problems.push(
+        new DetailedProblem({
+          data: response.data,
+          message: shouldBe('body', responseConfig.body, response.data),
+        }),
+      )
     }
 
     if (responseConfig.type) {

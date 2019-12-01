@@ -1,25 +1,37 @@
 import { Data, DataObject } from './types'
 import { ErrorObject } from 'ajv'
 
-type ProblemContext = ErrorObject
+interface CustomContext {
+  data: Data
+  message: string
+}
+
+export type ProblemContext = ErrorObject | CustomContext
 
 const is = <T extends ProblemContext>(ctx: ProblemContext, prop: keyof T): ctx is T =>
   (ctx as T)[prop] !== undefined
 
-export class DetailedProblem {
-  public readonly path?: string
+// TODO: switch to using Public<DetailedProblem> in tests
+export default class DetailedProblem {
+  private readonly _path?: string
   public readonly message?: string
   public readonly data?: Data
   public readonly schema?: object
 
   public constructor(ctx: ProblemContext) {
     if (is<ErrorObject>(ctx, 'dataPath')) {
-      const { dataPath, message, data, parentSchema } = ctx
-      this.path = dataPath || undefined
-      this.message = message
-      this.data = this.mapData(data)
-      this.schema = parentSchema
+      this._path = ctx.dataPath
+      this.message = ctx.message
+      this.data = this.mapData(ctx.data)
+      this.schema = ctx.parentSchema
+    } else {
+      this.message = ctx.message
+      this.data = this.mapData(ctx.data)
     }
+  }
+
+  public get path(): string {
+    return `<root>${this._path ?? ''}`
   }
 
   private mapData = (data: Data): Data => {

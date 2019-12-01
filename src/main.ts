@@ -2,26 +2,10 @@ import readConfig, { MockConfig } from './config'
 import chalk from 'chalk'
 import { startServer } from './server'
 import TypeValidator from './validation/type-validator'
-import CDCTester, { Problems } from './cdc/cdc-tester'
-import { mapToProblem } from './messages'
+import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
 import { readFileSync } from 'fs'
-import { Data } from './types'
-
-function rTrunc<T extends { [index: string]: Data }>(obj: T): T {
-  for (const key in obj) {
-    switch (typeof obj[key]) {
-      case 'string':
-        if (obj[key].length > 30) obj[key] = `${obj[key].substring(0, 50)}...` as Data
-        break
-      case 'object':
-        rTrunc(obj[key])
-        break
-    }
-  }
-
-  return obj
-}
+import DetailedProblem from './problem'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -77,7 +61,6 @@ export default class Main {
         baseURL: baseUrl,
       }),
       this.typeValidator,
-      mapToProblem,
     )
 
     const resultsLogger = this.logTestResults(baseUrl)
@@ -112,18 +95,16 @@ export default class Main {
     return Promise.all(testTasks)
   }
 
-  private logValidationErrors = (problems: Problems): void => {
-    if (typeof problems === 'string') return console.log(problems + `\r\n`)
-
-    groupBy(problems, x => x.dataPath).forEach((groupedProblems, dataPath) => {
+  private logValidationErrors = (problems: DetailedProblem[]): void => {
+    groupBy(problems, x => x.path).forEach((groupedProblems, dataPath) => {
       groupedProblems.forEach(({ message }) => console.log(chalk.blue('<root>' + dataPath), message))
-      const { data, parentSchema } = groupedProblems[0]
+      const { data, schema } = groupedProblems[0]
 
       console.log(chalk.yellow('Data:'))
-      console.dir(rTrunc(data), { depth: dataPath ? 4 : 0 })
+      console.dir(data, { depth: dataPath ? 4 : 0 })
       if (!!dataPath) {
         console.log(chalk.yellow('Schema:'))
-        console.dir(parentSchema)
+        console.dir(schema)
       }
       console.log()
     })
@@ -132,7 +113,7 @@ export default class Main {
   }
 
   private logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
-    problems: Problems,
+    problems: DetailedProblem[],
   ): void => {
     const displayEndpoint = chalk.blue(`${baseUrl}${endpoint}`)
     if (!problems.length) {

@@ -1,14 +1,11 @@
 import { Ajv } from 'ajv'
 import SchemaGenerator from './schema-loader'
-import { MapToProblem } from '../messages'
-import { Data, DetailedProblem } from '../types'
+import { Data } from '../types'
+import DetailedProblem from '../problem'
+import { shouldBe } from '../messages'
 
 export default class TypeValidator {
-  constructor(
-    private readonly validator: Ajv,
-    private readonly schemaGenerator: SchemaGenerator,
-    private readonly mapToProblem: MapToProblem,
-  ) {}
+  constructor(private readonly validator: Ajv, private readonly schemaGenerator: SchemaGenerator) {}
 
   public getProblems(data: Data, expectedType: string): Optional<DetailedProblem[]> {
     switch (expectedType) {
@@ -26,19 +23,13 @@ export default class TypeValidator {
         const isValid = validator(data)
 
         if (isValid || !validator.errors) return
-        return validator.errors.map(
-          (error): DetailedProblem => ({
-            dataPath: error.dataPath,
-            data: error.data,
-            message: error.message,
-            parentSchema: error.parentSchema,
-          }),
-        )
+        return validator.errors.map(error => new DetailedProblem(error))
     }
   }
 
   private mapSimpleProblem(expectedType: string, data: Data): Optional<DetailedProblem[]> {
     const actualType = typeof data
-    if (actualType !== expectedType) return [this.mapToProblem('type', expectedType, actualType, data)]
+    if (actualType !== expectedType)
+      return [new DetailedProblem({ data, message: shouldBe('type', expectedType, actualType) })]
   }
 }

@@ -2,23 +2,24 @@ import CDCTester from './cdc-tester'
 import { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
 import TypeValidator from '../validation/type-validator'
 import { ResponseConfig } from '../config'
-import { MapToProblem } from '../messages'
-import { DetailedProblem } from '../types'
 import * as _messages from '../messages'
+import * as _problem from '../problem'
+import DetailedProblem from '../problem'
 
 jest.mock('../messages')
+jest.mock('../problem')
 
 describe('CDC Tester', () => {
   const loader = mockObj<AxiosInstance>({ get: jest.fn() })
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
-  const mapToProblem: jest.MockedFunction<MapToProblem> = jest.fn()
   const messages = mockObj(_messages)
+  const problemCtor = (_problem as jest.Mocked<typeof _problem>).default
 
   let cdcTester: CDCTester
 
   beforeEach(() => {
     jest.resetAllMocks()
-    cdcTester = new CDCTester(loader, typeValidator, mapToProblem)
+    cdcTester = new CDCTester(loader, typeValidator)
   })
 
   it('returns an empty list when there are no problems', async () => {
@@ -96,30 +97,30 @@ describe('CDC Tester', () => {
   })
 
   it('returns a problem when the response code does not match expected', async () => {
-    const expectedProblem: DetailedProblem = { dataPath: 'some path' }
-    mapToProblem.mockReturnValue(expectedProblem)
     loader.get.mockResolvedValue({ status: 404 })
 
     const results = await cdcTester.test({ code: 123 }, 'endpoint', 'GET')
 
-    expect(mapToProblem).toBeCalledWith('status code', 123, 404)
-    expect(results).toContain(expectedProblem)
+    expect(messages.shouldBe).toBeCalledWith('status code', 123, 404)
+    expect(results).toHaveLength(1)
   })
 
   it('returns a problem when the response body does not match expected', async () => {
-    const expectedProblem: DetailedProblem = { dataPath: 'some path' }
-    mapToProblem.mockReturnValue(expectedProblem)
     loader.get.mockResolvedValue({ data: 'response bro' })
+    messages.shouldBe.mockReturnValue('message')
+    const expectedProblem: Partial<DetailedProblem> = { path: 'you did it!' }
+    problemCtor.mockImplementation(() => expectedProblem as DetailedProblem)
 
     const results = await cdcTester.test({ body: 'response yo' }, 'endpoint', 'GET')
 
-    expect(mapToProblem).toBeCalledWith('body', 'response yo', 'response bro')
+    expect(messages.shouldBe).toBeCalledWith('body', 'response yo', 'response bro')
+    expect(problemCtor).toBeCalledWith({ message: 'message', data: 'response bro' })
     expect(results).toContain(expectedProblem)
   })
 
   it('returns a problem when the response type does not match expected', async () => {
-    const expectedProblem = { dataPath: 'some path' }
-    typeValidator.getProblems.mockReturnValue([expectedProblem])
+    const expectedProblem: Partial<DetailedProblem> = { path: 'some path' }
+    typeValidator.getProblems.mockReturnValue([expectedProblem as DetailedProblem])
     loader.get.mockResolvedValue({ data: 'stuff' })
 
     const results = await cdcTester.test({ type: 'MyType' }, 'endpoint', 'GET')

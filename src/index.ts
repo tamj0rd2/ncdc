@@ -4,7 +4,6 @@ import Main from './main'
 import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-loader'
-import { mapToProblem } from './messages'
 import chalk from 'chalk'
 
 const handleError = ({ stack, message }: Error): never => {
@@ -15,11 +14,7 @@ const handleError = ({ stack, message }: Error): never => {
 const createMain = (configPath: string, allErrors: boolean, tsconfigPath: string): Main => {
   try {
     return new Main(
-      new TypeValidator(
-        new ajv({ verbose: true, allErrors }),
-        new SchemaGenerator(tsconfigPath),
-        mapToProblem,
-      ),
+      new TypeValidator(new ajv({ verbose: true, allErrors }), new SchemaGenerator(tsconfigPath)),
       configPath,
     )
   } catch (err) {

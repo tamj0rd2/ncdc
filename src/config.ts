@@ -2,7 +2,7 @@ import * as yup from 'yup'
 import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 import chalk from 'chalk'
-import { SupportedMethod } from './types'
+import { SupportedMethod, Data } from './types'
 
 export interface RequestConfig {
   endpoint: string
@@ -33,12 +33,12 @@ const stringOrObject = yup.lazy(val => (typeof val === 'string' ? yup.string() :
 
 export interface ResponseConfig {
   code?: number
-  body?: string | object | number
+  body?: Data
   type?: string
 }
 
 interface MockResponseConfig extends ResponseConfig {
-  body: string | object
+  body: Data
   mockBody?: string
   mockPath?: string
 }

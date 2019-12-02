@@ -1,13 +1,13 @@
 import request from 'supertest'
-import { configureServer } from './server'
+import { configureServer, Log } from './server'
 import { MockConfig } from './config'
 
 describe('server', () => {
-  const defaultConfig = (endpoint = '/api/resource', name = 'Test'): MockConfig => ({
-    name: name,
-    request: { method: 'GET', endpoint },
+  const defaultConfig: MockConfig = {
+    name: 'Test',
+    request: { method: 'GET', endpoint: '/api/resource' },
     response: { body: 'Hello, world!' },
-  })
+  }
 
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
   const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
@@ -16,7 +16,7 @@ describe('server', () => {
   afterAll(() => jest.clearAllMocks())
 
   it('sends configurations when visiting /', async () => {
-    const configs: MockConfig[] = [defaultConfig()]
+    const configs: MockConfig[] = [defaultConfig]
 
     const app = configureServer('mysite.com', configs)
 
@@ -34,7 +34,7 @@ describe('server', () => {
   ]
 
   it.each(getCases)('serves the configured path %s', async (endpoint, pathToVisit) => {
-    const configs: MockConfig[] = [defaultConfig(endpoint)]
+    const configs: MockConfig[] = [{ ...defaultConfig, request: { method: 'GET', endpoint } }]
     const app = configureServer('mysite.com', configs)
 
     await request(app)
@@ -44,9 +44,12 @@ describe('server', () => {
   })
 
   it('logs registration for each configured endpoint', () => {
-    const configs: MockConfig[] = [defaultConfig(), defaultConfig('/api/books/:id', 'Test2')]
+    const configs: MockConfig[] = [
+      defaultConfig,
+      { ...defaultConfig, name: 'Test2', request: { method: 'GET', endpoint: '/api/books/:id' } },
+    ]
 
-    const app = configureServer('mysite.com', configs)
+    configureServer('mysite.com', configs)
 
     expect(consoleSpy).toBeCalledTimes(2)
     expect(consoleSpy.mock.calls[0][0]).toMatch(/Registered mysite.com\/api\/resource from config:.*Test/)
@@ -55,21 +58,40 @@ describe('server', () => {
 
   it('shows logs for previous requests at /logs', async () => {
     dateSpy.mockReturnValue(0)
-    const configs: MockConfig[] = [defaultConfig('/api/resource/:id')]
+    const configs: MockConfig[] = [
+      {
+        name: 'Boom',
+        request: { method: 'GET', endpoint: '/api/resource/:id' },
+        response: { body: 'Hello, world!', code: 404 },
+      },
+    ]
     const app = configureServer('mysite.com', configs)
 
-    await request(app).get('/api/resource/22?ayy=lmao')
-    const { body } = await request(app)
-      .get('/logs')
-      .expect(200)
-      .expect('Content-Type', /json/)
+    await request(app)
+      .get('/api/resource/22?ayy=lmao')
+      .expect(404)
+    const body = (
+      await request(app)
+        .get('/logs')
+        .expect(200)
+        .expect('Content-Type', /json/)
+    ).body as Log[]
 
     expect(body).toHaveLength(1)
     expect(body[0]).toMatchObject({
-      method: 'GET',
-      path: '/api/resource/22',
-      query: { ayy: 'lmao' },
-      headers: {},
+      config: 'Boom',
+      timestamp: '1970-01-01T00:00:00.000Z',
+      request: {
+        method: 'GET',
+        path: '/api/resource/22',
+        query: { ayy: 'lmao' },
+        headers: {},
+      },
+      response: {
+        body: 'Hello, world!',
+        status: 404,
+        headers: {},
+      },
     })
   })
 })

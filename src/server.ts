@@ -1,9 +1,18 @@
 import express, { Express, Request } from 'express'
 import { MockConfig } from './config'
 import chalk from 'chalk'
+import { OutgoingHttpHeaders } from 'http'
+import { Data } from './types'
 
-type RequestLog = Pick<Request, 'method' | 'path' | 'query' | 'headers'> & {
+export interface Log {
+  config: string
   timestamp: string
+  request: Pick<Request, 'method' | 'path' | 'query' | 'headers'>
+  response: {
+    headers: OutgoingHttpHeaders
+    status: number
+    body: Data
+  }
 }
 
 export const configureServer = (baseUrl: string, mockConfigs: MockConfig[]): Express => {
@@ -12,25 +21,35 @@ export const configureServer = (baseUrl: string, mockConfigs: MockConfig[]): Exp
   const logPath = '/logs'
   const ignoredLogPaths = [root, logPath]
 
-  const requestLogs: RequestLog[] = []
-  app.use(({ method, path, query, headers }, _, next) => {
-    if (ignoredLogPaths.includes(path)) return next()
-    // TODO: it'd be cool to log the name of the configuration too
-    requestLogs.push({ method, path, timestamp: new Date(Date.now()).toJSON(), query, headers })
-    next()
-  })
+  const logs: Log[] = []
+  mockConfigs.forEach(({ name, request: requestConfig, response: responseConfig }) => {
+    const endpoint = (requestConfig.mockEndpoint ?? requestConfig.endpoint).split('?')[0]
 
-  mockConfigs.forEach(({ name, request, response }) => {
-    const endpoint = (request.mockEndpoint ?? request.endpoint).split('?')[0]
+    if (requestConfig.method === 'GET') {
+      app.get(endpoint, ({ method, path, query, headers }, res) => {
+        if (responseConfig.code) res.status(responseConfig.code)
+        res.send(responseConfig.body)
 
-    if (request.method === 'GET') {
-      app.get(endpoint, (_, res) => res.send(response.body))
+        // TODO: I want these logging to the console too
+        if (!ignoredLogPaths.includes(path)) {
+          logs.push({
+            config: name,
+            timestamp: new Date(Date.now()).toJSON(),
+            request: { method, path, query, headers },
+            response: {
+              headers: res.getHeaders(),
+              status: res.statusCode,
+              body: responseConfig.body,
+            },
+          })
+        }
+      })
       console.log(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
     }
   })
 
   app.get(root, (_, res) => res.json(mockConfigs))
-  app.get(logPath, (_, res) => res.json(requestLogs.reverse()))
+  app.get(logPath, (_, res) => res.json(logs.reverse()))
   return app
 }
 

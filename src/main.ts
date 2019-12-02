@@ -21,7 +21,7 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
 }
 
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
+  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
   public async serve(port: number): Promise<void> {
     const mockConfigs = readConfig<MockConfig>(this.configPath).filter(

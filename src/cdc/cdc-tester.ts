@@ -6,7 +6,7 @@ import { SupportedMethod } from '../types'
 import Problem from '../problem'
 
 export default class CDCTester {
-  constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) { }
+  constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
 
   public async test(
     responseConfig: ResponseConfig,
@@ -41,8 +41,6 @@ export default class CDCTester {
       )
     }
 
-    const blah = new Problem({ data: '', message: 'yo' })
-
     if (responseConfig.body && response.data !== responseConfig.body) {
       problems.push(
         new Problem({
@@ -53,7 +51,7 @@ export default class CDCTester {
     }
 
     if (responseConfig.type) {
-      const result = this.typeValidator.getProblems(response.data, responseConfig.type)
+      const result = await this.typeValidator.getProblems(response.data, responseConfig.type)
       if (result?.length) problems.push(...result)
     }
 

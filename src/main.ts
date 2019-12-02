@@ -30,8 +30,7 @@ export default class Main {
 
     if (!mockConfigs.length) return console.log('No mocks to run')
 
-    let mocksAreValid = true
-    mockConfigs.forEach(({ name, response }) => {
+    const validateTasks = mockConfigs.map(async ({ name, response }) => {
       if (response.type) {
         if (response.mockPath) {
           // TODO: it would be cool to make this async
@@ -40,16 +39,19 @@ export default class Main {
           response.body = response.mockBody ?? response.body
         }
 
-        const problems = this.typeValidator.getProblems(response.body, response.type)
+        const problems = await this.typeValidator.getProblems(response.body, response.type)
         if (problems) {
-          mocksAreValid = false
           console.error(chalk.red.bold('FAILED:'), chalk.red(name))
           this.logValidationErrors(problems)
+          return false
         }
       }
+
+      return true
     })
 
-    if (mocksAreValid) return startServer(port, mockConfigs)
+    const results = await Promise.all(validateTasks)
+    if (!results.includes(false)) return startServer(port, mockConfigs)
   }
 
   public async test(baseUrl: string): Promise<void | void[]> {

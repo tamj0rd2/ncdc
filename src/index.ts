@@ -6,6 +6,7 @@ import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-loader'
 import chalk from 'chalk'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError = ({ stack, message }: Error): never => {
   console.error(chalk.red(message))
   process.exit(1)

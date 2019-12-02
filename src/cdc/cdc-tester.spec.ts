@@ -120,7 +120,7 @@ describe('CDC Tester', () => {
 
   it('returns a problem when the response type does not match expected', async () => {
     const expectedProblem: Public<Problem> = { path: 'some path' }
-    typeValidator.getProblems.mockReturnValue([expectedProblem as Problem])
+    typeValidator.getProblems.mockResolvedValue([expectedProblem as Problem])
     loader.get.mockResolvedValue({ data: 'stuff' })
 
     const results = await cdcTester.test({ type: 'MyType' }, 'endpoint', 'GET')

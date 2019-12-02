@@ -31,17 +31,20 @@ describe('Type validator', () => {
       ['object', false],
     ]
 
-    it.each(simpleFailCases)('returns a problem when the data is not a valid %s', (expectedType, data) => {
-      const mappedProblem: Public<Problem> = { path: 'hello' }
-      messages.shouldBe.mockReturnValue('yo')
-      problemCtor.mockImplementation(() => mappedProblem as Problem)
+    it.each(simpleFailCases)(
+      'returns a problem when the data is not a valid %s',
+      async (expectedType, data) => {
+        const mappedProblem: Public<Problem> = { path: 'hello' }
+        messages.shouldBe.mockReturnValue('yo')
+        problemCtor.mockImplementation(() => mappedProblem as Problem)
 
-      const problems = typeValidator.getProblems(data, expectedType)
+        const problems = await typeValidator.getProblems(data, expectedType)
 
-      expect(messages.shouldBe).toBeCalledWith('type', expectedType, typeof data)
-      expect(problemCtor).toBeCalledWith({ data, message: 'yo' })
-      expect(problems).toStrictEqual([mappedProblem])
-    })
+        expect(messages.shouldBe).toBeCalledWith('type', expectedType, typeof data)
+        expect(problemCtor).toBeCalledWith({ data, message: 'yo' })
+        expect(problems).toStrictEqual([mappedProblem])
+      },
+    )
 
     const simpleSuccessCases: [string, Data][] = [
       ['string', '123'],
@@ -52,8 +55,8 @@ describe('Type validator', () => {
 
     it.each(simpleSuccessCases)(
       'does not return anything when the data is a valid %s',
-      (expectedType, data) => {
-        const problems = typeValidator.getProblems(data, expectedType)
+      async (expectedType, data) => {
+        const problems = await typeValidator.getProblems(data, expectedType)
 
         expect(problemCtor).not.toBeCalled()
         expect(problems).toBeUndefined()
@@ -62,25 +65,25 @@ describe('Type validator', () => {
   })
 
   describe('custom types', () => {
-    it('does not return anything when the data is valid', () => {
+    it('does not return anything when the data is valid', async () => {
       ajv.compile.mockReturnValue(jest.fn(() => true))
 
-      const problems = typeValidator.getProblems([], 'CrazyType')
+      const problems = await typeValidator.getProblems([], 'CrazyType')
 
       expect(problemCtor).not.toBeCalled()
       expect(problems).toBeUndefined()
     })
 
-    it('does not return anything when there are no validation errors', () => {
+    it('does not return anything when there are no validation errors', async () => {
       ajv.compile.mockReturnValue(jest.fn())
 
-      const problems = typeValidator.getProblems([], 'CrazyType')
+      const problems = await typeValidator.getProblems([], 'CrazyType')
 
       expect(problemCtor).not.toBeCalled()
       expect(problems).toBeUndefined()
     })
 
-    it('returns problems when there are validation errors', () => {
+    it('returns problems when there are validation errors', async () => {
       const validator: jest.MockedFunction<ValidateFunction> = jest.fn().mockReturnValue(false)
       const error1: Partial<ErrorObject> = {
         message: 'hey',
@@ -94,7 +97,7 @@ describe('Type validator', () => {
         .mockImplementationOnce(() => error1 as Problem)
         .mockImplementationOnce(() => error2 as Problem)
 
-      const problems = typeValidator.getProblems({}, 'AnotherType')
+      const problems = await typeValidator.getProblems({}, 'AnotherType')
 
       expect(problems).toStrictEqual([error1, error2])
     })

@@ -7,7 +7,7 @@ import { shouldBe } from '../messages'
 export default class TypeValidator {
   constructor(private readonly validator: Ajv, private readonly schemaGenerator: SchemaGenerator) {}
 
-  public getProblems(data: Data, expectedType: string): Optional<Problem[]> {
+  public async getProblems(data: Data, expectedType: string): Promise<Optional<Problem[]>> {
     switch (expectedType) {
       case 'string':
         return this.mapSimpleProblem('string', data)

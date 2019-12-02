@@ -1,4 +1,4 @@
-import readConfig, { MockConfig } from './config'
+import { MockConfig, TestConfig } from './config'
 import chalk from 'chalk'
 import { startServer } from './server'
 import TypeValidator from './validation/type-validator'
@@ -23,17 +23,12 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
 export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
-  public async serve(port: number): Promise<void> {
-    const mockConfigs = readConfig<MockConfig>(this.configPath).filter(
-      x => x.response.mockPath || x.response.mockBody || x.response.body,
-    )
-
-    if (!mockConfigs.length) return console.log('No mocks to run')
-
+  public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
     const validateTasks = mockConfigs.map(async ({ name, response }) => {
       if (response.type) {
         if (response.mockPath) {
           // TODO: it would be cool to make this async
+          // TODO: error handling :O
           response.body = JSON.parse(readFileSync(response.mockPath, 'utf-8'))
         } else {
           response.body = response.mockBody ?? response.body
@@ -54,10 +49,7 @@ export default class Main {
     if (!results.includes(false)) return startServer(port, mockConfigs)
   }
 
-  public async test(baseUrl: string): Promise<void | void[]> {
-    const testConfigs = readConfig(this.configPath).filter(x => x.request.endpoint)
-    if (!testConfigs.length) return console.log('No tests to run')
-
+  public async test(baseUrl: string, testConfigs: TestConfig[]): Promise<void | void[]> {
     const tester = new CDCTester(
       axios.create({
         baseURL: baseUrl,

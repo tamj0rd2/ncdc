@@ -5,6 +5,7 @@ import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-loader'
 import chalk from 'chalk'
+import readConfig, { MockConfig, TestConfig } from './config'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError = ({ stack, message }: Error): never => {
@@ -52,7 +53,7 @@ export default async function run(): Promise<void> {
             type: 'number',
             default: 4000,
           }),
-      async ({ configPath, port, allErrors, tsconfigPath }) => {
+      ({ configPath, port, allErrors, tsconfigPath }) => {
         if (!configPath) process.exit(1)
 
         if (isNaN(port)) {
@@ -61,9 +62,20 @@ export default async function run(): Promise<void> {
           return process.exit(1)
         }
 
+        let mockConfigs: MockConfig[]
+        try {
+          mockConfigs = readConfig<MockConfig>(configPath).filter(
+            x => x.response.mockPath || x.response.mockBody || x.response.body,
+          )
+        } catch (err) {
+          return handleError(err)
+        }
+
+        if (!mockConfigs.length) return console.log('No mocks to run')
+
         createMain(configPath, allErrors, tsconfigPath)
-          .serve(port)
-          .then(() => process.exit(0))
+          .serve(port, mockConfigs)
+          .then(() => process.exit())
           .catch(handleError)
       },
     )
@@ -80,12 +92,21 @@ export default async function run(): Promise<void> {
             describe: 'the URL that your endpoints should be accessed through',
             type: 'string',
           }),
-      async ({ configPath, baseUrl, allErrors, tsconfigPath }) => {
+      ({ configPath, baseUrl, allErrors, tsconfigPath }) => {
         if (!configPath || !baseUrl) process.exit(1)
 
+        let testConfigs: TestConfig[]
+        try {
+          testConfigs = readConfig(configPath).filter(x => x.request.endpoint)
+        } catch (err) {
+          return handleError(err)
+        }
+
+        if (!testConfigs.length) return console.log('No tests to run')
+
         createMain(configPath, allErrors, tsconfigPath)
-          .test(baseUrl)
-          .then(() => process.exit(0))
+          .test(baseUrl, testConfigs)
+          .then(() => process.exit())
           .catch(handleError)
       },
     )

@@ -11,7 +11,7 @@ export interface Log {
   response: {
     headers: OutgoingHttpHeaders
     status: number
-    body: Data
+    body?: Data
   }
 }
 

@@ -1,14 +1,9 @@
 import request from 'supertest'
 import { configureServer, Log } from './server'
 import { MockConfig } from './config'
+import ConfigBuilder from './config-builder'
 
 describe('server', () => {
-  const defaultConfig: MockConfig = {
-    name: 'Test',
-    request: { method: 'GET', endpoint: '/api/resource' },
-    response: { body: 'Hello, world!' },
-  }
-
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
   const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
 
@@ -16,7 +11,7 @@ describe('server', () => {
   afterAll(() => jest.clearAllMocks())
 
   it('sends configurations when visiting /', async () => {
-    const configs: MockConfig[] = [defaultConfig]
+    const configs: MockConfig[] = [new ConfigBuilder().build()]
 
     const app = configureServer('mysite.com', configs)
 
@@ -34,19 +29,23 @@ describe('server', () => {
   ]
 
   it.each(getCases)('serves the configured path %s', async (endpoint, pathToVisit) => {
-    const configs: MockConfig[] = [{ ...defaultConfig, request: { method: 'GET', endpoint } }]
+    const configs: MockConfig[] = [new ConfigBuilder().withEndpoint(endpoint).build()]
     const app = configureServer('mysite.com', configs)
 
     await request(app)
       .get(pathToVisit)
       .expect(200)
       .expect('Hello, world!')
+      .expect('Content-Type', /text\/html/)
   })
 
   it('logs registration for each configured endpoint', () => {
     const configs: MockConfig[] = [
-      defaultConfig,
-      { ...defaultConfig, name: 'Test2', request: { method: 'GET', endpoint: '/api/books/:id' } },
+      new ConfigBuilder().build(),
+      new ConfigBuilder()
+        .withName('Test2')
+        .withEndpoint('/api/books/:id')
+        .build(),
     ]
 
     configureServer('mysite.com', configs)
@@ -59,11 +58,12 @@ describe('server', () => {
   it('shows logs for previous requests at /logs', async () => {
     dateSpy.mockReturnValue(0)
     const configs: MockConfig[] = [
-      {
-        name: 'Boom',
-        request: { method: 'GET', endpoint: '/api/resource/:id' },
-        response: { body: 'Hello, world!', code: 404 },
-      },
+      new ConfigBuilder()
+        .withName('Boom')
+        .withEndpoint('/api/resource/:id')
+        .withResponseCode(404)
+        .withResponseBody('Hey!!')
+        .build(),
     ]
     const app = configureServer('mysite.com', configs)
 
@@ -88,10 +88,12 @@ describe('server', () => {
         headers: {},
       },
       response: {
-        body: 'Hello, world!',
+        body: 'Hey!!',
         status: 404,
         headers: {},
       },
     })
   })
+
+  it.todo('sets the Content-Type when provided')
 })

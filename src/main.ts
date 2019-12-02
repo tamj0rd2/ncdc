@@ -6,6 +6,7 @@ import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
 import { readFileSync } from 'fs'
 import Problem from './problem'
+import { Data } from './types'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -26,19 +27,21 @@ export default class Main {
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
     const validateTasks = mockConfigs.map(async ({ name, response }) => {
       if (response.type) {
-        if (response.mockPath) {
-          // TODO: it would be cool to make this async
-          // TODO: error handling :O
-          response.body = JSON.parse(readFileSync(response.mockPath, 'utf-8'))
-        } else {
-          response.body = response.mockBody ?? response.body
-        }
+        // TODO: would be cool to make reading async
+        const body: Optional<Data> = response.mockPath
+          ? JSON.parse(readFileSync(response.mockPath, 'utf-8'))
+          : response.mockBody ?? response.body
 
-        const problems = await this.typeValidator.getProblems(response.body, response.type)
-        if (problems) {
-          console.error(chalk.red.bold('FAILED:'), chalk.red(name))
-          this.logValidationErrors(problems)
-          return false
+        // TODO: need to return the body or do some mapping, so that the server actually
+        // can use the body we've determined. Should do the same with mockBody too
+        // server should receive a single source of truth for creating routes
+        if (body) {
+          const problems = await this.typeValidator.getProblems(body, response.type)
+          if (problems) {
+            console.error(chalk.red.bold('FAILED:'), chalk.red(name))
+            this.logValidationErrors(problems)
+            return false
+          }
         }
       }
 

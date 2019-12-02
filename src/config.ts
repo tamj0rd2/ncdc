@@ -3,6 +3,7 @@ import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 import chalk from 'chalk'
 import { SupportedMethod, Data } from './types'
+import { OutgoingHttpHeaders } from 'http'
 
 export interface RequestConfig {
   endpoint: string
@@ -10,7 +11,7 @@ export interface RequestConfig {
   params?: (string | string[])[]
 }
 
-interface MockRequestConfig extends RequestConfig {
+export interface MockRequestConfig extends RequestConfig {
   mockEndpoint?: string
 }
 
@@ -35,19 +36,20 @@ export interface ResponseConfig {
   code?: number
   body?: Data
   type?: string
+  headers?: OutgoingHttpHeaders
 }
 
-interface MockResponseConfig extends ResponseConfig {
-  body: Data
-  mockBody?: string
+export interface MockResponseConfig extends ResponseConfig {
+  mockBody?: Data
   mockPath?: string
 }
 
 const responseSchema = yup
   .object({
     code: yup.number(),
-    type: yup.string(),
     body: stringOrObject,
+    type: yup.string(),
+    headers: yup.object(),
     mockBody: stringOrObject,
     mockPath: yup.string(),
   })

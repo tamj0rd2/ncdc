@@ -1,11 +1,23 @@
 import express, { Express, Request } from 'express'
-import { MockConfig } from './config'
 import chalk from 'chalk'
 import { OutgoingHttpHeaders } from 'http'
-import { Data } from './types'
+import { Data, SupportedMethod } from '../types'
+
+export interface RouteConfig {
+  name: string
+  request: {
+    method: SupportedMethod
+    endpoint: string
+  }
+  response: {
+    code?: number
+    headers?: OutgoingHttpHeaders
+    body?: Data
+  }
+}
 
 export interface Log {
-  config: string
+  name: string
   timestamp: string
   request: Pick<Request, 'method' | 'path' | 'query' | 'headers'>
   response: {
@@ -15,45 +27,48 @@ export interface Log {
   }
 }
 
-export const configureServer = (baseUrl: string, mockConfigs: MockConfig[]): Express => {
+export const configureServer = (baseUrl: string, mockConfigs: RouteConfig[]): Express => {
   const app = express()
   const root = '/'
   const logPath = '/logs'
   const ignoredLogPaths = [root, logPath]
 
+  // TODO: I want very basic logs for each request in the console too
   const logs: Log[] = []
-  mockConfigs.forEach(({ name, request: requestConfig, response: responseConfig }) => {
-    const endpoint = (requestConfig.mockEndpoint ?? requestConfig.endpoint).split('?')[0]
+  app.get(root, (_, res) => res.json(mockConfigs))
+  app.get(logPath, (_, res) => res.json(logs.reverse()))
 
-    if (requestConfig.method === 'GET') {
+  mockConfigs.forEach(({ name, request, response }) => {
+    const endpoint = request.endpoint.split('?')[0]
+
+    if (request.method === 'GET') {
       app.get(endpoint, ({ method, path, query, headers }, res) => {
-        if (responseConfig.code) res.status(responseConfig.code)
-        res.send(responseConfig.body)
+        if (response.code) res.status(response.code)
+        if (response.headers) res.set(response.headers)
 
-        // TODO: I want these logging to the console too
         if (!ignoredLogPaths.includes(path)) {
           logs.push({
-            config: name,
+            name,
             timestamp: new Date(Date.now()).toJSON(),
             request: { method, path, query, headers },
             response: {
               headers: res.getHeaders(),
               status: res.statusCode,
-              body: responseConfig.body,
+              body: response.body,
             },
           })
         }
+
+        res.send(response.body)
       })
       console.log(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
     }
   })
 
-  app.get(root, (_, res) => res.json(mockConfigs))
-  app.get(logPath, (_, res) => res.json(logs.reverse()))
   return app
 }
 
-export const startServer = (port: number, routes: MockConfig[]): Promise<void> => {
+export const startServer = (port: number, routes: RouteConfig[]): Promise<void> => {
   return new Promise(resolve => {
     const serverRoot = `http://localhost:${port}`
     const app = configureServer(serverRoot, routes)

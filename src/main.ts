@@ -1,6 +1,6 @@
 import { MockConfig, TestConfig } from './config'
 import chalk from 'chalk'
-import { startServer } from './server'
+import { startServer, RouteConfig } from './serve/server'
 import TypeValidator from './validation/type-validator'
 import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
@@ -25,31 +25,33 @@ export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
-    const validateTasks = mockConfigs.map(async ({ name, response }) => {
-      if (response.type) {
+    const validateTasks = mockConfigs.map(
+      async ({ name, request, response }): Promise<Optional<RouteConfig>> => {
+        // TODO: needs error handling!
         // TODO: would be cool to make reading async
-        const body: Optional<Data> = response.mockPath
-          ? JSON.parse(readFileSync(response.mockPath, 'utf-8'))
+        const body = response.mockPath
+          ? (JSON.parse(readFileSync(response.mockPath, 'utf-8')) as Data)
           : response.mockBody ?? response.body
 
-        // TODO: need to return the body or do some mapping, so that the server actually
-        // can use the body we've determined. Should do the same with mockBody too
-        // server should receive a single source of truth for creating routes
-        if (body) {
+        if (response.type && body) {
           const problems = await this.typeValidator.getProblems(body, response.type)
           if (problems) {
             console.error(chalk.red.bold('FAILED:'), chalk.red(name))
             this.logValidationErrors(problems)
-            return false
+            return
           }
         }
-      }
 
-      return true
-    })
+        return {
+          name,
+          request: { method: request.method, endpoint: request.mockEndpoint ?? request.endpoint },
+          response: { code: response.code, headers: response.headers, body },
+        }
+      },
+    )
 
-    const results = await Promise.all(validateTasks)
-    if (!results.includes(false)) return startServer(port, mockConfigs)
+    const routes: Optional<RouteConfig>[] = await Promise.all(validateTasks)
+    if (!routes.includes(undefined)) return startServer(port, routes as RouteConfig[])
   }
 
   public async test(baseUrl: string, testConfigs: TestConfig[]): Promise<void | void[]> {

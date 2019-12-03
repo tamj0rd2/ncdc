@@ -1,7 +1,6 @@
 import request from 'supertest'
 import { configureServer, Log } from './server'
-import { MockConfig } from './config'
-import ConfigBuilder from './config-builder'
+import RouteConfigBuilder from './route-config-builder'
 
 describe('server', () => {
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
@@ -11,7 +10,7 @@ describe('server', () => {
   afterAll(() => jest.clearAllMocks())
 
   it('sends configurations when visiting /', async () => {
-    const configs: MockConfig[] = [new ConfigBuilder().build()]
+    const configs = [new RouteConfigBuilder().build()]
 
     const app = configureServer('mysite.com', configs)
 
@@ -29,7 +28,7 @@ describe('server', () => {
   ]
 
   it.each(getCases)('serves the configured path %s', async (endpoint, pathToVisit) => {
-    const configs: MockConfig[] = [new ConfigBuilder().withEndpoint(endpoint).build()]
+    const configs = [new RouteConfigBuilder().withEndpoint(endpoint).build()]
     const app = configureServer('mysite.com', configs)
 
     await request(app)
@@ -40,9 +39,9 @@ describe('server', () => {
   })
 
   it('logs registration for each configured endpoint', () => {
-    const configs: MockConfig[] = [
-      new ConfigBuilder().build(),
-      new ConfigBuilder()
+    const configs = [
+      new RouteConfigBuilder().build(),
+      new RouteConfigBuilder()
         .withName('Test2')
         .withEndpoint('/api/books/:id')
         .build(),
@@ -57,8 +56,8 @@ describe('server', () => {
 
   it('shows logs for previous requests at /logs', async () => {
     dateSpy.mockReturnValue(0)
-    const configs: MockConfig[] = [
-      new ConfigBuilder()
+    const configs = [
+      new RouteConfigBuilder()
         .withName('Boom')
         .withEndpoint('/api/resource/:id')
         .withResponseCode(404)
@@ -79,7 +78,7 @@ describe('server', () => {
 
     expect(body).toHaveLength(1)
     expect(body[0]).toMatchObject({
-      config: 'Boom',
+      name: 'Boom',
       timestamp: '1970-01-01T00:00:00.000Z',
       request: {
         method: 'GET',
@@ -95,5 +94,21 @@ describe('server', () => {
     })
   })
 
-  it.todo('sets the Content-Type when provided')
+  it('sets the response headers when provided', async () => {
+    const configs = [
+      new RouteConfigBuilder()
+        .withResponseHeaders({
+          'content-type': 'application/xml',
+          'another-header': 'my value',
+        })
+        .build(),
+    ]
+
+    const app = configureServer('mysite.com', configs)
+
+    await request(app)
+      .get(configs[0].request.endpoint)
+      .expect('Content-Type', /application\/xml/)
+      .expect('another-header', 'my value')
+  })
 })

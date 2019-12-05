@@ -62,6 +62,8 @@ export default class CDCTester {
     switch (method) {
       case 'GET':
         return await this.loader.get(endpoint)
+      case 'POST':
+        throw new Error('Not yet implemented')
     }
   }
 }

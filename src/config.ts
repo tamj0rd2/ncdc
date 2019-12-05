@@ -8,6 +8,8 @@ import { OutgoingHttpHeaders } from 'http'
 export interface RequestConfig {
   endpoint: string
   method: SupportedMethod
+  // TODO: add type checking for request body
+  body?: Data
   params?: (string | string[])[]
 }
 
@@ -15,22 +17,23 @@ export interface MockRequestConfig extends RequestConfig {
   mockEndpoint?: string
 }
 
+const stringOrObject = yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object()))
+
 const requestSchema = yup
   .object({
     endpoint: yup.string(),
     params: yup
       .array()
       .of(yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.array().of(yup.string())))),
+    body: stringOrObject,
     method: yup
       .string()
       .required()
-      .oneOf(['GET']),
+      .oneOf(['GET', 'POST']),
     mockEndpoint: yup.string(),
   })
   .noUnknown(true)
   .required()
-
-const stringOrObject = yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object()))
 
 export interface ResponseConfig {
   code?: number

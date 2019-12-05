@@ -27,12 +27,33 @@ describe('server', () => {
     ['/api/resource/:param', '/api/resource/something'],
   ]
 
-  it.each(getCases)('serves the configured path %s', async (endpoint, pathToVisit) => {
-    const configs = [new RouteConfigBuilder().withEndpoint(endpoint).build()]
+  it.each(getCases)('serves the configured path %s for GET requests', async (endpoint, pathToVisit) => {
+    const configs = [
+      new RouteConfigBuilder()
+        .withEndpoint(endpoint)
+        .withMethod('GET')
+        .build(),
+    ]
     const app = configureServer('mysite.com', configs)
 
     await request(app)
       .get(pathToVisit)
+      .expect(200)
+      .expect('Hello, world!')
+      .expect('Content-Type', /text\/html/)
+  })
+
+  it.each(getCases)('serves the configured path %s for POST requests', async (endpoint, pathToVisit) => {
+    const configs = [
+      new RouteConfigBuilder()
+        .withEndpoint(endpoint)
+        .withMethod('POST')
+        .build(),
+    ]
+    const app = configureServer('mysite.com', configs)
+
+    await request(app)
+      .post(pathToVisit)
       .expect(200)
       .expect('Hello, world!')
       .expect('Content-Type', /text\/html/)

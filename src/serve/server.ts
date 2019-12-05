@@ -27,6 +27,11 @@ export interface Log {
   }
 }
 
+const verbsMap: { [K in SupportedMethod]: 'get' | 'post' } = {
+  GET: 'get',
+  POST: 'post',
+}
+
 export const configureServer = (baseUrl: string, mockConfigs: RouteConfig[]): Express => {
   const app = express()
   const root = '/'
@@ -38,31 +43,29 @@ export const configureServer = (baseUrl: string, mockConfigs: RouteConfig[]): Ex
   app.get(root, (_, res) => res.json(mockConfigs))
   app.get(logPath, (_, res) => res.json(logs.reverse()))
 
-  mockConfigs.forEach(({ name, request, response }) => {
+  mockConfigs.forEach(({ name, request, response }: RouteConfig) => {
     const endpoint = request.endpoint.split('?')[0]
 
-    if (request.method === 'GET') {
-      app.get(endpoint, ({ method, path, query, headers }, res) => {
-        if (response.code) res.status(response.code)
-        if (response.headers) res.set(response.headers)
+    app[verbsMap[request.method]](endpoint, ({ method, path, query, headers }, res) => {
+      if (response.code) res.status(response.code)
+      if (response.headers) res.set(response.headers)
 
-        if (!ignoredLogPaths.includes(path)) {
-          logs.push({
-            name,
-            timestamp: new Date(Date.now()).toJSON(),
-            request: { method, path, query, headers },
-            response: {
-              headers: res.getHeaders(),
-              status: res.statusCode,
-              body: response.body,
-            },
-          })
-        }
+      if (!ignoredLogPaths.includes(path)) {
+        logs.push({
+          name,
+          timestamp: new Date(Date.now()).toJSON(),
+          request: { method, path, query, headers },
+          response: {
+            headers: res.getHeaders(),
+            status: res.statusCode,
+            body: response.body,
+          },
+        })
+      }
 
-        res.send(response.body)
-      })
-      console.log(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
-    }
+      res.send(response.body)
+    })
+    console.log(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
   })
 
   return app

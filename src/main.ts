@@ -69,7 +69,7 @@ export default class Main {
 
       if (!requestConfig.params) {
         return tester
-          .test(responseConfig, requestConfig.endpoint, requestConfig.method)
+          .test(requestConfig, responseConfig)
           .then(resultsLogger(name, requestConfig.endpoint))
           .catch(this.logTestError(name))
       }
@@ -85,7 +85,7 @@ export default class Main {
           ) ?? requestConfig.endpoint
 
         return tester
-          .test(responseConfig, endpoint, requestConfig.method)
+          .test(requestConfig, responseConfig)
           .then(resultsLogger(displayName, endpoint))
           .catch(this.logTestError(displayName))
       })

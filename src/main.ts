@@ -4,9 +4,9 @@ import { startServer, RouteConfig } from './serve/server'
 import TypeValidator from './validation/type-validator'
 import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
-import { readFileSync } from 'fs'
+import { readFileSync, readFile } from 'fs'
 import Problem from './problem'
-import { Data } from './types'
+import { Data, DataObject, DataArray } from './types'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -21,16 +21,27 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   }, new Map<string, T[]>())
 }
 
+const readJsonAsync = (path: string): Promise<DataObject | DataArray> =>
+  new Promise<DataObject | DataArray>((resolve, reject) => {
+    readFile(path, (err, data) => {
+      if (err) return reject(err)
+
+      try {
+        resolve(JSON.parse(data.toString()))
+      } catch (err) {
+        reject(err)
+      }
+    })
+  })
+
 export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
     const validateTasks = mockConfigs.map(
       async ({ name, request, response }): Promise<Optional<RouteConfig>> => {
-        // TODO: needs error handling!
-        // TODO: would be cool to make reading async
         const body = response.mockPath
-          ? (JSON.parse(readFileSync(response.mockPath, 'utf-8')) as Data)
+          ? await readJsonAsync(response.mockPath)
           : response.mockBody ?? response.body
 
         if (response.type && body) {

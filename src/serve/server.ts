@@ -68,6 +68,8 @@ export const configureServer = (baseUrl: string, mockConfigs: RouteConfig[]): Ex
     console.log(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
   })
 
+  // TODO: show some useful output in the case of a genuine 404 - route not defined
+
   return app
 }
 

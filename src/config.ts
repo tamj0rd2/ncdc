@@ -10,6 +10,7 @@ export interface RequestConfig {
   method: SupportedMethod
   type?: string
   body?: Data
+  // TODO: needs testing. Can't even remember how this works
   params?: (string | string[])[]
 }
 

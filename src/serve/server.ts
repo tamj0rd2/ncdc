@@ -32,11 +32,26 @@ const verbsMap: { [K in SupportedMethod]: 'get' | 'post' } = {
   POST: 'post',
 }
 
-export const configureServer = (baseUrl: string, mockConfigs: RouteConfig[]): Express => {
+const mapLog = (
+  name: Optional<string>,
+  { method, path, query, headers, body }: Request,
+  res: Response,
+  responseBody?: Data,
+): Log => ({
+  name,
+  timestamp: new Date(Date.now()).toJSON(),
+  request: { method, path, query, headers, body },
+  response: {
+    headers: res.getHeaders(),
+    status: res.statusCode,
+    body: responseBody,
+  },
+})
+
   const app = express()
-  const root = '/'
-  const logPath = '/logs'
-  const ignoredLogPaths = [root, logPath]
+  const ROOT = '/'
+  const LOG_PATH = '/logs'
+  const ignoredLogPaths = [ROOT, LOG_PATH]
 
   // TODO: I want very basic logs for each request in the console too
   const logs: Log[] = []
@@ -68,7 +83,19 @@ export const configureServer = (baseUrl: string, mockConfigs: RouteConfig[]): Ex
     console.log(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
   })
 
-  // TODO: show some useful output in the case of a genuine 404 - route not defined
+  app.use((req, res) => {
+    res.status(404)
+
+    const body =
+      'NCDC ERROR: Could not find an endpoint to serve this request\n' +
+      `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations\n` +
+      `Go to ${baseUrl}${LOG_PATH} to see details about this request\n`
+    if (!ignoredLogPaths.includes(req.path)) {
+      logs.push(mapLog(undefined, req, res, body))
+    }
+
+    res.send(body)
+  })
 
   return app
 }

@@ -1,18 +1,20 @@
 import request from 'supertest'
 import { configureServer, Log } from './server'
 import RouteConfigBuilder from './route-config-builder'
+import TypeValidator from '../validation/type-validator'
 
 describe('server', () => {
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
   const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
+  const mockTypeValidator = mockObj<TypeValidator>({})
 
   afterEach(() => jest.resetAllMocks())
   afterAll(() => jest.clearAllMocks())
 
   it('sends configurations when visiting /', async () => {
-    const configs = [new RouteConfigBuilder().build()]
+    const configs = [new RouteConfigBuilder().withRequestBodyType('Some Type').build()]
 
-    const app = configureServer('mysite.com', configs)
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
 
     await request(app)
       .get('/')
@@ -34,7 +36,7 @@ describe('server', () => {
         .withMethod('GET')
         .build(),
     ]
-    const app = configureServer('mysite.com', configs)
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
 
     await request(app)
       .get(pathToVisit)
@@ -50,7 +52,7 @@ describe('server', () => {
         .withMethod('POST')
         .build(),
     ]
-    const app = configureServer('mysite.com', configs)
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
 
     await request(app)
       .post(pathToVisit)
@@ -68,7 +70,7 @@ describe('server', () => {
         .build(),
     ]
 
-    configureServer('mysite.com', configs)
+    configureServer('mysite.com', configs, mockTypeValidator)
 
     expect(consoleSpy).toBeCalledTimes(2)
     expect(consoleSpy.mock.calls[0][0]).toMatch(/Registered mysite.com\/api\/resource from config:.*Test/)
@@ -85,7 +87,7 @@ describe('server', () => {
         .withResponseBody('Hey!!')
         .build(),
     ]
-    const app = configureServer('mysite.com', configs)
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
 
     await request(app)
       .get('/api/resource/22?ayy=lmao')
@@ -125,11 +127,22 @@ describe('server', () => {
         .build(),
     ]
 
-    const app = configureServer('mysite.com', configs)
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
 
     await request(app)
       .get(configs[0].request.endpoint)
       .expect('Content-Type', /application\/xml/)
       .expect('another-header', 'my value')
+  })
+
+  it('returns a custom 404 when the requested endpoint could not be found', async () => {
+    const configs = [new RouteConfigBuilder().withEndpoint('/almost/correct').build()]
+
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
+
+    await request(app)
+      .get('/nearly/correct')
+      .expect(/NCDC ERROR: Could not find an endpoint/)
+      .expect(404)
   })
 })

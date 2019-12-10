@@ -9,6 +9,12 @@ export default class CDCTester {
   constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
 
   public async test(requestConfig: RequestConfig, responseConfig: ResponseConfig): Promise<Problem[]> {
+    // Checks that request type matches // TODO: this is definitely duplicated
+    // makes a request // TODO: only implementation detail differs
+    // makes sure code matches
+    // makes sure body matches expected body
+    // makes sure body matches expected type // TODO: this is definitely duplicated
+
     const problems: Problem[] = []
 
     if (requestConfig.type && requestConfig.body) {

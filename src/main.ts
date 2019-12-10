@@ -38,6 +38,9 @@ export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
+    // checks that request types match
+    // if type is specified, loads the body and checks the type matches
+
     const validateTasks = mockConfigs.map(
       async ({ name, request, response }): Promise<Optional<RouteConfig>> => {
         const body = response.mockPath

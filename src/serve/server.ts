@@ -1,13 +1,16 @@
-import express, { Express, Request } from 'express'
+import express, { Express, Request, Response } from 'express'
 import chalk from 'chalk'
 import { OutgoingHttpHeaders } from 'http'
 import { Data, SupportedMethod } from '../types'
+import TypeValidator from '../validation/type-validator'
+import { ProblemType } from '../problem'
 
 export interface RouteConfig {
   name: string
   request: {
     method: SupportedMethod
     endpoint: string
+    bodyType?: string
   }
   response: {
     code?: number
@@ -17,9 +20,9 @@ export interface RouteConfig {
 }
 
 export interface Log {
-  name: string
+  name?: string
   timestamp: string
-  request: Pick<Request, 'method' | 'path' | 'query' | 'headers'>
+  request: Pick<Request, 'method' | 'path' | 'query' | 'headers' | 'body'>
   response: {
     headers: OutgoingHttpHeaders
     status: number
@@ -48,6 +51,11 @@ const mapLog = (
   },
 })
 
+export const configureServer = (
+  baseUrl: string,
+  mockConfigs: RouteConfig[],
+  typeValidator: TypeValidator,
+): Express => {
   const app = express()
   const ROOT = '/'
   const LOG_PATH = '/logs'
@@ -55,27 +63,29 @@ const mapLog = (
 
   // TODO: I want very basic logs for each request in the console too
   const logs: Log[] = []
-  app.get(root, (_, res) => res.json(mockConfigs))
-  app.get(logPath, (_, res) => res.json(logs.reverse()))
+  app.use(express.text())
+  app.use(express.json())
+  app.use(express.urlencoded())
+  app.use(express.raw())
+  app.get(ROOT, (_, res) => res.json(mockConfigs))
+  app.get(LOG_PATH, (_, res) => res.json(logs.reverse()))
 
   mockConfigs.forEach(({ name, request, response }: RouteConfig) => {
     const endpoint = request.endpoint.split('?')[0]
 
-    app[verbsMap[request.method]](endpoint, ({ method, path, query, headers }, res) => {
+    app[verbsMap[request.method]](endpoint, async (req, res, next) => {
+      if (request.bodyType) {
+        const problems = await typeValidator.getProblems(req.body, request.bodyType, ProblemType.Request)
+        if (problems) {
+          // TODO: I want to somehow log these problems somewhere
+          return next()
+        }
+      }
+
       if (response.code) res.status(response.code)
       if (response.headers) res.set(response.headers)
-
-      if (!ignoredLogPaths.includes(path)) {
-        logs.push({
-          name,
-          timestamp: new Date(Date.now()).toJSON(),
-          request: { method, path, query, headers },
-          response: {
-            headers: res.getHeaders(),
-            status: res.statusCode,
-            body: response.body,
-          },
-        })
+      if (!ignoredLogPaths.includes(req.path)) {
+        logs.push(mapLog(name, req, res, response.body))
       }
 
       res.send(response.body)
@@ -87,7 +97,7 @@ const mapLog = (
     res.status(404)
 
     const body =
-      'NCDC ERROR: Could not find an endpoint to serve this request\n' +
+      'NCDC ERROR: Could not find an endpoint to serve this request\n\n' +
       `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations\n` +
       `Go to ${baseUrl}${LOG_PATH} to see details about this request\n`
     if (!ignoredLogPaths.includes(req.path)) {
@@ -100,10 +110,14 @@ const mapLog = (
   return app
 }
 
-export const startServer = (port: number, routes: RouteConfig[]): Promise<void> => {
+export const startServer = (
+  port: number,
+  routes: RouteConfig[],
+  typeValidator: TypeValidator,
+): Promise<void> => {
   return new Promise(resolve => {
     const serverRoot = `http://localhost:${port}`
-    const app = configureServer(serverRoot, routes)
+    const app = configureServer(serverRoot, routes, typeValidator)
 
     app.listen(port, () => {
       console.log(`\nEnpoints are being served on ${serverRoot}`)

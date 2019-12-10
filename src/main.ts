@@ -72,14 +72,18 @@ export default class Main {
 
         return {
           name,
-          request: { method: request.method, endpoint: request.mockEndpoint ?? request.endpoint },
+          request: {
+            method: request.method,
+            endpoint: request.mockEndpoint ?? request.endpoint,
+            bodyType: request.type,
+          },
           response: { code: response.code, headers: response.headers, body },
         }
       },
     )
 
     const routes: Optional<RouteConfig>[] = await Promise.all(validateTasks)
-    if (!routes.includes(undefined)) return startServer(port, routes as RouteConfig[])
+    if (!routes.includes(undefined)) return startServer(port, routes as RouteConfig[], this.typeValidator)
   }
 
   public async test(baseUrl: string, testConfigs: TestConfig[]): Promise<void | void[]> {

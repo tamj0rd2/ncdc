@@ -2,11 +2,12 @@ import request from 'supertest'
 import { configureServer, Log } from './server'
 import RouteConfigBuilder from './route-config-builder'
 import TypeValidator from '../validation/type-validator'
+import Problem from '../problem'
 
 describe('server', () => {
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
   const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
-  const mockTypeValidator = mockObj<TypeValidator>({})
+  const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
 
   afterEach(() => jest.resetAllMocks())
   afterAll(() => jest.clearAllMocks())
@@ -82,6 +83,7 @@ describe('server', () => {
     const configs = [
       new RouteConfigBuilder()
         .withName('Boom')
+        .withMethod('POST')
         .withEndpoint('/api/resource/:id')
         .withResponseCode(404)
         .withResponseBody('Hey!!')
@@ -90,7 +92,9 @@ describe('server', () => {
     const app = configureServer('mysite.com', configs, mockTypeValidator)
 
     await request(app)
-      .get('/api/resource/22?ayy=lmao')
+      .post('/api/resource/22?ayy=lmao')
+      .set('Content-Type', 'text/plain')
+      .send('Woah!')
       .expect(404)
     const body = (
       await request(app)
@@ -100,20 +104,19 @@ describe('server', () => {
     ).body as Log[]
 
     expect(body).toHaveLength(1)
-    expect(body[0]).toMatchObject({
-      name: 'Boom',
-      timestamp: '1970-01-01T00:00:00.000Z',
-      request: {
-        method: 'GET',
-        path: '/api/resource/22',
-        query: { ayy: 'lmao' },
-        headers: {},
-      },
-      response: {
-        body: 'Hey!!',
-        status: 404,
-        headers: {},
-      },
+    expect(body[0].name).toBe('Boom')
+    expect(body[0].timestamp).toBe('1970-01-01T00:00:00.000Z')
+    expect(body[0].request).toMatchObject({
+      method: 'POST',
+      path: '/api/resource/22',
+      query: { ayy: 'lmao' },
+      headers: {},
+      body: 'Woah!',
+    })
+    expect(body[0].response).toMatchObject({
+      body: 'Hey!!',
+      status: 404,
+      headers: {},
     })
   })
 
@@ -144,5 +147,46 @@ describe('server', () => {
       .get('/nearly/correct')
       .expect(/NCDC ERROR: Could not find an endpoint/)
       .expect(404)
+  })
+
+  it('returns the desired response when the request body passes validation', async () => {
+    const configs = [
+      new RouteConfigBuilder()
+        .withMethod('POST')
+        .withEndpoint('/config1')
+        .withRequestBodyType('number')
+        .withResponseCode(404)
+        .withResponseBody('Noice')
+        .build(),
+    ]
+
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
+
+    await request(app)
+      .post(configs[0].request.endpoint)
+      .send('Yo dude!')
+      .expect(404)
+      .expect('Noice')
+  })
+
+  it('gives a 404 when the request body fails type validation', async () => {
+    const configs = [
+      new RouteConfigBuilder()
+        .withMethod('POST')
+        .withEndpoint('/config1')
+        .withRequestBodyType('number')
+        .build(),
+    ]
+
+    const problem: Partial<Problem> = { message: 'Welp!' }
+    mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
+
+    const app = configureServer('mysite.com', configs, mockTypeValidator)
+
+    await request(app)
+      .post(configs[0].request.endpoint)
+      .send('Yo dude!')
+      .expect(404)
+      .expect(/NCDC ERROR: Could not find an endpoint/)
   })
 })

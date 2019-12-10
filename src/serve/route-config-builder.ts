@@ -26,7 +26,12 @@ export default class RouteConfigBuilder {
   }
 
   public withMockEndpoint(mockEndpoint: string): RouteConfigBuilder {
-    ; (this.config.request as MockRequestConfig).mockEndpoint = mockEndpoint
+    ;(this.config.request as MockRequestConfig).mockEndpoint = mockEndpoint
+    return this
+  }
+
+  public withRequestBodyType(bodyType: string): RouteConfigBuilder {
+    this.config.request.bodyType = bodyType
     return this
   }
 
@@ -46,12 +51,12 @@ export default class RouteConfigBuilder {
   }
 
   public withMockBody(mockBody: Data): RouteConfigBuilder {
-    ; (this.config.response as MockResponseConfig).mockBody = mockBody
+    ;(this.config.response as MockResponseConfig).mockBody = mockBody
     return this
   }
 
   public withMockPath(mockPath: string): RouteConfigBuilder {
-    ; (this.config.response as MockResponseConfig).mockPath = mockPath
+    ;(this.config.response as MockResponseConfig).mockPath = mockPath
     return this
   }
 

@@ -4,7 +4,7 @@ import TypeValidator from '../validation/type-validator'
 import { ResponseConfig, RequestConfig } from '../config'
 import * as _messages from '../messages'
 import * as _problem from '../problem'
-import Problem from '../problem'
+import Problem, { ProblemType } from '../problem'
 
 jest.mock('../messages')
 jest.mock('../problem')
@@ -150,13 +150,13 @@ describe('CDC Tester', () => {
     }
     loader.get.mockResolvedValue({ data: 'response bro' })
     messages.shouldBe.mockReturnValue('message')
-    const expectedProblem: Public<Problem> = { path: 'you did it!' }
+    const expectedProblem: Public<Problem> = { path: 'you did it!', problemType: ProblemType.Response }
     problemCtor.mockImplementation(() => expectedProblem as Problem)
 
     const results = await cdcTester.test(requestConfig, { body: 'response yo' })
 
     expect(messages.shouldBe).toBeCalledWith('body', 'response yo', 'response bro')
-    expect(problemCtor).toBeCalledWith({ message: 'message', data: 'response bro' })
+    expect(problemCtor).toBeCalledWith({ message: 'message', data: 'response bro' }, ProblemType.Response)
     expect(results).toContain(expectedProblem)
   })
 
@@ -165,7 +165,7 @@ describe('CDC Tester', () => {
       method: 'GET',
       endpoint: 'endpoint',
     }
-    const expectedProblem: Public<Problem> = { path: 'some path' }
+    const expectedProblem: Public<Problem> = { path: 'some path', problemType: ProblemType.Response }
     typeValidator.getProblems.mockResolvedValue([expectedProblem as Problem])
     loader.get.mockResolvedValue({ data: 'stuff' })
 

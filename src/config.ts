@@ -8,7 +8,8 @@ import { OutgoingHttpHeaders } from 'http'
 export interface RequestConfig {
   endpoint: string
   method: SupportedMethod
-  // TODO: add type checking for request body
+  // TODO: type check this for test mode
+  type?: string
   body?: Data
   params?: (string | string[])[]
 }
@@ -25,6 +26,7 @@ const requestSchema = yup
     params: yup
       .array()
       .of(yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.array().of(yup.string())))),
+    type: yup.string(),
     body: stringOrObject,
     method: yup
       .string()

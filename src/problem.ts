@@ -7,6 +7,10 @@ interface CustomContext {
 }
 
 export type ProblemContext = ErrorObject | CustomContext
+export enum ProblemType {
+  Request = 'Request',
+  Response = 'Response',
+}
 
 const is = <T extends ProblemContext>(ctx: ProblemContext, prop: keyof T): ctx is T =>
   (ctx as T)[prop] !== undefined
@@ -16,8 +20,11 @@ export default class Problem {
   public readonly message?: string
   public readonly data?: Data
   public readonly schema?: object
+  public readonly problemType: ProblemType
 
-  public constructor(ctx: ProblemContext) {
+  public constructor(ctx: ProblemContext, problemType: ProblemType) {
+    this.problemType = problemType
+
     if (is<ErrorObject>(ctx, 'dataPath')) {
       this._path = ctx.dataPath
       this.message = ctx.message

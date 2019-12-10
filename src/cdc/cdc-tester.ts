@@ -3,7 +3,7 @@ import { ResponseConfig, RequestConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
 import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode, shouldBe } from '../messages'
 import { Data } from '../types'
-import Problem from '../problem'
+import Problem, { ProblemType } from '../problem'
 
 export default class CDCTester {
   constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
@@ -14,24 +14,34 @@ export default class CDCTester {
     const problems: Problem[] = []
     if (responseConfig.code && response.status !== responseConfig.code) {
       problems.push(
-        new Problem({
-          data: response.status,
-          message: shouldBe('status code', responseConfig.code, response.status),
-        }),
+        new Problem(
+          {
+            data: response.status,
+            message: shouldBe('status code', responseConfig.code, response.status),
+          },
+          ProblemType.Response,
+        ),
       )
     }
 
     if (responseConfig.body !== undefined && response.data !== responseConfig.body) {
       problems.push(
-        new Problem({
-          data: response.data,
-          message: shouldBe('body', responseConfig.body, response.data),
-        }),
+        new Problem(
+          {
+            data: response.data,
+            message: shouldBe('body', responseConfig.body, response.data),
+          },
+          ProblemType.Response,
+        ),
       )
     }
 
     if (responseConfig.type) {
-      const result = await this.typeValidator.getProblems(response.data, responseConfig.type)
+      const result = await this.typeValidator.getProblems(
+        response.data,
+        responseConfig.type,
+        ProblemType.Response,
+      )
       if (result?.length) problems.push(...result)
     }
 

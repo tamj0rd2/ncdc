@@ -2,7 +2,7 @@ import TypeValidator from './type-validator'
 import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
 import SchemaGenerator from './schema-loader'
 import { Data } from '../types'
-import Problem from '../problem'
+import Problem, { ProblemType } from '../problem'
 import * as _problems from '../problem'
 import * as _messages from '../messages'
 
@@ -34,11 +34,11 @@ describe('Type validator', () => {
     it.each(simpleFailCases)(
       'returns a problem when the data is not a valid %s',
       async (expectedType, data) => {
-        const mappedProblem: Public<Problem> = { path: 'hello' }
+        const mappedProblem: Public<Problem> = { path: 'hello', problemType: ProblemType.Request }
         messages.shouldBe.mockReturnValue('yo')
         problemCtor.mockImplementation(() => mappedProblem as Problem)
 
-        const problems = await typeValidator.getProblems(data, expectedType)
+        const problems = await typeValidator.getProblems(data, expectedType, ProblemType.Request)
 
         expect(messages.shouldBe).toBeCalledWith('type', expectedType, typeof data)
         expect(problemCtor).toBeCalledWith({ data, message: 'yo' })
@@ -56,7 +56,7 @@ describe('Type validator', () => {
     it.each(simpleSuccessCases)(
       'does not return anything when the data is a valid %s',
       async (expectedType, data) => {
-        const problems = await typeValidator.getProblems(data, expectedType)
+        const problems = await typeValidator.getProblems(data, expectedType, ProblemType.Response)
 
         expect(problemCtor).not.toBeCalled()
         expect(problems).toBeUndefined()
@@ -68,7 +68,7 @@ describe('Type validator', () => {
     it('does not return anything when the data is valid', async () => {
       ajv.compile.mockReturnValue(jest.fn(() => true))
 
-      const problems = await typeValidator.getProblems([], 'CrazyType')
+      const problems = await typeValidator.getProblems([], 'CrazyType', ProblemType.Request)
 
       expect(problemCtor).not.toBeCalled()
       expect(problems).toBeUndefined()
@@ -77,7 +77,7 @@ describe('Type validator', () => {
     it('does not return anything when there are no validation errors', async () => {
       ajv.compile.mockReturnValue(jest.fn())
 
-      const problems = await typeValidator.getProblems([], 'CrazyType')
+      const problems = await typeValidator.getProblems([], 'CrazyType', ProblemType.Response)
 
       expect(problemCtor).not.toBeCalled()
       expect(problems).toBeUndefined()
@@ -97,7 +97,7 @@ describe('Type validator', () => {
         .mockImplementationOnce(() => error1 as Problem)
         .mockImplementationOnce(() => error2 as Problem)
 
-      const problems = await typeValidator.getProblems({}, 'AnotherType')
+      const problems = await typeValidator.getProblems({}, 'AnotherType', ProblemType.Request)
 
       expect(problems).toStrictEqual([error1, error2])
     })

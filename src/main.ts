@@ -4,9 +4,9 @@ import { startServer, RouteConfig } from './serve/server'
 import TypeValidator from './validation/type-validator'
 import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
-import { readFileSync, readFile } from 'fs'
-import Problem from './problem'
-import { Data, DataObject, DataArray } from './types'
+import { readFile } from 'fs'
+import Problem, { ProblemType } from './problem'
+import { DataObject, DataArray } from './types'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -44,13 +44,30 @@ export default class Main {
           ? await readJsonAsync(response.mockPath)
           : response.mockBody ?? response.body
 
+        const problems: Problem[] = []
+
+        if (request.type && request.body) {
+          const validationProblems = await this.typeValidator.getProblems(
+            request.body,
+            request.type,
+            ProblemType.Request,
+          )
+          if (validationProblems) problems.push(...validationProblems)
+        }
+
         if (response.type && body) {
-          const problems = await this.typeValidator.getProblems(body, response.type)
-          if (problems) {
-            console.error(chalk.red.bold('FAILED:'), chalk.red(name))
-            this.logValidationErrors(problems)
-            return
-          }
+          const validationProblems = await this.typeValidator.getProblems(
+            body,
+            response.type,
+            ProblemType.Response,
+          )
+          if (validationProblems) problems.push(...validationProblems)
+        }
+
+        if (problems.length) {
+          console.error(chalk.red.bold('FAILED:'), chalk.red(name))
+          this.logValidationErrors(problems)
+          return
         }
 
         return {
@@ -107,16 +124,18 @@ export default class Main {
 
   private logValidationErrors = (problems: Problem[]): void => {
     groupBy(problems, x => x.path).forEach((groupedProblems, dataPath) => {
-      groupedProblems.forEach(({ message }) => console.log(chalk.blue('<root>' + dataPath), message))
-      const { data, schema } = groupedProblems[0]
+      groupBy(groupedProblems, x => x.problemType).forEach((groupedByType, type) => {
+        groupedByType.forEach(({ message }) => console.log(chalk.blue(`${type} ${dataPath}`), message))
+        const { data, schema } = groupedProblems[0]
 
-      console.log(chalk.yellow('Data:'))
-      console.dir(data, { depth: dataPath ? 4 : 0 })
-      if (!!dataPath) {
-        console.log(chalk.yellow('Schema:'))
-        console.dir(schema)
-      }
-      console.log()
+        console.log(chalk.yellow('Data:'))
+        console.dir(data, { depth: dataPath ? 4 : 0 })
+        if (!!dataPath) {
+          console.log(chalk.yellow('Schema:'))
+          console.dir(schema)
+        }
+        console.log()
+      })
     })
 
     console.log()

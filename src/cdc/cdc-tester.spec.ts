@@ -40,6 +40,24 @@ describe('CDC Tester', () => {
     expect(results).toHaveLength(0)
   })
 
+  it('returns problems when request body has type validation problems', async () => {
+    const requestConfig: RequestConfig = {
+      method: 'POST',
+      body: 'My body',
+      type: 'number',
+      endpoint: '/blah',
+    }
+
+    const problem: Partial<Problem> = { message: 'Oh noes!' }
+    typeValidator.getProblems.mockResolvedValue([problem as Problem])
+
+    const results = await cdcTester.test(requestConfig, {})
+
+    expect(results).toStrictEqual([problem])
+    expect(loader.get).not.toHaveBeenCalled()
+    expect(loader.post).not.toHaveBeenCalled()
+  })
+
   it('calls the loader with the correct args for a GET request', async () => {
     const requestConfig: RequestConfig = {
       method: 'GET',

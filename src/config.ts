@@ -8,7 +8,6 @@ import { OutgoingHttpHeaders } from 'http'
 export interface RequestConfig {
   endpoint: string
   method: SupportedMethod
-  // TODO: type check this for test mode
   type?: string
   body?: Data
   params?: (string | string[])[]

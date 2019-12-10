@@ -9,9 +9,20 @@ export default class CDCTester {
   constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
 
   public async test(requestConfig: RequestConfig, responseConfig: ResponseConfig): Promise<Problem[]> {
+    const problems: Problem[] = []
+
+    if (requestConfig.type && requestConfig.body) {
+      const result = await this.typeValidator.getProblems(
+        requestConfig.body,
+        requestConfig.type,
+        ProblemType.Request,
+      )
+
+      if (result) return result
+    }
+
     const response: AxiosResponse = await this.getResponse(requestConfig, responseConfig)
 
-    const problems: Problem[] = []
     if (responseConfig.code && response.status !== responseConfig.code) {
       problems.push(
         new Problem(
@@ -42,7 +53,7 @@ export default class CDCTester {
         responseConfig.type,
         ProblemType.Response,
       )
-      if (result?.length) problems.push(...result)
+      if (result) problems.push(...result)
     }
 
     return problems

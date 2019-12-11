@@ -41,7 +41,7 @@ describe('Type validator', () => {
         const problems = await typeValidator.getProblems(data, expectedType, ProblemType.Request)
 
         expect(messages.shouldBe).toBeCalledWith('type', expectedType, typeof data)
-        expect(problemCtor).toBeCalledWith({ data, message: 'yo' })
+        expect(problemCtor).toBeCalledWith({ data, message: 'yo' }, ProblemType.Request)
         expect(problems).toStrictEqual([mappedProblem])
       },
     )

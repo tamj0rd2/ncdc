@@ -2,7 +2,6 @@ import * as TJS from 'typescript-json-schema'
 import { resolve } from 'path'
 
 // TODO: we only need an instance of this if our response configs have types
-// TODO: and this is so slow to spin up :( wish it could be async
 export default class SchemaGenerator {
   private readonly generator: TJS.JsonSchemaGenerator
   private readonly cache: { [symbol: string]: TJS.Definition } = {}

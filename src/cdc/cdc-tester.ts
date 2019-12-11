@@ -1,93 +1,37 @@
-import { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
+import { AxiosInstance, AxiosError } from 'axios'
 import { ResponseConfig, RequestConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
-import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode, shouldBe } from '../messages'
-import { Data } from '../types'
-import Problem, { ProblemType } from '../problem'
+import Problem from '../problem'
+import { doItAll, ValidationFlags, GetResponse } from '../validation/validators'
+import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode } from '../messages'
 
 export default class CDCTester {
-  constructor(private readonly loader: AxiosInstance, private readonly typeValidator: TypeValidator) {}
+  public test: (requestConfig: RequestConfig, responseConfig: ResponseConfig) => Promise<Problem[]>
 
-  public async test(requestConfig: RequestConfig, responseConfig: ResponseConfig): Promise<Problem[]> {
-    // Checks that request type matches // TODO: this is definitely duplicated
-    // makes a request // TODO: only implementation detail differs
-    // makes sure code matches
-    // makes sure body matches expected body
-    // makes sure body matches expected type // TODO: this is definitely duplicated
+  constructor(loader: AxiosInstance, typeValidator: TypeValidator) {
+    const getResponse: GetResponse = async ({ method, endpoint, body }, { code }) => {
+      try {
+        switch (method) {
+          case 'GET':
+            return await loader.get(endpoint)
+          case 'POST':
+            return await loader.post(endpoint, body)
+        }
+      } catch (err) {
+        const axiosErr = err as AxiosError
+        const fullUri = loader.defaults.baseURL + endpoint
 
-    const problems: Problem[] = []
+        if (!axiosErr.response) throw new Error(errorNoResponse(fullUri))
 
-    if (requestConfig.type && requestConfig.body) {
-      const result = await this.typeValidator.getProblems(
-        requestConfig.body,
-        requestConfig.type,
-        ProblemType.Request,
-      )
+        if (!code) throw new Error(errorBadStatusCode(fullUri, axiosErr.response.status))
 
-      if (result) return result
-    }
+        if (code !== axiosErr.response.status)
+          throw new Error(errorWrongStatusCode(fullUri, code, axiosErr.response.status))
 
-    const response: AxiosResponse = await this.getResponse(requestConfig, responseConfig)
-
-    if (responseConfig.code && response.status !== responseConfig.code) {
-      problems.push(
-        new Problem(
-          {
-            data: response.status,
-            message: shouldBe('status code', responseConfig.code, response.status),
-          },
-          ProblemType.Response,
-        ),
-      )
-    }
-
-    if (responseConfig.body !== undefined && response.data !== responseConfig.body) {
-      problems.push(
-        new Problem(
-          {
-            data: response.data,
-            message: shouldBe('body', responseConfig.body, response.data),
-          },
-          ProblemType.Response,
-        ),
-      )
-    }
-
-    if (responseConfig.type) {
-      const result = await this.typeValidator.getProblems(
-        response.data,
-        responseConfig.type,
-        ProblemType.Response,
-      )
-      if (result) problems.push(...result)
-    }
-
-    return problems
-  }
-
-  private async getResponse(
-    { method, endpoint, body }: RequestConfig,
-    { code }: ResponseConfig,
-  ): Promise<AxiosResponse<Data>> {
-    try {
-      switch (method) {
-        case 'GET':
-          return await this.loader.get(endpoint)
-        case 'POST':
-          return await this.loader.post(endpoint, body)
+        return axiosErr.response
       }
-    } catch (err) {
-      const axiosErr = err as AxiosError
-      const fullUri = this.loader.defaults.baseURL + endpoint
-
-      if (!axiosErr.response) throw new Error(errorNoResponse(fullUri))
-
-      if (!code) throw new Error(errorBadStatusCode(fullUri, axiosErr.response.status))
-
-      if (code !== axiosErr.response.status)
-        throw new Error(errorWrongStatusCode(fullUri, code, axiosErr.response.status))
-
-      return axiosErr.response
     }
+
+    this.test = doItAll(typeValidator, getResponse, ValidationFlags.All)
   }
 }

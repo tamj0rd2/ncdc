@@ -120,7 +120,7 @@ export const startServer = (
     const app = configureServer(serverRoot, routes, typeValidator)
 
     app.listen(port, () => {
-      console.log(`\nEnpoints are being served on ${serverRoot}`)
+      console.log(`\nEndpoints are being served on ${serverRoot}`)
     })
 
     app.on('exit', () => {

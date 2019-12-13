@@ -35,7 +35,7 @@ const readJsonAsync = (path: string): Promise<DataObject | DataArray> =>
   })
 
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
+  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
 
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
     // checks that request types match
@@ -86,7 +86,8 @@ export default class Main {
     )
 
     const routes: Optional<RouteConfig>[] = await Promise.all(validateTasks)
-    if (!routes.includes(undefined)) return startServer(port, routes as RouteConfig[], this.typeValidator)
+    if (routes.includes(undefined)) throw new Error('Some mocks were invalid')
+    return startServer(port, routes as RouteConfig[], this.typeValidator)
   }
 
   public async test(baseUrl: string, testConfigs: TestConfig[]): Promise<void | void[]> {
@@ -126,7 +127,9 @@ export default class Main {
       })
     })
 
-    return Promise.all(testTasks)
+    const results = Promise.all(testTasks)
+
+    if ((await results).includes(1)) throw new Error('Not all tests passed')
   }
 
   private logValidationErrors = (problems: Problem[]): void => {
@@ -150,13 +153,15 @@ export default class Main {
 
   private logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
     problems: Problem[],
-  ): void => {
+  ): 0 | 1 => {
     const displayEndpoint = chalk.blue(`${baseUrl}${endpoint}`)
     if (!problems.length) {
       console.log(chalk.green.bold('PASSED:'), chalk.green(displayName), '-', displayEndpoint)
+      return 0
     } else {
       console.error(chalk.red.bold('FAILED:'), chalk.red(displayName), '-', displayEndpoint)
       this.logValidationErrors(problems)
+      return 1
     }
   }
 

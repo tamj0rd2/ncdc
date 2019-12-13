@@ -7,7 +7,7 @@
     "ncdc": "./bin/ncdc"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf ./dist && tsc",
     "test": "jest",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore"
   },

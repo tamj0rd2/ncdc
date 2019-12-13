@@ -4,5 +4,5 @@ dist
 .vscode
 *.yml
 *.yaml
-*.json
 coverage
+fixtures

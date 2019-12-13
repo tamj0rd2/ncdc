@@ -65,7 +65,7 @@ export const configureServer = (
   const logs: Log[] = []
   app.use(express.text())
   app.use(express.json())
-  app.use(express.urlencoded())
+  // app.use(express.urlencoded()) // TODO: find a way to get this back in. deprecation warning
   app.use(express.raw())
   app.get(ROOT, (_, res) => res.json(mockConfigs))
   app.get(LOG_PATH, (_, res) => res.json(logs.reverse()))

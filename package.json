@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "rm -rf ./dist && tsc",
+    "prepare": "rm -rf ./dist && tsc",
     "test": "jest",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore"
   },

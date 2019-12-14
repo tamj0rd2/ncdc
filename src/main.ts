@@ -7,7 +7,6 @@ import axios from 'axios'
 import { readFile } from 'fs'
 import Problem, { ProblemType } from './problem'
 import { DataObject, DataArray } from './types'
-import { resolve as pathResolve } from 'path'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -22,11 +21,9 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   }, new Map<string, T[]>())
 }
 
-const readJsonAsync = (path: string, configRoot: string): Promise<DataObject | DataArray> =>
+const readJsonAsync = (path: string): Promise<DataObject | DataArray> =>
   new Promise<DataObject | DataArray>((resolve, reject) => {
-    const pathToRead = /^.?.\//.test(path) ? pathResolve(configRoot, path) : path
-
-    readFile(pathToRead, (err, data) => {
+    readFile(path, (err, data) => {
       if (err) return reject(err)
 
       try {
@@ -40,11 +37,11 @@ const readJsonAsync = (path: string, configRoot: string): Promise<DataObject | D
 export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
-  public async serve(port: number, mockConfigs: MockConfig[], configRoot: string): Promise<void> {
+  public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
     const validateTasks = mockConfigs.map(
       async ({ name, request, response }): Promise<Optional<RouteConfig>> => {
         const body = response.mockPath
-          ? await readJsonAsync(response.mockPath, configRoot)
+          ? await readJsonAsync(response.mockPath)
           : response.mockBody ?? response.body
 
         const problems: Problem[] = []

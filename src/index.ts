@@ -64,12 +64,24 @@ export default async function run(): Promise<void> {
         }
 
         const fullConfigPath = resolve(configPath)
+        const configFolder = normalize(`${fullConfigPath}/../`)
 
         let mockConfigs: MockConfig[]
         try {
-          mockConfigs = readConfig<MockConfig>(fullConfigPath).filter(
-            x => x.response.mockPath || x.response.mockBody || x.response.body,
-          )
+          mockConfigs = readConfig<MockConfig>(fullConfigPath)
+            .filter(x => x.response.mockPath || x.response.mockBody || x.response.body)
+            .map(config => {
+              const mockPath = config.response.mockPath
+              if (!mockPath) return config
+
+              return {
+                ...config,
+                response: {
+                  ...config.response,
+                  mockPath: /^.?.\//.test(mockPath) ? resolve(configFolder, mockPath) : mockPath,
+                },
+              }
+            })
         } catch (err) {
           return handleError(err)
         }
@@ -77,7 +89,7 @@ export default async function run(): Promise<void> {
         if (!mockConfigs.length) return console.log('No mocks to run')
 
         createMain(fullConfigPath, allErrors, tsconfigPath)
-          .serve(port, mockConfigs, normalize(`${fullConfigPath}/../`))
+          .serve(port, mockConfigs)
           .then(() => process.exit())
           .catch(handleError)
       },

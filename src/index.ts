@@ -6,6 +6,7 @@ import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-loader'
 import chalk from 'chalk'
 import readConfig, { MockConfig, TestConfig } from './config'
+import { resolve, normalize } from 'path'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError = ({ stack, message }: Error): never => {
@@ -62,9 +63,11 @@ export default async function run(): Promise<void> {
           return process.exit(1)
         }
 
+        const fullConfigPath = resolve(configPath)
+
         let mockConfigs: MockConfig[]
         try {
-          mockConfigs = readConfig<MockConfig>(configPath).filter(
+          mockConfigs = readConfig<MockConfig>(fullConfigPath).filter(
             x => x.response.mockPath || x.response.mockBody || x.response.body,
           )
         } catch (err) {
@@ -73,8 +76,8 @@ export default async function run(): Promise<void> {
 
         if (!mockConfigs.length) return console.log('No mocks to run')
 
-        createMain(configPath, allErrors, tsconfigPath)
-          .serve(port, mockConfigs)
+        createMain(fullConfigPath, allErrors, tsconfigPath)
+          .serve(port, mockConfigs, normalize(`${fullConfigPath}/../`))
           .then(() => process.exit())
           .catch(handleError)
       },

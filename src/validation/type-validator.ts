@@ -8,7 +8,7 @@ export default class TypeValidator {
   constructor(private readonly validator: Ajv, private readonly schemaGenerator: SchemaGenerator) {}
 
   public async getProblems(
-    data: Data,
+    data: Optional<Data>,
     expectedType: string,
     type: ProblemType,
   ): Promise<Optional<Problem[]>> {
@@ -31,7 +31,11 @@ export default class TypeValidator {
     }
   }
 
-  private mapSimpleProblem(expectedType: string, data: Data, type: ProblemType): Optional<Problem[]> {
+  private mapSimpleProblem(
+    expectedType: string,
+    data: Optional<Data>,
+    type: ProblemType,
+  ): Optional<Problem[]> {
     const actualType = typeof data
     if (actualType !== expectedType)
       return [new Problem({ data, message: shouldBe('type', expectedType, actualType) }, type)]

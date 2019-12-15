@@ -5,8 +5,9 @@ import TypeValidator from './validation/type-validator'
 import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
 import { readFile } from 'fs'
-import Problem, { ProblemType } from './problem'
-import { DataObject, DataArray } from './types'
+import Problem from './problem'
+import { DataObject, DataArray, Data } from './types'
+import { doItAll, GetResponse, ValidationFlags } from './validation/validators'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -38,32 +39,30 @@ export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
-    const validateTasks = mockConfigs.map(
-      async ({ name, request, response }): Promise<Optional<RouteConfig>> => {
-        const body = response.mockPath
-          ? await readJsonAsync(response.mockPath)
-          : response.mockBody ?? response.body
+    const responseMap = new Map<string, Optional<Data>>()
 
-        const problems: Problem[] = []
+    const getResponse: GetResponse<MockConfig> = async ({ name, ...config }) => {
+      const { code, mockPath, mockBody, body } = config.response
 
-        if (request.type && request.body) {
-          const validationProblems = await this.typeValidator.getProblems(
-            request.body,
-            request.type,
-            ProblemType.Request,
-          )
-          if (validationProblems) problems.push(...validationProblems)
-        }
+      let data = responseMap.get(name)
+      if (!data) data = mockPath ? await readJsonAsync(mockPath) : mockBody ?? body
 
-        if (response.type && body) {
-          const validationProblems = await this.typeValidator.getProblems(
-            body,
-            response.type,
-            ProblemType.Response,
-          )
-          if (validationProblems) problems.push(...validationProblems)
-        }
+      return Promise.resolve({ status: code, data })
+    }
 
+    const test = doItAll(this.typeValidator, getResponse, [
+      ValidationFlags.RequestType,
+      ValidationFlags.ResponseType,
+    ])
+
+    // TODO: this is disgusting
+    const validateTasks = mockConfigs
+      .map(config => ({
+        config,
+        problems: test(config),
+      }))
+      .map(async ({ config: { name, request, response }, problems: problemsPromise }) => {
+        const problems = await problemsPromise
         if (problems.length) {
           console.error(chalk.red.bold('FAILED:'), chalk.red(name))
           this.logValidationErrors(problems)
@@ -77,10 +76,9 @@ export default class Main {
             endpoint: request.mockEndpoint ?? request.endpoint,
             bodyType: request.type,
           },
-          response: { code: response.code, headers: response.headers, body },
+          response: { code: response.code, headers: response.headers, body: responseMap.get(name) },
         }
-      },
-    )
+      })
 
     const routes: Optional<RouteConfig>[] = await Promise.all(validateTasks)
     if (routes.includes(undefined)) throw new Error('Some mocks were invalid')
@@ -98,11 +96,11 @@ export default class Main {
     const resultsLogger = this.logTestResults(baseUrl)
 
     const testTasks = testConfigs.flatMap(testConfig => {
-      const { name, request: requestConfig, response: responseConfig } = testConfig
+      const { name, request: requestConfig } = testConfig
 
       if (!requestConfig.params) {
         return tester
-          .test(requestConfig, responseConfig)
+          .test(testConfig)
           .then(resultsLogger(name, requestConfig.endpoint))
           .catch(this.logTestError(name))
       }
@@ -118,7 +116,7 @@ export default class Main {
           ) ?? requestConfig.endpoint
 
         return tester
-          .test(requestConfig, responseConfig)
+          .test(testConfig)
           .then(resultsLogger(displayName, endpoint))
           .catch(this.logTestError(displayName))
       })

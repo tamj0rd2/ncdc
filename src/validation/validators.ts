@@ -1,11 +1,11 @@
 import TypeValidator from './type-validator'
 import { Data } from '../types'
 import Problem, { ProblemType } from '../problem'
-import { ResponseConfig, RequestConfig } from '../config'
+import { TestConfig } from '../config'
 import { shouldBe } from '../messages'
 
-export type LoaderResponse = { status: number; data: Data }
-export type GetResponse = (request: RequestConfig, response: ResponseConfig) => Promise<LoaderResponse>
+export type LoaderResponse = { status: number; data?: Data }
+export type GetResponse<Config extends TestConfig = TestConfig> = (config: Config) => Promise<LoaderResponse>
 export enum ValidationFlags {
   All,
   RequestType,
@@ -13,7 +13,7 @@ export enum ValidationFlags {
   ResponseBody,
   ResponseType,
 }
-export type TestFn = (requestConfig: RequestConfig, responseConfig: ResponseConfig) => Promise<Problem[]>
+export type TestFn<Config extends TestConfig = TestConfig> = (config: Config) => Promise<Problem[]>
 
 export const doItAll = (
   typeValidator: TypeValidator,
@@ -23,7 +23,8 @@ export const doItAll = (
   const enabled = (target: ValidationFlags): boolean =>
     flags === ValidationFlags.All || flags.includes(target)
 
-  return async (requestConfig, responseConfig): Promise<Problem[]> => {
+  return async (config): Promise<Problem[]> => {
+    const { request: requestConfig, response: responseConfig } = config
     const problems: Problem[] = []
 
     if (enabled(ValidationFlags.RequestType) && requestConfig.type && requestConfig.body) {
@@ -36,7 +37,7 @@ export const doItAll = (
       if (result) return result
     }
 
-    const response = await getResponse(requestConfig, responseConfig)
+    const response = await getResponse(config)
 
     if (
       enabled(ValidationFlags.ResponseStatus) &&

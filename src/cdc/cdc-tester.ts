@@ -1,15 +1,16 @@
 import { AxiosInstance, AxiosError } from 'axios'
-import { ResponseConfig, RequestConfig } from '../config'
+import { TestConfig } from '../config'
 import TypeValidator from '../validation/type-validator'
-import Problem from '../problem'
-import { doItAll, ValidationFlags, GetResponse } from '../validation/validators'
+import { doItAll, ValidationFlags, GetResponse, TestFn } from '../validation/validators'
 import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode } from '../messages'
 
 export default class CDCTester {
-  public test: (requestConfig: RequestConfig, responseConfig: ResponseConfig) => Promise<Problem[]>
+  public test: TestFn<TestConfig>
 
   constructor(loader: AxiosInstance, typeValidator: TypeValidator) {
-    const getResponse: GetResponse = async ({ method, endpoint, body }, { code }) => {
+    const getResponse: GetResponse = async ({ request, response }) => {
+      const { method, endpoint, body } = request
+      const { code } = response
       try {
         switch (method) {
           case 'GET':

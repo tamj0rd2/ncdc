@@ -9,5 +9,5 @@ export const errorBadStatusCode = (uri: string, actual: number): string =>
 export const errorWrongStatusCode = (uri: string, expected: number, actual: number): string =>
   `Expected status code ${chalk.green(expected)} from ${chalk.blue(uri)} but got ${chalk.red(actual)}`
 
-export const shouldBe = (property: string, expected: Data, actual: Data): string =>
+export const shouldBe = (property: string, expected: Data, actual: Optional<Data>): string =>
   `${property} should be ${chalk.green(expected)} but got ${chalk.red(actual)}`

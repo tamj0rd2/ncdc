@@ -2,7 +2,7 @@ import { Data, DataObject } from './types'
 import { ErrorObject } from 'ajv'
 
 interface CustomContext {
-  data: Data
+  data?: Data
   message: string
 }
 
@@ -32,7 +32,7 @@ export default class Problem {
       this.schema = ctx.parentSchema
     } else {
       this.message = ctx.message
-      this.data = this.mapData(ctx.data)
+      this.data = ctx.data ? this.mapData(ctx.data) : undefined
     }
   }
 

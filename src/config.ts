@@ -38,7 +38,7 @@ const requestSchema = yup
   .required()
 
 export interface ResponseConfig {
-  code?: number
+  code: number
   body?: Data
   type?: string
   headers?: OutgoingHttpHeaders

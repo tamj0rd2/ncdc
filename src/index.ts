@@ -71,6 +71,7 @@ export default async function run(): Promise<void> {
           mockConfigs = readConfig<MockConfig>(fullConfigPath)
             .filter(x => x.response.mockPath || x.response.mockBody || x.response.body)
             .map(config => {
+              // TODO: this feels a bit naughty
               const mockPath = config.response.mockPath
               if (!mockPath) return config
 

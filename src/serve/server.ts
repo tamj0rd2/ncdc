@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express'
 import chalk from 'chalk'
-import { OutgoingHttpHeaders } from 'http'
+import { OutgoingHttpHeaders, Server } from 'http'
 import { Data, SupportedMethod } from '../types'
 import TypeValidator from '../validation/type-validator'
 import { ProblemType } from '../problem'
@@ -114,17 +114,17 @@ export const startServer = (
   port: number,
   routes: RouteConfig[],
   typeValidator: TypeValidator,
-): Promise<void> => {
+): Promise<Server> => {
   return new Promise(resolve => {
     const serverRoot = `http://localhost:${port}`
     const app = configureServer(serverRoot, routes, typeValidator)
 
-    app.listen(port, () => {
-      console.log(`\nEndpoints are being served on ${serverRoot}`)
-    })
-
     app.on('exit', () => {
       resolve()
+    })
+
+    return app.listen(port, () => {
+      console.log(`\nEndpoints are being served on ${serverRoot}`)
     })
   })
 }

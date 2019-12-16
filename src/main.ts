@@ -8,6 +8,7 @@ import { readFile } from 'fs'
 import Problem from './problem'
 import { DataObject, DataArray, Data } from './types'
 import { doItAll, GetResponse, ValidationFlags } from './validation/validators'
+import { Server } from 'http'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   return items.reduce((map, item) => {
@@ -38,7 +39,7 @@ const readJsonAsync = (path: string): Promise<DataObject | DataArray> =>
 export default class Main {
   public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
 
-  public async serve(port: number, mockConfigs: MockConfig[]): Promise<void> {
+  public async serve(port: number, mockConfigs: MockConfig[]): Promise<Server> {
     const responseMap = new Map<string, Optional<Data>>()
 
     const getResponse: GetResponse<MockConfig> = async ({ name, ...config }) => {

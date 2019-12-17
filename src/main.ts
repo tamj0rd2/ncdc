@@ -110,15 +110,15 @@ export default class Main {
         const displayName = `${name} [${caseIndex}]`
         const actualParams = typeof params === 'string' ? [params] : params
         const paramMatches = requestConfig.endpoint.match(/(:[^/?]+)/g)
-        const endpoint =
+        const transformedEndpoint =
           paramMatches?.reduce(
             (accum, next, i): string => accum.replace(next, actualParams[i]),
             requestConfig.endpoint,
           ) ?? requestConfig.endpoint
 
         return tester
-          .test(testConfig)
-          .then(resultsLogger(displayName, endpoint))
+          .test({ ...testConfig, request: { ...testConfig.request, endpoint: transformedEndpoint } })
+          .then(resultsLogger(displayName, transformedEndpoint))
           .catch(this.logTestError(displayName))
       })
     })

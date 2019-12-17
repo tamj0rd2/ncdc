@@ -1,6 +1,6 @@
 {
   "name": "ncdc",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "description": "",
   "main": "dist/index.js",
   "bin": {
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "rm -rf ./dist && tsc",
-    "prepublishOnly": "git stash && jest",
+    "prepublishOnly": "jest",
     "prepare": "rm -rf ./dist && tsc",
     "test": "jest",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore"

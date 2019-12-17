@@ -46,7 +46,10 @@ export default class Main {
       const { code, mockPath, mockBody, body } = config.response
 
       let data = responseMap.get(name)
-      if (!data) data = mockPath ? await readJsonAsync(mockPath) : mockBody ?? body
+      if (!data) {
+        data = mockPath ? await readJsonAsync(mockPath) : mockBody ?? body
+        responseMap.set(name, data)
+      }
 
       return Promise.resolve({ status: code, data })
     }

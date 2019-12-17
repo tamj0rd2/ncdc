@@ -204,10 +204,11 @@ describe('CDC Tester', () => {
 
     const expectedProblem: Public<Problem> = { path: 'some path', problemType: ProblemType.Response }
     typeValidator.getProblems.mockResolvedValue([expectedProblem as Problem])
-    loader.get.mockResolvedValue({ data: 'stuff' })
+    loader.get.mockResolvedValue({ data: 'stuff', status: 200 })
 
     const results = await cdcTester.test(config as TestConfig)
 
+    console.dir(results)
     expect(results).toStrictEqual([expectedProblem])
   })
 })

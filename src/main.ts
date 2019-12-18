@@ -37,7 +37,7 @@ const readJsonAsync = (path: string): Promise<DataObject | DataArray> =>
   })
 
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) {}
+  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
 
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<Server> {
     const responseMap = new Map<string, Optional<Data>>()
@@ -59,32 +59,28 @@ export default class Main {
       ValidationFlags.ResponseType,
     ])
 
-    // TODO: this is disgusting
-    const validateTasks = mockConfigs
-      .map(config => ({
-        config,
-        problems: test(config),
-      }))
-      .map(async ({ config: { name, request, response }, problems: problemsPromise }) => {
-        const problems = await problemsPromise
-        if (problems.length) {
-          console.error(chalk.red.bold('FAILED:'), chalk.red(name))
-          this.logValidationErrors(problems)
-          return
-        }
+    const getRouteConfigTasks = mockConfigs.map(async config => {
+      const problems = await test(config)
 
-        return {
-          name,
-          request: {
-            method: request.method,
-            endpoint: request.mockEndpoint ?? request.endpoint,
-            bodyType: request.type,
-          },
-          response: { code: response.code, headers: response.headers, body: responseMap.get(name) },
-        }
-      })
+      const { name, request, response } = config
+      if (problems.length) {
+        console.error(chalk.red.bold('FAILED:'), chalk.red(name))
+        this.logValidationErrors(problems)
+        return
+      }
 
-    const routes: Optional<RouteConfig>[] = await Promise.all(validateTasks)
+      return {
+        name,
+        request: {
+          method: request.method,
+          endpoint: request.mockEndpoint ?? request.endpoint,
+          bodyType: request.type,
+        },
+        response: { code: response.code, headers: response.headers, body: responseMap.get(name) },
+      }
+    })
+
+    const routes: Optional<RouteConfig>[] = await Promise.all(getRouteConfigTasks)
     if (routes.includes(undefined)) throw new Error('Some mocks were invalid')
     return startServer(port, routes as RouteConfig[], this.typeValidator)
   }

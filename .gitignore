@@ -6,3 +6,4 @@ dist
 *.yaml
 coverage
 fixtures
+.npmrc

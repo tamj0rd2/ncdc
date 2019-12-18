@@ -1,11 +1,14 @@
-declare type MockObj = <T>(thing: Partial<T>) => jest.Mocked<T>
+import { mockObj as mockObjOrig } from './test-helpers'
+import { mockFn as mockFnOrig } from './test-helpers'
 
 declare global {
-  let mockObj: MockObj
+  let mockObj: typeof mockObjOrig
+  let mockFn: typeof mockFnOrig
 
   namespace NodeJS {
     interface Global {
-      mockObj: MockObj
+      mockObj: typeof mockObjOrig
+      mockFn: typeof mockFn
     }
   }
 }

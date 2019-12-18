@@ -5,6 +5,21 @@ import chalk from 'chalk'
 import { SupportedMethod, Data } from './types'
 import { OutgoingHttpHeaders } from 'http'
 
+/* TODO: add better output for disallowed keys - https://github.com/jquense/yup/issues/55 https://github.com/jquense/yup/issues/312#issuecomment-442854307
+function allowedKeysOnly(this: yup.StringSchema, msg: string) {
+  return this.test({
+    name: 'allowedKeysOnly',
+    message: msg,
+    test: () => true,
+  })
+}
+
+declare module 'yup' {
+  interface StringSchema {
+    allowedKeysOnly(msg: string): StringSchema
+  }
+}*/
+
 export interface RequestConfig {
   endpoint: string
   method: SupportedMethod

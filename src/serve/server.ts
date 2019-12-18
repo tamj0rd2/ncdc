@@ -74,14 +74,14 @@ export const configureServer = (
   const ignoredLogPaths = [ROOT, LOG_PATH]
 
   // TODO: I want very basic logs for each request in the console too
-  const logs: Log[] = []
+  // const logs: Log[] = []
   app.use(handleError)
   app.use(express.text())
   app.use(express.json())
   // app.use(express.urlencoded()) // TODO: find a way to get this back in. deprecation warning
   app.use(express.raw())
   app.get(ROOT, (_, res) => res.json(mockConfigs))
-  app.get(LOG_PATH, (_, res) => res.json(logs.reverse().slice(0, 15)))
+  // app.get(LOG_PATH, (_, res) => res.json(logs.reverse().slice(0, 15)))
 
   mockConfigs.forEach(({ name, request, response }: RouteConfig) => {
     const endpoint = request.endpoint.split('?')[0]
@@ -98,8 +98,19 @@ export const configureServer = (
 
         if (response.code) res.status(response.code)
         if (response.headers) res.set(response.headers)
+        const { method, path, query, headers, body } = req
+
         if (!ignoredLogPaths.includes(req.path)) {
-          logs.push(mapLog(name, req, res, response.body))
+          console.dir({
+            timestamp: new Date(Date.now()).toJSON(),
+            request: { method, path, query, headers, body },
+            response: {
+              headers: res.getHeaders(),
+              status: res.statusCode,
+              body: 'NCDC: Omitted to save space',
+            },
+          })
+          // logs.push(mapLog(name, req, res, response.body))
         }
 
         res.send(response.body)
@@ -113,16 +124,26 @@ export const configureServer = (
   app.use((req, res, next) => {
     try {
       res.status(404)
+      const { method, path, query, headers, body } = req
 
-      const body =
+      const response =
         'NCDC ERROR: Could not find an endpoint to serve this request\n\n' +
         `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations\n` +
         `Go to ${baseUrl}${LOG_PATH} to see details about this request\n`
       if (!ignoredLogPaths.includes(req.path)) {
-        logs.push(mapLog(undefined, req, res, body))
+        // logs.push(mapLog(undefined, req, res, body))
+        console.dir({
+          timestamp: new Date(Date.now()).toJSON(),
+          request: { method, path, query, headers, body },
+          response: {
+            headers: res.getHeaders(),
+            status: res.statusCode,
+            body: 'NCDC ERROR: Could not find an endpoint to serve this request',
+          },
+        })
       }
 
-      res.send(body)
+      res.send(response)
     } catch (err) {
       handleError(err, req, res, next)
     }

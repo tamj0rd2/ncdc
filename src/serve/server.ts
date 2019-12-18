@@ -101,6 +101,7 @@ export const configureServer = (
         const { method, path, query, headers, body } = req
 
         if (!ignoredLogPaths.includes(req.path)) {
+          // TODO: logging needs to be made much nicer. Just use winston
           console.dir({
             timestamp: new Date(Date.now()).toJSON(),
             request: { method, path, query, headers, body },
@@ -131,7 +132,7 @@ export const configureServer = (
         `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations\n` +
         `Go to ${baseUrl}${LOG_PATH} to see details about this request\n`
       if (!ignoredLogPaths.includes(req.path)) {
-        // logs.push(mapLog(undefined, req, res, body))
+        // TODO: logging needs to be made much nicer. Just use winston
         console.dir({
           timestamp: new Date(Date.now()).toJSON(),
           request: { method, path, query, headers, body },

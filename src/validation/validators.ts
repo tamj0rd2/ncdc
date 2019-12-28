@@ -5,7 +5,9 @@ import { TestConfig } from '../config'
 import { shouldBe } from '../messages'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type GetResponse<Config extends TestConfig = TestConfig> = (config: Config) => Promise<LoaderResponse>
+export type FetchResource<Config extends TestConfig = TestConfig> = (
+  config: Config,
+) => Promise<LoaderResponse>
 export enum ValidationFlags {
   All,
   RequestType,
@@ -17,7 +19,7 @@ export type TestFn<Config extends TestConfig = TestConfig> = (config: Config) =>
 
 export const doItAll = (
   typeValidator: TypeValidator,
-  getResponse: GetResponse,
+  getResponse: FetchResource,
   flags: ValidationFlags.All | ValidationFlags[] = ValidationFlags.All,
 ): TestFn => {
   const shouldValidate = (target: ValidationFlags): boolean =>
@@ -26,7 +28,7 @@ export const doItAll = (
   return async (config): Promise<Problem[]> => {
     const { request: requestConfig, response: responseConfig } = config
 
-    if (shouldValidate(ValidationFlags.RequestType) && requestConfig.type && requestConfig.body) {
+    if (shouldValidate(ValidationFlags.RequestType) && requestConfig.type) {
       const result = await typeValidator.getProblems(
         requestConfig.body,
         requestConfig.type,

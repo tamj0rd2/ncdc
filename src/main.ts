@@ -7,7 +7,7 @@ import axios from 'axios'
 import { readFile } from 'fs'
 import Problem from './problem'
 import { DataObject, Data } from './types'
-import { doItAll, GetResponse, ValidationFlags } from './validation/validators'
+import { doItAll, FetchResource, ValidationFlags } from './validation/validators'
 import { Server } from 'http'
 
 function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
@@ -42,7 +42,7 @@ export default class Main {
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<Server> {
     const responseMap = new Map<string, Optional<Data>>()
 
-    const getResponse: GetResponse<MockConfig> = async ({ name, ...config }) => {
+    const getResponse: FetchResource<MockConfig> = async ({ name, ...config }) => {
       const { code, mockPath, mockBody, body } = config.response
 
       let data = responseMap.get(name)

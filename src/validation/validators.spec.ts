@@ -1,4 +1,4 @@
-import { doItAll, GetResponse, ValidationFlags } from './validators'
+import { doItAll, FetchResource, ValidationFlags } from './validators'
 import TypeValidator from './type-validator'
 import { TestConfig } from '../config'
 import Problem, { ProblemType } from '../problem'
@@ -9,7 +9,7 @@ jest.mock('../messages')
 
 describe('validators', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
-  const mockGetResponse = mockFn<GetResponse>()
+  const mockFetchResource = mockFn<FetchResource>()
   const mockProblemCtor = mockObj(Problem)
   const mockMessages = mockObj(messages)
 
@@ -17,12 +17,37 @@ describe('validators', () => {
     jest.resetAllMocks()
   })
 
-  it('returns problems when request body has type validation problems', async () => {
+  it('returns an empty list when all validations succeed', async () => {
+    const config: Partial<TestConfig> = {
+      request: {
+        endpoint: '/tables/drop',
+        method: 'POST',
+        type: 'string',
+        body: 'drop everything!',
+      },
+      response: {
+        code: 401,
+        body: 'not today son',
+        type: 'string',
+      },
+    }
+
+    mockFetchResource.mockResolvedValue({ status: 401, data: 'not today son' })
+
+    const results = await doItAll(
+      mockTypeValidator,
+      mockFetchResource,
+      ValidationFlags.All,
+    )(config as TestConfig)
+
+    expect(results).toHaveLength(0)
+  })
+
+  it('returns problems when request body does not match the given type', async () => {
     const flags: ValidationFlags[] = [ValidationFlags.RequestType]
     const config: Partial<TestConfig> = {
       request: {
         method: 'POST',
-        body: 'My body',
         type: 'number',
         endpoint: '/blah',
       },
@@ -30,12 +55,12 @@ describe('validators', () => {
     const problem: Partial<Problem> = { message: 'Oh noes!' }
     mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
 
-    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+    const results = await doItAll(mockTypeValidator, mockFetchResource, flags)(config as TestConfig)
 
     expect(results).toStrictEqual([problem])
   })
 
-  it('does not make a request if the request has validation problems', async () => {
+  it('does not make a request if the request body is invalid', async () => {
     const flags: ValidationFlags[] = [ValidationFlags.RequestType]
     const config: Partial<TestConfig> = {
       request: {
@@ -48,12 +73,12 @@ describe('validators', () => {
     const problem: Partial<Problem> = { message: 'Whoopsie' }
     mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
 
-    await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+    await doItAll(mockTypeValidator, mockFetchResource, flags)(config as TestConfig)
 
-    expect(mockGetResponse).not.toHaveBeenCalled()
+    expect(mockFetchResource).not.toHaveBeenCalled()
   })
 
-  it('returns problems when response code is invalid', async () => {
+  it('returns problems when response code does not match expected', async () => {
     const flags: ValidationFlags[] = [ValidationFlags.ResponseStatus]
     const config: Partial<TestConfig> = {
       response: {
@@ -61,17 +86,17 @@ describe('validators', () => {
       },
     }
 
-    mockGetResponse.mockResolvedValue({ status: 302 })
+    mockFetchResource.mockResolvedValue({ status: 302 })
     mockMessages.shouldBe.mockReturnValue('message')
 
-    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+    const results = await doItAll(mockTypeValidator, mockFetchResource, flags)(config as TestConfig)
 
     expect(results).toHaveLength(1)
     expect(mockMessages.shouldBe).toHaveBeenCalledWith('status code', 200, 302)
     expect(mockProblemCtor).toHaveBeenCalledWith({ data: 302, message: 'message' }, ProblemType.Response)
   })
 
-  it('returns problems when response body is invalid', async () => {
+  it('returns problems when response body does not match expected', async () => {
     const flags: ValidationFlags[] = [ValidationFlags.ResponseBody]
     const config: Partial<TestConfig> = {
       response: {
@@ -80,17 +105,17 @@ describe('validators', () => {
       },
     }
 
-    mockGetResponse.mockResolvedValue({ status: 200, data: 'RIP' })
+    mockFetchResource.mockResolvedValue({ status: 200, data: 'RIP' })
     mockMessages.shouldBe.mockReturnValue('message2')
 
-    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+    const results = await doItAll(mockTypeValidator, mockFetchResource, flags)(config as TestConfig)
 
     expect(results).toHaveLength(1)
     expect(mockMessages.shouldBe).toHaveBeenCalledWith('body', 'somebody to love', 'RIP')
     expect(mockProblemCtor).toHaveBeenCalledWith({ data: 'RIP', message: 'message2' }, ProblemType.Response)
   })
 
-  it('returns problems when response type does not match', async () => {
+  it('returns problems when response type does not match expected', async () => {
     const flags: ValidationFlags[] = [ValidationFlags.ResponseType]
     const config: Partial<TestConfig> = {
       response: {
@@ -100,11 +125,11 @@ describe('validators', () => {
       },
     }
 
-    mockGetResponse.mockResolvedValue({ status: 404, data: 'ayy' })
+    mockFetchResource.mockResolvedValue({ status: 404, data: 'ayy' })
     const problem: Partial<Problem> = { message: 'Yikes' }
     mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
 
-    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+    const results = await doItAll(mockTypeValidator, mockFetchResource, flags)(config as TestConfig)
 
     expect(results).toStrictEqual([problem])
   })

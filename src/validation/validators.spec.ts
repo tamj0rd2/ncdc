@@ -1,0 +1,111 @@
+import { doItAll, GetResponse, ValidationFlags } from './validators'
+import TypeValidator from './type-validator'
+import { TestConfig } from '../config'
+import Problem, { ProblemType } from '../problem'
+import * as messages from '../messages'
+
+jest.mock('../problem')
+jest.mock('../messages')
+
+describe('validators', () => {
+  const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
+  const mockGetResponse = mockFn<GetResponse>()
+  const mockProblemCtor = mockObj(Problem)
+  const mockMessages = mockObj(messages)
+
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
+  it('returns problems when request body has type validation problems', async () => {
+    const flags: ValidationFlags[] = [ValidationFlags.RequestType]
+    const config: Partial<TestConfig> = {
+      request: {
+        method: 'POST',
+        body: 'My body',
+        type: 'number',
+        endpoint: '/blah',
+      },
+    }
+    const problem: Partial<Problem> = { message: 'Oh noes!' }
+    mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
+
+    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+
+    expect(results).toStrictEqual([problem])
+  })
+
+  it('does not make a request if the request has validation problems', async () => {
+    const flags: ValidationFlags[] = [ValidationFlags.RequestType]
+    const config: Partial<TestConfig> = {
+      request: {
+        type: 'MyCustomType',
+        endpoint: '/blah',
+        method: 'POST',
+        body: { check: 'out that body' },
+      },
+    }
+    const problem: Partial<Problem> = { message: 'Whoopsie' }
+    mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
+
+    await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+
+    expect(mockGetResponse).not.toHaveBeenCalled()
+  })
+
+  it('returns problems when response code is invalid', async () => {
+    const flags: ValidationFlags[] = [ValidationFlags.ResponseStatus]
+    const config: Partial<TestConfig> = {
+      response: {
+        code: 200,
+      },
+    }
+
+    mockGetResponse.mockResolvedValue({ status: 302 })
+    mockMessages.shouldBe.mockReturnValue('message')
+
+    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+
+    expect(results).toHaveLength(1)
+    expect(mockMessages.shouldBe).toHaveBeenCalledWith('status code', 200, 302)
+    expect(mockProblemCtor).toHaveBeenCalledWith({ data: 302, message: 'message' }, ProblemType.Response)
+  })
+
+  it('returns problems when response body is invalid', async () => {
+    const flags: ValidationFlags[] = [ValidationFlags.ResponseBody]
+    const config: Partial<TestConfig> = {
+      response: {
+        body: 'somebody to love',
+        code: 200,
+      },
+    }
+
+    mockGetResponse.mockResolvedValue({ status: 200, data: 'RIP' })
+    mockMessages.shouldBe.mockReturnValue('message2')
+
+    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+
+    expect(results).toHaveLength(1)
+    expect(mockMessages.shouldBe).toHaveBeenCalledWith('body', 'somebody to love', 'RIP')
+    expect(mockProblemCtor).toHaveBeenCalledWith({ data: 'RIP', message: 'message2' }, ProblemType.Response)
+  })
+
+  it('returns problems when response type does not match', async () => {
+    const flags: ValidationFlags[] = [ValidationFlags.ResponseType]
+    const config: Partial<TestConfig> = {
+      response: {
+        body: 'ayy lmao',
+        code: 404,
+        type: 'MyFakeType',
+      },
+    }
+
+    mockGetResponse.mockResolvedValue({ status: 404, data: 'ayy' })
+    const problem: Partial<Problem> = { message: 'Yikes' }
+    mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
+
+    const results = await doItAll(mockTypeValidator, mockGetResponse, flags)(config as TestConfig)
+
+    expect(results).toStrictEqual([problem])
+  })
+})

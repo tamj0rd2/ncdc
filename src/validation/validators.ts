@@ -18,16 +18,15 @@ export type TestFn<Config extends TestConfig = TestConfig> = (config: Config) =>
 export const doItAll = (
   typeValidator: TypeValidator,
   getResponse: GetResponse,
-  flags: ValidationFlags.All | ValidationFlags[],
+  flags: ValidationFlags.All | ValidationFlags[] = ValidationFlags.All,
 ): TestFn => {
-  const enabled = (target: ValidationFlags): boolean =>
+  const shouldValidate = (target: ValidationFlags): boolean =>
     flags === ValidationFlags.All || flags.includes(target)
 
   return async (config): Promise<Problem[]> => {
     const { request: requestConfig, response: responseConfig } = config
-    const problems: Problem[] = []
 
-    if (enabled(ValidationFlags.RequestType) && requestConfig.type && requestConfig.body) {
+    if (shouldValidate(ValidationFlags.RequestType) && requestConfig.type && requestConfig.body) {
       const result = await typeValidator.getProblems(
         requestConfig.body,
         requestConfig.type,
@@ -37,10 +36,11 @@ export const doItAll = (
       if (result) return result
     }
 
+    const problems: Problem[] = []
     const response = await getResponse(config)
 
     if (
-      enabled(ValidationFlags.ResponseStatus) &&
+      shouldValidate(ValidationFlags.ResponseStatus) &&
       responseConfig.code &&
       response.status !== responseConfig.code
     ) {
@@ -56,7 +56,7 @@ export const doItAll = (
     }
 
     if (
-      enabled(ValidationFlags.ResponseBody) &&
+      shouldValidate(ValidationFlags.ResponseBody) &&
       responseConfig.body !== undefined &&
       response.data !== responseConfig.body
     ) {
@@ -71,7 +71,7 @@ export const doItAll = (
       )
     }
 
-    if (enabled(ValidationFlags.RequestType) && responseConfig.type) {
+    if (shouldValidate(ValidationFlags.ResponseType) && responseConfig.type) {
       const result = await typeValidator.getProblems(response.data, responseConfig.type, ProblemType.Response)
       if (result) problems.push(...result)
     }

@@ -9,6 +9,7 @@ import readConfig, { MockConfig, TestConfig } from './config'
 import { resolve, normalize } from 'path'
 import { createClient } from './test/http-client'
 import axios from 'axios'
+import IOClient from './serve/io-client'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError = ({ stack, message }: Error): never => {
@@ -91,7 +92,7 @@ export default async function run(): Promise<void> {
         if (!mockConfigs.length) return console.log('No mocks to run')
 
         createMain(allErrors, tsconfigPath)
-          .serve(port, mockConfigs)
+          .serve(port, mockConfigs, new IOClient())
           .then(() => process.exit())
           .catch(handleError)
       },

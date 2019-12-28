@@ -2,57 +2,17 @@ import { MockConfig, TestConfig } from './config'
 import chalk from 'chalk'
 import { startServer, RouteConfig } from './serve/server'
 import TypeValidator from './validation/type-validator'
-import { readFile } from 'fs'
 import Problem from './problem'
-import { DataObject, Data } from './types'
 import { doItAll, FetchResource, ValidationFlags } from './validation/validators'
 import { Server } from 'http'
-
-function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
-  return items.reduce((map, item) => {
-    const key = getKey(item)
-    const collection = map.get(key)
-    if (collection) {
-      collection.push(item)
-    } else {
-      map.set(key, [item])
-    }
-    return map
-  }, new Map<string, T[]>())
-}
-
-const readJsonAsync = (path: string): Promise<DataObject | Data[]> =>
-  new Promise<DataObject | Data[]>((resolve, reject) => {
-    readFile(path, (err, data) => {
-      if (err) return reject(err)
-
-      try {
-        resolve(JSON.parse(data.toString()))
-      } catch (err) {
-        reject(err)
-      }
-    })
-  })
+import IOClient from './serve/io-client'
+import { logValidationErrors } from './mode-shared'
 
 export default class Main {
   public constructor(private readonly typeValidator: TypeValidator) {}
 
-  public async serve(port: number, mockConfigs: MockConfig[]): Promise<Server> {
-    const responseMap = new Map<string, Optional<Data>>()
-
-    const getResponse: FetchResource<MockConfig> = async ({ name, ...config }) => {
-      const { code, mockPath, mockBody, body } = config.response
-
-      let data = responseMap.get(name)
-      if (!data) {
-        data = mockPath ? await readJsonAsync(mockPath) : mockBody ?? body
-        responseMap.set(name, data)
-      }
-
-      return Promise.resolve({ status: code, data })
-    }
-
-    const test = doItAll(this.typeValidator, getResponse, [
+  public async serve(port: number, mockConfigs: MockConfig[], ioClient: IOClient): Promise<Server> {
+    const test = doItAll(this.typeValidator, ioClient.fetch, [
       ValidationFlags.RequestType,
       ValidationFlags.ResponseType,
     ])
@@ -63,7 +23,7 @@ export default class Main {
       const { name, request, response } = config
       if (problems.length) {
         console.error(chalk.red.bold('FAILED:'), chalk.red(name))
-        this.logValidationErrors(problems)
+        logValidationErrors(problems)
         return
       }
 
@@ -74,7 +34,11 @@ export default class Main {
           endpoint: request.mockEndpoint ?? request.endpoint,
           bodyType: request.type,
         },
-        response: { code: response.code, headers: response.headers, body: responseMap.get(name) },
+        response: {
+          code: response.code,
+          headers: response.headers,
+          body: (await ioClient.fetch(config)).data,
+        },
       }
     })
 
@@ -122,25 +86,6 @@ export default class Main {
     if ((await results).includes(1)) throw new Error('Not all tests passed')
   }
 
-  private logValidationErrors = (problems: Problem[]): void => {
-    groupBy(problems, x => x.path).forEach((groupedProblems, dataPath) => {
-      groupBy(groupedProblems, x => x.problemType).forEach((groupedByType, type) => {
-        groupedByType.forEach(({ message }) => console.log(chalk.blue(`${type} ${dataPath}`), message))
-        const { data, schema } = groupedProblems[0]
-
-        console.log(chalk.yellow('Data:'))
-        console.dir(data, { depth: dataPath ? 4 : 0 })
-        if (!!dataPath) {
-          console.log(chalk.yellow('Schema:'))
-          console.dir(schema)
-        }
-        console.log()
-      })
-    })
-
-    console.log()
-  }
-
   private logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
     problems: Problem[],
   ): 0 | 1 => {
@@ -150,7 +95,7 @@ export default class Main {
       return 0
     } else {
       console.error(chalk.red.bold('FAILED:'), chalk.red(displayName), '-', displayEndpoint)
-      this.logValidationErrors(problems)
+      logValidationErrors(problems)
       return 1
     }
   }

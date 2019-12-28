@@ -7,6 +7,8 @@ import SchemaGenerator from './validation/schema-loader'
 import chalk from 'chalk'
 import readConfig, { MockConfig, TestConfig } from './config'
 import { resolve, normalize } from 'path'
+import { createClient } from './test/http-client'
+import axios from 'axios'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError = ({ stack, message }: Error): never => {
@@ -95,7 +97,7 @@ export default async function run(): Promise<void> {
       },
     )
     .command(
-      'test <configPath> <baseUrl>',
+      'test <configPath> <baseURL>',
       'Tests API endpoint responses against a json schema',
       yargs =>
         yargs
@@ -103,12 +105,12 @@ export default async function run(): Promise<void> {
             describe: 'path to the mock config',
             type: 'string',
           })
-          .positional('baseUrl', {
+          .positional('baseURL', {
             describe: 'the URL that your endpoints should be accessed through',
             type: 'string',
           }),
-      ({ configPath, baseUrl, allErrors, tsconfigPath }) => {
-        if (!configPath || !baseUrl) process.exit(1)
+      ({ configPath, baseURL, allErrors, tsconfigPath }) => {
+        if (!configPath || !baseURL) process.exit(1)
 
         let testConfigs: TestConfig[]
         try {
@@ -120,7 +122,7 @@ export default async function run(): Promise<void> {
         if (!testConfigs.length) return console.log('No tests to run')
 
         createMain(allErrors, tsconfigPath)
-          .test(baseUrl, testConfigs)
+          .test(baseURL, createClient(axios.create({ baseURL })), testConfigs)
           .then(() => process.exit())
           .catch(handleError)
       },

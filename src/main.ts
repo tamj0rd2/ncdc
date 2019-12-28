@@ -2,8 +2,6 @@ import { MockConfig, TestConfig } from './config'
 import chalk from 'chalk'
 import { startServer, RouteConfig } from './serve/server'
 import TypeValidator from './validation/type-validator'
-import CDCTester from './cdc/cdc-tester'
-import axios from 'axios'
 import { readFile } from 'fs'
 import Problem from './problem'
 import { DataObject, Data } from './types'
@@ -85,22 +83,20 @@ export default class Main {
     return startServer(port, routes as RouteConfig[], this.typeValidator)
   }
 
-  public async test(baseUrl: string, testConfigs: TestConfig[]): Promise<void | void[]> {
-    const tester = new CDCTester(
-      axios.create({
-        baseURL: baseUrl,
-      }),
-      this.typeValidator,
-    )
+  public async test(
+    baseURL: string,
+    fetchResource: FetchResource,
+    testConfigs: TestConfig[],
+  ): Promise<void | void[]> {
+    const test = doItAll(this.typeValidator, fetchResource)
 
-    const resultsLogger = this.logTestResults(baseUrl)
+    const resultsLogger = this.logTestResults(baseURL)
 
     const testTasks = testConfigs.flatMap(testConfig => {
       const { name, request: requestConfig } = testConfig
 
       if (!requestConfig.params) {
-        return tester
-          .test(testConfig)
+        return test(testConfig)
           .then(resultsLogger(name, requestConfig.endpoint))
           .catch(this.logTestError(name))
       }
@@ -115,8 +111,7 @@ export default class Main {
             requestConfig.endpoint,
           ) ?? requestConfig.endpoint
 
-        return tester
-          .test({ ...testConfig, request: { ...testConfig.request, endpoint: transformedEndpoint } })
+        return test({ ...testConfig, request: { ...testConfig.request, endpoint: transformedEndpoint } })
           .then(resultsLogger(displayName, transformedEndpoint))
           .catch(this.logTestError(displayName))
       })

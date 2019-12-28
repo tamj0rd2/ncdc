@@ -14,11 +14,10 @@ const handleError = ({ stack, message }: Error): never => {
   process.exit(1)
 }
 
-const createMain = (configPath: string, allErrors: boolean, tsconfigPath: string): Main => {
+const createMain = (allErrors: boolean, tsconfigPath: string): Main => {
   try {
     return new Main(
       new TypeValidator(new ajv({ verbose: true, allErrors }), new SchemaGenerator(tsconfigPath)),
-      configPath,
     )
   } catch (err) {
     return handleError(err)
@@ -89,7 +88,7 @@ export default async function run(): Promise<void> {
 
         if (!mockConfigs.length) return console.log('No mocks to run')
 
-        createMain(fullConfigPath, allErrors, tsconfigPath)
+        createMain(allErrors, tsconfigPath)
           .serve(port, mockConfigs)
           .then(() => process.exit())
           .catch(handleError)
@@ -120,7 +119,7 @@ export default async function run(): Promise<void> {
 
         if (!testConfigs.length) return console.log('No tests to run')
 
-        createMain(configPath, allErrors, tsconfigPath)
+        createMain(allErrors, tsconfigPath)
           .test(baseUrl, testConfigs)
           .then(() => process.exit())
           .catch(handleError)

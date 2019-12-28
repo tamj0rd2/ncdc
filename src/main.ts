@@ -6,7 +6,7 @@ import CDCTester from './cdc/cdc-tester'
 import axios from 'axios'
 import { readFile } from 'fs'
 import Problem from './problem'
-import { DataObject, DataArray, Data } from './types'
+import { DataObject, Data } from './types'
 import { doItAll, GetResponse, ValidationFlags } from './validation/validators'
 import { Server } from 'http'
 
@@ -23,8 +23,8 @@ function groupBy<T>(items: T[], getKey: (item: T) => string): Map<string, T[]> {
   }, new Map<string, T[]>())
 }
 
-const readJsonAsync = (path: string): Promise<DataObject | DataArray> =>
-  new Promise<DataObject | DataArray>((resolve, reject) => {
+const readJsonAsync = (path: string): Promise<DataObject | Data[]> =>
+  new Promise<DataObject | Data[]>((resolve, reject) => {
     readFile(path, (err, data) => {
       if (err) return reject(err)
 
@@ -37,7 +37,7 @@ const readJsonAsync = (path: string): Promise<DataObject | DataArray> =>
   })
 
 export default class Main {
-  public constructor(private readonly typeValidator: TypeValidator, private readonly configPath: string) { }
+  public constructor(private readonly typeValidator: TypeValidator) {}
 
   public async serve(port: number, mockConfigs: MockConfig[]): Promise<Server> {
     const responseMap = new Map<string, Optional<Data>>()

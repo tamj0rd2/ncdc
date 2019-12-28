@@ -208,7 +208,6 @@ describe('CDC Tester', () => {
 
     const results = await cdcTester.test(config as TestConfig)
 
-    console.dir(results)
     expect(results).toStrictEqual([expectedProblem])
   })
 })

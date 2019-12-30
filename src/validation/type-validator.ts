@@ -1,11 +1,10 @@
 import { Ajv } from 'ajv'
-import SchemaGenerator from './schema-generator'
-import { Data } from '../types'
+import { Data, SchemaRetriever } from '../types'
 import Problem, { ProblemType } from '../problem'
 import { shouldBe } from '../messages'
 
 export default class TypeValidator {
-  constructor(private readonly validator: Ajv, private readonly schemaGenerator: SchemaGenerator) {}
+  constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) {}
 
   public async getProblems(
     data: Optional<Data>,
@@ -22,7 +21,7 @@ export default class TypeValidator {
       case 'object':
         return this.mapSimpleProblem('object', data, type)
       default:
-        const jsonSchema = this.schemaGenerator.load(expectedType)
+        const jsonSchema = this.schemaRetriever.load(expectedType)
         const validator = this.validator.compile(jsonSchema)
         const isValid = validator(data)
 

@@ -13,7 +13,7 @@ describe('SchemaLoader', () => {
     jest.resetAllMocks()
   })
 
-  it('returns the generated schema', () => {
+  it('returns the generated schema', async () => {
     const someSchema = { $schema: 'schema stuff' }
     const mockedGenerator: Partial<TJS.JsonSchemaGenerator> = {
       getSchemaForSymbol: jest.fn().mockReturnValue(someSchema),
@@ -22,13 +22,13 @@ describe('SchemaLoader', () => {
     mockedPath.resolve.mockImplementation(args => args)
 
     const schemaLoader = new SchemaGenerator('tsconfig path')
-    const schema = schemaLoader.load('DealSchema')
+    const schema = await schemaLoader.load('DealSchema')
 
     expect(TJS.programFromConfig).toHaveBeenCalledWith('tsconfig path')
     expect(schema).toEqual(someSchema)
   })
 
-  it('returns cached data for properties that are accessed multiple times', () => {
+  it('returns cached data for properties that are accessed multiple times', async () => {
     const someSchema = { $schema: 'schema stuff' }
     const someSchema2 = { $schema: 'schema stuff 2' }
     const mockedGenerator: Partial<TJS.JsonSchemaGenerator> = {
@@ -40,8 +40,8 @@ describe('SchemaLoader', () => {
     mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
 
     const schemaLoader = new SchemaGenerator('tsconfig path')
-    const schema1 = schemaLoader.load('DealSchema')
-    const schema2 = schemaLoader.load('DealSchema')
+    const schema1 = await schemaLoader.load('DealSchema')
+    const schema2 = await schemaLoader.load('DealSchema')
 
     expect(schema1).toEqual(someSchema)
     expect(mockedGenerator.getSchemaForSymbol).toHaveBeenCalledTimes(1)

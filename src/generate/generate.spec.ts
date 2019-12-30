@@ -37,7 +37,7 @@ describe('Generate', () => {
     mockPath.resolve.mockImplementation((...args) => args.join('/'))
     const helloSchema = { $schema: 'Hello' }
     const worldSchema = { $schema: 'World!' }
-    mockSchemaGenerator.load.mockReturnValueOnce(helloSchema).mockReturnValueOnce(worldSchema)
+    mockSchemaGenerator.load.mockResolvedValueOnce(helloSchema).mockResolvedValueOnce(worldSchema)
 
     generate(mockSchemaGenerator, ['Hello', 'World'], './out')
 

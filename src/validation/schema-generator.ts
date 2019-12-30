@@ -1,8 +1,8 @@
 import * as TJS from 'typescript-json-schema'
 import { resolve } from 'path'
+import { SchemaRetriever } from '../types'
 
-// TODO: we only need an instance of this if our response configs have types
-export default class SchemaGenerator {
+export default class SchemaGenerator implements SchemaRetriever {
   private readonly generator: TJS.JsonSchemaGenerator
   private readonly cache: { [symbol: string]: TJS.Definition } = {}
 
@@ -15,7 +15,9 @@ export default class SchemaGenerator {
     this.generator = generator
   }
 
-  public load(symbolName: string): TJS.Definition {
-    return this.cache[symbolName] ?? (this.cache[symbolName] = this.generator.getSchemaForSymbol(symbolName))
+  public load(symbolName: string): Promise<TJS.Definition> {
+    return Promise.resolve(
+      this.cache[symbolName] ?? (this.cache[symbolName] = this.generator.getSchemaForSymbol(symbolName)),
+    )
   }
 }

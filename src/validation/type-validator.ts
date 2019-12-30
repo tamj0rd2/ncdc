@@ -21,7 +21,7 @@ export default class TypeValidator {
       case 'object':
         return this.mapSimpleProblem('object', data, type)
       default:
-        const jsonSchema = this.schemaRetriever.load(expectedType)
+        const jsonSchema = await this.schemaRetriever.load(expectedType)
         const validator = this.validator.compile(jsonSchema)
         const isValid = validator(data)
 

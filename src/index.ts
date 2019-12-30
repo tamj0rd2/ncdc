@@ -11,6 +11,7 @@ import { createClient } from './test/http-client'
 import axios from 'axios'
 import IOClient from './serve/io-client'
 import { generate } from './generate/generate'
+import SchemaLoader from './validation/schema-loader'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError = ({ stack, message }: Error): never => {
@@ -18,10 +19,13 @@ const handleError = ({ stack, message }: Error): never => {
   process.exit(1)
 }
 
-const createMain = (allErrors: boolean, tsconfigPath: string): Main => {
+const createMain = (allErrors: boolean, tsconfigPath: string, schemaPath: Optional<string>): Main => {
   try {
     return new Main(
-      new TypeValidator(new ajv({ verbose: true, allErrors }), new SchemaGenerator(tsconfigPath)),
+      new TypeValidator(
+        new ajv({ verbose: true, allErrors }),
+        schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath),
+      ),
     )
   } catch (err) {
     return handleError(err)
@@ -50,6 +54,10 @@ export default async function run(): Promise<void> {
             description: 'show all validation errors per test instead of failing fast',
             default: false,
           })
+          .option('schemaPath', {
+            type: 'string',
+            description: 'specify a path to load json schemas from, rather than generating them',
+          })
           .positional('configPath', {
             describe: 'path to the mock config',
             type: 'string',
@@ -59,7 +67,7 @@ export default async function run(): Promise<void> {
             type: 'number',
             default: 4000,
           }),
-      ({ configPath, port, allErrors, tsconfigPath }) => {
+      ({ configPath, port, allErrors, tsconfigPath, schemaPath }) => {
         if (!configPath) process.exit(1)
 
         if (isNaN(port)) {
@@ -94,7 +102,7 @@ export default async function run(): Promise<void> {
 
         if (!mockConfigs.length) return console.log('No mocks to run')
 
-        createMain(allErrors, tsconfigPath)
+        createMain(allErrors, tsconfigPath, schemaPath)
           .serve(port, mockConfigs, new IOClient())
           .then(() => process.exit())
           .catch(handleError)
@@ -111,6 +119,10 @@ export default async function run(): Promise<void> {
             description: 'show all validation errors per test instead of failing fast',
             default: false,
           })
+          .option('schemaPath', {
+            type: 'string',
+            description: 'specify a path to load json schemas from, rather than generating them',
+          })
           .positional('configPath', {
             describe: 'path to the mock config',
             type: 'string',
@@ -119,7 +131,7 @@ export default async function run(): Promise<void> {
             describe: 'the URL that your endpoints should be accessed through',
             type: 'string',
           }),
-      ({ configPath, baseURL, allErrors, tsconfigPath }) => {
+      ({ configPath, baseURL, allErrors, tsconfigPath, schemaPath }) => {
         if (!configPath || !baseURL) process.exit(1)
 
         let testConfigs: TestConfig[]
@@ -131,7 +143,7 @@ export default async function run(): Promise<void> {
 
         if (!testConfigs.length) return console.log('No tests to run')
 
-        createMain(allErrors, tsconfigPath)
+        createMain(allErrors, tsconfigPath, schemaPath)
           .test(baseURL, createClient(axios.create({ baseURL })), testConfigs)
           .then(() => process.exit())
           .catch(handleError)
@@ -165,7 +177,8 @@ export default async function run(): Promise<void> {
         try {
           const schemaLoader = new SchemaGenerator(tsconfigPath)
           generate(schemaLoader, types, outputPath)
-          console.log('Json schemas have been written to disk')
+            .then(() => console.log('Json schemas have been written to disk'))
+            .catch(handleError)
         } catch (err) {
           handleError(err)
         }

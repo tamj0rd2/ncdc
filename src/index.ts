@@ -37,12 +37,6 @@ export default async function run(): Promise<void> {
       description: 'a path to the tsconfig which contains required symbols',
       default: './tsconfig.json',
     })
-    .option('allErrors', {
-      alias: 'a',
-      type: 'boolean',
-      description: 'show all validation errors per test instead of failing fast',
-      default: false,
-    })
     // TODO: look into providing command modules. They should help tidy things up
     // https://github.com/yargs/yargs/blob/master/docs/advanced.md
     .command(
@@ -50,6 +44,12 @@ export default async function run(): Promise<void> {
       'Serves mock API responses',
       yargs =>
         yargs
+          .option('allErrors', {
+            alias: 'a',
+            type: 'boolean',
+            description: 'show all validation errors per test instead of failing fast',
+            default: false,
+          })
           .positional('configPath', {
             describe: 'path to the mock config',
             type: 'string',
@@ -105,6 +105,12 @@ export default async function run(): Promise<void> {
       'Tests API endpoint responses against a json schema',
       yargs =>
         yargs
+          .option('allErrors', {
+            alias: 'a',
+            type: 'boolean',
+            description: 'show all validation errors per test instead of failing fast',
+            default: false,
+          })
           .positional('configPath', {
             describe: 'path to the mock config',
             type: 'string',

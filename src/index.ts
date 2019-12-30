@@ -10,6 +10,7 @@ import { resolve, normalize } from 'path'
 import { createClient } from './test/http-client'
 import axios from 'axios'
 import IOClient from './serve/io-client'
+import { generate } from './generate/generate'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError = ({ stack, message }: Error): never => {
@@ -42,6 +43,8 @@ export default async function run(): Promise<void> {
       description: 'show all validation errors per test instead of failing fast',
       default: false,
     })
+    // TODO: look into providing command modules. They should help tidy things up
+    // https://github.com/yargs/yargs/blob/master/docs/advanced.md
     .command(
       'serve <configPath> [port]',
       'Serves mock API responses',
@@ -152,6 +155,14 @@ export default async function run(): Promise<void> {
         console.log(types)
         console.log(tsconfigPath)
         console.log(outputPath)
+
+        try {
+          const schemaLoader = new SchemaGenerator(tsconfigPath)
+          generate(schemaLoader, types, outputPath)
+          console.log('Json schemas have been written to disk')
+        } catch (err) {
+          handleError(err)
+        }
       },
     )
     .example(

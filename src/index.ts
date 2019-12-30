@@ -128,6 +128,32 @@ export default async function run(): Promise<void> {
           .catch(handleError)
       },
     )
+    .command(
+      'generate <types..>',
+      'Generates a json schema for each specified type',
+      yargs =>
+        yargs
+          .positional('types', {
+            describe: 'a space separated list of types',
+          })
+          .option('outputPath', {
+            alias: ['o', 'output'],
+            type: 'string',
+            description: 'sets an output folder for the json schemas',
+            default: './json-schema',
+          }),
+      ({ tsconfigPath, types, outputPath }) => {
+        if (!Array.isArray(types)) {
+          yargs.showHelp()
+          console.error('\ntypes must be a space separated list of available types')
+          return process.exit(1)
+        }
+
+        console.log(types)
+        console.log(tsconfigPath)
+        console.log(outputPath)
+      },
+    )
     .example(
       'ncdc serve ./service-config.json 4000',
       'Serves the mock API endpoints defined in service-config.json on port 4000',

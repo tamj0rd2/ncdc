@@ -1,5 +1,5 @@
 import { Ajv } from 'ajv'
-import SchemaGenerator from './schema-loader'
+import SchemaGenerator from './schema-generator'
 import { Data } from '../types'
 import Problem, { ProblemType } from '../problem'
 import { shouldBe } from '../messages'

@@ -1,4 +1,4 @@
-import SchemaGenerator from './schema-loader'
+import SchemaGenerator from './schema-generator'
 import * as TJS from 'typescript-json-schema'
 import * as path from 'path'
 

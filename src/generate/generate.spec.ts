@@ -1,4 +1,4 @@
-import SchemaGenerator from '../validation/schema-loader'
+import SchemaGenerator from '../validation/schema-generator'
 import { generate } from './generate'
 import * as _fs from 'fs'
 import * as _path from 'path'

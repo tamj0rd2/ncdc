@@ -11,7 +11,7 @@ export default class SchemaLoader implements SchemaRetriever {
   public async load(symbolName: string): Promise<Definition> {
     return (
       this.cache[symbolName] ??
-      (this.cache[symbolName] = await readJsonAsync(resolve(this.schemaPath, symbolName)))
+      (this.cache[symbolName] = await readJsonAsync(resolve(this.schemaPath, `${symbolName}.json`)))
     )
   }
 }

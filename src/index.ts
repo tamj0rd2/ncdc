@@ -150,12 +150,13 @@ export default async function run(): Promise<void> {
       },
     )
     .command(
-      'generate <types..>',
-      'Generates a json schema for each specified type',
+      'generate <configPath>',
+      'Generates a json schema for the types specified in the config file',
       yargs =>
         yargs
-          .positional('types', {
-            describe: 'a space separated list of types',
+          .positional('configPath', {
+            describe: 'path to the mock config',
+            type: 'string',
           })
           .option('outputPath', {
             alias: ['o', 'output'],
@@ -163,16 +164,26 @@ export default async function run(): Promise<void> {
             description: 'sets an output folder for the json schemas',
             default: './json-schema',
           }),
-      ({ tsconfigPath, types, outputPath }) => {
-        if (!Array.isArray(types)) {
-          yargs.showHelp()
-          console.error('\ntypes must be a space separated list of available types')
-          return process.exit(1)
+      yargs => {
+        const { tsconfigPath, configPath, outputPath } = yargs
+        if (!configPath) process.exit(1)
+
+        let allConfigs: TestConfig[]
+        try {
+          allConfigs = readConfig(configPath)
+        } catch (err) {
+          return handleError(err)
         }
 
-        console.log(types)
-        console.log(tsconfigPath)
-        console.log(outputPath)
+        if (!allConfigs.length) return console.log('No types to generate schemas for')
+
+        const builtInTypes = ['string', 'number', 'boolean', 'object']
+        const types = allConfigs
+          .map(x => x.request.type)
+          .concat(allConfigs.map(x => x.response.type))
+          .filter((x): x is string => !!x)
+          .filter(x => !builtInTypes.includes(x))
+          .filter((x, i, arr) => i === arr.indexOf(x))
 
         try {
           const schemaLoader = new SchemaGenerator(tsconfigPath)

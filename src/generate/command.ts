@@ -62,8 +62,8 @@ const createHandler = (handleError: HandleError) => (args: GenerateArgs): void =
 
 export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {
   return {
-    command: 'test <configPath> <baseURL>',
-    describe: 'Tests API endpoint responses against a json schema',
+    command: 'generate <configPath>',
+    describe: 'Generates a json schema for the types specified in the config file',
     builder,
     handler: createHandler(handleError),
   }

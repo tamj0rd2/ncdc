@@ -39,13 +39,14 @@ export default async function run(): Promise<void> {
     .command(createGenerateCommand(handleError))
     .command(createServeCommand(handleError, createMain))
     .command(createTestCommand(handleError, createMain))
+    .example('ncdc generate ./config.yml', 'Generates json schemas for any Type specified in config.yml')
     .example(
-      'ncdc serve ./service-config.json 4000',
-      'Serves the mock API endpoints defined in service-config.json on port 4000',
+      'ncdc serve ./config.yml 4000',
+      'Serves the mock API endpoints defined in config.yml on port 4000',
     )
     .example(
-      'ncdc test ./service-config.json https://mysite.com',
-      'Tests that the API endpoints defined in service-config.json match the configured body or json schema ',
+      'ncdc test ./config.yml https://mysite.com',
+      'Tests that the responses for the API endpoints defined in config.yml match the configured parameters',
     )
     .demandCommand()
     .strict()

@@ -4,14 +4,11 @@ import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import SchemaGenerator from './validation/schema-generator'
 import chalk from 'chalk'
-import readConfig, { TestConfig } from './config'
-import { createClient } from './test/http-client'
-import axios from 'axios'
 import SchemaLoader from './validation/schema-loader'
-import createServeCommand from './serve/command'
 import { HandleError, CreateMain } from './command-shared'
-import createGenerateCommand from './generate/command'
-import createTestCommand from './test/command'
+import createServeCommand from './serve'
+import createGenerateCommand from './generate'
+import createTestCommand from './test'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError: HandleError = ({ stack, message }) => {

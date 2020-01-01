@@ -1,6 +1,6 @@
 import * as TJS from 'typescript-json-schema'
 import { resolve } from 'path'
-import { SchemaRetriever } from '../types'
+import { SchemaRetriever } from './types'
 
 export default class SchemaGenerator implements SchemaRetriever {
   private readonly generator: TJS.JsonSchemaGenerator

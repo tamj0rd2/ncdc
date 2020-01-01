@@ -1,9 +1,10 @@
 import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
 import chalk from 'chalk'
 import { OutgoingHttpHeaders, Server } from 'http'
-import { Data, SupportedMethod } from '../../types'
+import { Data } from '../../types'
 import TypeValidator from '../../validation/type-validator'
 import { ProblemType } from '../../problem'
+import { SupportedMethod } from '../../config/config'
 
 export interface RouteConfig {
   name: string
@@ -35,6 +36,7 @@ const verbsMap: { [K in SupportedMethod]: 'get' | 'post' } = {
   POST: 'post',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mapLog = (
   name: Optional<string>,
   { method, path, query, headers, body }: Request,

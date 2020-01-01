@@ -2,7 +2,7 @@ import * as yup from 'yup'
 import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 import chalk from 'chalk'
-import { SupportedMethod, Data } from '../types'
+import { Data } from '../types'
 import { OutgoingHttpHeaders } from 'http'
 
 /* TODO: add better output for disallowed keys - https://github.com/jquense/yup/issues/55 https://github.com/jquense/yup/issues/312#issuecomment-442854307
@@ -19,6 +19,8 @@ declare module 'yup' {
     allowedKeysOnly(msg: string): StringSchema
   }
 }*/
+
+export type SupportedMethod = 'GET' | 'POST'
 
 export interface RequestConfig {
   endpoint: string

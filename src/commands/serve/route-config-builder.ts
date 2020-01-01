@@ -1,5 +1,5 @@
-import { MockRequestConfig, MockResponseConfig } from '../../config/config'
-import { Data, SupportedMethod } from '../../types'
+import { MockRequestConfig, MockResponseConfig, SupportedMethod } from '../../config/config'
+import { Data } from '../../types'
 import { OutgoingHttpHeaders } from 'http'
 import { RouteConfig } from './server'
 

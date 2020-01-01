@@ -7,10 +7,10 @@ import chalk from 'chalk'
 import readConfig, { TestConfig } from './config'
 import { createClient } from './test/http-client'
 import axios from 'axios'
-import { generate } from './generate/generate'
 import SchemaLoader from './validation/schema-loader'
 import createServeCommand from './serve/command'
 import { HandleError, CreateMain } from './command-shared'
+import createGenerateModule from './generate/command'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError: HandleError = ({ stack, message }) => {
@@ -83,58 +83,7 @@ export default async function run(): Promise<void> {
           .catch(handleError)
       },
     )
-    .command(
-      'generate <configPath>',
-      'Generates a json schema for the types specified in the config file',
-      yargs =>
-        yargs
-          .positional('configPath', {
-            describe: 'path to the mock config',
-            type: 'string',
-          })
-          .option('tsconfigPath', {
-            alias: 'c',
-            type: 'string',
-            description: 'a path to the tsconfig which contains required symbols',
-            default: './tsconfig.json',
-          })
-          .option('outputPath', {
-            alias: ['o', 'output'],
-            type: 'string',
-            description: 'sets an output folder for the json schemas',
-            default: './json-schema',
-          }),
-      yargs => {
-        const { tsconfigPath, configPath, outputPath } = yargs
-        if (!configPath) process.exit(1)
-
-        let allConfigs: TestConfig[]
-        try {
-          allConfigs = readConfig(configPath)
-        } catch (err) {
-          return handleError(err)
-        }
-
-        if (!allConfigs.length) return console.log('No types to generate schemas for')
-
-        const builtInTypes = ['string', 'number', 'boolean', 'object']
-        const types = allConfigs
-          .map(x => x.request.type)
-          .concat(allConfigs.map(x => x.response.type))
-          .filter((x): x is string => !!x)
-          .filter(x => !builtInTypes.includes(x))
-          .filter((x, i, arr) => i === arr.indexOf(x))
-
-        try {
-          const schemaLoader = new SchemaGenerator(tsconfigPath)
-          generate(schemaLoader, types, outputPath)
-            .then(() => console.log('Json schemas have been written to disk'))
-            .catch(handleError)
-        } catch (err) {
-          handleError(err)
-        }
-      },
-    )
+    .command(createGenerateModule(handleError))
     .example(
       'ncdc serve ./service-config.json 4000',
       'Serves the mock API endpoints defined in service-config.json on port 4000',

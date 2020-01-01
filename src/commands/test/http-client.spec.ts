@@ -4,8 +4,8 @@ import * as _messages from '../../messages'
 import { FetchResource } from '../../validation/validators'
 import { createClient } from './http-client'
 
-jest.mock('../messages')
-jest.mock('../problem')
+jest.mock('../../messages')
+jest.mock('../../problem')
 
 describe('CDC Tester', () => {
   const loader = mockObj<AxiosInstance>({ get: jest.fn(), post: jest.fn() })

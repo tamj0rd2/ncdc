@@ -1,8 +1,8 @@
 import request from 'supertest'
 import { configureServer, Log } from './server'
 import RouteConfigBuilder from './route-config-builder'
-import TypeValidator from '../validation/type-validator'
-import Problem from '../problem'
+import TypeValidator from '../../validation/type-validator'
+import Problem from '../../problem'
 
 describe('server', () => {
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()

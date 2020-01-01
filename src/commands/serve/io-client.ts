@@ -1,7 +1,7 @@
-import { Data, DataObject } from '../types'
-import { FetchResource } from '../validation/validators'
-import { MockConfig } from '../config'
-import { readJsonAsync } from '../io'
+import { Data, DataObject } from '../../types'
+import { FetchResource } from '../../validation/validators'
+import { MockConfig } from '../../config'
+import { readJsonAsync } from '../../io'
 
 export default class IOClient {
   private responseMap = new Map<string, Optional<Data>>()

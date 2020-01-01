@@ -1,11 +1,11 @@
 import { MockConfig, TestConfig } from './config'
 import chalk from 'chalk'
-import { startServer, RouteConfig } from './serve/server'
+import { startServer, RouteConfig } from './commands/serve/server'
 import TypeValidator from './validation/type-validator'
 import Problem from './problem'
 import { doItAll, FetchResource, ValidationFlags } from './validation/validators'
 import { Server } from 'http'
-import IOClient from './serve/io-client'
+import IOClient from './commands/serve/io-client'
 import { logValidationErrors } from './mode-shared'
 
 export default class Main {

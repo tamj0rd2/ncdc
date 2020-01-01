@@ -1,9 +1,9 @@
 import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
 import chalk from 'chalk'
 import { OutgoingHttpHeaders, Server } from 'http'
-import { Data, SupportedMethod } from '../types'
-import TypeValidator from '../validation/type-validator'
-import { ProblemType } from '../problem'
+import { Data, SupportedMethod } from '../../types'
+import TypeValidator from '../../validation/type-validator'
+import { ProblemType } from '../../problem'
 
 export interface RouteConfig {
   name: string

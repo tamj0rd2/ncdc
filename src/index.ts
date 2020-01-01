@@ -6,9 +6,9 @@ import SchemaGenerator from './validation/schema-generator'
 import chalk from 'chalk'
 import SchemaLoader from './validation/schema-loader'
 import { HandleError, CreateMain } from './command-shared'
-import createServeCommand from './serve'
-import createGenerateCommand from './generate'
-import createTestCommand from './test'
+import createServeCommand from './commands/serve'
+import createGenerateCommand from './commands/generate'
+import createTestCommand from './commands/test'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError: HandleError = ({ stack, message }) => {

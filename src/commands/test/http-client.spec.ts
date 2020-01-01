@@ -1,7 +1,7 @@
 import { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
-import { TestConfig } from '../config'
-import * as _messages from '../messages'
-import { FetchResource } from '../validation/validators'
+import { TestConfig } from '../../config'
+import * as _messages from '../../messages'
+import { FetchResource } from '../../validation/validators'
 import { createClient } from './http-client'
 
 jest.mock('../messages')

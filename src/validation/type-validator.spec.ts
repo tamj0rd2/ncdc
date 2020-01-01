@@ -1,6 +1,6 @@
 import TypeValidator from './type-validator'
 import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
-import SchemaGenerator from './schema-generator'
+import SchemaGenerator from '../schema/schema-generator'
 import { Data } from '../types'
 import Problem, { ProblemType } from '../problem'
 import * as _problems from '../problem'

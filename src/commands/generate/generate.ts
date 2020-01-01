@@ -1,4 +1,4 @@
-import SchemaGenerator from '../../validation/schema-generator'
+import SchemaGenerator from '../../schema/schema-generator'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
 

@@ -40,8 +40,6 @@ const createHandler = (handleError: HandleError) => (args: GenerateArgs): void =
     return handleError(err)
   }
 
-  if (!allConfigs.length) return console.log('No types to generate schemas for')
-
   const builtInTypes = ['string', 'number', 'boolean', 'object']
   const types = allConfigs
     .map(x => x.request.type)
@@ -50,14 +48,19 @@ const createHandler = (handleError: HandleError) => (args: GenerateArgs): void =
     .filter(x => !builtInTypes.includes(x))
     .filter((x, i, arr) => i === arr.indexOf(x))
 
+  if (!types.length) return console.log('No types were specified in the given config file')
+
+  let schemaGenerator: SchemaGenerator
+
   try {
-    const schemaLoader = new SchemaGenerator(tsconfigPath)
-    generate(schemaLoader, types, outputPath)
-      .then(() => console.log('Json schemas have been written to disk'))
-      .catch(handleError)
+    schemaGenerator = new SchemaGenerator(tsconfigPath)
   } catch (err) {
     handleError(err)
   }
+
+  generate(schemaGenerator, types, outputPath)
+    .then(() => console.log('Json schemas have been written to disk'))
+    .catch(handleError)
 }
 
 export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {

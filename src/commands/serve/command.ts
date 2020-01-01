@@ -1,7 +1,7 @@
 import { Argv } from 'yargs'
 import yargs = require('yargs')
 import { resolve, normalize } from 'path'
-import readConfig, { MockConfig } from '../../config'
+import readConfig, { MockConfig } from '../../config/config'
 import IOClient from './io-client'
 import { HandleError, CreateMain } from '../shared'
 

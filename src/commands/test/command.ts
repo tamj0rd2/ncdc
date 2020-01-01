@@ -1,6 +1,6 @@
 import { HandleError, CreateMain } from '../shared'
 import { Argv, CommandModule } from 'yargs'
-import readConfig, { TestConfig } from '../../config'
+import readConfig, { TestConfig } from '../../config/config'
 import { createClient } from './http-client'
 import axios from 'axios'
 

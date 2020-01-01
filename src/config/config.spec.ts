@@ -1,5 +1,6 @@
 import readConfig, { MockConfig } from './config'
 import jsYaml from 'js-yaml'
+import { mockObj } from '../test-helpers'
 
 jest.mock('fs')
 jest.mock('js-yaml')

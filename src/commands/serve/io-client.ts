@@ -1,6 +1,6 @@
 import { Data, DataObject } from '../../types'
 import { FetchResource } from '../../validation/validators'
-import { MockConfig } from '../../config'
+import { MockConfig } from '../../config/config'
 import { readJsonAsync } from '../../io'
 
 export default class IOClient {

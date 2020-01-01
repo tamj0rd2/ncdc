@@ -1,4 +1,4 @@
-import { MockConfig, TestConfig } from './config'
+import { MockConfig, TestConfig } from './config/config'
 import chalk from 'chalk'
 import { startServer, RouteConfig } from './commands/serve/server'
 import TypeValidator from './validation/type-validator'

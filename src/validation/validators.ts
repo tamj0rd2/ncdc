@@ -1,7 +1,7 @@
 import TypeValidator from './type-validator'
 import { Data } from '../types'
 import Problem, { ProblemType } from '../problem'
-import { TestConfig } from '../config'
+import { TestConfig } from '../config/config'
 import { shouldBe } from '../messages'
 
 export type LoaderResponse = { status: number; data?: Data }

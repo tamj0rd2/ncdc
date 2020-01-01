@@ -5,6 +5,7 @@ import { Data } from '../types'
 import Problem, { ProblemType } from '../problem'
 import * as _problems from '../problem'
 import * as _messages from '../messages'
+import { mockObj, mockCtor } from '../test-helpers'
 
 jest.mock('../messages')
 jest.mock('../problem')
@@ -13,7 +14,7 @@ describe('Type validator', () => {
   const ajv = mockObj<Ajv>({ compile: jest.fn() })
   const schemaGenerator = mockObj<SchemaGenerator>({ load: jest.fn() })
   const messages = mockObj(_messages)
-  const problemCtor = (_problems as jest.Mocked<typeof _problems>).default
+  const problemCtor = mockCtor(Problem)
   let typeValidator: TypeValidator
 
   beforeEach(() => {

@@ -1,8 +1,9 @@
 import { doItAll, FetchResource, ValidationFlags } from './validators'
 import TypeValidator from './type-validator'
-import { TestConfig } from '../config'
+import { TestConfig } from '../config/config'
 import Problem, { ProblemType } from '../problem'
 import * as messages from '../messages'
+import { mockObj, mockFn } from '../test-helpers'
 
 jest.mock('../problem')
 jest.mock('../messages')

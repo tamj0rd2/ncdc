@@ -10,7 +10,7 @@ import axios from 'axios'
 import SchemaLoader from './validation/schema-loader'
 import createServeCommand from './serve/command'
 import { HandleError, CreateMain } from './command-shared'
-import createGenerateModule from './generate/command'
+import createGenerateCommand from './generate/command'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleError: HandleError = ({ stack, message }) => {
@@ -83,7 +83,7 @@ export default async function run(): Promise<void> {
           .catch(handleError)
       },
     )
-    .command(createGenerateModule(handleError))
+    .command(createGenerateCommand(handleError))
     .example(
       'ncdc serve ./service-config.json 4000',
       'Serves the mock API endpoints defined in service-config.json on port 4000',

@@ -60,7 +60,7 @@ const createHandler = (handleError: HandleError) => (args: GenerateArgs): void =
   }
 }
 
-export default function createGenerateModule(handleError: HandleError): CommandModule<{}, GenerateArgs> {
+export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {
   return {
     command: 'test <configPath> <baseURL>',
     describe: 'Tests API endpoint responses against a json schema',

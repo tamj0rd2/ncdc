@@ -83,7 +83,7 @@ const createHandler = (handleError: HandleError, createMain: CreateMain) => (arg
     .catch(handleError)
 }
 
-export default function createServeModule(
+export default function createServeCommand(
   handleError: HandleError,
   createMain: CreateMain,
 ): yargs.CommandModule<{}, ServeArgs> {

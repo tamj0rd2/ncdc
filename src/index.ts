@@ -35,12 +35,6 @@ const createMain = (allErrors: boolean, tsconfigPath: string, schemaPath: Option
 export default async function run(): Promise<void> {
   // eslint-disable-next-line no-unused-expressions
   mainYargs
-    .option('tsconfigPath', {
-      alias: 'c',
-      type: 'string',
-      description: 'a path to the tsconfig which contains required symbols',
-      default: './tsconfig.json',
-    })
     // TODO: look into providing command modules. They should help tidy things up
     // https://github.com/yargs/yargs/blob/master/docs/advanced.md
     .command(
@@ -57,6 +51,12 @@ export default async function run(): Promise<void> {
           .option('schemaPath', {
             type: 'string',
             description: 'specify a path to load json schemas from, rather than generating them',
+          })
+          .option('tsconfigPath', {
+            alias: 'c',
+            type: 'string',
+            description: 'a path to the tsconfig which contains required symbols',
+            default: './tsconfig.json',
           })
           .positional('configPath', {
             describe: 'path to the mock config',
@@ -123,6 +123,12 @@ export default async function run(): Promise<void> {
             type: 'string',
             description: 'specify a path to load json schemas from, rather than generating them',
           })
+          .option('tsconfigPath', {
+            alias: 'c',
+            type: 'string',
+            description: 'a path to the tsconfig which contains required symbols',
+            default: './tsconfig.json',
+          })
           .positional('configPath', {
             describe: 'path to the mock config',
             type: 'string',
@@ -157,6 +163,12 @@ export default async function run(): Promise<void> {
           .positional('configPath', {
             describe: 'path to the mock config',
             type: 'string',
+          })
+          .option('tsconfigPath', {
+            alias: 'c',
+            type: 'string',
+            description: 'a path to the tsconfig which contains required symbols',
+            default: './tsconfig.json',
           })
           .option('outputPath', {
             alias: ['o', 'output'],

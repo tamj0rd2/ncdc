@@ -1,4 +1,4 @@
-import { HandleError } from '../../command-shared'
+import { HandleError } from '../shared'
 import { Argv, CommandModule } from 'yargs'
 import readConfig, { TestConfig } from '../../config'
 import SchemaGenerator from '../../schema/schema-generator'

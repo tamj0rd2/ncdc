@@ -3,7 +3,7 @@ import yargs = require('yargs')
 import { resolve, normalize } from 'path'
 import readConfig, { MockConfig } from '../../config'
 import IOClient from './io-client'
-import { HandleError, CreateMain } from '../../command-shared'
+import { HandleError, CreateMain } from '../shared'
 
 interface ServeArgs {
   configPath?: string

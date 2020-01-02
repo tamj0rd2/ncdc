@@ -16,7 +16,7 @@ describe('allowedKeysOnly', () => {
       age: 100,
     }
 
-    expect(schema.isValidSync(config)).toBe(true)
+    expect(() => schema.validateSync(config)).not.toThrowError()
   })
 
   it('is invalid when unspecified keys are used ', () => {
@@ -62,7 +62,7 @@ describe('allowedKeysOnly', () => {
       },
     }
 
-    expect(schema.isValidSync(config)).toBe(true)
+    expect(() => schema.validateSync(config)).not.toThrowError()
   })
 
   it('it is invalid when unspecified keys are used in nested objects', () => {
@@ -107,7 +107,7 @@ describe('requiredIf', () => {
       mockEndpoint: 'world',
     }
 
-    expect(schema.isValidSync(config)).toBe(true)
+    expect(() => schema.validateSync(config)).not.toThrowError()
   })
 
   it('is true if one option is specified', () => {
@@ -115,12 +115,42 @@ describe('requiredIf', () => {
       mockEndpoint: 'hello',
     }
 
-    expect(schema.isValidSync(config)).toBe(true)
+    expect(() => schema.validateSync(config)).not.toThrowError()
   })
 
   it('is false if neither option is specified', () => {
     const config = {}
 
     expect(schema.isValidSync(config)).toBe(false)
+  })
+})
+
+describe('notAllowedIf', () => {
+  const schema = yup.object().shape({
+    hello: yup.string().notAllowedIf<string>('world', world => !!world),
+    world: yup.string().notAllowedIf<string>('hello', hello => !!hello),
+  })
+
+  it('throws if both options are specified', () => {
+    const config = {
+      hello: 'hello',
+      world: 'world',
+    }
+
+    expect(() => schema.validateSync(config)).toThrowError()
+  })
+
+  it('is valid if one option is specified', () => {
+    const config = {
+      world: 'hello',
+    }
+
+    expect(() => schema.validateSync(config)).not.toThrowError()
+  })
+
+  it('is valid if neither option is specified', () => {
+    const config = {}
+
+    expect(() => schema.validateSync(config)).not.toThrowError()
   })
 })

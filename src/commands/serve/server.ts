@@ -92,11 +92,12 @@ export const configureServer = (
       try {
         if (request.bodyType) {
           const problems = await typeValidator.getProblems(req.body, request.bodyType, ProblemType.Request)
-          if (problems) {
-            // TODO: I want to somehow log these problems somewhere
-            return next()
-          }
+          // TODO: I want to somehow log these problems somewhere
+          if (problems) return next()
         }
+
+        // TODO: add this check for body
+        // if (request.body)
 
         if (response.code) res.status(response.code)
         if (response.headers) res.set(response.headers)

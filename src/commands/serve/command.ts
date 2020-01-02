@@ -1,5 +1,5 @@
 import { Argv } from 'yargs'
-import yargs = require('yargs')
+import yargs from 'yargs'
 import { resolve, normalize } from 'path'
 import readConfig, { MockConfig } from '../../config/config'
 import IOClient from './io-client'

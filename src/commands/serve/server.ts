@@ -4,7 +4,7 @@ import { OutgoingHttpHeaders, Server } from 'http'
 import { Data } from '../../types'
 import TypeValidator from '../../validation/type-validator'
 import { ProblemType } from '../../problem'
-import { SupportedMethod } from '../../config/config'
+import { SupportedMethod } from '../../config'
 
 export interface RouteConfig {
   name: string

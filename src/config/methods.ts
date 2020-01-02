@@ -6,8 +6,8 @@ declare module 'yup' {
   }
 }
 
-yup.addMethod(yup.object, 'allowedKeysOnly', function (this: yup.ObjectSchema) {
-  return this.test('allowedKeysOnly', '${path} contains an unknown key', function (value) {
+yup.addMethod(yup.object, 'allowedKeysOnly', function(this: yup.ObjectSchema) {
+  return this.test('allowedKeysOnly', '${path} contains an unknown key', function(value) {
     if (!value) return true
 
     const known = Object.keys((this.schema as any).fields)

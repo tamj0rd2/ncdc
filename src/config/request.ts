@@ -21,8 +21,8 @@ export const testRequestSchema = yup
       })
       .required(),
     type: yup.string().notRequired(),
-    body: yup.mixed<Data>().notAllowedIf('bodyPath', bodyPath => !!bodyPath),
-    bodyPath: yup.string().notAllowedIf('body', body => !!body),
+    body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
+    bodyPath: yup.string().notAllowedIfSiblings('body'),
   })
   .allowedKeysOnly('serveEndpoint')
 
@@ -52,16 +52,16 @@ export const serveRequestSchema = yup
       .string()
       .oneOf(['GET', 'POST'])
       .required(),
-    endpoint: yup.string().requiredIf<string>('serveEndpoint', serveEndpoint => !serveEndpoint),
-    serveEndpoint: yup.string().requiredIf<string>('endpoint', endpoint => !endpoint),
+    endpoint: yup.string().requiredIfNoSiblings('serveEndpoint'),
+    serveEndpoint: yup.string().requiredIfNoSiblings('endpoint'),
     type: yup.string().notRequired(),
-    body: yup.mixed<Data>().notAllowedIf('bodyPath', bodyPath => !!bodyPath),
-    bodyPath: yup.string().notAllowedIf('body', body => !!body),
+    body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
+    bodyPath: yup.string().notAllowedIfSiblings('body'),
     // NOTE: mockBody/mockPath should only be used in cases where a body or bodypath isn't specified.
     // This apeases the case where someone might want to do a cdc test where they don't check the boxy
     // while still being able to have a body available in serve mode
-    mockBody: yup.mixed<Data>().notAllowedIf(['body', 'bodyPath', 'mockBodyPath'], value => !!value),
-    mockBodyPath: yup.string().notAllowedIf(['body', 'bodyPath', 'mockBody'], value => !!value),
+    mockBody: yup.mixed<Data>().notAllowedIfSiblings('body', 'bodyPath', 'mockBodyPath'),
+    mockBodyPath: yup.string().notAllowedIfSiblings('body', 'bodyPath', 'mockBody'),
   })
   .allowedKeysOnly()
 

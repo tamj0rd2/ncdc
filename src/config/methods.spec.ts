@@ -97,8 +97,8 @@ describe('allowedKeysOnly', () => {
 
 describe('requiredIf', () => {
   const schema = yup.object().shape({
-    endpoint: yup.string().requiredIf('mockEndpoint', mockEndpoint => !mockEndpoint),
-    mockEndpoint: yup.string().requiredIf('endpoint', endpoint => endpoint === undefined),
+    endpoint: yup.string().requiredIfNoSiblings('mockEndpoint'),
+    mockEndpoint: yup.string().requiredIfNoSiblings('endpoint'),
   })
 
   it('is true if both options are specified', () => {
@@ -127,9 +127,9 @@ describe('requiredIf', () => {
 
 describe('notAllowedIf', () => {
   const schema = yup.object().shape({
-    hello: yup.string().notAllowedIf('world', world => !!world),
-    world: yup.string().notAllowedIf('hello', hello => !!hello),
-    nice: yup.string().notAllowedIf(['hello', 'world'], value => !!value),
+    hello: yup.string().notAllowedIfSiblings('world'),
+    world: yup.string().notAllowedIfSiblings('hello'),
+    nice: yup.string().notAllowedIfSiblings('hello', 'world'),
   })
 
   it.each(['hello', 'world', 'nice'])('is valid if only %s key is specified', key => {

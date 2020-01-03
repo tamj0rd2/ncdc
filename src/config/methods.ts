@@ -1,44 +1,47 @@
 import * as yup from 'yup'
 
-yup.addMethod(yup.mixed, 'requiredIf', function requiredIf<V>(
+yup.addMethod(yup.mixed, 'requiredIfNoSiblings', function(
   this: yup.Schema<yup.MixedSchema>,
-  sibling: string,
-  condition: (value: V) => boolean,
+  ...siblings: string[]
 ) {
-  return this.test('requiredIf', '', function (value) {
-    const isValid = !condition(this.parent[sibling]) || !!value
+  return this.test('requiredIf', '', function(value) {
+    const allSiblingsDefined = siblings.filter(x => !this.parent[x]).length === 0
+
+    const isValid = allSiblingsDefined || !!value
 
     return (
       isValid ||
       this.createError({
         path: this.path,
-        message: `${this.path} is required because its sibling "${sibling}" is not defined`,
+        message: `${this.path} is required because the following siblings are not defined: ${siblings.join(
+          ', ',
+        )}`,
       })
     )
   })
 })
 
-yup.addMethod(yup.mixed, 'notAllowedIf', function requiredIf(
+yup.addMethod(yup.mixed, 'notAllowedIfSiblings', function(
   this: yup.Schema<yup.MixedSchema>,
-  sibling: string | string[],
-  condition: (siblingValue: any) => boolean,
+  ...siblings: string[]
 ) {
-  return this.test('notAllowedIf', '', function (value) {
-    const siblings = typeof sibling === 'string' ? [sibling] : sibling
+  return this.test('notAllowedIf', '', function(value) {
     if (!value) return true
 
-    const conflict = siblings.map(sibling => condition(this.parent[sibling])).find(x => x)
-    if (!conflict) return true
+    const siblingIsDefined = siblings.find(x => !!this.parent[x])
+    if (!siblingIsDefined) return true
 
     return this.createError({
       path: this.path,
-      message: `${this.path} is not allowed because one of the following siblings are defined: ${siblings.join(', ')}`,
+      message: `${
+        this.path
+      } is not allowed because one of the following siblings are defined: ${siblings.join(', ')}`,
     })
   })
 })
 
-yup.addMethod(yup.object, 'allowedKeysOnly', function allowedKeysOnly(...ignoredKeys: string[]) {
-  return this.test('allowedKeysOnly', '', function (value) {
+yup.addMethod(yup.object, 'allowedKeysOnly', function(...ignoredKeys: string[]) {
+  return this.test('allowedKeysOnly', '', function(value) {
     if (!value) return true
 
     const known = Object.keys((this.schema as any).fields).concat(ignoredKeys)
@@ -54,17 +57,9 @@ yup.addMethod(yup.object, 'allowedKeysOnly', function allowedKeysOnly(...ignored
 
 declare module 'yup' {
   interface Schema<T> {
-    requiredIf<V>(
-      this: Schema<Optional<T>>,
-      sibling: string,
-      condition: (siblingValue: V) => boolean,
-    ): Schema<Optional<T>>
+    requiredIfNoSiblings<V>(this: Schema<Optional<T>>, ...siblings: string[]): Schema<Optional<T>>
 
-    notAllowedIf(
-      this: Schema<Optional<T>>,
-      sibling: string | string[],
-      condition: (siblingValue: any) => boolean,
-    ): Schema<Optional<T>>
+    notAllowedIfSiblings(this: Schema<Optional<T>>, ...siblings: string[]): Schema<Optional<T>>
   }
 
   interface ObjectSchema<T> {

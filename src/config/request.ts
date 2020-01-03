@@ -18,12 +18,19 @@ export const testRequestSchema = yup
         yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.array().of(yup.string()))),
       )
       .notRequired(),
-    body: yup.mixed<Data>().notRequired(),
     type: yup.string().notRequired(),
+    body: yup.mixed<Data>().notAllowedIf('bodyPath', bodyPath => !!bodyPath),
+    bodyPath: yup.string().notAllowedIf('body', body => !!body),
   })
   .allowedKeysOnly('serveEndpoint')
 
-export type TestRequestConfig = yup.InferType<typeof testRequestSchema>
+export const mapTestRequestConfig = (config: yup.InferType<typeof testRequestSchema>) => {
+  return {
+    method: config.method,
+    endpoint: config.endpoint,
+    params: config.params,
+  }
+}
 
 export const serveRequestSchema = yup
   .object({
@@ -31,15 +38,18 @@ export const serveRequestSchema = yup
       .string()
       .oneOf(['GET', 'POST'])
       .required(),
-    endpoint: yup.string().requiredIf('serveEndpoint', serveEndpoint => !serveEndpoint),
-    serveEndpoint: yup.string().requiredIf('endpoint', endpoint => !endpoint),
-    body: yup.mixed<Data>().notRequired(),
-    bodyPath: yup.string().notRequired(),
+    endpoint: yup.string().requiredIf<string>('serveEndpoint', serveEndpoint => !serveEndpoint),
+    serveEndpoint: yup.string().requiredIf<string>('endpoint', endpoint => !endpoint),
     type: yup.string().notRequired(),
+    body: yup.mixed<Data>().notAllowedIf('bodyPath', bodyPath => !!bodyPath),
+    bodyPath: yup.string().notAllowedIf('body', body => !!body),
+    // NOTE: mockBody/mockPath should only be used in cases where a body or bodypath isn't specified.
+    // This apeases the case where someone might want to do a cdc test where they don't check the boxy
+    // while still being able to have a body available in serve mode
+    mockBody: yup.mixed<Data>().notAllowedIf(['body', 'bodyPath', 'mockBodyPath'], value => !!value),
+    mockBodyPath: yup.string().notAllowedIf(['body', 'bodyPath', 'mockBody'], value => !!value),
   })
-  .allowedKeysOnly()
-
-export type ServeRequestConfig = yup.InferType<typeof serveRequestSchema>
+  .allowedKeysOnly('params')
 
 export interface RequestConfig {
   endpoint: string

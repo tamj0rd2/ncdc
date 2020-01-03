@@ -127,11 +127,20 @@ describe('requiredIf', () => {
 
 describe('notAllowedIf', () => {
   const schema = yup.object().shape({
-    hello: yup.string().notAllowedIf<string>('world', world => !!world),
-    world: yup.string().notAllowedIf<string>('hello', hello => !!hello),
+    hello: yup.string().notAllowedIf('world', world => !!world),
+    world: yup.string().notAllowedIf('hello', hello => !!hello),
+    nice: yup.string().notAllowedIf(['hello', 'world'], value => !!value),
   })
 
-  it('throws if both options are specified', () => {
+  it.each(['hello', 'world', 'nice'])('is valid if only %s key is specified', key => {
+    const config = {
+      [key]: key,
+    }
+
+    expect(() => schema.validateSync(config)).not.toThrowError()
+  })
+
+  it('throws if hello and world are specified', () => {
     const config = {
       hello: 'hello',
       world: 'world',
@@ -140,17 +149,13 @@ describe('notAllowedIf', () => {
     expect(() => schema.validateSync(config)).toThrowError()
   })
 
-  it('is valid if one option is specified', () => {
+  it('it throws if hello or world are specified with nice', () => {
     const config = {
-      world: 'hello',
+      hello: 'hello',
+      world: 'world',
+      nice: 'nice',
     }
 
-    expect(() => schema.validateSync(config)).not.toThrowError()
-  })
-
-  it('is valid if neither option is specified', () => {
-    const config = {}
-
-    expect(() => schema.validateSync(config)).not.toThrowError()
+    expect(() => schema.validateSync(config)).toThrowError(/nice is not allowed .* hello, world/)
   })
 })

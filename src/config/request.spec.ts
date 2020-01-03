@@ -1,10 +1,11 @@
 import { testRequestSchema, serveRequestSchema } from './request'
 
-it('does not throw for a valid Test request config', () => {
+const cases: (string | string[])[] = ['/endpoint1', ['/endpoint1', '/endpoint2']]
+
+it.each(cases)('does not throw for a valid Test request config %s', endpoints => {
   const config = {
     method: 'POST',
-    endpoint: '/api/hello?target=world',
-    params: [],
+    endpoints,
     type: 'string',
     body: 'hello world',
     serveEndpoint: '/api/hello',
@@ -17,7 +18,6 @@ it('does not throw for a valid Serve request config', () => {
   const config = {
     method: 'POST',
     endpoint: '/api/hello?target=world',
-    params: [],
     type: 'string',
     mockBody: 'hello world',
     serveEndpoint: '/api/hello',

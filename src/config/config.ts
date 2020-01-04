@@ -11,7 +11,13 @@ import {
   mapServeRequestConfig,
 } from './request'
 import { RequestConfigArray } from '.'
-import { OldResponseConfig, OldMockResponseConfig, oldResponseSchema } from './response'
+import {
+  OldResponseConfig,
+  OldMockResponseConfig,
+  oldResponseSchema,
+  mapTestResponseConfig,
+  mapServeResponseConfig,
+} from './response'
 
 export interface Config {
   name: string
@@ -54,12 +60,13 @@ export async function readConfig(configPath: string, mode: Mode): Promise<Config
   const configs = await configSchema.validate(rawConfig)
 
   const requestMapper = mode === Mode.Test ? mapTestRequestConfig : mapServeRequestConfig
+  const responseMapper = mode === Mode.Test ? mapTestResponseConfig : mapServeResponseConfig
 
   return await Promise.all(
-    configs.map<Promise<Config>>(async ({ name, request }) => ({
+    configs.map<Promise<Config>>(async ({ name, request, response }) => ({
       name: name,
       requests: await requestMapper(request),
-      response: {},
+      response: await responseMapper(response),
     })),
   )
 }

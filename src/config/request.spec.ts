@@ -4,7 +4,7 @@ import { mockObj } from '../test-helpers'
 
 jest.mock('../io')
 
-const cobinedConfigCases: object[][] = [
+const combinedConfigCases: object[][] = [
   [
     {
       method: 'GET',
@@ -74,7 +74,7 @@ describe('mapTestRequestConfig', () => {
     expect(mappedConfig.body).toEqual({ hello: 'world' })
   })
 
-  it.each(cobinedConfigCases)(
+  it.each(combinedConfigCases)(
     'does not throw for config that contains serve settings',
     async combinedConfig => {
       await expect(mapTestRequestConfig(combinedConfig)).resolves.not.toThrowError()
@@ -166,7 +166,7 @@ describe('mapMockRequestConfig', () => {
     expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
   })
 
-  it.each(cobinedConfigCases)(
+  it.each(combinedConfigCases)(
     'does not throw for config that contains test settings',
     async combinedConfig => {
       await expect(mapServeRequestConfig(combinedConfig)).resolves.not.toThrowError()

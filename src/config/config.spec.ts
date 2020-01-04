@@ -4,15 +4,18 @@ import * as _fs from 'fs'
 import * as _io from '../io'
 import { mockObj } from '../test-helpers'
 import * as _request from './request'
+import * as _response from './response'
 
 jest.mock('fs')
 jest.mock('js-yaml')
 jest.mock('../io')
 jest.mock('./request')
+jest.mock('./response')
 
 const { safeLoad } = mockObj(_jsYaml)
 const { readFileAsync } = mockObj(_io)
 const { mapTestRequestConfig, mapServeRequestConfig } = mockObj(_request)
+const { mapTestResponseConfig, mapServeResponseConfig } = mockObj(_response)
 
 describe('Read config', () => {
   afterEach(() => {
@@ -126,7 +129,34 @@ describe('readConfig', () => {
     expect(safeLoad).toHaveBeenCalledWith('hello moto')
   })
 
+  // TODO: populate this once the old stuff has been removed
   it.todo('throws if the config is in the wrong shape')
+
+  it('returns each mapped config', async () => {
+    const loadedConfigs = [
+      {
+        name: 'Yo',
+        request: { hello: 'world' },
+        response: { goodbye: 'world' },
+      },
+    ]
+    safeLoad.mockReturnValue(loadedConfigs)
+
+    const mappedRequests: Partial<_request.RequestConfig>[] = [{ endpoint: 'yeah' }]
+    mapTestRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
+
+    const mappedResponse: _response.ResponseConfig = { code: 200 }
+    mapTestResponseConfig.mockResolvedValue(mappedResponse as _response.ResponseConfig)
+
+    const result = await readConfig('path', Mode.Test)
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject<Config>({
+      name: 'Yo',
+      requests: mappedRequests as _request.RequestConfigArray,
+      response: mappedResponse,
+    })
+  })
 
   describe('request mapping', () => {
     const loadedConfigs = [
@@ -154,28 +184,33 @@ describe('readConfig', () => {
       expect(mapServeRequestConfig).toHaveBeenCalledTimes(1)
       expect(mapServeRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request)
     })
+  })
 
-    it('returns each mapped config', async () => {
-      const loadedConfigs = [
-        {
-          name: 'Yo',
-          request: { hello: 'world' },
-          response: { goodbye: 'world' },
-        },
-      ]
-
-      safeLoad.mockReturnValue(loadedConfigs)
-      const mappedRequests: Partial<_request.RequestConfig>[] = [{ endpoint: 'yeah' }]
-      mapTestRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
-
-      const result = await readConfig('path', Mode.Test)
-
-      expect(result).toHaveLength(1)
-      expect(result[0]).toMatchObject<Config>({
+  describe('response mapping', () => {
+    const loadedConfigs = [
+      {
         name: 'Yo',
-        requests: mappedRequests as _request.RequestConfigArray,
-        response: {},
-      })
+        request: { hello: 'world' },
+        response: { goodbye: 'world' },
+      },
+    ]
+
+    it('calls the test mapper when in test mode', async () => {
+      safeLoad.mockReturnValue(loadedConfigs)
+
+      await readConfig('path', Mode.Test)
+
+      expect(mapTestResponseConfig).toHaveBeenCalledTimes(1)
+      expect(mapTestResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response)
+    })
+
+    it('calls the serve mapper when in serve mode', async () => {
+      safeLoad.mockReturnValue(loadedConfigs)
+
+      await readConfig('path', Mode.Serve)
+
+      expect(mapServeResponseConfig).toHaveBeenCalledTimes(1)
+      expect(mapServeResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response)
     })
   })
 })

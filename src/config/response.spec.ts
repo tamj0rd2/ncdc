@@ -7,6 +7,33 @@ jest.mock('../io')
 
 const { readJsonAsync } = mockObj(_io)
 
+const combinedConfigCases: object[][] = [
+  [
+    {
+      code: 200,
+      type: 'object',
+      bodyPath: './request.json',
+      headers: { header1: 'blah ' },
+    },
+  ],
+  [
+    {
+      code: 200,
+      type: 'object',
+      serveBody: ':D',
+      headers: { header1: 'blah ' },
+    },
+  ],
+  [
+    {
+      code: 200,
+      type: 'object',
+      serveBodyPath: './request.json',
+      headers: { header1: 'blah ' },
+    },
+  ],
+]
+
 describe('mapTestResponseConfig', () => {
   it('maps a basic config', async () => {
     const rawConfig = {
@@ -84,6 +111,13 @@ describe('mapTestResponseConfig', () => {
 
     await expect(mapTestResponseConfig(config)).rejects.toThrowError('headers.key should be of type:')
   })
+
+  it.each(combinedConfigCases)(
+    'does not throw for config that contains test settings',
+    async combinedConfig => {
+      await expect(mapTestResponseConfig(combinedConfig)).resolves.not.toThrowError()
+    },
+  )
 })
 
 describe('mapServeResponseConfig', () => {
@@ -149,4 +183,11 @@ describe('mapServeResponseConfig', () => {
       body: 'the body',
     })
   })
+
+  it.each(combinedConfigCases)(
+    'does not throw for config that contains test settings',
+    async combinedConfig => {
+      await expect(mapServeResponseConfig(combinedConfig)).resolves.not.toThrowError()
+    },
+  )
 })

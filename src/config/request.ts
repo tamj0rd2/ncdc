@@ -66,10 +66,11 @@ export const serveRequestSchema = yup
   .allowedKeysOnly()
 
 export interface RequestConfig {
-  endpoints: string[]
+  endpoint: string
   method: SupportedMethod
   type?: string
   body?: Data
+  params?: (string | string[])[]
 }
 
 export interface MockRequestConfig extends RequestConfig {

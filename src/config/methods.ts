@@ -56,14 +56,20 @@ yup.addMethod(yup.object, 'allowedKeysOnly', function(...ignoredKeys: string[]) 
 })
 
 yup.addMethod(yup.string, 'startsWith', function(substring: string) {
-  return this.test('startsWith', '', value => value.startsWith(substring))
+  return this.test('startsWith', '', function(value) {
+    return !value || value.startsWith(substring)
+  })
 })
 
-declare module 'yup' {
-  interface Schema<T> {
-    requiredIfNoSiblings<V>(this: Schema<Optional<T>>, ...siblings: string[]): typeof this
+type NotAllowedIfSiblings<T> = (this: T, ...siblings: string[]) => typeof this
 
-    notAllowedIfSiblings(this: Schema<Optional<T>>, ...siblings: string[]): typeof this
+declare module 'yup' {
+  interface MixedSchema<T> {
+    notAllowedIfSiblings: (this: MixedSchema<T>, ...siblings: string[]) => MixedSchema<Optional<T>>
+  }
+
+  interface ArraySchema<T> {
+    requiredIfNoSiblings<V>(this: ArraySchema<T>, ...siblings: string[]): NotRequiredArraySchema<T>
   }
 
   interface ObjectSchema<T> {
@@ -72,5 +78,7 @@ declare module 'yup' {
 
   interface StringSchema<T> {
     startsWith(this: StringSchema<T>, substring: string): typeof this
+    notAllowedIfSiblings: (this: StringSchema<T>, ...siblings: string[]) => StringSchema<Optional<T>>
+    requiredIfNoSiblings<V>(this: StringSchema<T>, ...siblings: string[]): StringSchema<Optional<T>>
   }
 }

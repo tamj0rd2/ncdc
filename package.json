@@ -10,7 +10,7 @@
     "build": "rm -rf ./dist && tsc",
     "prepublishOnly": "jest && git push",
     "prepare": "rm -rf ./dist && tsc",
-    "test": "jest",
+    "test": "jest --collectCoverage",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore"
   },
   "jest": {
@@ -19,7 +19,6 @@
       "<rootDir>/node_modules/"
     ],
     "testEnvironment": "node",
-    "collectCoverage": true,
     "collectCoverageFrom": [
       "**/*.ts",
       "!**/node_modules/**",

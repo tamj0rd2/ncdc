@@ -1,11 +1,13 @@
-import { mapTestRequestConfig, serveRequestSchema } from './request'
+import { mapTestRequestConfig, mapServeRequestConfig } from './request'
 import * as _io from '../io'
 import { mockObj } from '../test-helpers'
 
 jest.mock('../io')
 
-describe('TestRequestConfig', () => {
-  const { readJsonAsync } = mockObj(_io)
+const { readJsonAsync } = mockObj(_io)
+
+describe('mapTestRequestConfig', () => {
+  afterEach(() => jest.resetAllMocks())
 
   it('maps a basic config correctly', async () => {
     const rawConfig = {
@@ -24,7 +26,7 @@ describe('TestRequestConfig', () => {
     expect(mappedConfig.type).toBe('string')
   })
 
-  it('maps body when a body path is given', async () => {
+  it('maps body when a bodyPath is given', async () => {
     const rawConfig = {
       method: 'POST',
       endpoints: ['/endpoint1', '/endpoint2'],
@@ -42,14 +44,85 @@ describe('TestRequestConfig', () => {
   })
 })
 
-it('does not throw for a valid Serve request config', () => {
-  const config = {
-    method: 'POST',
-    endpoint: '/api/hello?target=world',
-    serveEndpoint: '/api/hello',
-    type: 'string',
-    mockBody: 'hello world',
-  }
+describe('mapMockRequestConfig', () => {
+  afterEach(() => jest.resetAllMocks())
 
-  expect(() => serveRequestSchema.validateSync(config)).not.toThrowError()
+  it('maps a basic config correctly', async () => {
+    const rawConfig = {
+      method: 'GET',
+      endpoints: ['/endpoint1'],
+      type: 'MyType',
+      body: 'silly',
+    }
+
+    const mappedConfig = await mapServeRequestConfig(rawConfig)
+
+    expect(mappedConfig.body).toBe('silly')
+    expect(mappedConfig.endpoints).toStrictEqual(['/endpoint1'])
+    expect(mappedConfig.method).toBe('GET')
+    expect(mappedConfig.type).toBe('MyType')
+  })
+
+  it('maps endpoints when serveEndpoint is given', async () => {
+    const rawConfig = {
+      method: 'GET',
+      serveEndpoint: '/serve-endpoint',
+      type: 'MyType',
+      body: 'silly',
+    }
+
+    const mappedConfig = await mapServeRequestConfig(rawConfig)
+
+    expect(mappedConfig.body).toBe('silly')
+    expect(mappedConfig.endpoints).toStrictEqual(['/serve-endpoint'])
+    expect(mappedConfig.method).toBe('GET')
+    expect(mappedConfig.type).toBe('MyType')
+  })
+
+  it('maps body when a serveBodyPath is given', async () => {
+    const rawConfig = {
+      method: 'GET',
+      endpoints: ['/endpoint1'],
+      type: 'MyType',
+      serveBodyPath: './silly.json',
+    }
+
+    readJsonAsync.mockResolvedValue({ silly: 'billy' })
+
+    const mappedConfig = await mapServeRequestConfig(rawConfig)
+
+    expect(readJsonAsync).toHaveBeenCalledWith('./silly.json')
+    expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
+  })
+
+  it('maps body when a serveBody is given', async () => {
+    const rawConfig = {
+      method: 'GET',
+      endpoints: ['/endpoint1'],
+      type: 'MyType',
+      serveBody: 'silly',
+    }
+
+    readJsonAsync.mockResolvedValue({ silly: 'billy' })
+
+    const mappedConfig = await mapServeRequestConfig(rawConfig)
+
+    expect(mappedConfig.body).toBe('silly')
+  })
+
+  it('maps body when a bodyPath is given', async () => {
+    const rawConfig = {
+      method: 'GET',
+      endpoints: ['/endpoint1'],
+      type: 'MyType',
+      bodyPath: './silly.json',
+    }
+
+    readJsonAsync.mockResolvedValue({ silly: 'billy' })
+
+    const mappedConfig = await mapServeRequestConfig(rawConfig)
+
+    expect(readJsonAsync).toHaveBeenCalledWith('./silly.json')
+    expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
+  })
 })

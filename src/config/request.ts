@@ -12,7 +12,7 @@ export interface RequestConfig {
   type?: string
 }
 
-type RequestConfigArray = PopulatedArray<RequestConfig>
+export type RequestConfigArray = PopulatedArray<RequestConfig>
 
 const endpointSchema = yup.string().startsWith('/')
 const endpointsSchema = yup.array().of(endpointSchema)

@@ -1,11 +1,18 @@
-import readConfigOld, { MockConfig } from './config'
-import jsYaml from 'js-yaml'
+import readConfigOld, { MockConfig, readTestConfig, Config } from './config'
+import _jsYaml from 'js-yaml'
+import * as _fs from 'fs'
+import * as _io from '../io'
 import { mockObj } from '../test-helpers'
+import * as _request from './request'
 
 jest.mock('fs')
 jest.mock('js-yaml')
+jest.mock('../io')
+jest.mock('./request')
 
-const mockedJsYaml = mockObj(jsYaml)
+const { safeLoad } = mockObj(_jsYaml)
+const { readFileAsync } = mockObj(_io)
+const { mapTestRequestConfig } = mockObj(_request)
 
 describe('Read config', () => {
   afterEach(() => {
@@ -13,7 +20,7 @@ describe('Read config', () => {
   })
 
   it('throws for invalid test configs', () => {
-    mockedJsYaml.safeLoad.mockReturnValue([
+    safeLoad.mockReturnValue([
       {
         name: 'A normal blah',
         request: {
@@ -46,7 +53,7 @@ describe('Read config', () => {
         },
       },
     ]
-    mockedJsYaml.safeLoad.mockReturnValue(config)
+    safeLoad.mockReturnValue(config)
 
     const result = readConfigOld('path')
 
@@ -54,7 +61,7 @@ describe('Read config', () => {
   })
 
   it('throws for invalid mock configs', () => {
-    mockedJsYaml.safeLoad.mockReturnValue([
+    safeLoad.mockReturnValue([
       {
         name: 'A normal blah',
         request: {
@@ -91,7 +98,7 @@ describe('Read config', () => {
       },
     ]
 
-    mockedJsYaml.safeLoad.mockReturnValue(config)
+    safeLoad.mockReturnValue(config)
 
     const result = readConfigOld<MockConfig>('path')
 
@@ -99,4 +106,67 @@ describe('Read config', () => {
   })
 })
 
-describe('readTestConfig', () => {})
+describe('readTestConfig', () => {
+  afterEach(() => jest.resetAllMocks())
+
+  it('calls readFileSync with the correct params', async () => {
+    safeLoad.mockReturnValue([])
+
+    await readTestConfig('./configPath')
+
+    expect(readFileAsync).toHaveBeenCalledWith('./configPath')
+  })
+
+  it('calls safe load with the raw configuration', async () => {
+    readFileAsync.mockResolvedValue('hello moto')
+    safeLoad.mockReturnValue([])
+
+    await readTestConfig('path')
+
+    expect(safeLoad).toHaveBeenCalledWith('hello moto')
+  })
+
+  it.todo('throws if the config is in the wrong shape')
+
+  describe('request mapping', () => {
+    const loadedConfigs = [
+      {
+        name: 'Yo',
+        request: { hello: 'world' },
+        response: { goodbye: 'world' },
+      },
+    ]
+
+    it('calls the request mapper with the correct paramets', async () => {
+      safeLoad.mockReturnValue(loadedConfigs)
+
+      await readTestConfig('path')
+
+      expect(mapTestRequestConfig).toHaveBeenCalledTimes(1)
+      expect(mapTestRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request)
+    })
+
+    it('returns each mapped config', async () => {
+      const loadedConfigs = [
+        {
+          name: 'Yo',
+          request: { hello: 'world' },
+          response: { goodbye: 'world' },
+        },
+      ]
+
+      safeLoad.mockReturnValue(loadedConfigs)
+      const mappedRequests: Partial<_request.RequestConfig>[] = [{ endpoint: 'yeah' }]
+      mapTestRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
+
+      const result = await readTestConfig('path')
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject<Config>({
+        name: 'Yo',
+        requests: mappedRequests as _request.RequestConfigArray,
+        response: {},
+      })
+    })
+  })
+})

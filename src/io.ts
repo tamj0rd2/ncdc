@@ -1,15 +1,18 @@
 import { readFile } from 'fs'
 
-export const readJsonAsync = <TOut = object>(path: string): Promise<TOut> => {
-  return new Promise<TOut>((resolve, reject) => {
-    readFile(path, (err, data) => {
+export const readFileAsync = (path: string): Promise<string> => {
+  return new Promise<string>((resolve, reject) => {
+    readFile(path, 'utf8', (err, data) => {
       if (err) return reject(err)
 
       try {
-        resolve(JSON.parse(data.toString()))
+        resolve(data)
       } catch (err) {
         reject(err)
       }
     })
   })
 }
+
+export const readJsonAsync = async <TOut = object>(path: string): Promise<TOut> =>
+  JSON.parse(await readFileAsync(path))

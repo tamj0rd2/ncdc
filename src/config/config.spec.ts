@@ -1,4 +1,4 @@
-import readConfigOld, { MockConfig, readTestConfig, Config } from './config'
+import readConfigOld, { MockConfig, readConfig, Config, Mode } from './config'
 import _jsYaml from 'js-yaml'
 import * as _fs from 'fs'
 import * as _io from '../io'
@@ -12,7 +12,7 @@ jest.mock('./request')
 
 const { safeLoad } = mockObj(_jsYaml)
 const { readFileAsync } = mockObj(_io)
-const { mapTestRequestConfig } = mockObj(_request)
+const { mapTestRequestConfig, mapServeRequestConfig } = mockObj(_request)
 
 describe('Read config', () => {
   afterEach(() => {
@@ -106,13 +106,13 @@ describe('Read config', () => {
   })
 })
 
-describe('readTestConfig', () => {
+describe('readConfig', () => {
   afterEach(() => jest.resetAllMocks())
 
   it('calls readFileSync with the correct params', async () => {
     safeLoad.mockReturnValue([])
 
-    await readTestConfig('./configPath')
+    await readConfig('./configPath', Mode.Test)
 
     expect(readFileAsync).toHaveBeenCalledWith('./configPath')
   })
@@ -121,7 +121,7 @@ describe('readTestConfig', () => {
     readFileAsync.mockResolvedValue('hello moto')
     safeLoad.mockReturnValue([])
 
-    await readTestConfig('path')
+    await readConfig('path', Mode.Test)
 
     expect(safeLoad).toHaveBeenCalledWith('hello moto')
   })
@@ -137,13 +137,22 @@ describe('readTestConfig', () => {
       },
     ]
 
-    it('calls the request mapper with the correct paramets', async () => {
+    it('calls the test mapper when in test mode', async () => {
       safeLoad.mockReturnValue(loadedConfigs)
 
-      await readTestConfig('path')
+      await readConfig('path', Mode.Test)
 
       expect(mapTestRequestConfig).toHaveBeenCalledTimes(1)
       expect(mapTestRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request)
+    })
+
+    it('calls the serve mapper when in serve mode', async () => {
+      safeLoad.mockReturnValue(loadedConfigs)
+
+      await readConfig('path', Mode.Serve)
+
+      expect(mapServeRequestConfig).toHaveBeenCalledTimes(1)
+      expect(mapServeRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request)
     })
 
     it('returns each mapped config', async () => {
@@ -159,7 +168,7 @@ describe('readTestConfig', () => {
       const mappedRequests: Partial<_request.RequestConfig>[] = [{ endpoint: 'yeah' }]
       mapTestRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
 
-      const result = await readTestConfig('path')
+      const result = await readConfig('path', Mode.Test)
 
       expect(result).toHaveLength(1)
       expect(result[0]).toMatchObject<Config>({

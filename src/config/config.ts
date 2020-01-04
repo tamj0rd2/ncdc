@@ -3,7 +3,13 @@ import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 import { readFileAsync } from '../io'
 import chalk from 'chalk'
-import { OldRequestConfig, OldMockRequestConfig, requestSchema, mapTestRequestConfig } from './request'
+import {
+  OldRequestConfig,
+  OldMockRequestConfig,
+  requestSchema,
+  mapTestRequestConfig,
+  mapServeRequestConfig,
+} from './request'
 import { RequestConfigArray } from '.'
 import { ResponseConfig, MockResponseConfig, responseSchema } from './response'
 
@@ -38,14 +44,21 @@ const configSchema = yup.array().of<ConfigSchema>(
   }),
 )
 
-export async function readTestConfig(configPath: string): Promise<Config[]> {
+export enum Mode {
+  Test,
+  Serve,
+}
+
+export async function readConfig(configPath: string, mode: Mode): Promise<Config[]> {
   const rawConfig = safeLoad(await readFileAsync(configPath))
   const configs = await configSchema.validate(rawConfig)
+
+  const requestMapper = mode === Mode.Test ? mapTestRequestConfig : mapServeRequestConfig
 
   return await Promise.all(
     configs.map<Promise<Config>>(async ({ name, request }) => ({
       name: name,
-      requests: await mapTestRequestConfig(request),
+      requests: await requestMapper(request),
       response: {},
     })),
   )

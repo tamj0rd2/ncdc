@@ -1,4 +1,4 @@
-import { MockRequestConfig, MockResponseConfig, SupportedMethod } from '../../config'
+import { OldMockRequestConfig, MockResponseConfig, SupportedMethod } from '../../config'
 import { Data } from '../../types'
 import { OutgoingHttpHeaders } from 'http'
 import { RouteConfig } from './server'
@@ -26,7 +26,7 @@ export default class RouteConfigBuilder {
   }
 
   public withMockEndpoint(mockEndpoint: string): RouteConfigBuilder {
-    ;(this.config.request as MockRequestConfig).mockEndpoint = mockEndpoint
+    ;(this.config.request as OldMockRequestConfig).mockEndpoint = mockEndpoint
     return this
   }
 

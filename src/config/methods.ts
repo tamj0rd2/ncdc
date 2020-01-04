@@ -59,18 +59,9 @@ yup.addMethod(yup.string, 'startsWith', function(substring: string) {
   return this.test(
     'startsWith',
     `value of \${path} should start with ${substring} but received \${value} `,
-    function(value) {
-      return !value || value.startsWith(substring)
-
-      return this.createError({
-        path: this.path,
-        message: `${this.path} value should start with "${substring}" but the value was: ${value}}`,
-      })
-    },
+    value => !value || value.startsWith(substring),
   )
 })
-
-type NotAllowedIfSiblings<T> = (this: T, ...siblings: string[]) => typeof this
 
 declare module 'yup' {
   interface MixedSchema<T> {

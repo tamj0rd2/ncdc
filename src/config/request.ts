@@ -5,6 +5,7 @@ import { readJsonAsync } from '../io'
 
 export type SupportedMethod = 'GET' | 'POST'
 
+// TODO: add headers
 export interface RequestConfig {
   method: SupportedMethod
   endpoint: string

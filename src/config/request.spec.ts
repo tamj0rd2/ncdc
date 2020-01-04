@@ -10,7 +10,7 @@ const cobinedConfigCases: object[][] = [
       method: 'GET',
       endpoints: ['/endpoint1'],
       type: 'object',
-      bodyPath: './response.json',
+      bodyPath: './request.json',
       serveEndpoint: '/serve-endpoint',
     },
   ],
@@ -28,7 +28,7 @@ const cobinedConfigCases: object[][] = [
       method: 'GET',
       endpoints: ['/endpoint1'],
       type: 'object',
-      serveBodyPath: './response.json',
+      serveBodyPath: './request.json',
       serveEndpoint: '/serve-endpoint',
     },
   ],
@@ -63,14 +63,14 @@ describe('mapTestRequestConfig', () => {
       method: 'POST',
       endpoints: ['/endpoint1'],
       type: 'object',
-      bodyPath: './response.json',
+      bodyPath: './request.json',
     }
 
     readJsonAsync.mockResolvedValue({ hello: 'world' })
 
     const mappedConfig = (await mapTestRequestConfig(rawConfig))[0]
 
-    expect(readJsonAsync).toHaveBeenCalledWith('./response.json')
+    expect(readJsonAsync).toHaveBeenCalledWith('./request.json')
     expect(mappedConfig.body).toEqual({ hello: 'world' })
   })
 

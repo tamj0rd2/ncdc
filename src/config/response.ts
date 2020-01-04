@@ -40,7 +40,7 @@ export interface ResponseConfig {
   type?: string // TODO: only necessary for validation, pre server instantiation. should just be done here...
 }
 
-const testResponseSchema = yup.object({
+const baseResponseSchema = yup.object({
   code: yup.number().required(),
   body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
   bodyPath: yup.string().notAllowedIfSiblings('body'),
@@ -66,6 +66,13 @@ const testResponseSchema = yup.object({
   type: yup.string().notRequired(),
 })
 
+const testResponseSchema = baseResponseSchema
+
+const serveResponseSchema = baseResponseSchema.shape({
+  serveBody: yup.mixed<Data>().notAllowedIfSiblings('body, bodyPath, serveBodyPath'),
+  serveBodyPath: yup.string().notAllowedIfSiblings('body, bodyPath, serveBody'),
+})
+
 export const mapTestResponseConfig = async (responseConfig: object): Promise<ResponseConfig> => {
   const validatedConfig = await testResponseSchema.validate(responseConfig)
   const { body, bodyPath, code, type, headers } = validatedConfig
@@ -73,6 +80,24 @@ export const mapTestResponseConfig = async (responseConfig: object): Promise<Res
   return {
     code,
     body: bodyPath ? await readJsonAsync(bodyPath) : body,
+    type,
+    headers,
+  }
+}
+
+export const mapServeResponseConfig = async (responseConfig: object): Promise<ResponseConfig> => {
+  const validatedConfig = await serveResponseSchema.validate(responseConfig)
+  const { body, bodyPath, serveBody, serveBodyPath, code, type, headers } = validatedConfig
+
+  let bodyToUse: Optional<Data>
+  if (body) bodyToUse = body
+  else if (bodyPath) bodyToUse = await readJsonAsync(bodyPath)
+  else if (serveBody) bodyToUse = serveBody
+  else if (serveBodyPath) bodyToUse = await readJsonAsync(serveBodyPath)
+
+  return {
+    code,
+    body: bodyToUse,
     type,
     headers,
   }

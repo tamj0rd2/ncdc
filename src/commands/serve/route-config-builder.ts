@@ -1,4 +1,4 @@
-import { OldMockRequestConfig, MockResponseConfig, SupportedMethod } from '../../config'
+import { OldMockRequestConfig, OldMockResponseConfig, SupportedMethod } from '../../config'
 import { Data } from '../../types'
 import { OutgoingHttpHeaders } from 'http'
 import { RouteConfig } from './server'
@@ -51,12 +51,12 @@ export default class RouteConfigBuilder {
   }
 
   public withMockBody(mockBody: Data): RouteConfigBuilder {
-    ;(this.config.response as MockResponseConfig).mockBody = mockBody
+    ;(this.config.response as OldMockResponseConfig).mockBody = mockBody
     return this
   }
 
   public withMockPath(mockPath: string): RouteConfigBuilder {
-    ;(this.config.response as MockResponseConfig).mockPath = mockPath
+    ;(this.config.response as OldMockResponseConfig).mockPath = mockPath
     return this
   }
 

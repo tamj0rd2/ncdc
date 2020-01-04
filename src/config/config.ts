@@ -11,7 +11,7 @@ import {
   mapServeRequestConfig,
 } from './request'
 import { RequestConfigArray } from '.'
-import { ResponseConfig, MockResponseConfig, responseSchema } from './response'
+import { OldResponseConfig, OldMockResponseConfig, oldResponseSchema } from './response'
 
 export interface Config {
   name: string
@@ -22,12 +22,12 @@ export interface Config {
 export interface TestConfig {
   name: string
   request: OldRequestConfig
-  response: ResponseConfig
+  response: OldResponseConfig
 }
 
 export interface MockConfig extends TestConfig {
   request: OldMockRequestConfig
-  response: MockResponseConfig
+  response: OldMockResponseConfig
 }
 
 export interface ConfigSchema {
@@ -76,7 +76,7 @@ export default function readConfigOld<T extends TestConfig>(configPath: string):
           .object({
             name: yup.string().required(),
             request: requestSchema,
-            response: responseSchema,
+            response: oldResponseSchema,
           })
           .noUnknown(true),
       )

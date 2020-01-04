@@ -2,21 +2,21 @@ import { Data } from '../types'
 import * as yup from 'yup'
 import { OutgoingHttpHeaders } from 'http'
 
-export interface ResponseConfig {
+export interface OldResponseConfig {
   code: number
   body?: Data
   type?: string
   headers?: OutgoingHttpHeaders
 }
 
-export interface MockResponseConfig extends ResponseConfig {
+export interface OldMockResponseConfig extends OldResponseConfig {
   mockBody?: Data
   mockPath?: string
 }
 
 const stringOrObject = yup.lazy(val => (typeof val === 'string' ? yup.string() : yup.object()))
 
-export const responseSchema = yup
+export const oldResponseSchema = yup
   .object({
     code: yup.number(),
     body: stringOrObject,
@@ -27,3 +27,7 @@ export const responseSchema = yup
   })
   .noUnknown(true)
   .required()
+
+// =====================
+// NEW STUFF :D
+// =====================

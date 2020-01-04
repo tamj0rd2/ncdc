@@ -94,7 +94,7 @@ export const mapServeRequestConfig = async (
   })) as PopulatedArray<RequestConfig2>
 }
 
-export interface RequestConfig {
+export interface OldRequestConfig {
   endpoint: string
   method: SupportedMethod
   type?: string
@@ -102,7 +102,7 @@ export interface RequestConfig {
   params?: (string | string[])[]
 }
 
-export interface MockRequestConfig extends RequestConfig {
+export interface MockRequestConfig extends OldRequestConfig {
   mockEndpoint?: string
 }
 

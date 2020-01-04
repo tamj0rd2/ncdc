@@ -159,3 +159,17 @@ describe('notAllowedIf', () => {
     expect(() => schema.validateSync(config)).toThrowError(/nice is not allowed .* hello, world/)
   })
 })
+
+describe('startsWith', () => {
+  it('does not throw when starts with specified substring', () => {
+    const schema = yup.string().startsWith('hello')
+
+    expect(() => schema.validateSync('hello world')).not.toThrowError()
+  })
+
+  it('does throw when does not start with specified substring', () => {
+    const schema = yup.string().startsWith('hello')
+
+    expect(() => schema.validateSync('yellow world')).toThrowError()
+  })
+})

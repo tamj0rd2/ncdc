@@ -1,10 +1,11 @@
 import { Data } from '../types'
 import * as yup from 'yup'
 import './methods'
+import { readJsonAsync } from '../io'
 
 export type SupportedMethod = 'GET' | 'POST'
 
-export const testRequestSchema = yup
+const testRequestSchema = yup
   .object()
   .shape({
     method: yup
@@ -13,12 +14,7 @@ export const testRequestSchema = yup
       .required(),
     endpoints: yup
       .array()
-      .of(yup.string())
-      .transform(function(val, originalValue: string | string[]) {
-        if (typeof originalValue === 'string') return [originalValue]
-        if (originalValue.filter(x => typeof x !== 'string').length === 0) return originalValue
-        return null
-      })
+      .of(yup.string().startsWith('/'))
       .required(),
     type: yup.string().notRequired(),
     body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
@@ -26,25 +22,24 @@ export const testRequestSchema = yup
   })
   .allowedKeysOnly('serveEndpoint')
 
-export interface TestRequestConfig {
-  method: SupportedMethod
-  endpoint: string
-  type?: string
-  body?: Data
+interface TestRequestConfig extends Omit<yup.InferType<typeof testRequestSchema>, 'bodyPath'> {
+  endpoints: PopulatedArray<string>
 }
 
-type Blah = yup.InferType<typeof testRequestSchema>
+export const mapTestRequestConfig = async (requestConfig: object): Promise<TestRequestConfig> => {
+  const validatedConfig = testRequestSchema.validateSync(requestConfig)
 
-// export const mapTestRequestConfig = (config: yup.InferType<typeof testRequestSchema>): TestRequestConfig => {
-//   let params: string[][] | undefined
+  const body: Optional<Data> = validatedConfig.bodyPath
+    ? await readJsonAsync(validatedConfig.bodyPath)
+    : validatedConfig.body
 
-//   if (config.params) {
-//   }
-
-//   return {
-//     method: config.method,
-//   }
-// }
+  return {
+    endpoints: validatedConfig.endpoints as PopulatedArray<string>,
+    method: validatedConfig.method,
+    type: validatedConfig.type,
+    body,
+  }
+}
 
 export const serveRequestSchema = yup
   .object({

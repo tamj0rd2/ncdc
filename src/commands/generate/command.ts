@@ -1,6 +1,6 @@
 import { HandleError } from '../shared'
 import { Argv, CommandModule } from 'yargs'
-import readConfig, { TestConfig } from '../../config/config'
+import readConfigOld, { TestConfig } from '../../config/config'
 import SchemaGenerator from '../../schema/schema-generator'
 import { generate } from './generate'
 
@@ -35,7 +35,7 @@ const createHandler = (handleError: HandleError) => (args: GenerateArgs): void =
 
   let allConfigs: TestConfig[]
   try {
-    allConfigs = readConfig(configPath)
+    allConfigs = readConfigOld(configPath)
   } catch (err) {
     return handleError(err)
   }

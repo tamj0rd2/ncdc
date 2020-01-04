@@ -1,6 +1,6 @@
 import { HandleError, CreateMain } from '../shared'
 import { Argv, CommandModule } from 'yargs'
-import readConfig, { TestConfig } from '../../config/config'
+import readConfigOld, { TestConfig } from '../../config/config'
 import { createClient } from './http-client'
 import axios from 'axios'
 
@@ -45,7 +45,7 @@ const createHandler = (handleError: HandleError, createMain: CreateMain) => (arg
 
   let testConfigs: TestConfig[]
   try {
-    testConfigs = readConfig(configPath).filter(x => x.request.endpoint)
+    testConfigs = readConfigOld(configPath).filter(x => x.request.endpoint)
   } catch (err) {
     return handleError(err)
   }

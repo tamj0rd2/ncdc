@@ -1,4 +1,4 @@
-import readConfig, { MockConfig } from './config'
+import readConfigOld, { MockConfig } from './config'
 import jsYaml from 'js-yaml'
 import { mockObj } from '../test-helpers'
 
@@ -29,7 +29,7 @@ describe('Read config', () => {
       },
     ])
 
-    expect(() => readConfig('path')).toThrow()
+    expect(() => readConfigOld('path')).toThrow()
   })
 
   it('succeeds for valid test configs', () => {
@@ -48,7 +48,7 @@ describe('Read config', () => {
     ]
     mockedJsYaml.safeLoad.mockReturnValue(config)
 
-    const result = readConfig('path')
+    const result = readConfigOld('path')
 
     expect(result).toEqual(config)
   })
@@ -70,7 +70,7 @@ describe('Read config', () => {
       },
     ])
 
-    expect(() => readConfig<MockConfig>('path')).toThrow()
+    expect(() => readConfigOld<MockConfig>('path')).toThrow()
   })
 
   it('succeeds for valid mock configs', () => {
@@ -93,8 +93,10 @@ describe('Read config', () => {
 
     mockedJsYaml.safeLoad.mockReturnValue(config)
 
-    const result = readConfig<MockConfig>('path')
+    const result = readConfigOld<MockConfig>('path')
 
     expect(result).toEqual(config)
   })
 })
+
+describe('readTestConfig', () => {})

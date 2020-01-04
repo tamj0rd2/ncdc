@@ -1,7 +1,7 @@
 import { Argv } from 'yargs'
 import yargs from 'yargs'
 import { resolve, normalize } from 'path'
-import readConfig, { MockConfig } from '../../config/config'
+import readConfigOld, { MockConfig } from '../../config/config'
 import IOClient from './io-client'
 import { HandleError, CreateMain } from '../shared'
 
@@ -56,7 +56,7 @@ const createHandler = (handleError: HandleError, createMain: CreateMain) => (arg
 
   let mockConfigs: MockConfig[]
   try {
-    mockConfigs = readConfig<MockConfig>(fullConfigPath)
+    mockConfigs = readConfigOld<MockConfig>(fullConfigPath)
       .filter(x => x.response.mockPath || x.response.mockBody || x.response.body)
       .map(config => {
         // TODO: this feels a bit naughty

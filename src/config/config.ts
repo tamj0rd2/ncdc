@@ -2,7 +2,7 @@ import * as yup from 'yup'
 import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 import chalk from 'chalk'
-import { OldRequestConfig, MockRequestConfig, requestSchema } from './request'
+import { OldRequestConfig, OldMockRequestConfig, requestSchema } from './request'
 import { ResponseConfig, MockResponseConfig, responseSchema } from './response'
 
 export interface TestConfig {
@@ -12,7 +12,7 @@ export interface TestConfig {
 }
 
 export interface MockConfig extends TestConfig {
-  request: MockRequestConfig
+  request: OldMockRequestConfig
   response: MockResponseConfig
 }
 

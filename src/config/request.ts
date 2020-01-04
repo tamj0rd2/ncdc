@@ -102,7 +102,7 @@ export interface OldRequestConfig {
   params?: (string | string[])[]
 }
 
-export interface MockRequestConfig extends OldRequestConfig {
+export interface OldMockRequestConfig extends OldRequestConfig {
   mockEndpoint?: string
 }
 

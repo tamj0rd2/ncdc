@@ -29,17 +29,17 @@ const testRequestSchema = yup
   .allowedKeysOnly('serveEndpoint')
 
 export const mapTestRequestConfig = async (requestConfig: object): Promise<RequestConfig2> => {
+  // TODO: type validation of the type against the body could even be done here :O
   const validatedConfig = await testRequestSchema.validate(requestConfig)
+  const { bodyPath, body, endpoints, type, method } = validatedConfig
 
-  const body: Optional<Data> = validatedConfig.bodyPath
-    ? await readJsonAsync(validatedConfig.bodyPath)
-    : validatedConfig.body
+  const bodyToUse: Optional<Data> = bodyPath ? await readJsonAsync(bodyPath) : body
 
   return {
-    body,
-    endpoints: validatedConfig.endpoints as PopulatedArray<string>,
-    method: validatedConfig.method,
-    type: validatedConfig.type,
+    body: bodyToUse,
+    endpoints: endpoints as PopulatedArray<string>,
+    method: method,
+    type: type,
   }
 }
 

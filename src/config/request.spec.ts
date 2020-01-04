@@ -4,13 +4,35 @@ import { mockObj } from '../test-helpers'
 
 jest.mock('../io')
 
-const combinedConfig = {
-  method: 'POST',
-  endpoints: ['/endpoint1'],
-  type: 'object',
-  bodyPath: './response.json',
-  serveEndpoint: '/serve-endpoint',
-}
+const cobinedConfigCases: object[][] = [
+  [
+    {
+      method: 'GET',
+      endpoints: ['/endpoint1'],
+      type: 'object',
+      bodyPath: './response.json',
+      serveEndpoint: '/serve-endpoint',
+    },
+  ],
+  [
+    {
+      method: 'GET',
+      endpoints: ['/endpoint1', '/spice-it-up'],
+      type: 'object',
+      serveBody: ':D',
+      serveEndpoint: '/serve-endpoint',
+    },
+  ],
+  [
+    {
+      method: 'GET',
+      endpoints: ['/endpoint1'],
+      type: 'object',
+      serveBodyPath: './response.json',
+      serveEndpoint: '/serve-endpoint',
+    },
+  ],
+]
 
 describe('mapTestRequestConfig', () => {
   const { readJsonAsync } = mockObj(_io)
@@ -52,9 +74,12 @@ describe('mapTestRequestConfig', () => {
     expect(mappedConfig.body).toEqual({ hello: 'world' })
   })
 
-  it('does not throw for config that contains serve settings', async () => {
-    await expect(mapTestRequestConfig(combinedConfig)).resolves.not.toThrowError()
-  })
+  it.each(cobinedConfigCases)(
+    'does not throw for config that contains serve settings',
+    async combinedConfig => {
+      await expect(mapTestRequestConfig(combinedConfig)).resolves.not.toThrowError()
+    },
+  )
 })
 
 describe('mapMockRequestConfig', () => {
@@ -141,7 +166,10 @@ describe('mapMockRequestConfig', () => {
     expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
   })
 
-  it('does not throw for config that contains serve settings', async () => {
-    await expect(mapServeRequestConfig(combinedConfig)).resolves.not.toThrowError()
-  })
+  it.each(cobinedConfigCases)(
+    'does not throw for config that contains test settings',
+    async combinedConfig => {
+      await expect(mapServeRequestConfig(combinedConfig)).resolves.not.toThrowError()
+    },
+  )
 })

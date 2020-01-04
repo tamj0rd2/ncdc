@@ -38,3 +38,5 @@ export default function readConfig<T extends TestConfig>(configPath: string): T[
     throw new Error(`${chalk.bold('Config error:')} ${err.message}`)
   }
 }
+
+// TODO: Create a GenerateConfig because we don't really want to do a big validation just to get a list of types

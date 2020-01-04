@@ -29,7 +29,7 @@ const baseRequestConfigSchema = yup.object({
 
 const testRequestSchema = baseRequestConfigSchema
   .shape({ endpoints: endpointsSchema.required() })
-  .allowedKeysOnly('serveEndpoint')
+  .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')
 
 const serveRequestSchema = baseRequestConfigSchema
   .shape({
@@ -65,7 +65,7 @@ export const mapServeRequestConfig = async (requestConfig: object): Promise<Requ
   if (body) bodyToUse = body
   else if (bodyPath) bodyToUse = await readJsonAsync(bodyPath)
   else if (serveBody) bodyToUse = serveBody
-  if (serveBodyPath) bodyToUse = await readJsonAsync(serveBodyPath)
+  else if (serveBodyPath) bodyToUse = await readJsonAsync(serveBodyPath)
 
   const endpointsToUse = serveEndpoint ? [serveEndpoint] : (endpoints as PopulatedArray<string>)
   return endpointsToUse.map<RequestConfig>(endpoint => ({

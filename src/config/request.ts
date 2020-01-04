@@ -4,9 +4,10 @@ import './methods'
 import { readJsonAsync } from '../io'
 
 export type SupportedMethod = 'GET' | 'POST'
+
 export interface RequestConfig2 {
   method: SupportedMethod
-  endpoints: PopulatedArray<string>
+  endpoint: string
   body?: Data
   type?: string
 }
@@ -28,19 +29,21 @@ const testRequestSchema = yup
   })
   .allowedKeysOnly('serveEndpoint')
 
-export const mapTestRequestConfig = async (requestConfig: object): Promise<RequestConfig2> => {
+export const mapTestRequestConfig = async (
+  requestConfig: object,
+): Promise<PopulatedArray<RequestConfig2>> => {
   // TODO: type validation of the type against the body could even be done here :O
   const validatedConfig = await testRequestSchema.validate(requestConfig)
   const { bodyPath, body, endpoints, type, method } = validatedConfig
 
   const bodyToUse: Optional<Data> = bodyPath ? await readJsonAsync(bodyPath) : body
 
-  return {
+  return endpoints.map(endpoint => ({
     body: bodyToUse,
-    endpoints: endpoints as PopulatedArray<string>,
-    method: method,
-    type: type,
-  }
+    endpoint,
+    method,
+    type,
+  })) as PopulatedArray<RequestConfig2>
 }
 
 const serveRequestSchema = yup
@@ -57,7 +60,6 @@ const serveRequestSchema = yup
       .string()
       .requiredIfNoSiblings('endpoints')
       .startsWith('/'),
-    // .startsWith('/'),
     type: yup.string().notRequired(),
     body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
     bodyPath: yup.string().notAllowedIfSiblings('body'),
@@ -69,7 +71,9 @@ const serveRequestSchema = yup
   })
   .allowedKeysOnly()
 
-export const mapServeRequestConfig = async (requestConfig: object): Promise<RequestConfig2> => {
+export const mapServeRequestConfig = async (
+  requestConfig: object,
+): Promise<PopulatedArray<RequestConfig2>> => {
   // TODO: type validation of the type against the body could even be done here :O
   const validatedConfig = await serveRequestSchema.validate(requestConfig)
   const { method, type, endpoints, serveEndpoint, body, bodyPath, serveBody, serveBodyPath } = validatedConfig
@@ -81,12 +85,13 @@ export const mapServeRequestConfig = async (requestConfig: object): Promise<Requ
   else if (serveBody) bodyToUse = serveBody
   if (serveBodyPath) bodyToUse = await readJsonAsync(serveBodyPath)
 
-  return {
+  const endpointsToUse = serveEndpoint ? [serveEndpoint] : (endpoints as PopulatedArray<string>)
+  return endpointsToUse.map<RequestConfig2>(endpoint => ({
     body: bodyToUse,
-    endpoints: serveEndpoint ? [serveEndpoint] : (endpoints as PopulatedArray<string>),
-    method: method,
-    type: type,
-  }
+    endpoint,
+    method,
+    type,
+  })) as PopulatedArray<RequestConfig2>
 }
 
 export interface RequestConfig {

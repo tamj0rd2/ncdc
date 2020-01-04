@@ -1,4 +1,4 @@
-import { mapTestRequestConfig, mapServeRequestConfig } from './request'
+import { mapTestRequestConfig, mapServeRequestConfig, RequestConfig2 } from './request'
 import * as _io from '../io'
 import { mockObj } from '../test-helpers'
 
@@ -18,18 +18,21 @@ describe('mapTestRequestConfig', () => {
       serveEndpoint: '/api/hello',
     }
 
-    const mappedConfig = await mapTestRequestConfig(rawConfig)
+    const mappedConfigs = await mapTestRequestConfig(rawConfig)
 
-    expect(mappedConfig.body).toBe('hello world')
-    expect(mappedConfig.endpoints).toStrictEqual(['/endpoint1', '/endpoint2'])
-    expect(mappedConfig.method).toBe('POST')
-    expect(mappedConfig.type).toBe('string')
+    expect(mappedConfigs.length).toBe(2)
+    expect(mappedConfigs[0]).toMatchObject<RequestConfig2>({
+      endpoint: '/endpoint1',
+      body: 'hello world',
+      method: 'POST',
+      type: 'string',
+    })
   })
 
   it('maps body when a bodyPath is given', async () => {
     const rawConfig = {
       method: 'POST',
-      endpoints: ['/endpoint1', '/endpoint2'],
+      endpoints: ['/endpoint1'],
       type: 'object',
       bodyPath: './response.json',
       serveEndpoint: '/api/hello',
@@ -37,7 +40,7 @@ describe('mapTestRequestConfig', () => {
 
     readJsonAsync.mockResolvedValue({ hello: 'world' })
 
-    const mappedConfig = await mapTestRequestConfig(rawConfig)
+    const mappedConfig = (await mapTestRequestConfig(rawConfig))[0]
 
     expect(readJsonAsync).toHaveBeenCalledWith('./response.json')
     expect(mappedConfig.body).toEqual({ hello: 'world' })
@@ -55,10 +58,10 @@ describe('mapMockRequestConfig', () => {
       body: 'silly',
     }
 
-    const mappedConfig = await mapServeRequestConfig(rawConfig)
+    const mappedConfig = (await mapServeRequestConfig(rawConfig))[0]
 
     expect(mappedConfig.body).toBe('silly')
-    expect(mappedConfig.endpoints).toStrictEqual(['/endpoint1'])
+    expect(mappedConfig.endpoint).toBe('/endpoint1')
     expect(mappedConfig.method).toBe('GET')
     expect(mappedConfig.type).toBe('MyType')
   })
@@ -71,10 +74,10 @@ describe('mapMockRequestConfig', () => {
       body: 'silly',
     }
 
-    const mappedConfig = await mapServeRequestConfig(rawConfig)
+    const mappedConfig = (await mapServeRequestConfig(rawConfig))[0]
 
     expect(mappedConfig.body).toBe('silly')
-    expect(mappedConfig.endpoints).toStrictEqual(['/serve-endpoint'])
+    expect(mappedConfig.endpoint).toBe('/serve-endpoint')
     expect(mappedConfig.method).toBe('GET')
     expect(mappedConfig.type).toBe('MyType')
   })
@@ -89,7 +92,7 @@ describe('mapMockRequestConfig', () => {
 
     readJsonAsync.mockResolvedValue({ silly: 'billy' })
 
-    const mappedConfig = await mapServeRequestConfig(rawConfig)
+    const mappedConfig = (await mapServeRequestConfig(rawConfig))[0]
 
     expect(readJsonAsync).toHaveBeenCalledWith('./silly.json')
     expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
@@ -105,7 +108,7 @@ describe('mapMockRequestConfig', () => {
 
     readJsonAsync.mockResolvedValue({ silly: 'billy' })
 
-    const mappedConfig = await mapServeRequestConfig(rawConfig)
+    const mappedConfig = (await mapServeRequestConfig(rawConfig))[0]
 
     expect(mappedConfig.body).toBe('silly')
   })
@@ -120,7 +123,7 @@ describe('mapMockRequestConfig', () => {
 
     readJsonAsync.mockResolvedValue({ silly: 'billy' })
 
-    const mappedConfig = await mapServeRequestConfig(rawConfig)
+    const mappedConfig = (await mapServeRequestConfig(rawConfig))[0]
 
     expect(readJsonAsync).toHaveBeenCalledWith('./silly.json')
     expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })

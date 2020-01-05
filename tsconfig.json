@@ -13,6 +13,7 @@
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": true,
     "outDir": "dist",
+    "noEmit": true,
     "inlineSourceMap": true,
     "paths": {
       "~*": ["src/*"]

@@ -39,8 +39,11 @@ describe('readConfig', () => {
     expect(safeLoad).toHaveBeenCalledWith('hello moto')
   })
 
-  // TODO: populate this once the old stuff has been removed
-  it.todo('throws if the config is in the wrong shape')
+  it('throws if the config is in the wrong shape', async () => {
+    safeLoad.mockReturnValue([{ poop: ':O' }])
+
+    await expect(readConfig('path', typeValidator, Mode.Test)).rejects.toThrowError()
+  })
 
   it('calls the request mapper with the correct args', async () => {
     const loadedConfigs = [

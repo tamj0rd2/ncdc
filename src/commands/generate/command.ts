@@ -2,7 +2,7 @@ import { HandleError } from '../shared'
 import { Argv, CommandModule } from 'yargs'
 import SchemaGenerator from '../../schema/schema-generator'
 import { generate } from './generate'
-import { readGenerateConfig, Config } from './config'
+import { readGenerateConfig, GenerateConfigs } from './config'
 
 interface GenerateArgs {
   configPath?: string
@@ -33,7 +33,7 @@ const createHandler = (handleError: HandleError) => async (args: GenerateArgs): 
   const { tsconfigPath, configPath, outputPath } = args
   if (!configPath) process.exit(1)
 
-  let configs: Config[]
+  let configs: GenerateConfigs
   try {
     configs = await readGenerateConfig(configPath)
   } catch (err) {

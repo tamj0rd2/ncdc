@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { configureServer, Log } from './server'
-import RouteConfigBuilder from './route-config-builder'
+import ConfigBuilder from '../../config/config-builder'
 import TypeValidator from '../../validation/type-validator'
 import Problem from '../../problem'
 import { mockObj } from '../../test-helpers'
@@ -15,7 +15,7 @@ describe('server', () => {
   afterAll(() => jest.clearAllMocks())
 
   it('sends configurations when visiting /', async () => {
-    const configs = [new RouteConfigBuilder().withRequestBodyType('Some Type').build()]
+    const configs = [new ConfigBuilder().withRequestType('Some Type').build()]
 
     const app = configureServer('mysite.com', configs, mockTypeValidator)
 
@@ -34,7 +34,7 @@ describe('server', () => {
 
   it.each(getCases)('serves the configured path %s for GET requests', async (endpoint, pathToVisit) => {
     const configs = [
-      new RouteConfigBuilder()
+      new ConfigBuilder()
         .withEndpoint(endpoint)
         .withMethod('GET')
         .build(),
@@ -50,7 +50,7 @@ describe('server', () => {
 
   it.each(getCases)('serves the configured path %s for POST requests', async (endpoint, pathToVisit) => {
     const configs = [
-      new RouteConfigBuilder()
+      new ConfigBuilder()
         .withEndpoint(endpoint)
         .withMethod('POST')
         .build(),
@@ -66,8 +66,8 @@ describe('server', () => {
 
   it.skip('logs registration for each configured endpoint', () => {
     const configs = [
-      new RouteConfigBuilder().build(),
-      new RouteConfigBuilder()
+      new ConfigBuilder().build(),
+      new ConfigBuilder()
         .withName('Test2')
         .withEndpoint('/api/books/:id')
         .build(),
@@ -83,7 +83,7 @@ describe('server', () => {
   it.skip('shows logs for previous requests at /logs', async () => {
     dateSpy.mockReturnValue(0)
     const configs = [
-      new RouteConfigBuilder()
+      new ConfigBuilder()
         .withName('Boom')
         .withMethod('POST')
         .withEndpoint('/api/resource/:id')
@@ -124,7 +124,7 @@ describe('server', () => {
 
   it('sets the response headers when provided', async () => {
     const configs = [
-      new RouteConfigBuilder()
+      new ConfigBuilder()
         .withResponseHeaders({
           'content-type': 'application/xml',
           'another-header': 'my value',
@@ -141,7 +141,7 @@ describe('server', () => {
   })
 
   it('returns a custom 404 when the requested endpoint could not be found', async () => {
-    const configs = [new RouteConfigBuilder().withEndpoint('/almost/correct').build()]
+    const configs = [new ConfigBuilder().withEndpoint('/almost/correct').build()]
 
     const app = configureServer('mysite.com', configs, mockTypeValidator)
 
@@ -153,10 +153,10 @@ describe('server', () => {
 
   it('returns the desired response when the request body passes validation', async () => {
     const configs = [
-      new RouteConfigBuilder()
+      new ConfigBuilder()
         .withMethod('POST')
         .withEndpoint('/config1')
-        .withRequestBodyType('number')
+        .withRequestType('number')
         .withResponseCode(404)
         .withResponseBody('Noice')
         .build(),
@@ -173,10 +173,10 @@ describe('server', () => {
 
   it('gives a 404 when the request body fails type validation', async () => {
     const configs = [
-      new RouteConfigBuilder()
+      new ConfigBuilder()
         .withMethod('POST')
         .withEndpoint('/config1')
-        .withRequestBodyType('number')
+        .withRequestType('number')
         .build(),
     ]
 

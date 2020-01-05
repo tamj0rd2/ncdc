@@ -35,7 +35,6 @@ export default async function readConfig(
   typeValidator: TypeValidator,
   mode: Mode.Test | Mode.Serve,
 ): Promise<Config[]> {
-  // TODO: add some error handling. All of these things can possibly throw
   const rawConfig = safeLoad(await readFileAsync(configPath))
   const configs = (await configSchema.validate(rawConfig)).filter(
     x => mode === Mode.Serve || x.request.endpoints,

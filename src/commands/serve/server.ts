@@ -4,21 +4,7 @@ import { OutgoingHttpHeaders, Server } from 'http'
 import { Data } from '../../types'
 import TypeValidator from '../../validation/type-validator'
 import { ProblemType } from '../../problem'
-import { SupportedMethod } from '../../config'
-
-export interface RouteConfig {
-  name: string
-  request: {
-    method: SupportedMethod
-    endpoint: string
-    bodyType?: string
-  }
-  response: {
-    code?: number
-    headers?: OutgoingHttpHeaders
-    body?: Data
-  }
-}
+import { SupportedMethod, Config } from '../../config'
 
 export interface Log {
   name?: string
@@ -67,7 +53,7 @@ const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
 
 export const configureServer = (
   baseUrl: string,
-  mockConfigs: RouteConfig[],
+  mockConfigs: Config[],
   typeValidator: TypeValidator,
 ): Express => {
   const app = express()
@@ -85,14 +71,14 @@ export const configureServer = (
   app.get(ROOT, (_, res) => res.json(mockConfigs))
   // app.get(LOG_PATH, (_, res) => res.json(logs.reverse().slice(0, 15)))
 
-  mockConfigs.forEach(({ name, request, response }: RouteConfig) => {
+  mockConfigs.forEach(({ name, request, response }) => {
     const endpoint = request.endpoint.split('?')[0]
 
     app[verbsMap[request.method]](endpoint, async (req, res, next) => {
       try {
-        if (request.bodyType) {
-          const problems = await typeValidator.getProblems(req.body, request.bodyType, ProblemType.Request)
-          // TODO: I want to somehow log these problems somewhere
+        if (request.type) {
+          const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)
+          // TODO: I want to somehow log these problems somewhere. Also, the output should be different from the above
           if (problems) return next()
         }
 
@@ -158,7 +144,7 @@ export const configureServer = (
 
 export const startServer = (
   port: number,
-  routes: RouteConfig[],
+  routes: Config[],
   typeValidator: TypeValidator,
 ): Promise<Server> => {
   return new Promise(resolve => {

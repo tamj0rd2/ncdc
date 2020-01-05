@@ -62,7 +62,6 @@ export const doItAll = (
       )
     }
 
-    // TODO: Add Type back in
     if (shouldValidate(ValidationFlags.ResponseType) && responseConfig.type) {
       const result = await typeValidator.getProblems(response.data, responseConfig.type, ProblemType.Response)
       if (result) problems.push(...result)

@@ -8,7 +8,8 @@ const generateSchema = yup.object({
   response: yup.object({ type: yup.string().notRequired() }).required(),
 })
 
-export type Config = yup.InferType<typeof generateSchema>
+type Config = yup.InferType<typeof generateSchema>
+export type GenerateConfigs = Config[]
 
 export async function readGenerateConfig(configPath: string): Promise<Config[]> {
   const generateSchema = yup.array().of(

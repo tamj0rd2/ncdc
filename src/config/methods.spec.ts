@@ -212,3 +212,29 @@ describe('startsWith', () => {
     )
   })
 })
+
+describe('ofHeaders', () => {
+  const schema = yup.object().ofHeaders()
+
+  it('does not throw when headers are valid types', async () => {
+    const headers = {
+      header1: 'value1',
+      header2: ['woah', 'dude'],
+      header3: undefined,
+    }
+
+    expect(() => schema.validateSync(headers)).not.toThrowError()
+  })
+
+  const invalidHeaderCases: object[][] = [
+    [{ key: true }],
+    [{ key: 123 }],
+    [{ key: [123, 'abc'] }],
+    [{ key: ['abc', false] }],
+    [{ key: { hello: 'world' } }],
+  ]
+
+  it.each(invalidHeaderCases)('throws an error when headers are invalid %s', async headers => {
+    await expect(schema.validate(headers)).rejects.toThrowError('object.key should be of type:')
+  })
+})

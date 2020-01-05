@@ -49,6 +49,7 @@ describe('mapTestResponseConfig', () => {
     const rawConfig = {
       code: 200,
       type: 'MyType',
+      headers: { header1: 'yo' },
     }
 
     const mappedConfig = await mapTestResponseConfig(rawConfig)
@@ -56,6 +57,7 @@ describe('mapTestResponseConfig', () => {
     expect(mappedConfig).toMatchObject<ResponseConfig>({
       code: 200,
       type: 'MyType',
+      headers: { header1: 'yo' },
     })
   })
 
@@ -75,43 +77,6 @@ describe('mapTestResponseConfig', () => {
     })
   })
 
-  it('maps valid headers', async () => {
-    const rawConfig = {
-      code: 200,
-      headers: {
-        header1: 'value1',
-        header2: 2,
-        header3: ['woah', 'dude'],
-        header4: undefined,
-      },
-    }
-
-    const mappedConfig = await mapTestResponseConfig(rawConfig)
-
-    expect(mappedConfig.headers).toMatchObject<OutgoingHttpHeaders>({
-      header1: 'value1',
-      header2: 2,
-      header3: ['woah', 'dude'],
-      header4: undefined,
-    })
-  })
-
-  const invalidHeaderCases: object[][] = [
-    [{ key: true }],
-    [{ key: [123, 'abc'] }],
-    [{ key: [123, false] }],
-    [{ key: { hello: 'world' } }],
-  ]
-
-  it.each(invalidHeaderCases)('throws an error when headers are invalid %s', async headers => {
-    const config = {
-      code: 123,
-      headers,
-    }
-
-    await expect(mapTestResponseConfig(config)).rejects.toThrowError('headers.key should be of type:')
-  })
-
   it.each(combinedConfigCases)(
     'does not throw for config that contains test settings',
     async combinedConfig => {
@@ -126,7 +91,7 @@ describe('mapServeResponseConfig', () => {
       code: 200,
       body: 'boday',
       type: 'MyType',
-      headers: {},
+      headers: { header1: 'yo' },
     }
 
     const mappedConfig = await mapServeResponseConfig(rawConfig)
@@ -135,7 +100,7 @@ describe('mapServeResponseConfig', () => {
       code: 200,
       body: 'boday',
       type: 'MyType',
-      headers: {},
+      headers: { header1: 'yo' },
     })
   })
 

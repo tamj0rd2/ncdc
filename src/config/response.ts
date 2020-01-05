@@ -46,22 +46,7 @@ const baseResponseSchema = yup.object({
   bodyPath: yup.string().notAllowedIfSiblings('body'),
   headers: yup
     .object<OutgoingHttpHeaders>()
-    .test('hasValidHeaders', '', function(headers) {
-      const firstInvalidField = Object.keys(headers ?? {}).find(key => {
-        const value = headers[key]
-
-        return Array.isArray(value)
-          ? value.find(x => typeof x !== 'string')
-          : !['string', 'number', 'undefined'].includes(typeof value)
-      })
-
-      if (!firstInvalidField) return true
-
-      return this.createError({
-        path: this.path,
-        message: `${this.path}.${firstInvalidField} should be of type: string | number | string[] | undefined`,
-      })
-    })
+    .ofHeaders()
     .notRequired(),
   type: yup.string().notRequired(),
 })

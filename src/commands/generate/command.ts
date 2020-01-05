@@ -3,6 +3,7 @@ import { Argv, CommandModule } from 'yargs'
 import readConfigOld, { TestConfig } from '../../config/config'
 import SchemaGenerator from '../../schema/schema-generator'
 import { generate } from './generate'
+import { readGenerateConfig, Config } from './config'
 
 interface GenerateArgs {
   configPath?: string
@@ -29,13 +30,13 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
       default: './json-schema',
     })
 
-const createHandler = (handleError: HandleError) => (args: GenerateArgs): void => {
+const createHandler = (handleError: HandleError) => async (args: GenerateArgs): Promise<void> => {
   const { tsconfigPath, configPath, outputPath } = args
   if (!configPath) process.exit(1)
 
-  let allConfigs: TestConfig[]
+  let allConfigs: Config[]
   try {
-    allConfigs = readConfigOld(configPath)
+    allConfigs = await readGenerateConfig(configPath)
   } catch (err) {
     return handleError(err)
   }
@@ -58,9 +59,13 @@ const createHandler = (handleError: HandleError) => (args: GenerateArgs): void =
     handleError(err)
   }
 
-  generate(schemaGenerator, types, outputPath)
-    .then(() => console.log('Json schemas have been written to disk'))
-    .catch(handleError)
+  try {
+    await generate(schemaGenerator, types, outputPath)
+  } catch (err) {
+    return handleError(err)
+  } finally {
+    console.log('Json schemas have been written to disk')
+  }
 }
 
 export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {

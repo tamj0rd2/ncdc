@@ -9,8 +9,7 @@ import {
 } from './commands'
 import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
-import SchemaGenerator from './schema/schema-generator'
-import SchemaLoader from './schema/schema-loader'
+import { SchemaGenerator, SchemaLoader } from './schema'
 
 export default async function run(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

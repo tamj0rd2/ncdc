@@ -1,4 +1,4 @@
-import SchemaGenerator from '~schema/schema-generator'
+import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import * as _fs from 'fs'
 import * as _path from 'path'

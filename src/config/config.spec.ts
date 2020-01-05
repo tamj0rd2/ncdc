@@ -1,4 +1,4 @@
-import readConfigOld, { MockConfig, readConfig, Config, Mode, readGenerateConfig } from './config'
+import readConfigOld, { MockConfig, readConfig, Config, Mode } from './config'
 import _jsYaml from 'js-yaml'
 import * as _io from '../io'
 import { mockObj } from '../test-helpers'
@@ -191,50 +191,6 @@ describe('readConfig', () => {
       name: 'Yo',
       requests: mappedRequests as _request.RequestConfigArray,
       response: mappedResponse,
-    })
-  })
-})
-
-describe('readGenerateConfig', () => {
-  afterEach(() => jest.resetAllMocks())
-
-  it('calls readFileSync with the correct params', async () => {
-    safeLoad.mockReturnValue([])
-
-    await readConfig('./configPath', typeValidator, Mode.Test)
-
-    expect(readFileAsync).toHaveBeenCalledWith('./configPath')
-  })
-
-  it('calls safe load with the raw configuration', async () => {
-    readFileAsync.mockResolvedValue('hello moto')
-    safeLoad.mockReturnValue([])
-
-    await readConfig('path', typeValidator, Mode.Test)
-
-    expect(safeLoad).toHaveBeenCalledWith('hello moto')
-  })
-
-  // TODO: populate this once the old stuff has been removed
-  it.todo('throws if the config is in the wrong shape')
-
-  it('returns each mapped config', async () => {
-    const loadedConfigs = [
-      {
-        name: 'Yo',
-        request: { type: 'hey' },
-        response: { type: 'bay' },
-      },
-    ]
-    safeLoad.mockReturnValue(loadedConfigs)
-
-    const result = await readGenerateConfig('path')
-
-    expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({
-      name: 'Yo',
-      request: { type: 'hey' },
-      response: { type: 'bay' },
     })
   })
 })

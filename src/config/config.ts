@@ -48,21 +48,6 @@ const configSchema = yup.array().of<ConfigSchema>(
 export enum Mode {
   Test = 'Test',
   Serve = 'Serve',
-  Generate = 'Generate',
-}
-
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function readGenerateConfig(configPath: string) {
-  const generateSchema = yup.array().of(
-    yup.object({
-      name: yup.string().required(),
-      request: yup.object({ type: yup.string().notRequired() }).required(),
-      response: yup.object({ type: yup.string().notRequired() }).required(),
-    }),
-  )
-
-  const rawConfig = safeLoad(await readFileAsync(configPath))
-  return await generateSchema.validate(rawConfig)
 }
 
 export async function readConfig(

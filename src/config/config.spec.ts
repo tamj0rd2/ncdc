@@ -138,12 +138,13 @@ describe('readConfig', () => {
     const loadedConfigs = [
       {
         name: 'Yo',
-        request: { endpoints: ['hello'] },
-        response: { endpoints: ['goodbye'] },
+        request: { endpoints: ['hello', 'world'] },
+        response: { body: 'goodbye' },
       },
     ]
 
     safeLoad.mockReturnValue(loadedConfigs)
+    mapRequestConfig.mockResolvedValue([{} as _request.RequestConfig])
 
     await readConfig('path', typeValidator, Mode.Test)
 
@@ -155,12 +156,13 @@ describe('readConfig', () => {
     const loadedConfigs = [
       {
         name: 'Yo',
-        request: { hello: 'world' },
+        request: { endpoints: ['world'] },
         response: { goodbye: 'world' },
       },
     ]
 
     safeLoad.mockReturnValue(loadedConfigs)
+    mapRequestConfig.mockResolvedValue([{} as _request.RequestConfig])
 
     await readConfig('path', typeValidator, Mode.Serve)
 
@@ -172,13 +174,13 @@ describe('readConfig', () => {
     const loadedConfigs = [
       {
         name: 'Yo',
-        request: { endpoints: ['hello'] },
-        response: { endpoints: ['goodbye'] },
+        request: { endpoints: ['hello', 'world'] },
+        response: { body: 'hmm' },
       },
     ]
     safeLoad.mockReturnValue(loadedConfigs)
 
-    const mappedRequests: Partial<_request.RequestConfig>[] = [{ endpoint: 'yeah' }]
+    const mappedRequests: Partial<_request.RequestConfig>[] = [{ endpoint: 'hello' }, { endpoint: 'world' }]
     mapRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
 
     const mappedResponse: _response.ResponseConfig = { code: 200 }
@@ -186,12 +188,19 @@ describe('readConfig', () => {
 
     const result = await readConfig('path', typeValidator, Mode.Test)
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject<Config>({
-      name: 'Yo',
-      requests: mappedRequests as _request.RequestConfigArray,
-      response: mappedResponse,
-    })
+    expect(result).toHaveLength(2)
+    expect(result).toMatchObject<Config[]>([
+      {
+        name: 'Yo [0]',
+        request: mappedRequests[0] as _request.RequestConfig,
+        response: mappedResponse,
+      },
+      {
+        name: 'Yo [1]',
+        request: mappedRequests[1] as _request.RequestConfig,
+        response: mappedResponse,
+      },
+    ])
   })
 
   describe('test mode specifics', () => {
@@ -209,6 +218,7 @@ describe('readConfig', () => {
         },
       ]
       safeLoad.mockReturnValue(loadedConfigs)
+      mapRequestConfig.mockResolvedValue([{} as _request.RequestConfig])
 
       const result = await readConfig('path', typeValidator, Mode.Test)
 

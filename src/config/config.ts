@@ -8,9 +8,8 @@ import {
   OldMockRequestConfig,
   requestSchema,
   mapRequestConfig,
-  TestRequestSchema,
+  RequestConfig,
 } from './request'
-import { RequestConfigArray } from '.'
 import {
   OldResponseConfig,
   OldMockResponseConfig,
@@ -22,7 +21,7 @@ import TypeValidator from '../validation/type-validator'
 
 export interface Config {
   name: string
-  requests: RequestConfigArray
+  request: RequestConfig
   response: ResponseConfig
 }
 
@@ -66,13 +65,22 @@ export async function readConfig(
     x => mode === Mode.Serve || x.request.endpoints,
   )
 
-  return await Promise.all(
-    configs.map<Promise<Config>>(async ({ name, request, response }) => ({
-      name: name,
-      requests: await mapRequestConfig(request, typeValidator, mode),
-      response: await mapResponseConfig(response, typeValidator, mode),
-    })),
+  const mappedConfigs = await Promise.all(
+    configs.map(
+      async ({ name, request, response }): Promise<Config[]> => {
+        const requestConfigs = await mapRequestConfig(request, typeValidator, mode)
+        const responseConfig = await mapResponseConfig(response, typeValidator, mode)
+
+        return requestConfigs.map<Config>((requestConfig, i) => ({
+          name: `${name} [${i}]`,
+          request: requestConfig,
+          response: responseConfig,
+        }))
+      },
+    ),
   )
+
+  return mappedConfigs.flat()
 }
 
 export default function readConfigOld<T extends TestConfig>(configPath: string): T[] {

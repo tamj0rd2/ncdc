@@ -4,6 +4,8 @@ import { OutgoingHttpHeaders } from 'http'
 import { readJsonAsync } from '../io'
 import './methods'
 import { Mode } from './config'
+import TypeValidator, { TypeValidationError } from '../validation/type-validator'
+import { ProblemType } from '../problem'
 
 export interface OldResponseConfig {
   code: number
@@ -38,7 +40,6 @@ export interface ResponseConfig {
   code: number
   body?: Data
   headers?: OutgoingHttpHeaders // TODO: literally unused right now. Needs to be checked in test mode and sent in serve mode
-  type?: string // TODO: only necessary for validation, pre server instantiation. should just be done here...
 }
 
 const baseResponseSchema = yup.object({
@@ -71,6 +72,7 @@ const getResponseBody = async (config: Pick<ServeResponseSchema, BodyKeys>): Pro
 
 export const mapResponseConfig = async (
   responseConfig: object,
+  typeValidator: TypeValidator,
   mode: Mode.Test | Mode.Serve,
 ): Promise<ResponseConfig> => {
   const schema = mode === Mode.Test ? testResponseSchema : serveResponseSchema
@@ -79,10 +81,14 @@ export const mapResponseConfig = async (
 
   const bodyToUse = await getResponseBody(validatedConfig)
 
+  if (bodyToUse && type) {
+    const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Response)
+    if (problems) throw new TypeValidationError(problems)
+  }
+
   return {
     code,
     body: bodyToUse,
-    type,
     headers,
   }
 }

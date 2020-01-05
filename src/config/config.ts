@@ -77,7 +77,7 @@ export async function readConfig(
     configs.map<Promise<Config>>(async ({ name, request, response }) => ({
       name: name,
       requests: await mapRequestConfig(request, typeValidator, mode),
-      response: await mapResponseConfig(response, mode),
+      response: await mapResponseConfig(response, typeValidator, mode),
     })),
   )
 }

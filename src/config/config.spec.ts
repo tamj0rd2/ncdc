@@ -165,7 +165,7 @@ describe('readConfig', () => {
     await readConfig('path', typeValidator, Mode.Serve)
 
     expect(mapResponseConfig).toHaveBeenCalledTimes(1)
-    expect(mapResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response, Mode.Serve)
+    expect(mapResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response, typeValidator, Mode.Serve)
   })
 
   it('returns each mapped config', async () => {

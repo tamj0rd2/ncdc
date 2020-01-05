@@ -1,191 +1,82 @@
-import { mapTestRequestConfig, mapServeRequestConfig, RequestConfig } from './request'
+import { RequestConfig, mapRequestConfig } from './request'
 import * as _io from '../io'
 import { mockObj } from '../test-helpers'
 import TypeValidator from '../validation/type-validator'
 import Problem, { ProblemType } from '../problem'
+import { Mode } from './config'
 
 jest.mock('../io')
 
-const combinedConfigCases: object[][] = [
-  [
-    {
-      method: 'GET',
-      endpoints: ['/endpoint1'],
-      type: 'object',
-      bodyPath: './request.json',
-      serveEndpoint: '/serve-endpoint',
-    },
-  ],
-  [
-    {
-      method: 'GET',
-      endpoints: ['/endpoint1', '/spice-it-up'],
-      type: 'object',
-      serveBody: ':D',
-      serveEndpoint: '/serve-endpoint',
-    },
-  ],
-  [
-    {
-      method: 'GET',
-      endpoints: ['/endpoint1'],
-      type: 'object',
-      serveBodyPath: './request.json',
-      serveEndpoint: '/serve-endpoint',
-    },
-  ],
-]
-
-describe('mapTestRequestConfig', () => {
+describe('mapRequestConfig', () => {
   const { readJsonAsync } = mockObj(_io)
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
 
   afterEach(() => jest.resetAllMocks())
 
-  it('maps a basic config correctly', async () => {
+  const basicMappingCases: [Mode.Serve | Mode.Test][] = [[Mode.Test], [Mode.Serve]]
+  it.each(basicMappingCases)('maps a basic %s config correctly', async mode => {
     const rawConfig = {
-      method: 'POST',
+      method: 'GET',
       endpoints: ['/endpoint1', '/endpoint2'],
-      type: 'string',
-      body: 'hello world',
+      type: 'MyType',
+      body: 'silly',
     }
 
-    const mappedConfigs = await mapTestRequestConfig(rawConfig, typeValidator)
+    const expected: RequestConfig[] = [
+      {
+        method: 'GET',
+        endpoint: '/endpoint1',
+        type: 'MyType',
+        body: 'silly',
+      },
+      {
+        method: 'GET',
+        endpoint: '/endpoint2',
+        type: 'MyType',
+        body: 'silly',
+      },
+    ]
 
-    expect(mappedConfigs.length).toBe(2)
-    expect(mappedConfigs[0]).toMatchObject<RequestConfig>({
-      endpoint: '/endpoint1',
-      body: 'hello world',
-      method: 'POST',
-      type: 'string',
-    })
+    await expect(mapRequestConfig(rawConfig, typeValidator, mode)).resolves.toMatchObject(expected)
   })
 
-  it('maps body when a bodyPath is given', async () => {
-    const rawConfig = {
-      method: 'POST',
-      endpoints: ['/endpoint1'],
-      type: 'object',
-      bodyPath: './request.json',
-    }
-
-    readJsonAsync.mockResolvedValue({ hello: 'world' })
-
-    const mappedConfig = (await mapTestRequestConfig(rawConfig, typeValidator))[0]
-
-    expect(readJsonAsync).toHaveBeenCalledWith('./request.json')
-    expect(mappedConfig.body).toEqual({ hello: 'world' })
-  })
+  const combinedConfigCases: [object][] = [
+    [
+      {
+        method: 'GET',
+        endpoints: ['/endpoint1'],
+        type: 'object',
+        bodyPath: './request.json',
+        serveEndpoint: '/serve-endpoint',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        endpoints: ['/endpoint1', '/spice-it-up'],
+        type: 'object',
+        serveBody: ':D',
+        serveEndpoint: '/serve-endpoint',
+      },
+    ],
+    [
+      {
+        method: 'GET',
+        endpoints: ['/endpoint1'],
+        type: 'object',
+        serveBodyPath: './request.json',
+        serveEndpoint: '/serve-endpoint',
+      },
+    ],
+  ]
 
   it.each(combinedConfigCases)(
-    'does not throw for config that contains serve settings',
+    'does not throw for config that contains test settings',
     async combinedConfig => {
-      await expect(mapTestRequestConfig(combinedConfig, typeValidator)).resolves.not.toThrowError()
+      await expect(mapRequestConfig(combinedConfig, typeValidator, Mode.Test)).resolves.not.toThrowError()
+      await expect(mapRequestConfig(combinedConfig, typeValidator, Mode.Serve)).resolves.not.toThrowError()
     },
   )
-
-  describe('body type validation', () => {
-    it('calls the type validator with the correct', async () => {
-      const rawConfig = {
-        method: 'POST',
-        endpoints: ['/endpoint1'],
-        type: 'MyCoolType',
-        bodyPath: './request.json',
-      }
-
-      const mappedBody = { hello: 'world' }
-      readJsonAsync.mockResolvedValue(mappedBody)
-
-      await mapTestRequestConfig(rawConfig, typeValidator)
-
-      expect(typeValidator.getProblems).toHaveBeenCalledWith(mappedBody, 'MyCoolType', ProblemType.Request)
-    })
-
-    it('throws when the mapped body does not match the type', async () => {
-      const rawConfig = {
-        method: 'POST',
-        endpoints: ['/endpoint1'],
-        type: 'MyCoolType',
-        bodyPath: './request.json',
-      }
-
-      const mappedBody = { hello: 'world' }
-      readJsonAsync.mockResolvedValue(mappedBody)
-      typeValidator.getProblems.mockResolvedValue([{} as Problem])
-
-      await expect(mapTestRequestConfig(rawConfig, typeValidator)).rejects.toThrowError()
-    })
-  })
-})
-
-describe('mapMockRequestConfig', () => {
-  const { readJsonAsync } = mockObj(_io)
-  const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
-
-  afterEach(() => jest.resetAllMocks())
-
-  it('maps a basic config correctly', async () => {
-    const rawConfig = {
-      method: 'GET',
-      endpoints: ['/endpoint1'],
-      type: 'MyType',
-      body: 'silly',
-    }
-
-    const mappedConfig = (await mapServeRequestConfig(rawConfig, typeValidator))[0]
-
-    expect(mappedConfig.body).toBe('silly')
-    expect(mappedConfig.endpoint).toBe('/endpoint1')
-    expect(mappedConfig.method).toBe('GET')
-    expect(mappedConfig.type).toBe('MyType')
-  })
-
-  it('maps endpoints when serveEndpoint is given', async () => {
-    const rawConfig = {
-      method: 'GET',
-      serveEndpoint: '/serve-endpoint',
-      type: 'MyType',
-      body: 'silly',
-    }
-
-    const mappedConfig = (await mapServeRequestConfig(rawConfig, typeValidator))[0]
-
-    expect(mappedConfig.body).toBe('silly')
-    expect(mappedConfig.endpoint).toBe('/serve-endpoint')
-    expect(mappedConfig.method).toBe('GET')
-    expect(mappedConfig.type).toBe('MyType')
-  })
-
-  it('maps body when a serveBodyPath is given', async () => {
-    const rawConfig = {
-      method: 'GET',
-      endpoints: ['/endpoint1'],
-      type: 'MyType',
-      serveBodyPath: './silly.json',
-    }
-
-    readJsonAsync.mockResolvedValue({ silly: 'billy' })
-
-    const mappedConfig = (await mapServeRequestConfig(rawConfig, typeValidator))[0]
-
-    expect(readJsonAsync).toHaveBeenCalledWith('./silly.json')
-    expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
-  })
-
-  it('maps body when a serveBody is given', async () => {
-    const rawConfig = {
-      method: 'GET',
-      endpoints: ['/endpoint1'],
-      type: 'MyType',
-      serveBody: 'silly',
-    }
-
-    readJsonAsync.mockResolvedValue({ silly: 'billy' })
-
-    const mappedConfig = (await mapServeRequestConfig(rawConfig, typeValidator))[0]
-
-    expect(mappedConfig.body).toBe('silly')
-  })
 
   it('maps body when a bodyPath is given', async () => {
     const rawConfig = {
@@ -197,21 +88,14 @@ describe('mapMockRequestConfig', () => {
 
     readJsonAsync.mockResolvedValue({ silly: 'billy' })
 
-    const mappedConfig = (await mapServeRequestConfig(rawConfig, typeValidator))[0]
+    const mappedConfig = (await mapRequestConfig(rawConfig, typeValidator, Mode.Serve))[0]
 
     expect(readJsonAsync).toHaveBeenCalledWith('./silly.json')
     expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
   })
 
-  it.each(combinedConfigCases)(
-    'does not throw for config that contains test settings',
-    async combinedConfig => {
-      await expect(mapServeRequestConfig(combinedConfig, typeValidator)).resolves.not.toThrowError()
-    },
-  )
-
-  describe('body type validation', () => {
-    it('calls the type validator with the correct', async () => {
+  describe('when a body and type are both given', () => {
+    it('calls the type validator with the correct args', async () => {
       const rawConfig = {
         method: 'POST',
         endpoints: ['/endpoint1'],
@@ -222,7 +106,7 @@ describe('mapMockRequestConfig', () => {
       const mappedBody = { hello: 'world' }
       readJsonAsync.mockResolvedValue(mappedBody)
 
-      await mapServeRequestConfig(rawConfig, typeValidator)
+      await mapRequestConfig(rawConfig, typeValidator, Mode.Serve)
 
       expect(typeValidator.getProblems).toHaveBeenCalledWith(mappedBody, 'MyCoolType', ProblemType.Request)
     })
@@ -239,7 +123,56 @@ describe('mapMockRequestConfig', () => {
       readJsonAsync.mockResolvedValue(mappedBody)
       typeValidator.getProblems.mockResolvedValue([{} as Problem])
 
-      await expect(mapServeRequestConfig(rawConfig, typeValidator)).rejects.toThrowError()
+      await expect(mapRequestConfig(rawConfig, typeValidator, Mode.Serve)).rejects.toThrowError()
+    })
+  })
+
+  describe('serve mode body particulars', () => {
+    it('maps endpoints when serveEndpoint is given', async () => {
+      const rawConfig = {
+        method: 'GET',
+        serveEndpoint: '/serve-endpoint',
+        type: 'MyType',
+        body: 'silly',
+      }
+
+      const mappedConfig = (await mapRequestConfig(rawConfig, typeValidator, Mode.Serve))[0]
+
+      expect(mappedConfig.body).toBe('silly')
+      expect(mappedConfig.endpoint).toBe('/serve-endpoint')
+      expect(mappedConfig.method).toBe('GET')
+      expect(mappedConfig.type).toBe('MyType')
+    })
+
+    it('maps body when a serveBodyPath is given', async () => {
+      const rawConfig = {
+        method: 'GET',
+        endpoints: ['/endpoint1'],
+        type: 'MyType',
+        serveBodyPath: './silly.json',
+      }
+
+      readJsonAsync.mockResolvedValue({ silly: 'billy' })
+
+      const mappedConfig = (await mapRequestConfig(rawConfig, typeValidator, Mode.Serve))[0]
+
+      expect(readJsonAsync).toHaveBeenCalledWith('./silly.json')
+      expect(mappedConfig.body).toStrictEqual({ silly: 'billy' })
+    })
+
+    it('maps body when a serveBody is given', async () => {
+      const rawConfig = {
+        method: 'GET',
+        endpoints: ['/endpoint1'],
+        type: 'MyType',
+        serveBody: 'silly',
+      }
+
+      readJsonAsync.mockResolvedValue({ silly: 'billy' })
+
+      const mappedConfig = (await mapRequestConfig(rawConfig, typeValidator, Mode.Serve))[0]
+
+      expect(mappedConfig.body).toBe('silly')
     })
   })
 })

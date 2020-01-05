@@ -2,9 +2,9 @@ import { Data } from '../types'
 import * as yup from 'yup'
 import './methods'
 import { readJsonAsync } from '../io'
-import { SchemaRetriever } from '../schema/types'
 import TypeValidator, { TypeValidationError } from '../validation/type-validator'
 import { ProblemType } from '../problem'
+import { Mode } from './config'
 
 export type SupportedMethod = 'GET' | 'POST'
 
@@ -43,57 +43,51 @@ const serveRequestSchema = baseRequestConfigSchema
     serveBodyPath: yup.string().notAllowedIfSiblings('body', 'bodyPath', 'serveBody'),
   })
   .allowedKeysOnly()
+type ServeRequestSchema = yup.InferType<typeof serveRequestSchema>
 
-export const mapTestRequestConfig = async (
+const getBodyToUse = async (
+  config: Pick<ServeRequestSchema, 'body' | 'bodyPath' | 'serveBody' | 'serveBodyPath'>,
+): Promise<Optional<Data>> => {
+  const { body, bodyPath, serveBody, serveBodyPath } = config
+
+  if (body) return body
+  if (bodyPath) return await readJsonAsync(bodyPath)
+  if (serveBody) return serveBody
+  if (serveBodyPath) return await readJsonAsync(serveBodyPath)
+}
+
+const chooseEndpoints = ({
+  endpoints,
+  serveEndpoint,
+}: Pick<ServeRequestSchema, 'endpoints' | 'serveEndpoint'>): PopulatedArray<string> =>
+  serveEndpoint ? [serveEndpoint] : (endpoints as PopulatedArray<string>)
+
+export const mapRequestConfig = async (
   requestConfig: object,
   typeValidator: TypeValidator,
+  mode: Mode.Test | Mode.Serve,
 ): Promise<RequestConfigArray> => {
-  const validatedConfig = await testRequestSchema.validate(requestConfig)
-  const { bodyPath, body, endpoints, type, method } = validatedConfig
+  const testMode = mode === Mode.Test
+  const schema = testMode ? testRequestSchema : serveRequestSchema
+  const validatedConfig = await schema.validate(requestConfig)
+  const { type, method } = validatedConfig
 
-  const bodyToUse: Optional<Data> = bodyPath ? await readJsonAsync(bodyPath) : body
+  const bodyToUse: Optional<Data> = await getBodyToUse(validatedConfig)
 
   if (bodyToUse && type) {
     const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Request)
     if (problems) throw new TypeValidationError(problems)
   }
 
-  return endpoints.map(endpoint => ({
+  const endpointsToUse: PopulatedArray<string> = chooseEndpoints(validatedConfig)
+
+  return endpointsToUse.map(endpoint => ({
     body: bodyToUse,
     endpoint,
     method,
     type,
   })) as RequestConfigArray
 }
-
-export const mapServeRequestConfig = async (
-  requestConfig: object,
-  typeValidator: TypeValidator,
-): Promise<RequestConfigArray> => {
-  const validatedConfig = await serveRequestSchema.validate(requestConfig)
-  const { method, type, endpoints, serveEndpoint, body, bodyPath, serveBody, serveBodyPath } = validatedConfig
-
-  let bodyToUse: Optional<Data>
-
-  if (body) bodyToUse = body
-  else if (bodyPath) bodyToUse = await readJsonAsync(bodyPath)
-  else if (serveBody) bodyToUse = serveBody
-  else if (serveBodyPath) bodyToUse = await readJsonAsync(serveBodyPath)
-
-  if (bodyToUse && type) {
-    const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Request)
-    if (problems) throw new TypeValidationError(problems)
-  }
-
-  const endpointsToUse = serveEndpoint ? [serveEndpoint] : (endpoints as PopulatedArray<string>)
-  return endpointsToUse.map<RequestConfig>(endpoint => ({
-    body: bodyToUse,
-    endpoint,
-    method,
-    type,
-  })) as RequestConfigArray
-}
-
 export interface OldRequestConfig {
   endpoint: string
   method: SupportedMethod

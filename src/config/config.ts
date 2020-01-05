@@ -3,13 +3,7 @@ import { safeLoad } from 'js-yaml'
 import { readFileSync } from 'fs'
 import { readFileAsync } from '../io'
 import chalk from 'chalk'
-import {
-  OldRequestConfig,
-  OldMockRequestConfig,
-  requestSchema,
-  mapTestRequestConfig,
-  mapServeRequestConfig,
-} from './request'
+import { OldRequestConfig, OldMockRequestConfig, requestSchema, mapRequestConfig } from './request'
 import { RequestConfigArray } from '.'
 import {
   OldResponseConfig,
@@ -53,8 +47,9 @@ const configSchema = yup.array().of<ConfigSchema>(
 )
 
 export enum Mode {
-  Test,
-  Serve,
+  Test = 'Test',
+  Serve = 'Serve',
+  Generate = 'Generate',
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -74,18 +69,17 @@ export async function readGenerateConfig(configPath: string) {
 export async function readConfig(
   configPath: string,
   typeValidator: TypeValidator,
-  mode: Mode,
+  mode: Mode.Test | Mode.Serve,
 ): Promise<Config[]> {
   const rawConfig = safeLoad(await readFileAsync(configPath))
   const configs = await configSchema.validate(rawConfig)
 
-  const requestMapper = mode === Mode.Test ? mapTestRequestConfig : mapServeRequestConfig
   const responseMapper = mode === Mode.Test ? mapTestResponseConfig : mapServeResponseConfig
 
   return await Promise.all(
     configs.map<Promise<Config>>(async ({ name, request, response }) => ({
       name: name,
-      requests: await requestMapper(request, typeValidator),
+      requests: await mapRequestConfig(request, typeValidator, mode),
       response: await responseMapper(response),
     })),
   )
@@ -114,5 +108,3 @@ export default function readConfigOld<T extends TestConfig>(configPath: string):
     throw new Error(`${chalk.bold('Config error:')} ${err.message}`)
   }
 }
-
-// TODO: Create a GenerateConfig because we don't really want to do a big validation just to get a list of types

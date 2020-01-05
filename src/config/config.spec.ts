@@ -1,6 +1,5 @@
 import readConfigOld, { MockConfig, readConfig, Config, Mode, readGenerateConfig } from './config'
 import _jsYaml from 'js-yaml'
-import * as _fs from 'fs'
 import * as _io from '../io'
 import { mockObj } from '../test-helpers'
 import * as _request from './request'
@@ -16,11 +15,11 @@ jest.mock('../validation/type-validator')
 
 const { safeLoad } = mockObj(_jsYaml)
 const { readFileAsync } = mockObj(_io)
-const { mapTestRequestConfig, mapServeRequestConfig } = mockObj(_request)
+const { mapRequestConfig } = mockObj(_request)
 const { mapTestResponseConfig, mapServeResponseConfig } = mockObj(_response)
 const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
 
-describe('Read config', () => {
+describe('Read config old', () => {
   afterEach(() => {
     jest.resetAllMocks()
   })
@@ -135,6 +134,23 @@ describe('readConfig', () => {
   // TODO: populate this once the old stuff has been removed
   it.todo('throws if the config is in the wrong shape')
 
+  it('calls the request mapper with the correct args', async () => {
+    const loadedConfigs = [
+      {
+        name: 'Yo',
+        request: { hello: 'world' },
+        response: { goodbye: 'world' },
+      },
+    ]
+
+    safeLoad.mockReturnValue(loadedConfigs)
+
+    await readConfig('path', typeValidator, Mode.Test)
+
+    expect(mapRequestConfig).toHaveBeenCalledTimes(1)
+    expect(mapRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator, Mode.Test)
+  })
+
   it('returns each mapped config', async () => {
     const loadedConfigs = [
       {
@@ -146,7 +162,7 @@ describe('readConfig', () => {
     safeLoad.mockReturnValue(loadedConfigs)
 
     const mappedRequests: Partial<_request.RequestConfig>[] = [{ endpoint: 'yeah' }]
-    mapTestRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
+    mapRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
 
     const mappedResponse: _response.ResponseConfig = { code: 200 }
     mapTestResponseConfig.mockResolvedValue(mappedResponse as _response.ResponseConfig)
@@ -158,34 +174,6 @@ describe('readConfig', () => {
       name: 'Yo',
       requests: mappedRequests as _request.RequestConfigArray,
       response: mappedResponse,
-    })
-  })
-
-  describe('request mapping', () => {
-    const loadedConfigs = [
-      {
-        name: 'Yo',
-        request: { hello: 'world' },
-        response: { goodbye: 'world' },
-      },
-    ]
-
-    it('calls the test mapper when in test mode', async () => {
-      safeLoad.mockReturnValue(loadedConfigs)
-
-      await readConfig('path', typeValidator, Mode.Test)
-
-      expect(mapTestRequestConfig).toHaveBeenCalledTimes(1)
-      expect(mapTestRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator)
-    })
-
-    it('calls the serve mapper when in serve mode', async () => {
-      safeLoad.mockReturnValue(loadedConfigs)
-
-      await readConfig('path', typeValidator, Mode.Serve)
-
-      expect(mapServeRequestConfig).toHaveBeenCalledTimes(1)
-      expect(mapServeRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator)
     })
   })
 

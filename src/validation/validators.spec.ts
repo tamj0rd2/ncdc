@@ -1,6 +1,6 @@
 import { doItAll, FetchResource, ValidationFlags } from './validators'
 import TypeValidator from './type-validator'
-import { Config } from '../config/config'
+import { Config } from '../config'
 import Problem, { ProblemType } from '../problem'
 import * as messages from '../messages'
 import { mockObj, mockFn } from '../test-helpers'

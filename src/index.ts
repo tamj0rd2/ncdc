@@ -1,9 +1,12 @@
 import mainYargs from 'yargs'
 import chalk from 'chalk'
-import { HandleError, CreateTypeValidator } from './commands/shared'
-import createServeCommand from './commands/serve'
-import createGenerateCommand from './commands/generate'
-import createTestCommand from './commands/test'
+import {
+  HandleError,
+  CreateTypeValidator,
+  createGenerateCommand,
+  createServeCommand,
+  createTestCommand,
+} from './commands'
 import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import SchemaGenerator from './schema/schema-generator'

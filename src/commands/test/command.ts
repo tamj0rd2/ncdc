@@ -2,11 +2,7 @@ import { HandleError, CreateTypeValidator } from '../shared'
 import { Argv, CommandModule } from 'yargs'
 import { createHttpClient } from './http-client'
 import axios from 'axios'
-import readConfig, { Config, Mode } from '../../config/config'
-import TypeValidator from '../../validation/type-validator'
-import ajv = require('ajv')
-import SchemaLoader from '../../schema/schema-loader'
-import SchemaGenerator from '../../schema/schema-generator'
+import readConfig, { Config, Mode } from '../../config'
 import { testConfigs } from './test'
 
 interface TestArgs {

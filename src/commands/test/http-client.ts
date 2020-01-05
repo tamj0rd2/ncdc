@@ -1,4 +1,4 @@
-import { FetchResource, LoaderResponse } from '~validation/validators'
+import { FetchResource, LoaderResponse } from '~validation'
 import { AxiosError, AxiosInstance } from 'axios'
 import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode } from '~messages'
 

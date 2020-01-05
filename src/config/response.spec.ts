@@ -2,7 +2,7 @@ import { ResponseConfig, mapResponseConfig } from './response'
 import * as _io from '~io'
 import { mockObj } from '~test-helpers'
 import { Mode } from './config'
-import TypeValidator from '~validation/type-validator'
+import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 
 jest.mock('~io')

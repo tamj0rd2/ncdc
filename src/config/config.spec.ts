@@ -4,14 +4,13 @@ import * as _io from '~io'
 import { mockObj } from '~test-helpers'
 import * as _request from './request'
 import * as _response from './response'
-import TypeValidator from '~validation/type-validator'
+import { TypeValidator } from '~validation'
 
 jest.mock('fs')
 jest.mock('js-yaml')
 jest.mock('~io')
 jest.mock('./request')
 jest.mock('./response')
-jest.mock('~validation/type-validator')
 
 const { safeLoad } = mockObj(_jsYaml)
 const { readFileAsync } = mockObj(_io)

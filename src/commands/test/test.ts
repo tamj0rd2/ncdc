@@ -1,5 +1,4 @@
-import TypeValidator from '~validation/type-validator'
-import { FetchResource, doItAll } from '~validation/validators'
+import { TypeValidator, FetchResource, doItAll } from '~validation'
 import { Config } from '~config'
 import Problem from '~problem'
 import chalk from 'chalk'

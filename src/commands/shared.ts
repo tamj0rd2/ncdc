@@ -1,4 +1,4 @@
-import TypeValidator from '~validation/type-validator'
+import { TypeValidator } from '~validation'
 import Problem from '~problem'
 import chalk from 'chalk'
 

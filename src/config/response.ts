@@ -4,7 +4,7 @@ import { OutgoingHttpHeaders } from 'http'
 import { readJsonAsync } from '~io'
 import './methods'
 import { Mode } from './config'
-import TypeValidator, { TypeValidationError } from '~validation/type-validator'
+import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 
 export interface ResponseConfig {

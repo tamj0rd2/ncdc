@@ -1,6 +1,6 @@
 import { Ajv } from 'ajv'
 import { Data } from '~types'
-import { SchemaRetriever } from '~schema/types'
+import { SchemaRetriever } from '~schema'
 import Problem, { ProblemType } from '~problem'
 import { shouldBe } from '~messages'
 
@@ -16,7 +16,7 @@ export class TypeValidationError extends Error {
 }
 
 export default class TypeValidator {
-  constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) { }
+  constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) {}
 
   public async getProblems(
     data: Optional<Data>,

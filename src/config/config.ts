@@ -3,7 +3,7 @@ import { safeLoad } from 'js-yaml'
 import { readFileAsync } from '~io'
 import { mapRequestConfig, RequestConfig } from './request'
 import { ResponseConfig, mapResponseConfig } from './response'
-import TypeValidator from '~validation/type-validator'
+import { TypeValidator } from '~validation'
 
 export interface Config {
   name: string

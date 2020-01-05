@@ -1,7 +1,7 @@
 import { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
-import { Config } from '~config/config'
+import { Config } from '~config'
 import * as _messages from '~messages'
-import { FetchResource } from '~validation/validators'
+import { FetchResource } from '~validation'
 import { createHttpClient } from './http-client'
 import { mockObj } from '~test-helpers'
 

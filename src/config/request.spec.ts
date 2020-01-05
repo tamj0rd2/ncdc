@@ -1,7 +1,7 @@
 import { RequestConfig, mapRequestConfig } from './request'
 import * as _io from '~io'
 import { mockObj } from '~test-helpers'
-import TypeValidator from '~validation/type-validator'
+import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { Mode } from './config'
 

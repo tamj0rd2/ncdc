@@ -3,7 +3,7 @@ import { FetchResource, doItAll } from '~validation/validators'
 import { Config } from '~config'
 import Problem from '~problem'
 import chalk from 'chalk'
-import { logValidationErrors } from '~mode-shared'
+import { logValidationErrors } from '../shared'
 
 const logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
   problems: Problem[],

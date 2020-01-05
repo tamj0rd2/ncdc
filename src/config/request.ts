@@ -91,6 +91,11 @@ export const mapRequestConfig = async (
     headers,
   })) as RequestConfigArray
 }
+
+// =====================
+// Old stuff. gross.
+// =====================
+
 export interface OldRequestConfig {
   endpoint: string
   method: SupportedMethod

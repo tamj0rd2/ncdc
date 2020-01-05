@@ -1,7 +1,6 @@
 import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
 import chalk from 'chalk'
 import { OutgoingHttpHeaders, Server } from 'http'
-import { Data } from '~types'
 import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
 import { SupportedMethod, Config } from '~config'

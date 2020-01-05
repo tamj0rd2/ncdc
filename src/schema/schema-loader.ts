@@ -6,7 +6,7 @@ import { SchemaRetriever } from './types'
 export default class SchemaLoader implements SchemaRetriever {
   private readonly cache: { [symbol: string]: Definition } = {}
 
-  constructor(private readonly schemaPath: string) { }
+  constructor(private readonly schemaPath: string) {}
 
   public async load(symbolName: string): Promise<Definition> {
     return (

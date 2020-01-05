@@ -1,4 +1,3 @@
-import { Data, DataObject } from './types'
 import { ErrorObject } from 'ajv'
 
 interface CustomContext {

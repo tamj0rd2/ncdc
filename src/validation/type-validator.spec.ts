@@ -1,7 +1,6 @@
 import TypeValidator from './type-validator'
 import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
 import { SchemaGenerator } from '~schema'
-import { Data } from '~types'
 import Problem, { ProblemType } from '~problem'
 import * as _messages from '~messages'
 import { mockObj, mockCtor } from '~test-helpers'

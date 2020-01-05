@@ -1,4 +1,3 @@
-import { Data } from '~types'
 import * as yup from 'yup'
 import './methods'
 import { readJsonAsync } from '~io'

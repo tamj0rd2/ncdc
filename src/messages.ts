@@ -1,5 +1,4 @@
 import chalk from 'chalk'
-import { Data } from './types'
 
 export const errorNoResponse = (uri: string): string => `No response from ${chalk.blue(uri)}`
 

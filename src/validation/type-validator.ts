@@ -1,5 +1,4 @@
 import { Ajv } from 'ajv'
-import { Data } from '~types'
 import { SchemaRetriever } from '~schema'
 import Problem, { ProblemType } from '~problem'
 import { shouldBe } from '~messages'

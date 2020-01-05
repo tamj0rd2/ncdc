@@ -1,6 +1,5 @@
 import { ErrorObject } from 'ajv'
 import Problem, { ProblemContext, ProblemType } from './problem'
-import { Data } from './types'
 
 describe('DetailedProblem', () => {
   it('can be constructed from an ErrorObject', () => {

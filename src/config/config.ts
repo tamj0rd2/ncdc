@@ -9,9 +9,8 @@ import {
   OldResponseConfig,
   OldMockResponseConfig,
   oldResponseSchema,
-  mapTestResponseConfig,
-  mapServeResponseConfig,
   ResponseConfig,
+  mapResponseConfig,
 } from './response'
 import TypeValidator from '../validation/type-validator'
 
@@ -74,13 +73,11 @@ export async function readConfig(
   const rawConfig = safeLoad(await readFileAsync(configPath))
   const configs = await configSchema.validate(rawConfig)
 
-  const responseMapper = mode === Mode.Test ? mapTestResponseConfig : mapServeResponseConfig
-
   return await Promise.all(
     configs.map<Promise<Config>>(async ({ name, request, response }) => ({
       name: name,
       requests: await mapRequestConfig(request, typeValidator, mode),
-      response: await responseMapper(response),
+      response: await mapResponseConfig(response, mode),
     })),
   )
 }

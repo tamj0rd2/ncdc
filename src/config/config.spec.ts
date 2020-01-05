@@ -16,7 +16,7 @@ jest.mock('../validation/type-validator')
 const { safeLoad } = mockObj(_jsYaml)
 const { readFileAsync } = mockObj(_io)
 const { mapRequestConfig } = mockObj(_request)
-const { mapTestResponseConfig, mapServeResponseConfig } = mockObj(_response)
+const { mapResponseConfig } = mockObj(_response)
 const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
 
 describe('Read config old', () => {
@@ -151,6 +151,23 @@ describe('readConfig', () => {
     expect(mapRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator, Mode.Test)
   })
 
+  it('calls the response mapper with the correct args', async () => {
+    const loadedConfigs = [
+      {
+        name: 'Yo',
+        request: { hello: 'world' },
+        response: { goodbye: 'world' },
+      },
+    ]
+
+    safeLoad.mockReturnValue(loadedConfigs)
+
+    await readConfig('path', typeValidator, Mode.Serve)
+
+    expect(mapResponseConfig).toHaveBeenCalledTimes(1)
+    expect(mapResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response, Mode.Serve)
+  })
+
   it('returns each mapped config', async () => {
     const loadedConfigs = [
       {
@@ -165,7 +182,7 @@ describe('readConfig', () => {
     mapRequestConfig.mockResolvedValue(mappedRequests as _request.RequestConfigArray)
 
     const mappedResponse: _response.ResponseConfig = { code: 200 }
-    mapTestResponseConfig.mockResolvedValue(mappedResponse as _response.ResponseConfig)
+    mapResponseConfig.mockResolvedValue(mappedResponse as _response.ResponseConfig)
 
     const result = await readConfig('path', typeValidator, Mode.Test)
 
@@ -174,34 +191,6 @@ describe('readConfig', () => {
       name: 'Yo',
       requests: mappedRequests as _request.RequestConfigArray,
       response: mappedResponse,
-    })
-  })
-
-  describe('response mapping', () => {
-    const loadedConfigs = [
-      {
-        name: 'Yo',
-        request: { hello: 'world' },
-        response: { goodbye: 'world' },
-      },
-    ]
-
-    it('calls the test mapper when in test mode', async () => {
-      safeLoad.mockReturnValue(loadedConfigs)
-
-      await readConfig('path', typeValidator, Mode.Test)
-
-      expect(mapTestResponseConfig).toHaveBeenCalledTimes(1)
-      expect(mapTestResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response)
-    })
-
-    it('calls the serve mapper when in serve mode', async () => {
-      safeLoad.mockReturnValue(loadedConfigs)
-
-      await readConfig('path', typeValidator, Mode.Serve)
-
-      expect(mapServeResponseConfig).toHaveBeenCalledTimes(1)
-      expect(mapServeResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response)
     })
   })
 })

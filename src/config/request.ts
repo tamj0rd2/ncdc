@@ -50,9 +50,7 @@ const serveRequestSchema = baseRequestConfigSchema
   .allowedKeysOnly()
 type ServeRequestSchema = yup.InferType<typeof serveRequestSchema>
 
-const getBodyToUse = async (
-  config: Pick<ServeRequestSchema, 'body' | 'bodyPath' | 'serveBody' | 'serveBodyPath'>,
-): Promise<Optional<Data>> => {
+const getBodyToUse = async (config: Pick<ServeRequestSchema, BodyKeys>): Promise<Optional<Data>> => {
   const { body, bodyPath, serveBody, serveBodyPath } = config
 
   if (body) return body
@@ -72,8 +70,7 @@ export const mapRequestConfig = async (
   typeValidator: TypeValidator,
   mode: Mode.Test | Mode.Serve,
 ): Promise<RequestConfigArray> => {
-  const testMode = mode === Mode.Test
-  const schema = testMode ? testRequestSchema : serveRequestSchema
+  const schema = mode === Mode.Test ? testRequestSchema : serveRequestSchema
   const validatedConfig = await schema.validate(requestConfig)
   const { type, method, headers } = validatedConfig
 

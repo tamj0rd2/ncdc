@@ -138,8 +138,8 @@ describe('readConfig', () => {
     const loadedConfigs = [
       {
         name: 'Yo',
-        request: { hello: 'world' },
-        response: { goodbye: 'world' },
+        request: { endpoints: ['hello'] },
+        response: { endpoints: ['goodbye'] },
       },
     ]
 
@@ -172,8 +172,8 @@ describe('readConfig', () => {
     const loadedConfigs = [
       {
         name: 'Yo',
-        request: { hello: 'world' },
-        response: { goodbye: 'world' },
+        request: { endpoints: ['hello'] },
+        response: { endpoints: ['goodbye'] },
       },
     ]
     safeLoad.mockReturnValue(loadedConfigs)
@@ -191,6 +191,30 @@ describe('readConfig', () => {
       name: 'Yo',
       requests: mappedRequests as _request.RequestConfigArray,
       response: mappedResponse,
+    })
+  })
+
+  describe('test mode specifics', () => {
+    it('filters out configs that do not have endpoints', async () => {
+      const loadedConfigs = [
+        {
+          name: 'Yo',
+          request: { endpoints: ['/endpoint1', '/endpoint2'] },
+          response: { goodbye: 'world' },
+        },
+        {
+          name: 'No',
+          request: {},
+          response: { goodbye: 'world' },
+        },
+      ]
+      safeLoad.mockReturnValue(loadedConfigs)
+
+      const result = await readConfig('path', typeValidator, Mode.Test)
+
+      expect(mapRequestConfig).toHaveBeenCalledTimes(1)
+      expect(mapResponseConfig).toHaveBeenCalledTimes(1)
+      expect(result).toHaveLength(1)
     })
   })
 })

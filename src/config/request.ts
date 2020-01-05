@@ -39,6 +39,7 @@ const baseRequestConfigSchema = yup.object({
 const testRequestSchema = baseRequestConfigSchema
   .shape({ endpoints: endpointsSchema.required() })
   .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')
+export type TestRequestSchema = yup.InferType<typeof testRequestSchema>
 
 const serveRequestSchema = baseRequestConfigSchema
   .shape({

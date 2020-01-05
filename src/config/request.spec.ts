@@ -20,6 +20,7 @@ describe('mapRequestConfig', () => {
       endpoints: ['/endpoint1', '/endpoint2'],
       type: 'MyType',
       body: 'silly',
+      headers: { header1: 'yo' },
     }
 
     const expected: RequestConfig[] = [
@@ -28,12 +29,14 @@ describe('mapRequestConfig', () => {
         endpoint: '/endpoint1',
         type: 'MyType',
         body: 'silly',
+        headers: { header1: 'yo' },
       },
       {
         method: 'GET',
         endpoint: '/endpoint2',
         type: 'MyType',
         body: 'silly',
+        headers: { header1: 'yo' },
       },
     ]
 

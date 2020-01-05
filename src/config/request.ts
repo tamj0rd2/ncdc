@@ -5,15 +5,16 @@ import { readJsonAsync } from '../io'
 import TypeValidator, { TypeValidationError } from '../validation/type-validator'
 import { ProblemType } from '../problem'
 import { Mode } from './config'
+import { IncomingHttpHeaders } from 'http'
 
 export type SupportedMethod = 'GET' | 'POST'
 
-// TODO: add headers
 export interface RequestConfig {
   method: SupportedMethod
   endpoint: string
   body?: Data
   type?: string
+  headers?: IncomingHttpHeaders
 }
 
 export type RequestConfigArray = PopulatedArray<RequestConfig>
@@ -29,6 +30,10 @@ const baseRequestConfigSchema = yup.object({
   type: yup.string().notRequired(),
   body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
   bodyPath: yup.string().notAllowedIfSiblings('body'),
+  headers: yup
+    .object<IncomingHttpHeaders>()
+    .ofHeaders()
+    .notRequired(),
 })
 
 const testRequestSchema = baseRequestConfigSchema
@@ -70,7 +75,7 @@ export const mapRequestConfig = async (
   const testMode = mode === Mode.Test
   const schema = testMode ? testRequestSchema : serveRequestSchema
   const validatedConfig = await schema.validate(requestConfig)
-  const { type, method } = validatedConfig
+  const { type, method, headers } = validatedConfig
 
   const bodyToUse: Optional<Data> = await getBodyToUse(validatedConfig)
 
@@ -86,6 +91,7 @@ export const mapRequestConfig = async (
     endpoint,
     method,
     type,
+    headers,
   })) as RequestConfigArray
 }
 export interface OldRequestConfig {

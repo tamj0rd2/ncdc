@@ -93,6 +93,43 @@ describe('allowedKeysOnly', () => {
     expect(schema.isValidSync(config)).toBe(false)
     expect(() => schema.validateSync(config)).toThrow(/stuff contains .* birthday, greeting/)
   })
+
+  it('is valid when an unspecified key is present but has been ignored', () => {
+    const schema = yup
+      .object()
+      .shape({
+        name: yup.string(),
+        age: yup.number(),
+      })
+      .allowedKeysOnly('language')
+
+    const config = {
+      name: 'Name',
+      age: 100,
+      language: 'english',
+    }
+
+    expect(() => schema.validateSync(config)).not.toThrowError()
+  })
+
+  it('strips keys that are unspecified and ignored', () => {
+    const schema = yup
+      .object()
+      .shape({
+        name: yup.string(),
+        age: yup.number(),
+      })
+      .allowedKeysOnly('language')
+
+    const config = {
+      name: 'Name',
+      age: 100,
+      language: 'english',
+    }
+
+    expect(() => schema.validateSync(config)).not.toThrowError()
+    expect(schema.validateSync(config)).not.toHaveProperty('language')
+  })
 })
 
 describe('requiredIf', () => {

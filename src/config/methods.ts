@@ -41,10 +41,18 @@ yup.addMethod(yup.mixed, 'notAllowedIfSiblings', function(
 })
 
 yup.addMethod(yup.object, 'allowedKeysOnly', function(...ignoredKeys: string[]) {
-  return this.test('allowedKeysOnly', '', function(value) {
+  return this.transform(value => {
+    const strippedValue = { ...value }
+
+    for (const key of ignoredKeys) {
+      delete strippedValue[key]
+    }
+
+    return strippedValue
+  }).test('allowedKeysOnly', '', function(value) {
     if (!value) return true
 
-    const known = Object.keys((this.schema as any).fields).concat(ignoredKeys)
+    const known = Object.keys((this.schema as any).fields)
     const unknownKeys = Object.keys(value).filter(key => known.indexOf(key) === -1)
 
     if (!unknownKeys.length) return true

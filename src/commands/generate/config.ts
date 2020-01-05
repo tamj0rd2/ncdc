@@ -1,6 +1,6 @@
 import * as yup from 'yup'
 import { safeLoad } from 'js-yaml'
-import { readFileAsync } from '../../io'
+import { readFileAsync } from '~io'
 
 const generateSchema = yup.object({
   name: yup.string().required(),

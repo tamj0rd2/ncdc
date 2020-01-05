@@ -1,4 +1,4 @@
-import TypeValidator from '../validation/type-validator'
+import TypeValidator from '~validation/type-validator'
 
 export type HandleError = (error: Error) => never
 export type CreateTypeValidator = (

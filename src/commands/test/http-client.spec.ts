@@ -1,12 +1,12 @@
 import { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
-import { Config } from '../../config/config'
-import * as _messages from '../../messages'
-import { FetchResource } from '../../validation/validators'
+import { Config } from '~config/config'
+import * as _messages from '~messages'
+import { FetchResource } from '~validation/validators'
 import { createHttpClient } from './http-client'
-import { mockObj } from '../../test-helpers'
+import { mockObj } from '~test-helpers'
 
-jest.mock('../../messages')
-jest.mock('../../problem')
+jest.mock('~messages')
+jest.mock('~problem')
 
 describe('CDC Tester', () => {
   const loader = mockObj<AxiosInstance>({ get: jest.fn(), post: jest.fn() })

@@ -1,12 +1,12 @@
 import { doItAll, FetchResource, ValidationFlags } from './validators'
 import TypeValidator from './type-validator'
-import { Config } from '../config'
-import Problem, { ProblemType } from '../problem'
-import * as messages from '../messages'
-import { mockObj, mockFn } from '../test-helpers'
+import { Config } from '~config'
+import Problem, { ProblemType } from '~problem'
+import * as messages from '~messages'
+import { mockObj, mockFn } from '~test-helpers'
 
-jest.mock('../problem')
-jest.mock('../messages')
+jest.mock('~problem')
+jest.mock('~messages')
 
 describe('validators', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })

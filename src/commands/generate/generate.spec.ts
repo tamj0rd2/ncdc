@@ -1,8 +1,8 @@
-import SchemaGenerator from '../../schema/schema-generator'
+import SchemaGenerator from '~schema/schema-generator'
 import { generate } from './generate'
 import * as _fs from 'fs'
 import * as _path from 'path'
-import { mockObj } from '../../test-helpers'
+import { mockObj } from '~test-helpers'
 
 jest.mock('path')
 jest.mock('fs')

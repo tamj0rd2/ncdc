@@ -1,8 +1,8 @@
 import TypeValidator from './type-validator'
-import { Data } from '../types'
-import Problem, { ProblemType } from '../problem'
-import { Config } from '../config'
-import { shouldBe } from '../messages'
+import { Data } from '~types'
+import Problem, { ProblemType } from '~problem'
+import { Config } from '~config'
+import { shouldBe } from '~messages'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: Config) => Promise<LoaderResponse>

@@ -1,5 +1,5 @@
 import { SupportedMethod, Config } from '.'
-import { Data } from '../types'
+import { Data } from '~types'
 import { OutgoingHttpHeaders } from 'http'
 
 export default class ConfigBuilder {

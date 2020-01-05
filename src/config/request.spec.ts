@@ -1,11 +1,11 @@
 import { RequestConfig, mapRequestConfig } from './request'
-import * as _io from '../io'
-import { mockObj } from '../test-helpers'
-import TypeValidator from '../validation/type-validator'
-import Problem, { ProblemType } from '../problem'
+import * as _io from '~io'
+import { mockObj } from '~test-helpers'
+import TypeValidator from '~validation/type-validator'
+import Problem, { ProblemType } from '~problem'
 import { Mode } from './config'
 
-jest.mock('../io')
+jest.mock('~io')
 
 describe('mapRequestConfig', () => {
   const { readJsonAsync } = mockObj(_io)

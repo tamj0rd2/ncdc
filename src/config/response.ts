@@ -1,11 +1,11 @@
-import { Data } from '../types'
+import { Data } from '~types'
 import * as yup from 'yup'
 import { OutgoingHttpHeaders } from 'http'
-import { readJsonAsync } from '../io'
+import { readJsonAsync } from '~io'
 import './methods'
 import { Mode } from './config'
-import TypeValidator, { TypeValidationError } from '../validation/type-validator'
-import { ProblemType } from '../problem'
+import TypeValidator, { TypeValidationError } from '~validation/type-validator'
+import { ProblemType } from '~problem'
 
 export interface ResponseConfig {
   code: number

@@ -1,10 +1,10 @@
-import { mockObj } from '../../test-helpers'
+import { mockObj } from '~test-helpers'
 import { readGenerateConfig } from './config'
 import _jsYaml from 'js-yaml'
-import * as _io from '../../io'
+import * as _io from '~io'
 
 jest.mock('js-yaml')
-jest.mock('../../io')
+jest.mock('~io')
 
 describe('readGenerateConfig', () => {
   afterEach(() => jest.resetAllMocks())

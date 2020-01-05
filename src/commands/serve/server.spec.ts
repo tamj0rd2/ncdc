@@ -1,9 +1,9 @@
 import request from 'supertest'
 import { configureServer, Log } from './server'
-import ConfigBuilder from '../../config/config-builder'
-import TypeValidator from '../../validation/type-validator'
-import Problem from '../../problem'
-import { mockObj } from '../../test-helpers'
+import ConfigBuilder from '~config/config-builder'
+import TypeValidator from '~validation/type-validator'
+import Problem from '~problem'
+import { mockObj } from '~test-helpers'
 
 describe('server', () => {
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()

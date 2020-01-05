@@ -2,7 +2,7 @@ import { HandleError, CreateTypeValidator } from '../shared'
 import { Argv, CommandModule } from 'yargs'
 import { createHttpClient } from './http-client'
 import axios from 'axios'
-import readConfig, { Config, Mode } from '../../config'
+import readConfig, { Config, Mode } from '~config'
 import { testConfigs } from './test'
 
 interface TestArgs {

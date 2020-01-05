@@ -22,6 +22,9 @@
       "<rootDir>/dist/",
       "<rootDir>/node_modules/"
     ],
+    "moduleNameMapper": {
+      "~(.*)$": "<rootDir>/src/$1"
+    },
     "testEnvironment": "node",
     "collectCoverageFrom": [
       "**/*.ts",

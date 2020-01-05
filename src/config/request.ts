@@ -1,9 +1,9 @@
-import { Data } from '../types'
+import { Data } from '~types'
 import * as yup from 'yup'
 import './methods'
-import { readJsonAsync } from '../io'
-import TypeValidator, { TypeValidationError } from '../validation/type-validator'
-import { ProblemType } from '../problem'
+import { readJsonAsync } from '~io'
+import TypeValidator, { TypeValidationError } from '~validation/type-validator'
+import { ProblemType } from '~problem'
 import { Mode } from './config'
 import { IncomingHttpHeaders } from 'http'
 

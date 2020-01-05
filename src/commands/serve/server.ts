@@ -1,10 +1,10 @@
 import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
 import chalk from 'chalk'
 import { OutgoingHttpHeaders, Server } from 'http'
-import { Data } from '../../types'
-import TypeValidator from '../../validation/type-validator'
-import { ProblemType } from '../../problem'
-import { SupportedMethod, Config } from '../../config'
+import { Data } from '~types'
+import TypeValidator from '~validation/type-validator'
+import { ProblemType } from '~problem'
+import { SupportedMethod, Config } from '~config'
 
 export interface Log {
   name?: string

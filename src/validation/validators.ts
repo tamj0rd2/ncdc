@@ -25,7 +25,6 @@ export const doItAll = (
     flags === ValidationFlags.All || flags.includes(target)
 
   return async (config): Promise<Problem[]> => {
-    // TODO: this needs figuring out. assuming mapping needs to be done a level above to handle multiple requests
     const { response: responseConfig } = config
 
     const problems: Problem[] = []

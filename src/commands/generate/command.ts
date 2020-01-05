@@ -33,17 +33,17 @@ const createHandler = (handleError: HandleError) => async (args: GenerateArgs): 
   const { tsconfigPath, configPath, outputPath } = args
   if (!configPath) process.exit(1)
 
-  let allConfigs: Config[]
+  let configs: Config[]
   try {
-    allConfigs = await readGenerateConfig(configPath)
+    configs = await readGenerateConfig(configPath)
   } catch (err) {
     return handleError(err)
   }
 
   const builtInTypes = ['string', 'number', 'boolean', 'object']
-  const types = allConfigs
+  const types = configs
     .map(x => x.request.type)
-    .concat(allConfigs.map(x => x.response.type))
+    .concat(configs.map(x => x.response.type))
     .filter((x): x is string => !!x)
     .filter(x => !builtInTypes.includes(x))
     .filter((x, i, arr) => i === arr.indexOf(x))

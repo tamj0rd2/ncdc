@@ -1,4 +1,4 @@
-import { HandleError } from '../shared'
+import { HandleError, CreateTypeValidator } from '../shared'
 import { Argv, CommandModule } from 'yargs'
 import { createHttpClient } from './http-client'
 import axios from 'axios'
@@ -44,14 +44,13 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
       type: 'string',
     })
 
-const createHandler = (handleError: HandleError) => async (args: TestArgs): Promise<void> => {
+const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
+  args: TestArgs,
+): Promise<void> => {
   const { configPath, baseURL, allErrors, tsconfigPath, schemaPath } = args
   if (!configPath || !baseURL) process.exit(1)
 
-  const typeValidator = new TypeValidator(
-    new ajv({ verbose: true, allErrors }),
-    schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath),
-  )
+  const typeValidator = createTypeValidator(allErrors, tsconfigPath, schemaPath)
 
   let configs: Config[]
   try {
@@ -67,11 +66,14 @@ const createHandler = (handleError: HandleError) => async (args: TestArgs): Prom
     .catch(handleError)
 }
 
-export default function createTestCommand(handleError: HandleError): CommandModule<{}, TestArgs> {
+export default function createTestCommand(
+  handleError: HandleError,
+  createTypeValidator: CreateTypeValidator,
+): CommandModule<{}, TestArgs> {
   return {
     command: 'test <configPath> <baseURL>',
     describe: 'Tests API endpoint responses against a json schema',
     builder,
-    handler: createHandler(handleError),
+    handler: createHandler(handleError, createTypeValidator),
   }
 }

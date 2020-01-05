@@ -2,11 +2,7 @@ import { Argv } from 'yargs'
 import yargs from 'yargs'
 import { resolve } from 'path'
 import readConfig, { Config, Mode } from '../../config/config'
-import { HandleError } from '../shared'
-import TypeValidator from '../../validation/type-validator'
-import ajv from 'ajv'
-import SchemaLoader from '../../schema/schema-loader'
-import SchemaGenerator from '../../schema/schema-generator'
+import { HandleError, CreateTypeValidator } from '../shared'
 import { startServer } from './server'
 
 interface ServeArgs {
@@ -45,7 +41,9 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       default: 4000,
     })
 
-const createHandler = (handleError: HandleError) => async (args: ServeArgs): Promise<void> => {
+const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
+  args: ServeArgs,
+): Promise<void> => {
   const { configPath, port, allErrors, tsconfigPath, schemaPath } = args
   if (!configPath) process.exit(1)
 
@@ -55,11 +53,7 @@ const createHandler = (handleError: HandleError) => async (args: ServeArgs): Pro
     return process.exit(1)
   }
 
-  const typeValidator = new TypeValidator(
-    new ajv({ verbose: true, allErrors }),
-    schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath),
-  )
-
+  const typeValidator = createTypeValidator(allErrors, tsconfigPath, schemaPath)
   const fullConfigPath = resolve(configPath)
 
   let configs: Config[]
@@ -76,11 +70,14 @@ const createHandler = (handleError: HandleError) => async (args: ServeArgs): Pro
     .catch(handleError)
 }
 
-export default function createServeCommand(handleError: HandleError): yargs.CommandModule<{}, ServeArgs> {
+export default function createServeCommand(
+  handleError: HandleError,
+  createTypeValidator: CreateTypeValidator,
+): yargs.CommandModule<{}, ServeArgs> {
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves mock API responses',
     builder,
-    handler: createHandler(handleError),
+    handler: createHandler(handleError, createTypeValidator),
   }
 }

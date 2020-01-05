@@ -13,6 +13,14 @@ const groupBy = <T>(items: T[], getKey: (item: T) => string): Map<string, T[]> =
     return map
   }, new Map<string, T[]>())
 
+export const logSucess = (displayName: string, prefix = 'PASSED', extra?: string): void => {
+  console.log(chalk.green.bold(`${prefix}:`), chalk.green(displayName), extra)
+}
+
+export const logFailure = (displayName: string, prefix = 'FAILED', suffix?: string): void => {
+  console.error(chalk.red.bold(`${prefix}:`), chalk.red(displayName), suffix)
+}
+
 export const logValidationErrors = (problems: Problem[]): void => {
   groupBy(problems, x => x.path).forEach((groupedProblems, dataPath) => {
     groupBy(groupedProblems, x => x.problemType).forEach((groupedByType, type) => {

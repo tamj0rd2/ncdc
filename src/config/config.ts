@@ -19,6 +19,7 @@ import {
   mapServeResponseConfig,
   ResponseConfig,
 } from './response'
+import TypeValidator from '../validation/type-validator'
 
 export interface Config {
   name: string
@@ -70,7 +71,11 @@ export async function readGenerateConfig(configPath: string) {
   return await generateSchema.validate(rawConfig)
 }
 
-export async function readConfig(configPath: string, mode: Mode): Promise<Config[]> {
+export async function readConfig(
+  configPath: string,
+  typeValidator: TypeValidator,
+  mode: Mode,
+): Promise<Config[]> {
   const rawConfig = safeLoad(await readFileAsync(configPath))
   const configs = await configSchema.validate(rawConfig)
 
@@ -80,7 +85,7 @@ export async function readConfig(configPath: string, mode: Mode): Promise<Config
   return await Promise.all(
     configs.map<Promise<Config>>(async ({ name, request, response }) => ({
       name: name,
-      requests: await requestMapper(request),
+      requests: await requestMapper(request, typeValidator),
       response: await responseMapper(response),
     })),
   )

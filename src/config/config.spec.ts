@@ -5,17 +5,20 @@ import * as _io from '../io'
 import { mockObj } from '../test-helpers'
 import * as _request from './request'
 import * as _response from './response'
+import TypeValidator from '../validation/type-validator'
 
 jest.mock('fs')
 jest.mock('js-yaml')
 jest.mock('../io')
 jest.mock('./request')
 jest.mock('./response')
+jest.mock('../validation/type-validator')
 
 const { safeLoad } = mockObj(_jsYaml)
 const { readFileAsync } = mockObj(_io)
 const { mapTestRequestConfig, mapServeRequestConfig } = mockObj(_request)
 const { mapTestResponseConfig, mapServeResponseConfig } = mockObj(_response)
+const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
 
 describe('Read config', () => {
   afterEach(() => {
@@ -115,7 +118,7 @@ describe('readConfig', () => {
   it('calls readFileSync with the correct params', async () => {
     safeLoad.mockReturnValue([])
 
-    await readConfig('./configPath', Mode.Test)
+    await readConfig('./configPath', typeValidator, Mode.Test)
 
     expect(readFileAsync).toHaveBeenCalledWith('./configPath')
   })
@@ -124,7 +127,7 @@ describe('readConfig', () => {
     readFileAsync.mockResolvedValue('hello moto')
     safeLoad.mockReturnValue([])
 
-    await readConfig('path', Mode.Test)
+    await readConfig('path', typeValidator, Mode.Test)
 
     expect(safeLoad).toHaveBeenCalledWith('hello moto')
   })
@@ -148,7 +151,7 @@ describe('readConfig', () => {
     const mappedResponse: _response.ResponseConfig = { code: 200 }
     mapTestResponseConfig.mockResolvedValue(mappedResponse as _response.ResponseConfig)
 
-    const result = await readConfig('path', Mode.Test)
+    const result = await readConfig('path', typeValidator, Mode.Test)
 
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject<Config>({
@@ -170,19 +173,19 @@ describe('readConfig', () => {
     it('calls the test mapper when in test mode', async () => {
       safeLoad.mockReturnValue(loadedConfigs)
 
-      await readConfig('path', Mode.Test)
+      await readConfig('path', typeValidator, Mode.Test)
 
       expect(mapTestRequestConfig).toHaveBeenCalledTimes(1)
-      expect(mapTestRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request)
+      expect(mapTestRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator)
     })
 
     it('calls the serve mapper when in serve mode', async () => {
       safeLoad.mockReturnValue(loadedConfigs)
 
-      await readConfig('path', Mode.Serve)
+      await readConfig('path', typeValidator, Mode.Serve)
 
       expect(mapServeRequestConfig).toHaveBeenCalledTimes(1)
-      expect(mapServeRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request)
+      expect(mapServeRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator)
     })
   })
 
@@ -198,7 +201,7 @@ describe('readConfig', () => {
     it('calls the test mapper when in test mode', async () => {
       safeLoad.mockReturnValue(loadedConfigs)
 
-      await readConfig('path', Mode.Test)
+      await readConfig('path', typeValidator, Mode.Test)
 
       expect(mapTestResponseConfig).toHaveBeenCalledTimes(1)
       expect(mapTestResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response)
@@ -207,7 +210,7 @@ describe('readConfig', () => {
     it('calls the serve mapper when in serve mode', async () => {
       safeLoad.mockReturnValue(loadedConfigs)
 
-      await readConfig('path', Mode.Serve)
+      await readConfig('path', typeValidator, Mode.Serve)
 
       expect(mapServeResponseConfig).toHaveBeenCalledTimes(1)
       expect(mapServeResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response)
@@ -221,7 +224,7 @@ describe('readGenerateConfig', () => {
   it('calls readFileSync with the correct params', async () => {
     safeLoad.mockReturnValue([])
 
-    await readConfig('./configPath', Mode.Test)
+    await readConfig('./configPath', typeValidator, Mode.Test)
 
     expect(readFileAsync).toHaveBeenCalledWith('./configPath')
   })
@@ -230,7 +233,7 @@ describe('readGenerateConfig', () => {
     readFileAsync.mockResolvedValue('hello moto')
     safeLoad.mockReturnValue([])
 
-    await readConfig('path', Mode.Test)
+    await readConfig('path', typeValidator, Mode.Test)
 
     expect(safeLoad).toHaveBeenCalledWith('hello moto')
   })

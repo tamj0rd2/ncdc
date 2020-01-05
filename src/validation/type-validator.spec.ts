@@ -3,7 +3,6 @@ import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
 import SchemaGenerator from '../schema/schema-generator'
 import { Data } from '../types'
 import Problem, { ProblemType } from '../problem'
-import * as _problems from '../problem'
 import * as _messages from '../messages'
 import { mockObj, mockCtor } from '../test-helpers'
 

@@ -10,7 +10,7 @@ import { ProblemType } from '../problem'
 export interface ResponseConfig {
   code: number
   body?: Data
-  headers?: OutgoingHttpHeaders // TODO: literally unused right now. Needs to be checked in test mode and sent in serve mode
+  headers?: OutgoingHttpHeaders // TODO: unused right now. Needs to be checked in test mode and sent in serve mode
 }
 
 const baseResponseSchema = yup.object({

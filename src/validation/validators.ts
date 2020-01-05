@@ -1,13 +1,11 @@
 import TypeValidator from './type-validator'
 import { Data } from '../types'
 import Problem, { ProblemType } from '../problem'
-import { TestConfig } from '../config/config'
+import { Config } from '../config/config'
 import { shouldBe } from '../messages'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource<Config extends TestConfig = TestConfig> = (
-  config: Config,
-) => Promise<LoaderResponse>
+export type FetchResource = (config: Config) => Promise<LoaderResponse>
 export enum ValidationFlags {
   All,
   RequestType,
@@ -15,8 +13,9 @@ export enum ValidationFlags {
   ResponseBody,
   ResponseType,
 }
-export type TestFn<Config extends TestConfig = TestConfig> = (config: Config) => Promise<Problem[]>
+export type TestFn = (config: Config) => Promise<Problem[]>
 
+// TODO: get rid of this. it's only used by test mode now
 export const doItAll = (
   typeValidator: TypeValidator,
   getResponse: FetchResource,
@@ -26,17 +25,8 @@ export const doItAll = (
     flags === ValidationFlags.All || flags.includes(target)
 
   return async (config): Promise<Problem[]> => {
-    const { request: requestConfig, response: responseConfig } = config
-
-    if (shouldValidate(ValidationFlags.RequestType) && requestConfig.type) {
-      const result = await typeValidator.getProblems(
-        requestConfig.body,
-        requestConfig.type,
-        ProblemType.Request,
-      )
-
-      if (result) return result
-    }
+    // TODO: this needs figuring out. assuming mapping needs to be done a level above to handle multiple requests
+    const { response: responseConfig } = config
 
     const problems: Problem[] = []
     const response = await getResponse(config)
@@ -73,6 +63,7 @@ export const doItAll = (
       )
     }
 
+    // TODO: Add Type back in
     if (shouldValidate(ValidationFlags.ResponseType) && responseConfig.type) {
       const result = await typeValidator.getProblems(response.data, responseConfig.type, ProblemType.Response)
       if (result) problems.push(...result)

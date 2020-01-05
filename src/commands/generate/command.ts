@@ -1,6 +1,5 @@
 import { HandleError } from '../shared'
 import { Argv, CommandModule } from 'yargs'
-import readConfigOld, { TestConfig } from '../../config/config'
 import SchemaGenerator from '../../schema/schema-generator'
 import { generate } from './generate'
 import { readGenerateConfig, Config } from './config'

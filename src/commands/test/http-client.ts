@@ -2,7 +2,7 @@ import { FetchResource, LoaderResponse } from '../../validation/validators'
 import { AxiosError, AxiosInstance } from 'axios'
 import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode } from '../../messages'
 
-export const createClient = (loader: AxiosInstance): FetchResource => async ({
+export const createHttpClient = (loader: AxiosInstance): FetchResource => async ({
   request,
   response,
 }): Promise<LoaderResponse> => {

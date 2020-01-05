@@ -52,6 +52,7 @@ const serveRequestSchema = baseRequestConfigSchema
 type ServeRequestSchema = yup.InferType<typeof serveRequestSchema>
 
 const getBodyToUse = async (config: Pick<ServeRequestSchema, BodyKeys>): Promise<Optional<Data>> => {
+  // TODO: might need to resolve these paths
   const { body, bodyPath, serveBody, serveBodyPath } = config
 
   if (body) return body

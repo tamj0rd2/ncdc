@@ -1,9 +1,13 @@
 import { Argv } from 'yargs'
 import yargs from 'yargs'
-import { resolve, normalize } from 'path'
-import readConfigOld, { MockConfig } from '../../config/config'
-import IOClient from './io-client'
-import { HandleError, CreateMain } from '../shared'
+import { resolve } from 'path'
+import readConfig, { Config, Mode } from '../../config/config'
+import { HandleError } from '../shared'
+import TypeValidator from '../../validation/type-validator'
+import ajv from 'ajv'
+import SchemaLoader from '../../schema/schema-loader'
+import SchemaGenerator from '../../schema/schema-generator'
+import { startServer } from './server'
 
 interface ServeArgs {
   configPath?: string
@@ -41,7 +45,7 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       default: 4000,
     })
 
-const createHandler = (handleError: HandleError, createMain: CreateMain) => (args: ServeArgs): void => {
+const createHandler = (handleError: HandleError) => async (args: ServeArgs): Promise<void> => {
   const { configPath, port, allErrors, tsconfigPath, schemaPath } = args
   if (!configPath) process.exit(1)
 
@@ -51,46 +55,32 @@ const createHandler = (handleError: HandleError, createMain: CreateMain) => (arg
     return process.exit(1)
   }
 
+  const typeValidator = new TypeValidator(
+    new ajv({ verbose: true, allErrors }),
+    schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath),
+  )
+
   const fullConfigPath = resolve(configPath)
-  const configFolder = normalize(`${fullConfigPath}/../`)
 
-  let mockConfigs: MockConfig[]
+  let configs: Config[]
   try {
-    mockConfigs = readConfigOld<MockConfig>(fullConfigPath)
-      .filter(x => x.response.mockPath || x.response.mockBody || x.response.body)
-      .map(config => {
-        // TODO: this feels a bit naughty
-        const mockPath = config.response.mockPath
-        if (!mockPath) return config
-
-        return {
-          ...config,
-          response: {
-            ...config.response,
-            mockPath: /^.?.\//.test(mockPath) ? resolve(configFolder, mockPath) : mockPath,
-          },
-        }
-      })
+    configs = await readConfig(fullConfigPath, typeValidator, Mode.Serve)
   } catch (err) {
     return handleError(err)
   }
 
-  if (!mockConfigs.length) return console.log('No mocks to run')
+  if (!configs.length) return console.log('No mocks to run')
 
-  createMain(allErrors, tsconfigPath, schemaPath)
-    .serve(port, mockConfigs, new IOClient())
+  return startServer(port, configs, typeValidator)
     .then(() => process.exit())
     .catch(handleError)
 }
 
-export default function createServeCommand(
-  handleError: HandleError,
-  createMain: CreateMain,
-): yargs.CommandModule<{}, ServeArgs> {
+export default function createServeCommand(handleError: HandleError): yargs.CommandModule<{}, ServeArgs> {
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves mock API responses',
     builder,
-    handler: createHandler(handleError, createMain),
+    handler: createHandler(handleError),
   }
 }

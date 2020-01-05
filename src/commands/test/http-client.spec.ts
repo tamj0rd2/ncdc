@@ -1,8 +1,8 @@
 import { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
-import { TestConfig } from '../../config/config'
+import { Config } from '../../config/config'
 import * as _messages from '../../messages'
 import { FetchResource } from '../../validation/validators'
-import { createClient } from './http-client'
+import { createHttpClient } from './http-client'
 import { mockObj } from '../../test-helpers'
 
 jest.mock('../../messages')
@@ -17,11 +17,11 @@ describe('CDC Tester', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     loader.defaults = { baseURL: 'some url' }
-    fetchResource = createClient(loader)
+    fetchResource = createHttpClient(loader)
   })
 
   it('calls the loader with the correct args for a GET request', async () => {
-    const config: Partial<TestConfig> = {
+    const config: Partial<Config> = {
       request: {
         method: 'GET',
         endpoint: '/blah',
@@ -30,13 +30,13 @@ describe('CDC Tester', () => {
     }
     loader.get.mockResolvedValue({ status: 200 })
 
-    await fetchResource(config as TestConfig)
+    await fetchResource(config as Config)
 
     expect(loader.get).toBeCalledWith('/blah')
   })
 
   it('calls the loader with the correct args for a POST request', async () => {
-    const config: Partial<TestConfig> = {
+    const config: Partial<Config> = {
       request: {
         method: 'POST',
         endpoint: '/blah',
@@ -46,14 +46,14 @@ describe('CDC Tester', () => {
     }
     loader.post.mockResolvedValue({ status: 200 })
 
-    await fetchResource(config as TestConfig)
+    await fetchResource(config as Config)
 
     expect(loader.post).toBeCalledWith('/blah', 'Ello')
   })
 
   describe('error calling service', () => {
     it('throws an error when there is no service response', async () => {
-      const config: Partial<TestConfig> = {
+      const config: Partial<Config> = {
         request: {
           method: 'GET',
           endpoint: '/some/endpoint',
@@ -70,12 +70,12 @@ describe('CDC Tester', () => {
       loader.get.mockRejectedValue(new Error('welp'))
       messages.errorNoResponse.mockReturnValue('error msg')
 
-      await expect(fetchResource(config as TestConfig)).rejects.toThrowError('error msg')
+      await expect(fetchResource(config as Config)).rejects.toThrowError('error msg')
       expect(messages.errorNoResponse).toBeCalledWith(baseURL + endpoint)
     })
 
     it('throws an error when the response code does not match expected', async () => {
-      const config: Partial<TestConfig> = {
+      const config: Partial<Config> = {
         request: {
           method: 'GET',
           endpoint: '/some/endpoint',
@@ -91,12 +91,12 @@ describe('CDC Tester', () => {
       loader.get.mockRejectedValue(error)
       messages.errorWrongStatusCode.mockReturnValue('error msg2')
 
-      await expect(fetchResource(config as TestConfig)).rejects.toThrowError('error msg2')
+      await expect(fetchResource(config as Config)).rejects.toThrowError('error msg2')
       expect(messages.errorWrongStatusCode).toBeCalledWith(baseURL + config.request!.endpoint, 404, 503)
     })
 
     it('returns the response if the response code matches', async () => {
-      const config: Partial<TestConfig> = {
+      const config: Partial<Config> = {
         request: {
           method: 'GET',
           endpoint: 'endpoint',
@@ -107,7 +107,7 @@ describe('CDC Tester', () => {
       const error: Partial<AxiosError> = { response: response as AxiosResponse }
       loader.get.mockRejectedValue(error)
 
-      const result = await fetchResource(config as TestConfig)
+      const result = await fetchResource(config as Config)
 
       expect(result).toBe(response)
     })

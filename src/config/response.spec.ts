@@ -26,6 +26,7 @@ describe('mapResponseConfig', () => {
 
     expect(mappedConfig).toMatchObject<ResponseConfig>({
       code: 200,
+      type: 'MyType',
       body: 'boday',
       headers: { header1: 'yo' },
     })

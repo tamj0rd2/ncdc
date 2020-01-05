@@ -11,6 +11,7 @@ export interface ResponseConfig {
   code: number
   body?: Data
   headers?: OutgoingHttpHeaders // TODO: unused right now. Needs to be checked in test mode and sent in serve mode
+  type?: string
 }
 
 const baseResponseSchema = yup.object({
@@ -33,6 +34,7 @@ const serveResponseSchema = baseResponseSchema.shape({
 type ServeResponseSchema = yup.InferType<typeof serveResponseSchema>
 
 const getResponseBody = async (config: Pick<ServeResponseSchema, BodyKeys>): Promise<Optional<Data>> => {
+  // TODO: might need to resolve these paths
   const { body, bodyPath, serveBody, serveBodyPath } = config
 
   if (body) return body
@@ -61,6 +63,7 @@ export const mapResponseConfig = async (
     code,
     body: bodyToUse,
     headers,
+    type,
   }
 }
 

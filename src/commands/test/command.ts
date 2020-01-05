@@ -1,8 +1,13 @@
-import { HandleError, CreateMain } from '../shared'
+import { HandleError } from '../shared'
 import { Argv, CommandModule } from 'yargs'
-import readConfigOld, { TestConfig } from '../../config/config'
-import { createClient } from './http-client'
+import { createHttpClient } from './http-client'
 import axios from 'axios'
+import readConfig, { Config, Mode } from '../../config/config'
+import TypeValidator from '../../validation/type-validator'
+import ajv = require('ajv')
+import SchemaLoader from '../../schema/schema-loader'
+import SchemaGenerator from '../../schema/schema-generator'
+import { testConfigs } from './test'
 
 interface TestArgs {
   allErrors: boolean
@@ -39,33 +44,34 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
       type: 'string',
     })
 
-const createHandler = (handleError: HandleError, createMain: CreateMain) => (args: TestArgs): void => {
+const createHandler = (handleError: HandleError) => async (args: TestArgs): Promise<void> => {
   const { configPath, baseURL, allErrors, tsconfigPath, schemaPath } = args
   if (!configPath || !baseURL) process.exit(1)
 
-  let testConfigs: TestConfig[]
+  const typeValidator = new TypeValidator(
+    new ajv({ verbose: true, allErrors }),
+    schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath),
+  )
+
+  let configs: Config[]
   try {
-    testConfigs = readConfigOld(configPath).filter(x => x.request.endpoint)
+    configs = await readConfig(configPath, typeValidator, Mode.Test)
   } catch (err) {
     return handleError(err)
   }
 
-  if (!testConfigs.length) return console.log('No tests to run')
+  if (!configs.length) return console.log('No tests to run')
 
-  createMain(allErrors, tsconfigPath, schemaPath)
-    .test(baseURL, createClient(axios.create({ baseURL })), testConfigs)
+  testConfigs(baseURL, createHttpClient(axios.create({ baseURL })), configs, typeValidator)
     .then(() => process.exit())
     .catch(handleError)
 }
 
-export default function createTestCommand(
-  handleError: HandleError,
-  createMain: CreateMain,
-): CommandModule<{}, TestArgs> {
+export default function createTestCommand(handleError: HandleError): CommandModule<{}, TestArgs> {
   return {
     command: 'test <configPath> <baseURL>',
     describe: 'Tests API endpoint responses against a json schema',
     builder,
-    handler: createHandler(handleError, createMain),
+    handler: createHandler(handleError),
   }
 }

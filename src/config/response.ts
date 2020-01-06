@@ -23,7 +23,8 @@ const baseResponseSchema = yup.object({
   type: yup.string().notRequired(),
 })
 
-export const testResponseSchema = baseResponseSchema.allowedKeysOnly()
+// TODO: needs tests
+export const testResponseSchema = baseResponseSchema.allowedKeysOnly('serveBody', 'serveBodyPath')
 type TestResponseSchema = yup.InferType<typeof testResponseSchema>
 
 export const serveResponseSchema = baseResponseSchema

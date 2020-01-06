@@ -4,6 +4,7 @@ import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
 
+// TODO: add tests for the schemas themselves
 describe('mapResponseConfig', () => {
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
   const getBodyToUse = mockFn<GetBodyToUse>()
@@ -64,7 +65,6 @@ describe('mapResponseConfig', () => {
   it.each(combinedConfigCases)(
     'does not throw for config that contains test settings',
     async combinedConfig => {
-      await expect(mapResponseConfig(combinedConfig, typeValidator, getBodyToUse)).resolves.not.toThrowError()
       await expect(mapResponseConfig(combinedConfig, typeValidator, getBodyToUse)).resolves.not.toThrowError()
     },
   )

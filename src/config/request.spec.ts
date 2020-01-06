@@ -7,6 +7,7 @@ import { GetBodyToUse } from './body'
 
 jest.mock('path')
 
+// TODO: add tests for the schemas themselves. NEEDS to be done before next release
 describe('mapRequestConfig', () => {
   // const { getBodyToUse } = mockObj(_io)
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })

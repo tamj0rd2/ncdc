@@ -1,10 +1,10 @@
 import * as yup from 'yup'
 import { OutgoingHttpHeaders } from 'http'
-import { readJsonAsync } from '~io'
 import './methods'
 import { Mode } from './config'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
+import { GetBodyToUse } from './body'
 
 export interface ResponseConfig {
   code: number
@@ -30,22 +30,12 @@ const serveResponseSchema = baseResponseSchema.shape({
   serveBody: yup.mixed<Data>().notAllowedIfSiblings('body, bodyPath, serveBodyPath'),
   serveBodyPath: yup.string().notAllowedIfSiblings('body, bodyPath, serveBody'),
 })
-type ServeResponseSchema = yup.InferType<typeof serveResponseSchema>
-
-const getResponseBody = async (config: Pick<ServeResponseSchema, BodyKeys>): Promise<Optional<Data>> => {
-  // TODO: might need to resolve these paths
-  const { body, bodyPath, serveBody, serveBodyPath } = config
-
-  if (body) return body
-  if (bodyPath) return await readJsonAsync(bodyPath)
-  if (serveBody) return serveBody
-  if (serveBodyPath) return await readJsonAsync(serveBodyPath)
-}
 
 export const mapResponseConfig = async (
   responseConfig: object,
   typeValidator: TypeValidator,
   mode: Mode.Test | Mode.Serve,
+  getResponseBody: GetBodyToUse,
 ): Promise<ResponseConfig> => {
   const schema = mode === Mode.Test ? testResponseSchema : serveResponseSchema
   const validatedConfig = await schema.validate(responseConfig)

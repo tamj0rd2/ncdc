@@ -1,10 +1,10 @@
 import * as yup from 'yup'
 
-yup.addMethod(yup.mixed, 'requiredIfNoSiblings', function (
+yup.addMethod(yup.mixed, 'requiredIfNoSiblings', function(
   this: yup.Schema<yup.MixedSchema>,
   ...siblings: string[]
 ) {
-  return this.test('requiredIf', '', function (value) {
+  return this.test('requiredIf', '', function(value) {
     const allSiblingsDefined = siblings.filter(x => !this.parent[x]).length === 0
 
     const isValid = allSiblingsDefined || !!value
@@ -21,11 +21,11 @@ yup.addMethod(yup.mixed, 'requiredIfNoSiblings', function (
   })
 })
 
-yup.addMethod(yup.mixed, 'notAllowedIfSiblings', function (
+yup.addMethod(yup.mixed, 'notAllowedIfSiblings', function(
   this: yup.Schema<yup.MixedSchema>,
   ...siblings: string[]
 ) {
-  return this.test('notAllowedIf', '', function (value) {
+  return this.test('notAllowedIf', '', function(value) {
     if (!value) return true
 
     const siblingIsDefined = siblings.find(x => !!this.parent[x])
@@ -35,12 +35,12 @@ yup.addMethod(yup.mixed, 'notAllowedIfSiblings', function (
       path: this.path,
       message: `${
         this.path
-        } is not allowed because one of the following siblings are defined: ${siblings.join(', ')}`,
+      } is not allowed because one of the following siblings are defined: ${siblings.join(', ')}`,
     })
   })
 })
 
-yup.addMethod(yup.object, 'allowedKeysOnly', function (...ignoredKeys: string[]) {
+yup.addMethod(yup.object, 'allowedKeysOnly', function(...ignoredKeys: string[]) {
   return this.transform(value => {
     const strippedValue = { ...value }
 
@@ -49,7 +49,7 @@ yup.addMethod(yup.object, 'allowedKeysOnly', function (...ignoredKeys: string[])
     }
 
     return strippedValue
-  }).test('allowedKeysOnly', '', function (value) {
+  }).test('allowedKeysOnly', '', function(value) {
     if (!value) return true
 
     const known = Object.keys((this.schema as any).fields)
@@ -63,8 +63,8 @@ yup.addMethod(yup.object, 'allowedKeysOnly', function (...ignoredKeys: string[])
   })
 })
 
-yup.addMethod(yup.object, 'ofHeaders', function () {
-  return this.test('hasValidHeaders', '', function (headers) {
+yup.addMethod(yup.object, 'ofHeaders', function() {
+  return this.test('hasValidHeaders', '', function(headers) {
     const firstInvalidField = Object.keys(headers ?? {}).find(key => {
       const value = headers[key]
 
@@ -83,7 +83,7 @@ yup.addMethod(yup.object, 'ofHeaders', function () {
   })
 })
 
-yup.addMethod(yup.string, 'startsWith', function (substring: string) {
+yup.addMethod(yup.string, 'startsWith', function(substring: string) {
   return this.test(
     'startsWith',
     `value of \${path} should start with ${substring} but received \${value} `,

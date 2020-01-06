@@ -4,6 +4,7 @@ import { readFileAsync } from '~io'
 import { mapRequestConfig, RequestConfig } from './request'
 import { ResponseConfig, mapResponseConfig } from './response'
 import { TypeValidator } from '~validation'
+import { createGetBodyToUse } from './body'
 
 export interface Config {
   name: string
@@ -39,12 +40,13 @@ export default async function readConfig(
   const configs = (await configSchema.validate(rawConfig)).filter(
     x => mode === Mode.Serve || x.request.endpoints,
   )
+  const getBody = createGetBodyToUse(configPath)
 
   const mappedConfigs = await Promise.all(
     configs.map(
       async ({ name, request, response }): Promise<Config[]> => {
-        const requestConfigs = await mapRequestConfig(request, typeValidator, mode)
-        const responseConfig = await mapResponseConfig(response, typeValidator, mode)
+        const requestConfigs = await mapRequestConfig(request, typeValidator, mode, getBody)
+        const responseConfig = await mapResponseConfig(response, typeValidator, mode, getBody)
 
         return requestConfigs.map<Config>((requestConfig, i) => ({
           name: `${name} [${i}]`,

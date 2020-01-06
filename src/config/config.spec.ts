@@ -1,9 +1,10 @@
 import readConfig, { Config, Mode } from './config'
 import _jsYaml from 'js-yaml'
 import * as _io from '~io'
-import { mockObj } from '~test-helpers'
+import { mockObj, mockFn } from '~test-helpers'
 import * as _request from './request'
 import * as _response from './response'
+import * as _body from './body'
 import { TypeValidator } from '~validation'
 
 jest.mock('fs')
@@ -11,14 +12,21 @@ jest.mock('js-yaml')
 jest.mock('~io')
 jest.mock('./request')
 jest.mock('./response')
-
-const { safeLoad } = mockObj(_jsYaml)
-const { readFileAsync } = mockObj(_io)
-const { mapRequestConfig } = mockObj(_request)
-const { mapResponseConfig } = mockObj(_response)
-const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
+jest.mock('./body')
 
 describe('readConfig', () => {
+  const { safeLoad } = mockObj(_jsYaml)
+  const { readFileAsync } = mockObj(_io)
+  const { mapRequestConfig } = mockObj(_request)
+  const { mapResponseConfig } = mockObj(_response)
+  const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
+  const { createGetBodyToUse } = mockObj(_body)
+  const getBodyToUse = mockFn<_body.GetBodyToUse>()
+
+  beforeEach(() => {
+    createGetBodyToUse.mockReturnValue(getBodyToUse)
+  })
+
   afterEach(() => jest.resetAllMocks())
 
   it('calls readFileSync with the correct params', async () => {
@@ -44,6 +52,14 @@ describe('readConfig', () => {
     await expect(readConfig('path', typeValidator, Mode.Test)).rejects.toThrowError()
   })
 
+  it('calls create get body to use with the correct args', async () => {
+    safeLoad.mockReturnValue([])
+
+    await readConfig('./crazy-config.yml', typeValidator, Mode.Test)
+
+    expect(createGetBodyToUse).toHaveBeenCalledWith('./crazy-config.yml')
+  })
+
   it('calls the request mapper with the correct args', async () => {
     const loadedConfigs = [
       {
@@ -59,7 +75,12 @@ describe('readConfig', () => {
     await readConfig('path', typeValidator, Mode.Test)
 
     expect(mapRequestConfig).toHaveBeenCalledTimes(1)
-    expect(mapRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator, Mode.Test)
+    expect(mapRequestConfig).toHaveBeenCalledWith(
+      loadedConfigs[0].request,
+      typeValidator,
+      Mode.Test,
+      getBodyToUse,
+    )
   })
 
   it('calls the response mapper with the correct args', async () => {
@@ -77,7 +98,12 @@ describe('readConfig', () => {
     await readConfig('path', typeValidator, Mode.Serve)
 
     expect(mapResponseConfig).toHaveBeenCalledTimes(1)
-    expect(mapResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response, typeValidator, Mode.Serve)
+    expect(mapResponseConfig).toHaveBeenCalledWith(
+      loadedConfigs[0].response,
+      typeValidator,
+      Mode.Serve,
+      getBodyToUse,
+    )
   })
 
   it('returns each mapped config', async () => {

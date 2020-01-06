@@ -1,10 +1,10 @@
 import * as yup from 'yup'
 import './methods'
-import { readJsonAsync } from '~io'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { Mode } from './config'
 import { IncomingHttpHeaders } from 'http'
+import { GetBodyToUse } from './body'
 
 export type SupportedMethod = 'GET' | 'POST'
 
@@ -54,16 +54,6 @@ const serveRequestSchema = baseRequestConfigSchema
   .allowedKeysOnly()
 type ServeRequestSchema = yup.InferType<typeof serveRequestSchema>
 
-const getBodyToUse = async (config: Pick<ServeRequestSchema, BodyKeys>): Promise<Optional<Data>> => {
-  // TODO: might need to resolve these paths
-  const { body, bodyPath, serveBody, serveBodyPath } = config
-
-  if (body) return body
-  if (bodyPath) return await readJsonAsync(bodyPath)
-  if (serveBody) return serveBody
-  if (serveBodyPath) return await readJsonAsync(serveBodyPath)
-}
-
 const chooseEndpoints = ({
   endpoints,
   serveEndpoint,
@@ -74,12 +64,13 @@ export const mapRequestConfig = async (
   requestConfig: object,
   typeValidator: TypeValidator,
   mode: Mode.Test | Mode.Serve,
+  getRequestBody: GetBodyToUse,
 ): Promise<RequestConfigArray> => {
   const schema = mode === Mode.Test ? testRequestSchema : serveRequestSchema
   const validatedConfig = await schema.validate(requestConfig)
   const { type, method, headers } = validatedConfig
 
-  const bodyToUse: Optional<Data> = await getBodyToUse(validatedConfig)
+  const bodyToUse: Optional<Data> = await getRequestBody(validatedConfig)
 
   if (bodyToUse && type) {
     const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Request)

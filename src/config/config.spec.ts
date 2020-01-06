@@ -75,12 +75,7 @@ describe('readConfig', () => {
     await readConfig('path', typeValidator, Mode.Test)
 
     expect(mapRequestConfig).toHaveBeenCalledTimes(1)
-    expect(mapRequestConfig).toHaveBeenCalledWith(
-      loadedConfigs[0].request,
-      typeValidator,
-      Mode.Test,
-      getBodyToUse,
-    )
+    expect(mapRequestConfig).toHaveBeenCalledWith(loadedConfigs[0].request, typeValidator, getBodyToUse)
   })
 
   it('calls the response mapper with the correct args', async () => {
@@ -98,12 +93,7 @@ describe('readConfig', () => {
     await readConfig('path', typeValidator, Mode.Serve)
 
     expect(mapResponseConfig).toHaveBeenCalledTimes(1)
-    expect(mapResponseConfig).toHaveBeenCalledWith(
-      loadedConfigs[0].response,
-      typeValidator,
-      Mode.Serve,
-      getBodyToUse,
-    )
+    expect(mapResponseConfig).toHaveBeenCalledWith(loadedConfigs[0].response, typeValidator, getBodyToUse)
   })
 
   it('returns each mapped config', async () => {

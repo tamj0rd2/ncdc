@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "rm -rf ./dist",
     "typecheck": "tsc",
-    "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts'",
+    "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "build": "run-s clean typecheck compile",
     "prepublishOnly": "run-s build test && git push",
     "prepare": "npm run build",

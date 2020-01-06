@@ -5,35 +5,17 @@ import { shouldBe } from '~messages'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: Config) => Promise<LoaderResponse>
-export enum ValidationFlags {
-  All,
-  RequestType,
-  ResponseStatus,
-  ResponseBody,
-  ResponseType,
-}
 export type TestFn = (config: Config) => Promise<Problem[]>
 
 // TODO: get rid of this. it's only used by test mode now
-export const doItAll = (
-  typeValidator: TypeValidator,
-  getResponse: FetchResource,
-  flags: ValidationFlags.All | ValidationFlags[] = ValidationFlags.All,
-): TestFn => {
-  const shouldValidate = (target: ValidationFlags): boolean =>
-    flags === ValidationFlags.All || flags.includes(target)
-
+export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource): TestFn => {
   return async (config): Promise<Problem[]> => {
     const { response: responseConfig } = config
 
     const problems: Problem[] = []
     const response = await getResponse(config)
 
-    if (
-      shouldValidate(ValidationFlags.ResponseStatus) &&
-      responseConfig.code &&
-      response.status !== responseConfig.code
-    ) {
+    if (responseConfig.code && response.status !== responseConfig.code) {
       problems.push(
         new Problem(
           {
@@ -45,11 +27,7 @@ export const doItAll = (
       )
     }
 
-    if (
-      shouldValidate(ValidationFlags.ResponseBody) &&
-      responseConfig.body !== undefined &&
-      response.data !== responseConfig.body
-    ) {
+    if (responseConfig.body !== undefined && response.data !== responseConfig.body) {
       problems.push(
         new Problem(
           {
@@ -61,7 +39,7 @@ export const doItAll = (
       )
     }
 
-    if (shouldValidate(ValidationFlags.ResponseType) && responseConfig.type) {
+    if (responseConfig.type) {
       const result = await typeValidator.getProblems(response.data, responseConfig.type, ProblemType.Response)
       if (result) problems.push(...result)
     }

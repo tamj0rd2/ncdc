@@ -1,6 +1,5 @@
-import { ResponseConfig, mapResponseConfig } from './response'
+import { ResponseConfig, mapResponseConfig, ResponseSchema } from './response'
 import { mockObj, mockFn } from '~test-helpers'
-import { Mode } from './config'
 import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
@@ -25,7 +24,7 @@ describe('mapResponseConfig', () => {
       headers: { header1: 'yo' },
     }
 
-    const mappedConfig = await mapResponseConfig(rawConfig, typeValidator, Mode.Test, getBodyToUse)
+    const mappedConfig = await mapResponseConfig(rawConfig, typeValidator, getBodyToUse)
 
     expect(mappedConfig).toMatchObject<ResponseConfig>({
       code: 200,
@@ -35,7 +34,7 @@ describe('mapResponseConfig', () => {
     })
   })
 
-  const combinedConfigCases: object[][] = [
+  const combinedConfigCases: [ResponseSchema][] = [
     [
       {
         code: 200,
@@ -65,12 +64,8 @@ describe('mapResponseConfig', () => {
   it.each(combinedConfigCases)(
     'does not throw for config that contains test settings',
     async combinedConfig => {
-      await expect(
-        mapResponseConfig(combinedConfig, typeValidator, Mode.Test, getBodyToUse),
-      ).resolves.not.toThrowError()
-      await expect(
-        mapResponseConfig(combinedConfig, typeValidator, Mode.Serve, getBodyToUse),
-      ).resolves.not.toThrowError()
+      await expect(mapResponseConfig(combinedConfig, typeValidator, getBodyToUse)).resolves.not.toThrowError()
+      await expect(mapResponseConfig(combinedConfig, typeValidator, getBodyToUse)).resolves.not.toThrowError()
     },
   )
 
@@ -85,7 +80,7 @@ describe('mapResponseConfig', () => {
       const mappedBody = { hello: 'world' }
       getBodyToUse.mockResolvedValue(mappedBody)
 
-      await mapResponseConfig(rawConfig, typeValidator, Mode.Test, getBodyToUse)
+      await mapResponseConfig(rawConfig, typeValidator, getBodyToUse)
 
       expect(typeValidator.getProblems).toHaveBeenCalledWith(mappedBody, 'MyCoolType', ProblemType.Response)
     })
@@ -101,9 +96,7 @@ describe('mapResponseConfig', () => {
       getBodyToUse.mockResolvedValue(mappedBody)
       typeValidator.getProblems.mockResolvedValue([{} as Problem])
 
-      await expect(
-        mapResponseConfig(rawConfig, typeValidator, Mode.Test, getBodyToUse),
-      ).rejects.toThrowError()
+      await expect(mapResponseConfig(rawConfig, typeValidator, getBodyToUse)).rejects.toThrowError()
     })
   })
 })

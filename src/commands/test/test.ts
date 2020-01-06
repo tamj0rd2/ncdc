@@ -18,8 +18,10 @@ const logTestResults = (baseUrl: string) => (displayName: string, endpoint: stri
   }
 }
 
-const logTestError = (displayName: string) => ({ message }: Error): void =>
+const logTestError = (displayName: string) => ({ stack, message }: Error): void => {
   console.error(chalk.red.bold('FAILED:'), chalk.red(displayName), '-', message)
+  // console.error(stack)
+}
 
 export const testConfigs = async (
   baseURL: string,
@@ -33,8 +35,8 @@ export const testConfigs = async (
 
   const testTasks = configs.map(testConfig => {
     return test(testConfig)
-      .then(resultsLogger(name, testConfig.request.endpoint))
-      .catch(logTestError(name))
+      .then(resultsLogger(testConfig.name, testConfig.request.endpoint))
+      .catch(logTestError(testConfig.name))
   })
 
   const results = Promise.all(testTasks)

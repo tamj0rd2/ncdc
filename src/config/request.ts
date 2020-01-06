@@ -2,7 +2,6 @@ import * as yup from 'yup'
 import './methods'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
-import { Mode } from './config'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from './body'
 
@@ -39,12 +38,12 @@ const baseRequestConfigSchema = yup.object({
     .notRequired(),
 })
 
-const testRequestSchema = baseRequestConfigSchema
-  .shape({ endpoints: endpointsSchema.required() })
+export const testRequestSchema = baseRequestConfigSchema
+  .shape({ endpoints: endpointsSchema.notRequired() })
   .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')
-export type TestRequestSchema = yup.InferType<typeof testRequestSchema>
+type TestRequestSchema = yup.InferType<typeof testRequestSchema>
 
-const serveRequestSchema = baseRequestConfigSchema
+export const serveRequestSchema = baseRequestConfigSchema
   .shape({
     endpoints: endpointsSchema.requiredIfNoSiblings('serveEndpoint'),
     serveEndpoint: endpointSchema.requiredIfNoSiblings('endpoints'),
@@ -54,6 +53,8 @@ const serveRequestSchema = baseRequestConfigSchema
   .allowedKeysOnly()
 type ServeRequestSchema = yup.InferType<typeof serveRequestSchema>
 
+export type RequestSchema = TestRequestSchema | ServeRequestSchema
+
 const chooseEndpoints = ({
   endpoints,
   serveEndpoint,
@@ -61,13 +62,10 @@ const chooseEndpoints = ({
   serveEndpoint ? [serveEndpoint] : (endpoints as PopulatedArray<string>)
 
 export const mapRequestConfig = async (
-  requestConfig: object,
+  validatedConfig: RequestSchema,
   typeValidator: TypeValidator,
-  mode: Mode.Test | Mode.Serve,
   getRequestBody: GetBodyToUse,
 ): Promise<RequestConfigArray> => {
-  const schema = mode === Mode.Test ? testRequestSchema : serveRequestSchema
-  const validatedConfig = await schema.validate(requestConfig)
   const { type, method, headers } = validatedConfig
 
   const bodyToUse: Optional<Data> = await getRequestBody(validatedConfig)

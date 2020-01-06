@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 
-export const errorNoResponse = (uri: string): string => `No response from ${chalk.blue(uri)}`
+export const errorNoResponse = (uri: string): string => `Could not reach ${chalk.blue(uri)}`
 
 export const errorBadStatusCode = (uri: string, actual: number): string =>
   `Received status code ${chalk.red(actual)} from ${chalk.blue(uri)}`

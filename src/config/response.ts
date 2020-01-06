@@ -1,7 +1,6 @@
 import * as yup from 'yup'
 import { OutgoingHttpHeaders } from 'http'
 import './methods'
-import { Mode } from './config'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
@@ -24,21 +23,22 @@ const baseResponseSchema = yup.object({
   type: yup.string().notRequired(),
 })
 
-const testResponseSchema = baseResponseSchema
+export const testResponseSchema = baseResponseSchema
+type TestResponseSchema = yup.InferType<typeof testResponseSchema>
 
-const serveResponseSchema = baseResponseSchema.shape({
+export const serveResponseSchema = baseResponseSchema.shape({
   serveBody: yup.mixed<Data>().notAllowedIfSiblings('body, bodyPath, serveBodyPath'),
   serveBodyPath: yup.string().notAllowedIfSiblings('body, bodyPath, serveBody'),
 })
+type ServeResponseSchema = yup.InferType<typeof serveResponseSchema>
+
+export type ResponseSchema = TestResponseSchema | ServeResponseSchema
 
 export const mapResponseConfig = async (
-  responseConfig: object,
+  validatedConfig: ResponseSchema,
   typeValidator: TypeValidator,
-  mode: Mode.Test | Mode.Serve,
   getResponseBody: GetBodyToUse,
 ): Promise<ResponseConfig> => {
-  const schema = mode === Mode.Test ? testResponseSchema : serveResponseSchema
-  const validatedConfig = await schema.validate(responseConfig)
   const { code, type, headers } = validatedConfig
 
   const bodyToUse = await getResponseBody(validatedConfig)

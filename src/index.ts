@@ -15,6 +15,7 @@ export default async function run(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleError: HandleError = ({ stack, message }) => {
     console.error(chalk.red(message))
+    // console.log(stack) // TODO: add some debug mode toggle to everywhere this happens
     process.exit(1)
   }
 

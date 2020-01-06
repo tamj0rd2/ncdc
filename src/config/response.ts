@@ -23,13 +23,15 @@ const baseResponseSchema = yup.object({
   type: yup.string().notRequired(),
 })
 
-export const testResponseSchema = baseResponseSchema
+export const testResponseSchema = baseResponseSchema.allowedKeysOnly()
 type TestResponseSchema = yup.InferType<typeof testResponseSchema>
 
-export const serveResponseSchema = baseResponseSchema.shape({
-  serveBody: yup.mixed<Data>().notAllowedIfSiblings('body, bodyPath, serveBodyPath'),
-  serveBodyPath: yup.string().notAllowedIfSiblings('body, bodyPath, serveBody'),
-})
+export const serveResponseSchema = baseResponseSchema
+  .shape({
+    serveBody: yup.mixed<Data>().notAllowedIfSiblings('body, bodyPath, serveBodyPath'),
+    serveBodyPath: yup.string().notAllowedIfSiblings('body, bodyPath, serveBody'),
+  })
+  .allowedKeysOnly()
 type ServeResponseSchema = yup.InferType<typeof serveResponseSchema>
 
 export type ResponseSchema = TestResponseSchema | ServeResponseSchema

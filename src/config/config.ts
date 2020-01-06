@@ -23,16 +23,17 @@ export default async function readConfig(
   mode: Mode.Test | Mode.Serve,
 ): Promise<Config[]> {
   const rawConfig = safeLoad(await readFileAsync(configPath))
+  const configs = await yup
+    .array()
+    .of(
+      yup.object({
+        name: yup.string().required(),
+        request: (mode === Mode.Test ? testRequestSchema : serveRequestSchema).required(),
+        response: (mode === Mode.Test ? testResponseSchema : serveResponseSchema).required(),
+      }),
+    )
+    .validate(rawConfig)
 
-  const schema = yup.array().of(
-    yup.object({
-      name: yup.string().required(),
-      request: (mode === Mode.Test ? testRequestSchema : serveRequestSchema).required(),
-      response: (mode === Mode.Test ? testResponseSchema : serveResponseSchema).required(),
-    }),
-  )
-
-  const configs = await schema.validate(rawConfig)
   const getBody = createGetBodyToUse(configPath)
 
   const mappedConfigs = await Promise.all(

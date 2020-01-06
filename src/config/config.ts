@@ -45,7 +45,7 @@ export default async function readConfig(
           const responseConfig = await mapResponseConfig(response, typeValidator, getBody)
 
           return requestConfigs.map<Config>((requestConfig, i) => ({
-            name: `${name} [${i}]`,
+            name: requestConfigs.length === 1 ? name : `${name} [${i}]`,
             request: requestConfig,
             response: responseConfig,
           }))

@@ -19,7 +19,11 @@ export interface RequestConfig {
 export type RequestConfigArray = PopulatedArray<RequestConfig>
 
 const endpointSchema = yup.string().startsWith('/')
-const endpointsSchema = yup.array().of(endpointSchema)
+
+const endpointsSchema = yup
+  .array()
+  .of(endpointSchema)
+  .transform((_, oValue) => (Array.isArray(oValue) ? oValue : [oValue]))
 
 const baseRequestConfigSchema = yup.object({
   method: yup

@@ -43,6 +43,18 @@ describe('mapRequestConfig', () => {
     await expect(mapRequestConfig(rawConfig, typeValidator, mode)).resolves.toMatchObject(expected)
   })
 
+  it('maps a config with endpoints as a string', async () => {
+    const rawConfig = {
+      method: 'GET',
+      endpoints: '/endpoint1',
+    }
+
+    const result = await mapRequestConfig(rawConfig, typeValidator, Mode.Test)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].endpoint).toEqual('/endpoint1')
+  })
+
   const combinedConfigCases: [object][] = [
     [
       {

@@ -4,7 +4,12 @@ import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from './body'
-import { SupportedMethod, testRequestSchema } from './request/schema'
+import {
+  SupportedMethod,
+  testRequestSchema,
+  TestRequestSchema,
+  baseRequestConfigSchema,
+} from './request/schema'
 
 export { SupportedMethod, testRequestSchema }
 
@@ -24,22 +29,6 @@ const endpointsSchema = yup
   .array()
   .of(endpointSchema)
   .transform((_, oValue) => (Array.isArray(oValue) ? oValue : [oValue]))
-
-const baseRequestConfigSchema = yup.object({
-  method: yup
-    .mixed<SupportedMethod>()
-    .oneOf(['GET', 'POST'])
-    .required(),
-  type: yup.string().notRequired(),
-  body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
-  bodyPath: yup.string().notAllowedIfSiblings('body'),
-  headers: yup
-    .object<IncomingHttpHeaders>()
-    .ofHeaders()
-    .notRequired(),
-})
-
-type TestRequestSchema = yup.InferType<typeof testRequestSchema>
 
 export const serveRequestSchema = baseRequestConfigSchema
   .shape({

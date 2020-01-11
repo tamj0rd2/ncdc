@@ -11,7 +11,7 @@ const endpointsSchema = yup
   .of(endpointSchema)
   .transform((_, oValue) => (Array.isArray(oValue) ? oValue : [oValue]))
 
-const baseRequestConfigSchema = yup.object({
+export const baseRequestConfigSchema = yup.object({
   method: yup
     .mixed<SupportedMethod>()
     .oneOf(['GET', 'POST'])
@@ -26,8 +26,17 @@ const baseRequestConfigSchema = yup.object({
     .object<IncomingHttpHeaders>()
     .ofHeaders()
     .notRequired(),
+  serveOnly: yup.bool().default(false),
 })
 
 export const testRequestSchema = baseRequestConfigSchema
-  .shape({ endpoints: endpointsSchema.notRequired() })
+  .shape({
+    endpoints: endpointsSchema.when('serveOnly', {
+      is: true,
+      then: endpointsSchema.notRequired(),
+      otherwise: endpointsSchema.required(),
+    }),
+  })
   .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')
+
+export type TestRequestSchema = yup.InferType<typeof testRequestSchema>

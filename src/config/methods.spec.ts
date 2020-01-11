@@ -207,9 +207,7 @@ describe('startsWith', () => {
   it('does throw when does not start with specified substring', () => {
     const schema = yup.string().startsWith('hello')
 
-    expect(() => schema.validateSync('yellow world')).toThrowError(
-      'value of this should start with hello but received yellow world',
-    )
+    expect(() => schema.validateSync('yellow world')).toThrowError('this should start with hello')
   })
 })
 

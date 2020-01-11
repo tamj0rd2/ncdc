@@ -58,7 +58,7 @@ yup.addMethod(yup.object, 'allowedKeysOnly', function(...ignoredKeys: string[]) 
     if (!unknownKeys.length) return true
     return this.createError({
       path: this.path,
-      message: `${this.path || 'object'} contains the unknown keys: ${unknownKeys.join(', ')}`,
+      message: `${this.path} contains the unknown keys: ${unknownKeys.join(', ')}`,
     })
   })
 })
@@ -75,10 +75,11 @@ yup.addMethod(yup.object, 'ofHeaders', function() {
 
     if (!firstInvalidField) return true
 
+    const path = `${this.path || 'object'}.${firstInvalidField}`
+
     return this.createError({
-      path: this.path,
-      message: `${this.path ||
-        'object'}.${firstInvalidField} should be of type: string | string[] | undefined`,
+      path: path,
+      message: `${path} should be of type: string | string[] | undefined`,
     })
   })
 })
@@ -86,7 +87,7 @@ yup.addMethod(yup.object, 'ofHeaders', function() {
 yup.addMethod(yup.string, 'startsWith', function(substring: string) {
   return this.test(
     'startsWith',
-    `value of \${path} should start with ${substring} but received \${value} `,
+    `\${path} should start with ${substring}`,
     value => !value || value.startsWith(substring),
   )
 })

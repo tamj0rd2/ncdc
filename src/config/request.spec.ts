@@ -23,6 +23,7 @@ describe('mapRequestConfig', () => {
     const requestSchema: RequestSchema = {
       method: 'GET',
       endpoints: ['/endpoint1', '/endpoint2'],
+      serveOnly: false,
       type: 'MyType',
       body: 'silly',
       headers: { header1: 'yo' },
@@ -56,6 +57,7 @@ describe('mapRequestConfig', () => {
     const requestSchema: RequestSchema = {
       method: 'GET',
       endpoints: ['/endpoint1'],
+      serveOnly: false,
     }
 
     const result = await mapRequestConfig(requestSchema, typeValidator, getBodyToUse)
@@ -69,6 +71,7 @@ describe('mapRequestConfig', () => {
       {
         method: 'GET',
         endpoints: ['/endpoint1'],
+        serveOnly: false,
         type: 'object',
         bodyPath: './request.json',
         serveEndpoint: '/serve-endpoint',
@@ -78,6 +81,7 @@ describe('mapRequestConfig', () => {
       {
         method: 'GET',
         endpoints: ['/endpoint1', '/spice-it-up'],
+        serveOnly: false,
         type: 'object',
         serveBody: ':D',
         serveEndpoint: '/serve-endpoint',
@@ -87,6 +91,7 @@ describe('mapRequestConfig', () => {
       {
         method: 'GET',
         endpoints: ['/endpoint1'],
+        serveOnly: false,
         type: 'object',
         serveBodyPath: './request.json',
         serveEndpoint: '/serve-endpoint',
@@ -107,6 +112,7 @@ describe('mapRequestConfig', () => {
       const requestSchema: RequestSchema = {
         method: 'POST',
         endpoints: ['/endpoint1'],
+        serveOnly: false,
         type: 'MyCoolType',
         bodyPath: './request.json',
       }
@@ -123,6 +129,7 @@ describe('mapRequestConfig', () => {
       const requestSchema: RequestSchema = {
         method: 'POST',
         endpoints: ['/endpoint1'],
+        serveOnly: false,
         type: 'MyCoolType',
         bodyPath: './request.json',
       }

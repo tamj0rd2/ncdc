@@ -34,7 +34,7 @@ export default async function readConfig(
 
   const mappedConfigs = await Promise.all(
     configs
-      .filter(x => mode === Mode.Serve || x.request.endpoints)
+      .filter(x => mode === Mode.Serve || !x.request.serveOnly)
       .map(
         async ({ name, request, response }): Promise<Config[]> => {
           const requestConfigs = await mapRequestConfig(request, typeValidator, getBody)

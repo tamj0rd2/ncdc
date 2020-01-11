@@ -131,7 +131,7 @@ describe('readConfig', () => {
   })
 
   describe('test mode specifics', () => {
-    it('filters out configs that do not have endpoints', async () => {
+    it('filters out configs that are serve only', async () => {
       const loadedConfigs = [
         {
           name: 'Yo',
@@ -140,7 +140,7 @@ describe('readConfig', () => {
         },
         {
           name: 'No',
-          request: {},
+          request: { serveOnly: true },
           response: { goodbye: 'world' },
         },
       ]

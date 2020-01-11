@@ -1,4 +1,4 @@
-import readConfig, { Config, Mode } from './config'
+import readConfig, { Config } from './config'
 import _jsYaml from 'js-yaml'
 import * as _io from '~io'
 import { mockObj, mockFn } from '~test-helpers'
@@ -6,6 +6,7 @@ import * as _request from './request'
 import * as _response from './response'
 import * as _body from './body'
 import { TypeValidator } from '~validation'
+import { Mode } from './types'
 
 jest.mock('fs')
 jest.mock('js-yaml')

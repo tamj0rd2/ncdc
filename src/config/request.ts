@@ -4,8 +4,9 @@ import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from './body'
+import { SupportedMethod, testRequestSchema } from './request/schema'
 
-export type SupportedMethod = 'GET' | 'POST'
+export { SupportedMethod, testRequestSchema }
 
 export interface RequestConfig {
   method: SupportedMethod
@@ -38,9 +39,6 @@ const baseRequestConfigSchema = yup.object({
     .notRequired(),
 })
 
-export const testRequestSchema = baseRequestConfigSchema
-  .shape({ endpoints: endpointsSchema.notRequired() })
-  .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')
 type TestRequestSchema = yup.InferType<typeof testRequestSchema>
 
 export const serveRequestSchema = baseRequestConfigSchema

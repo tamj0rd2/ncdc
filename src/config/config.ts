@@ -5,16 +5,12 @@ import { mapRequestConfig, RequestConfig, testRequestSchema, serveRequestSchema 
 import { ResponseConfig, mapResponseConfig, testResponseSchema, serveResponseSchema } from './response'
 import { TypeValidator } from '~validation'
 import { createGetBodyToUse } from './body'
+import { Mode } from './types'
 
 export interface Config {
   name: string
   request: RequestConfig
   response: ResponseConfig
-}
-
-export enum Mode {
-  Test = 'Test',
-  Serve = 'Serve',
 }
 
 export default async function readConfig(

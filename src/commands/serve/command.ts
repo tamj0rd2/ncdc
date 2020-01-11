@@ -1,9 +1,10 @@
 import { Argv } from 'yargs'
 import yargs from 'yargs'
 import { resolve } from 'path'
-import readConfig, { Config, Mode } from '~config'
+import readConfig, { Config } from '~config'
 import { HandleError, CreateTypeValidator } from '../shared'
 import { startServer } from './server'
+import { Mode } from '~config/types'
 
 interface ServeArgs {
   configPath?: string

@@ -11,7 +11,7 @@
     "typecheck": "tsc",
     "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "build": "run-s clean typecheck compile",
-    "prepublishOnly": "run-s build test && git push",
+    "prepublishOnly": "npm t && git push",
     "prepare": "npm run build",
     "test": "jest --collectCoverage",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore"
@@ -28,6 +28,9 @@
     "moduleNameMapper": {
       "~(.*)$": "<rootDir>/src/$1"
     },
+    "unmockedModulePathPatterns": [
+      "<rootDir>/src/test-helpers"
+    ],
     "testEnvironment": "node",
     "collectCoverageFrom": [
       "**/*.ts",

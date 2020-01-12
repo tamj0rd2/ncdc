@@ -28,7 +28,6 @@ describe('mapRequestConfig', () => {
     const requestSchema: RequestSchema = {
       method: 'GET',
       endpoints: ['/endpoint1', '/endpoint2'],
-      serveOnly: false,
       type: 'MyType',
       body: 'silly',
       headers: { header1: 'yo' },
@@ -62,7 +61,6 @@ describe('mapRequestConfig', () => {
     const requestSchema: RequestSchema = {
       method: 'GET',
       endpoints: ['/endpoint1'],
-      serveOnly: false,
     }
 
     const result = await mapRequestConfig(requestSchema, typeValidator, getBodyToUse)
@@ -76,7 +74,6 @@ describe('mapRequestConfig', () => {
       {
         method: 'GET',
         endpoints: ['/endpoint1'],
-        serveOnly: false,
         type: 'object',
         bodyPath: './request.json',
         serveEndpoint: '/serve-endpoint',
@@ -86,7 +83,6 @@ describe('mapRequestConfig', () => {
       {
         method: 'GET',
         endpoints: ['/endpoint1', '/spice-it-up'],
-        serveOnly: false,
         type: 'object',
         serveBody: ':D',
         serveEndpoint: '/serve-endpoint',
@@ -96,7 +92,6 @@ describe('mapRequestConfig', () => {
       {
         method: 'GET',
         endpoints: ['/endpoint1'],
-        serveOnly: false,
         type: 'object',
         serveBodyPath: './request.json',
         serveEndpoint: '/serve-endpoint',
@@ -117,7 +112,6 @@ describe('mapRequestConfig', () => {
       const requestSchema: RequestSchema = {
         method: 'POST',
         endpoints: ['/endpoint1'],
-        serveOnly: false,
         type: 'MyCoolType',
         bodyPath: './request.json',
       }
@@ -134,7 +128,6 @@ describe('mapRequestConfig', () => {
       const requestSchema: RequestSchema = {
         method: 'POST',
         endpoints: ['/endpoint1'],
-        serveOnly: false,
         type: 'MyCoolType',
         bodyPath: './request.json',
       }
@@ -150,7 +143,7 @@ describe('mapRequestConfig', () => {
 
 describe('getRequestSchema', () => {
   const { serveRequestSchema } = mockObj(serveSchema)
-  const { testRequestSchema } = mockObj(testSchema)
+  const { getTestSchema } = mockObj(testSchema)
 
   it('returns the serve schema when in serve mode', () => {
     const result = getRequestSchema(Mode.Serve, false)
@@ -158,9 +151,18 @@ describe('getRequestSchema', () => {
     expect(result).toEqual(serveRequestSchema)
   })
 
+  it.each([[true], [false]])('calls get test schema with the correct args', serveOnly => {
+    getRequestSchema(Mode.Test, serveOnly)
+
+    expect(getTestSchema).toHaveBeenCalledWith(serveOnly)
+  })
+
   it('returns the test schema when in test mode', () => {
+    const mockTestSchema = { hello: 'world' }
+    getTestSchema.mockReturnValue(mockTestSchema as any)
+
     const result = getRequestSchema(Mode.Test, false)
 
-    expect(result).toEqual(testRequestSchema)
+    expect(result).toEqual(mockTestSchema)
   })
 })

@@ -20,6 +20,6 @@ describe('serveRequestSchema', () => {
 
     const result = await serveRequestSchema.validate(rawConfig)
 
-    expect(result).toMatchObject<RequestSchema>({ method: 'POST', endpoints: ['/yo'], serveOnly: false })
+    expect(result).toMatchObject<RequestSchema>({ method: 'POST', endpoints: ['/yo'] })
   })
 })

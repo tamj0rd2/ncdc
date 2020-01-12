@@ -27,6 +27,5 @@ export const baseRequestSchema = yup
       .object<IncomingHttpHeaders>()
       .ofHeaders()
       .notRequired(),
-    serveOnly: yup.bool().default(false),
   })
   .allowedKeysOnly()

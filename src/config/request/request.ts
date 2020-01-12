@@ -3,10 +3,11 @@ import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from '../body'
-import { testRequestSchema, TestRequestSchema } from './test-schema'
+import { testRequestSchema, TestRequestSchema, getTestSchema } from './test-schema'
 import { serveRequestSchema, ServeRequestSchema } from './serve-schema'
 import { SupportedMethod } from './schema-shared'
 import { Mode } from '../types'
+import { ObjectSchema, Shape } from 'yup'
 
 export { SupportedMethod, testRequestSchema, serveRequestSchema }
 
@@ -22,13 +23,13 @@ export type RequestConfigArray = PopulatedArray<RequestConfig>
 
 export type RequestSchema = TestRequestSchema | ServeRequestSchema
 
-export const getRequestSchema = (mode: Mode, serveOnly: boolean) => {
+export const getRequestSchema = (mode: Mode, serveOnly: boolean): ObjectSchema<Shape<RequestSchema, {}>> => {
   if (mode === Mode.Serve) {
     return serveRequestSchema
   }
 
   if (mode === Mode.Test) {
-    return testRequestSchema
+    return getTestSchema(serveOnly)
   }
 
   throw new Error(`Mode ${mode} is not supported`)

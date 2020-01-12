@@ -33,7 +33,6 @@ describe('baseRequestSchema', () => {
           header1: ':O',
           header2: 'woah',
         },
-        serveOnly: true,
       },
     ],
   ]
@@ -41,7 +40,7 @@ describe('baseRequestSchema', () => {
   it.each(basicCases)('does not throw when given the config %o', async rawConfig => {
     const result = await baseRequestSchema.validate(rawConfig)
 
-    expect(result).toMatchObject({ serveOnly: false, ...rawConfig })
+    expect(result).toMatchObject(rawConfig)
   })
 
   it('throws when there are unknown keys', async () => {

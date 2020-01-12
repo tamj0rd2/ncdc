@@ -140,7 +140,8 @@ describe('readConfig', () => {
         },
         {
           name: 'No',
-          request: { serveOnly: true },
+          serveOnly: true,
+          request: { bizarre: 'yo' },
           response: { goodbye: 'world' },
         },
       ]

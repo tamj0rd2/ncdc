@@ -1,4 +1,4 @@
-import { testRequestSchema } from './test-schema'
+import { getTestSchema } from './test-schema'
 import { RequestSchema } from '.'
 
 jest.enableAutomock()
@@ -7,7 +7,7 @@ jest.unmock('./schema-shared')
 jest.unmock('../methods')
 jest.unmock('yup')
 
-describe('testRequestSchema', () => {
+describe('getTestSchema', () => {
   afterEach(() => {
     jest.resetAllMocks()
   })
@@ -18,9 +18,25 @@ describe('testRequestSchema', () => {
       endpoints: '/yo',
     }
 
-    const result = await testRequestSchema.validate(rawConfig)
+    const result = await getTestSchema(false).validate(rawConfig)
 
-    expect(result).toMatchObject<RequestSchema>({ method: 'POST', endpoints: ['/yo'], serveOnly: false })
+    expect(result).toMatchObject<RequestSchema>({ method: 'POST', endpoints: ['/yo'] })
+  })
+
+  it('throws when serveOnly is false and endpoints are missing', async () => {
+    const rawConfig = {
+      method: 'GET',
+    }
+
+    await expect(getTestSchema(false).validate(rawConfig)).rejects.toThrowError('endpoints')
+  })
+
+  it('does not throw when serveOnly is true and endpoints are missing', async () => {
+    const rawConfig = {
+      method: 'GET',
+    }
+
+    await expect(getTestSchema(true).validate(rawConfig)).resolves.not.toThrowError()
   })
 
   it('does not throw when given ignored keys', async () => {
@@ -32,12 +48,11 @@ describe('testRequestSchema', () => {
       serveBodyPath: 'hell',
     }
 
-    const result = await testRequestSchema.validate(rawConfig)
+    const result = await getTestSchema(false).validate(rawConfig)
 
     expect(result).toStrictEqual<RequestSchema>({
       method: 'GET',
       endpoints: ['/me'],
-      serveOnly: false,
     })
   })
 })

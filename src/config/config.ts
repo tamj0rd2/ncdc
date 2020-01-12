@@ -24,6 +24,7 @@ export default async function readConfig(
     .of(
       yup.object({
         name: yup.string().required(),
+        serveOnly: yup.bool().default(false),
         request: (mode === Mode.Test ? testRequestSchema : serveRequestSchema).required(),
         response: (mode === Mode.Test ? testResponseSchema : serveResponseSchema).required(),
       }),
@@ -34,7 +35,7 @@ export default async function readConfig(
 
   const mappedConfigs = await Promise.all(
     configs
-      .filter(x => mode === Mode.Serve || !x.request.serveOnly)
+      .filter(x => mode === Mode.Serve || !x.serveOnly)
       .map(
         async ({ name, request, response }): Promise<Config[]> => {
           const requestConfigs = await mapRequestConfig(request, typeValidator, getBody)

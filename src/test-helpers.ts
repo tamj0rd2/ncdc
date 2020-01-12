@@ -4,7 +4,10 @@ export const mockObj = <T>(thing: Partial<T>): jest.Mocked<T> => thing as jest.M
 
 export const mockCtor = (target: jest.Constructable) => target as jest.MockedClass<typeof target>
 
-export const mockFn = <T extends (...args: any[]) => ReturnType<T>>(): jest.Mock<
-  ReturnType<T>,
-  Parameters<T>
-> => jest.fn<ReturnType<T>, Parameters<T>>()
+export const mocked = <T extends (...args: any[]) => ReturnType<T>>(fn: T) => fn as jest.MockedFunction<T>
+
+export function mockFn<T extends (...args: any[]) => ReturnType<T>>(): jest.Mock<ReturnType<T>, Parameters<T>>
+export function mockFn<T extends (...args: any[]) => ReturnType<T>>(fn: T): jest.MockedFunction<T>
+export function mockFn<T extends (...args: any[]) => ReturnType<T>>(fn?: T): any {
+  return fn ? (fn as jest.MockedFunction<T>) : jest.fn<ReturnType<T>, Parameters<T>>()
+}

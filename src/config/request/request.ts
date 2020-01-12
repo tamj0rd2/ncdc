@@ -11,16 +11,6 @@ import { ObjectSchema, Shape } from 'yup'
 
 export { SupportedMethod, testRequestSchema, serveRequestSchema }
 
-export interface RequestConfig {
-  method: SupportedMethod
-  endpoint: string
-  body?: Data
-  type?: string
-  headers?: IncomingHttpHeaders
-}
-
-export type RequestConfigArray = PopulatedArray<RequestConfig>
-
 export type RequestSchema = TestRequestSchema | ServeRequestSchema
 
 export const getRequestSchema = (mode: Mode, serveOnly: boolean): ObjectSchema<Shape<RequestSchema, {}>> => {
@@ -40,6 +30,16 @@ const chooseEndpoints = ({
   serveEndpoint,
 }: Pick<ServeRequestSchema, 'endpoints' | 'serveEndpoint'>): PopulatedArray<string> =>
   serveEndpoint ? [serveEndpoint] : (endpoints as PopulatedArray<string>)
+
+export interface RequestConfig {
+  method: SupportedMethod
+  endpoint: string
+  body?: Data
+  type?: string
+  headers?: IncomingHttpHeaders
+}
+
+export type RequestConfigArray = PopulatedArray<RequestConfig>
 
 export const mapRequestConfig = async (
   validatedConfig: RequestSchema,
@@ -65,3 +65,5 @@ export const mapRequestConfig = async (
     headers,
   })) as RequestConfigArray
 }
+
+export const something = 'wrong'

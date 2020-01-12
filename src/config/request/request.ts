@@ -1,11 +1,12 @@
-import './methods'
+import '../methods'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
-import { GetBodyToUse } from './body'
-import { testRequestSchema, TestRequestSchema } from './request/test-schema'
-import { serveRequestSchema, ServeRequestSchema } from './request/serve-schema'
-import { SupportedMethod } from './request/schema-shared'
+import { GetBodyToUse } from '../body'
+import { testRequestSchema, TestRequestSchema } from './test-schema'
+import { serveRequestSchema, ServeRequestSchema } from './serve-schema'
+import { SupportedMethod } from './schema-shared'
+import { Mode } from '../types'
 
 export { SupportedMethod, testRequestSchema, serveRequestSchema }
 
@@ -20,6 +21,18 @@ export interface RequestConfig {
 export type RequestConfigArray = PopulatedArray<RequestConfig>
 
 export type RequestSchema = TestRequestSchema | ServeRequestSchema
+
+export const getRequestSchema = (mode: Mode, serveOnly: boolean) => {
+  if (mode === Mode.Serve) {
+    return serveRequestSchema
+  }
+
+  if (mode === Mode.Test) {
+    return testRequestSchema
+  }
+
+  throw new Error(`Mode ${mode} is not supported`)
+}
 
 const chooseEndpoints = ({
   endpoints,

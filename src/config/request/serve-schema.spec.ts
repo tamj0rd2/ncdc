@@ -1,5 +1,5 @@
 import { serveRequestSchema } from './serve-schema'
-import { RequestSchema } from '~config/request'
+import { RequestSchema } from '.'
 
 jest.enableAutomock()
 jest.unmock('./serve-schema')

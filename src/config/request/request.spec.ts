@@ -1,11 +1,16 @@
-import { RequestConfig, mapRequestConfig, RequestSchema } from './request'
+import { RequestConfig, mapRequestConfig, RequestSchema, getRequestSchema } from './request'
 import * as _path from 'path'
 import { mockObj, mockFn } from '~test-helpers'
 import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
-import { GetBodyToUse } from './body'
+import { GetBodyToUse } from '../body'
+import { Mode } from '~config/types'
+import * as serveSchema from './serve-schema'
+import * as testSchema from './test-schema'
 
 jest.mock('path')
+jest.mock('./test-schema')
+jest.mock('./serve-schema')
 
 // TODO: add tests for the schemas themselves. NEEDS to be done before next release
 describe('mapRequestConfig', () => {
@@ -140,5 +145,22 @@ describe('mapRequestConfig', () => {
 
       await expect(mapRequestConfig(requestSchema, typeValidator, getBodyToUse)).rejects.toThrowError()
     })
+  })
+})
+
+describe('getRequestSchema', () => {
+  const { serveRequestSchema } = mockObj(serveSchema)
+  const { testRequestSchema } = mockObj(testSchema)
+
+  it('returns the serve schema when in serve mode', () => {
+    const result = getRequestSchema(Mode.Serve, false)
+
+    expect(result).toEqual(serveRequestSchema)
+  })
+
+  it('returns the test schema when in test mode', () => {
+    const result = getRequestSchema(Mode.Test, false)
+
+    expect(result).toEqual(testRequestSchema)
   })
 })

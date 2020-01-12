@@ -1,17 +1,13 @@
-import * as yup from 'yup'
 import './methods'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from './body'
-import {
-  SupportedMethod,
-  testRequestSchema,
-  TestRequestSchema,
-  baseRequestConfigSchema,
-} from './request/test-schema'
+import { testRequestSchema, TestRequestSchema } from './request/test-schema'
+import { serveRequestSchema, ServeRequestSchema } from './request/serve-schema'
+import { SupportedMethod } from './request/schema-shared'
 
-export { SupportedMethod, testRequestSchema }
+export { SupportedMethod, testRequestSchema, serveRequestSchema }
 
 export interface RequestConfig {
   method: SupportedMethod
@@ -22,23 +18,6 @@ export interface RequestConfig {
 }
 
 export type RequestConfigArray = PopulatedArray<RequestConfig>
-
-const endpointSchema = yup.string().startsWith('/')
-
-const endpointsSchema = yup
-  .array()
-  .of(endpointSchema)
-  .transform((_, oValue) => (Array.isArray(oValue) ? oValue : [oValue]))
-
-export const serveRequestSchema = baseRequestConfigSchema
-  .shape({
-    endpoints: endpointsSchema.requiredIfNoSiblings('serveEndpoint'),
-    serveEndpoint: endpointSchema.requiredIfNoSiblings('endpoints'),
-    serveBody: yup.mixed<Data>().notAllowedIfSiblings('body', 'bodyPath', 'serveBodyPath'),
-    serveBodyPath: yup.string().notAllowedIfSiblings('body', 'bodyPath', 'serveBody'),
-  })
-  .allowedKeysOnly()
-type ServeRequestSchema = yup.InferType<typeof serveRequestSchema>
 
 export type RequestSchema = TestRequestSchema | ServeRequestSchema
 

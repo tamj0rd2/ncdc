@@ -1,8 +1,8 @@
-import { testRequestSchema } from './schema'
+import { testRequestSchema } from './test-schema'
 import { RequestSchema } from '~config/request'
 
 jest.enableAutomock()
-jest.unmock('./schema')
+jest.unmock('./test-schema')
 jest.unmock('../methods')
 jest.unmock('yup')
 

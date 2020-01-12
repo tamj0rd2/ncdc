@@ -9,7 +9,7 @@ import {
   testRequestSchema,
   TestRequestSchema,
   baseRequestConfigSchema,
-} from './request/schema'
+} from './request/test-schema'
 
 export { SupportedMethod, testRequestSchema }
 

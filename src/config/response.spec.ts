@@ -1,13 +1,13 @@
 import { ResponseConfig, mapResponseConfig, ResponseSchema } from './response'
-import { mockObj, mockFn } from '~test-helpers'
-import { TypeValidator } from '~validation'
+import { mockObj, mockFn, mockCtor } from '~test-helpers'
+import { TypeValidator, TypeValidationError } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
 
 // TODO: remove this yup workaround
-jest.disableAutomock()
-jest.mock('~problem')
-jest.mock('./body')
+jest.unmock('yup')
+jest.unmock('./response')
+jest.unmock('./methods')
 
 // TODO: add tests for the schemas themselves
 describe('mapResponseConfig', () => {
@@ -99,9 +99,11 @@ describe('mapResponseConfig', () => {
 
       const mappedBody = { hello: 'world' }
       getBodyToUse.mockResolvedValue(mappedBody)
-      typeValidator.getProblems.mockResolvedValue([{} as Problem])
 
-      await expect(mapResponseConfig(rawConfig, typeValidator, getBodyToUse)).rejects.toThrowError()
+      typeValidator.getProblems.mockResolvedValue([{} as Problem])
+      mockCtor(TypeValidationError).mockImplementation(() => new Error('Yikes'))
+
+      await expect(mapResponseConfig(rawConfig, typeValidator, getBodyToUse)).rejects.toThrowError('Yikes')
     })
   })
 })

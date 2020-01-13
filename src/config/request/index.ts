@@ -4,5 +4,7 @@ export {
   RequestSchema,
   SupportedMethod,
   mapRequestConfig,
-  getRequestSchema,
 } from './request'
+
+export { getTestSchema, TestRequestSchema } from './test-schema'
+export { getServeSchema } from './serve-schema'

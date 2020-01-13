@@ -4,18 +4,8 @@ import enrichYup from '../methods'
 
 enrichYup()
 
-export const testRequestSchema = baseRequestSchema
-  .shape({
-    endpoints: endpointsSchema.when('serveOnly', {
-      is: true,
-      then: endpointsSchema.notRequired(),
-      otherwise: endpointsSchema.required(),
-    }),
-  })
-  .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')
-
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const getTestSchema = (serveOnly: boolean) =>
+export const getTestSchema = (serveOnly = false) =>
   baseRequestSchema
     .shape({ endpoints: serveOnly ? endpointsSchema.notRequired() : endpointsSchema.required() })
     .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')

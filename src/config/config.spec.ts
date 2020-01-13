@@ -7,6 +7,7 @@ import * as _response from './response'
 import * as _body from './body'
 import { TypeValidator } from '~validation'
 import { Mode } from './types'
+import { number, object } from 'yup'
 
 // TODO: fix this yup workaround
 jest.disableAutomock()
@@ -21,7 +22,7 @@ jest.mock('~io')
 describe('readConfig', () => {
   const { safeLoad } = mockObj(_jsYaml)
   const { readFileAsync } = mockObj(_io)
-  const { mapRequestConfig, getRequestSchema } = mockObj(_request)
+  const { mapRequestConfig, getTestSchema, getServeSchema } = mockObj(_request)
   const { mapResponseConfig } = mockObj(_response)
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
   const { createGetBodyToUse } = mockObj(_body)
@@ -29,7 +30,9 @@ describe('readConfig', () => {
 
   beforeEach(() => {
     createGetBodyToUse.mockReturnValue(getBodyToUse)
-    getRequestSchema.mockReturnValue({ required: jest.fn() } as any)
+    // TODO: would be cool to fix these
+    getTestSchema.mockReturnValue({ required: jest.fn(() => ({ resolve: jest.fn() })) } as any)
+    getServeSchema.mockReturnValue({ required: jest.fn(() => ({ resolve: jest.fn() })) } as any)
   })
 
   afterEach(() => jest.resetAllMocks())
@@ -157,6 +160,49 @@ describe('readConfig', () => {
       expect(mapRequestConfig).toHaveBeenCalledTimes(1)
       expect(mapResponseConfig).toHaveBeenCalledTimes(1)
       expect(result).toHaveLength(1)
+    })
+
+    it('does not throw when serveOnly is false and request has endpoints', async () => {
+      const rawConfig = {
+        name: '1',
+        serveOnly: false,
+        request: {
+          method: 'GET',
+          endpoints: 'endpoint1',
+        },
+        response: {
+          code: 200,
+        },
+      }
+
+      getTestSchema.mockImplementation(serveOnly => (!serveOnly ? object() : number()) as any)
+
+      safeLoad.mockReturnValue([rawConfig])
+      mapRequestConfig.mockResolvedValue([rawConfig as any])
+
+      await expect(readConfig('path', typeValidator, Mode.Test)).resolves.not.toThrowError()
+    })
+
+    it('throws when serveOnly is false and request has no endpoints', async () => {
+      const rawConfig = {
+        name: '1',
+        serveOnly: false,
+        request: {
+          method: 'GET',
+        },
+        response: {
+          code: 200,
+        },
+      }
+
+      getTestSchema.mockImplementation(serveOnly => (serveOnly ? object() : number()) as any)
+
+      safeLoad.mockReturnValue([rawConfig])
+      mapRequestConfig.mockResolvedValue([rawConfig as any])
+
+      await expect(readConfig('path', typeValidator, Mode.Test)).rejects.toThrowError(
+        "schema's of different types",
+      )
     })
   })
 })

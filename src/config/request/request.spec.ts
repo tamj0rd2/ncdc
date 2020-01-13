@@ -1,17 +1,13 @@
-import { mapRequestConfig, RequestSchema, getRequestSchema } from './request'
-import { mockObj, mockFn } from '~test-helpers'
-import { TypeValidator } from '~validation'
+import { mapRequestConfig, RequestSchema } from './request'
+import { mockObj, mockFn, mockCtor } from '~test-helpers'
+import { TypeValidator, TypeValidationError } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from '../body'
-import { Mode } from '~config/types'
-import { getTestSchema } from './test-schema'
-import { getServeSchema } from './serve-schema'
 
+jest.unmock('./request')
 // TODO: remove yup workaround
-jest.disableAutomock()
-jest.mock('~problem')
-jest.mock('./test-schema')
-jest.mock('./serve-schema')
+jest.unmock('yup')
+jest.unmock('../methods')
 
 describe('mapRequestConfig', () => {
   const getRequestBody = mockFn<GetBodyToUse>()
@@ -58,9 +54,13 @@ describe('mapRequestConfig', () => {
 
       const mappedBody = { hello: 'world' }
       getRequestBody.mockResolvedValue(mappedBody)
-      typeValidator.getProblems.mockResolvedValue([{} as Problem])
 
-      await expect(mapRequestConfig(requestSchema, typeValidator, getRequestBody)).rejects.toThrowError()
+      typeValidator.getProblems.mockResolvedValue([{} as Problem])
+      mockCtor(TypeValidationError).mockImplementation(() => new Error('Yikes'))
+
+      await expect(mapRequestConfig(requestSchema, typeValidator, getRequestBody)).rejects.toThrowError(
+        'Yikes',
+      )
     })
   })
 
@@ -88,38 +88,5 @@ describe('mapRequestConfig', () => {
 
     expect(configs).toHaveLength(1)
     expect(configs[0].endpoint).toEqual('supa hot')
-  })
-})
-
-describe('getRequestSchema', () => {
-  afterEach(() => jest.resetAllMocks())
-
-  it('returns the serve schema when in serve mode', () => {
-    const mockServeSchema = { snooze: 'lose' }
-    mockFn(getServeSchema).mockReturnValue(mockServeSchema as any)
-
-    const result = getRequestSchema(Mode.Serve, false)
-
-    expect(getServeSchema).toHaveBeenCalled()
-    expect(result).toEqual(mockServeSchema)
-  })
-
-  it.each([[true], [false]])(
-    'calls get test schema with the correct args when serve only is %s',
-    serveOnly => {
-      getRequestSchema(Mode.Test, serveOnly)
-
-      expect(mockFn(getTestSchema)).toHaveBeenCalledWith(serveOnly)
-    },
-  )
-
-  it('returns the test schema when in test mode', () => {
-    const mockTestSchema = { hello: 'world' }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockFn(getTestSchema).mockReturnValue(mockTestSchema as any)
-
-    const result = getRequestSchema(Mode.Test, false)
-
-    expect(result).toEqual(mockTestSchema)
   })
 })

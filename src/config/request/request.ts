@@ -2,30 +2,13 @@ import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from '../body'
-import { TestRequestSchema, getTestSchema } from './test-schema'
-import { ServeRequestSchema, getServeSchema } from './serve-schema'
+import { TestRequestSchema } from './test-schema'
+import { ServeRequestSchema } from './serve-schema'
 import { SupportedMethod } from './schema-shared'
-import { Mode } from '../types'
-import { ObjectSchema, Shape } from 'yup'
-import enrichYup from '../methods'
-
-enrichYup()
 
 export { SupportedMethod }
 
 export type RequestSchema = TestRequestSchema | ServeRequestSchema
-
-export const getRequestSchema = (mode: Mode, serveOnly: boolean): ObjectSchema<Shape<RequestSchema, {}>> => {
-  if (mode === Mode.Serve) {
-    return getServeSchema()
-  }
-
-  if (mode === Mode.Test) {
-    return getTestSchema(serveOnly)
-  }
-
-  throw new Error(`Mode ${mode} is not supported`)
-}
 
 const chooseEndpoints = ({
   endpoints,

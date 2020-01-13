@@ -5,6 +5,8 @@ import { TypeValidator } from '~validation'
 import Problem from '~problem'
 import { mockObj } from '~test-helpers'
 
+jest.disableAutomock()
+
 describe('server', () => {
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
   const logSpy = jest.spyOn(console, 'log').mockImplementation()

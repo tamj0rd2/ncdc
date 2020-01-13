@@ -5,8 +5,7 @@ import Problem, { ProblemType } from '~problem'
 import * as messages from '~messages'
 import { mockObj, mockFn } from '~test-helpers'
 
-jest.mock('~problem')
-jest.mock('~messages')
+jest.unmock('./validators')
 
 describe('validators', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })

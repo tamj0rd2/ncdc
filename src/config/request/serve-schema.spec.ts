@@ -1,7 +1,6 @@
-import { serveRequestSchema } from './serve-schema'
+import { getServeSchema } from './serve-schema'
 import { RequestSchema } from '.'
 
-jest.enableAutomock()
 jest.unmock('./serve-schema')
 jest.unmock('./schema-shared')
 jest.unmock('../methods')
@@ -18,7 +17,7 @@ describe('serveRequestSchema', () => {
       endpoints: '/yo',
     }
 
-    const result = await serveRequestSchema.validate(rawConfig)
+    const result = await getServeSchema().validate(rawConfig)
 
     expect(result).toMatchObject<RequestSchema>({ method: 'POST', endpoints: ['/yo'] })
   })

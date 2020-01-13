@@ -1,21 +1,23 @@
-import '../methods'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from '../body'
-import { testRequestSchema, TestRequestSchema, getTestSchema } from './test-schema'
-import { serveRequestSchema, ServeRequestSchema } from './serve-schema'
+import { TestRequestSchema, getTestSchema } from './test-schema'
+import { ServeRequestSchema, getServeSchema } from './serve-schema'
 import { SupportedMethod } from './schema-shared'
 import { Mode } from '../types'
 import { ObjectSchema, Shape } from 'yup'
+import enrichYup from '../methods'
 
-export { SupportedMethod, testRequestSchema, serveRequestSchema }
+enrichYup()
+
+export { SupportedMethod }
 
 export type RequestSchema = TestRequestSchema | ServeRequestSchema
 
 export const getRequestSchema = (mode: Mode, serveOnly: boolean): ObjectSchema<Shape<RequestSchema, {}>> => {
   if (mode === Mode.Serve) {
-    return serveRequestSchema
+    return getServeSchema()
   }
 
   if (mode === Mode.Test) {
@@ -65,5 +67,3 @@ export const mapRequestConfig = async (
     headers,
   })) as RequestConfigArray
 }
-
-export const something = 'wrong'

@@ -1,9 +1,11 @@
-import * as yup from 'yup'
+import { object, number, mixed, string, InferType } from 'yup'
 import { OutgoingHttpHeaders } from 'http'
-import './methods'
 import { TypeValidator, TypeValidationError } from '~validation'
 import { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
+import enrichYup from './methods'
+
+enrichYup()
 
 export interface ResponseConfig {
   code: number
@@ -12,28 +14,27 @@ export interface ResponseConfig {
   type?: string
 }
 
-const baseResponseSchema = yup.object({
-  code: yup.number().required(),
-  body: yup.mixed<Data>().notAllowedIfSiblings('bodyPath'),
-  bodyPath: yup.string().notAllowedIfSiblings('body'),
-  headers: yup
-    .object<OutgoingHttpHeaders>()
+const baseResponseSchema = object({
+  code: number().required(),
+  body: mixed<Data>().notAllowedIfSiblings('bodyPath'),
+  bodyPath: string().notAllowedIfSiblings('body'),
+  headers: object<OutgoingHttpHeaders>()
     .ofHeaders()
     .notRequired(),
-  type: yup.string().notRequired(),
+  type: string().notRequired(),
 })
 
 // TODO: needs tests
 export const testResponseSchema = baseResponseSchema.allowedKeysOnly('serveBody', 'serveBodyPath')
-type TestResponseSchema = yup.InferType<typeof testResponseSchema>
+type TestResponseSchema = InferType<typeof testResponseSchema>
 
 export const serveResponseSchema = baseResponseSchema
   .shape({
-    serveBody: yup.mixed<Data>().notAllowedIfSiblings('body, bodyPath, serveBodyPath'),
-    serveBodyPath: yup.string().notAllowedIfSiblings('body, bodyPath, serveBody'),
+    serveBody: mixed<Data>().notAllowedIfSiblings('body, bodyPath, serveBodyPath'),
+    serveBodyPath: string().notAllowedIfSiblings('body, bodyPath, serveBody'),
   })
   .allowedKeysOnly()
-type ServeResponseSchema = yup.InferType<typeof serveResponseSchema>
+type ServeResponseSchema = InferType<typeof serveResponseSchema>
 
 export type ResponseSchema = TestResponseSchema | ServeResponseSchema
 
@@ -48,7 +49,10 @@ export const mapResponseConfig = async (
 
   if (bodyToUse && type) {
     const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Response)
-    if (problems) throw new TypeValidationError(problems)
+    if (problems) {
+      const error = new TypeValidationError(problems)
+      throw error
+    }
   }
 
   return {

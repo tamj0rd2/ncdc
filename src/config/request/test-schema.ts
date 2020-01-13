@@ -1,6 +1,8 @@
-import * as yup from 'yup'
+import { InferType } from 'yup'
 import { baseRequestSchema, endpointsSchema } from './schema-shared'
-import '../methods'
+import enrichYup from '../methods'
+
+enrichYup()
 
 export const testRequestSchema = baseRequestSchema
   .shape({
@@ -18,4 +20,4 @@ export const getTestSchema = (serveOnly: boolean) =>
     .shape({ endpoints: serveOnly ? endpointsSchema.notRequired() : endpointsSchema.required() })
     .allowedKeysOnly('serveEndpoint', 'serveBody', 'serveBodyPath')
 
-export type TestRequestSchema = yup.InferType<ReturnType<typeof getTestSchema>>
+export type TestRequestSchema = InferType<ReturnType<typeof getTestSchema>>

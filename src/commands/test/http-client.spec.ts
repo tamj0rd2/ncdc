@@ -5,8 +5,7 @@ import { FetchResource } from '~validation'
 import { createHttpClient } from './http-client'
 import { mockObj } from '~test-helpers'
 
-jest.mock('~messages')
-jest.mock('~problem')
+jest.unmock('./http-client')
 
 describe('CDC Tester', () => {
   const loader = mockObj<AxiosInstance>({ get: jest.fn(), post: jest.fn() })

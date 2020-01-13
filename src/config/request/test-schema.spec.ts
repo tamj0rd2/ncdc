@@ -1,7 +1,6 @@
 import { getTestSchema } from './test-schema'
 import { RequestSchema } from '.'
 
-jest.enableAutomock()
 jest.unmock('./test-schema')
 jest.unmock('./schema-shared')
 jest.unmock('../methods')

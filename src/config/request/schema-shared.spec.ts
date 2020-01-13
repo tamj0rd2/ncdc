@@ -1,6 +1,5 @@
 import { baseRequestSchema } from './schema-shared'
 
-jest.enableAutomock()
 jest.unmock('./schema-shared')
 jest.unmock('../methods')
 jest.unmock('yup')

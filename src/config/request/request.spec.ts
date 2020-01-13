@@ -1,24 +1,18 @@
-jest.enableAutomock()
-
-import { mapRequestConfig, RequestSchema, getRequestSchema, something } from './request'
+import { mapRequestConfig, RequestSchema, getRequestSchema } from './request'
 import { mockObj, mockFn } from '~test-helpers'
 import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from '../body'
 import { Mode } from '~config/types'
-// import { serveRequestSchema } from './serve-schema'
 import { getTestSchema } from './test-schema'
+import { getServeSchema } from './serve-schema'
 
-// jest.unmock('yup')
-// jest.dontMock('./request')
+// TODO: remove yup workaround
+jest.disableAutomock()
+jest.mock('~problem')
+jest.mock('./test-schema')
+jest.mock('./serve-schema')
 
-describe('mapRequestConfig', () => {
-  it('does stuff', () => {
-    expect(something).toEqual('good :d')
-  })
-})
-
-/*
 describe('mapRequestConfig', () => {
   const getRequestBody = mockFn<GetBodyToUse>()
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
@@ -100,11 +94,15 @@ describe('mapRequestConfig', () => {
 describe('getRequestSchema', () => {
   afterEach(() => jest.resetAllMocks())
 
-  // xit('returns the serve schema when in serve mode', () => {
-  //   const result = getRequestSchema(Mode.Serve, false)
+  it('returns the serve schema when in serve mode', () => {
+    const mockServeSchema = { snooze: 'lose' }
+    mockFn(getServeSchema).mockReturnValue(mockServeSchema as any)
 
-  //   expect(result).toEqual(serveRequestSchema)
-  // })
+    const result = getRequestSchema(Mode.Serve, false)
+
+    expect(getServeSchema).toHaveBeenCalled()
+    expect(result).toEqual(mockServeSchema)
+  })
 
   it.each([[true], [false]])(
     'calls get test schema with the correct args when serve only is %s',
@@ -125,4 +123,3 @@ describe('getRequestSchema', () => {
     expect(result).toEqual(mockTestSchema)
   })
 })
-*/

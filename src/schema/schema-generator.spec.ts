@@ -3,6 +3,8 @@ import * as TJS from 'typescript-json-schema'
 import * as path from 'path'
 import { mockObj } from '~test-helpers'
 
+// TODO: remove TJS workaround
+jest.disableAutomock()
 jest.mock('typescript-json-schema')
 jest.mock('path')
 

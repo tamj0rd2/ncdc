@@ -1,6 +1,8 @@
 import { ErrorObject } from 'ajv'
 import Problem, { ProblemContext, ProblemType } from './problem'
 
+jest.unmock('./problem')
+
 describe('DetailedProblem', () => {
   it('can be constructed from an ErrorObject', () => {
     const errorObj: Partial<ErrorObject> = {

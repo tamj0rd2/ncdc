@@ -4,6 +4,7 @@ import * as _fs from 'fs'
 import * as _path from 'path'
 import { mockObj } from '~test-helpers'
 
+jest.unmock('./generate')
 jest.mock('path')
 jest.mock('fs')
 

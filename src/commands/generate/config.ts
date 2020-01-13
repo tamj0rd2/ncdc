@@ -1,25 +1,23 @@
-import * as yup from 'yup'
+import { string, object, array } from 'yup'
 import { safeLoad } from 'js-yaml'
 import { readFileAsync } from '~io'
 
-const generateSchema = yup.object({
-  name: yup.string().required(),
-  request: yup.object({ type: yup.string().notRequired() }).required(),
-  response: yup.object({ type: yup.string().notRequired() }).required(),
-})
+type Config = {
+  name: string
+  request: { type?: string }
+  response: { type?: string }
+}
 
-type Config = yup.InferType<typeof generateSchema>
 export type GenerateConfigs = Config[]
 
-export async function readGenerateConfig(configPath: string): Promise<Config[]> {
-  const generateSchema = yup.array().of(
-    yup.object({
-      name: yup.string().required(),
-      request: yup.object({ type: yup.string().notRequired() }).required(),
-      response: yup.object({ type: yup.string().notRequired() }).required(),
+export async function readGenerateConfig(configPath: string): Promise<GenerateConfigs> {
+  const generateSchema = array().of(
+    object({
+      name: string().required(),
+      request: object({ type: string().notRequired() }).required(),
+      response: object({ type: string().notRequired() }).required(),
     }),
   )
-
   const rawConfig = safeLoad(await readFileAsync(configPath))
   return await generateSchema.validate(rawConfig)
 }

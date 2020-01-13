@@ -1,19 +1,18 @@
 import { createGetBodyToUse, GetBodyToUse } from './body'
 import * as _io from '~io'
-import * as _path from 'path'
-import { mockObj } from '~test-helpers'
+import { resolve } from 'path'
+import { mockObj, mockFn } from '~test-helpers'
 
-jest.mock('~io')
+jest.unmock('./body')
 jest.mock('path')
 
 describe('get body to use', () => {
   const { readJsonAsync } = mockObj(_io)
-  const { resolve } = mockObj(_path)
   let getBodyToUse: GetBodyToUse
 
   beforeEach(() => {
     getBodyToUse = createGetBodyToUse('some path')
-    resolve.mockImplementation((...args) => args[1])
+    mockFn(resolve).mockImplementation((...args) => args[1])
   })
 
   afterEach(() => {
@@ -39,7 +38,7 @@ describe('get body to use', () => {
 
     const body = await getBodyToUse(bodyConfig)
 
-    expect(resolve).toHaveBeenCalledWith('some path', '..', './response.json')
+    expect(mockFn(resolve)).toHaveBeenCalledWith('some path', '..', './response.json')
     expect(body).toEqual('the body')
   })
 
@@ -62,7 +61,7 @@ describe('get body to use', () => {
 
     const body = await getBodyToUse(bodyConfig)
 
-    expect(resolve).toHaveBeenCalledWith('some path', '..', './response.json')
+    expect(mockFn(resolve)).toHaveBeenCalledWith('some path', '..', './response.json')
     expect(body).toEqual('the body')
   })
 })

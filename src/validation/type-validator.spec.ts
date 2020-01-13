@@ -5,8 +5,7 @@ import Problem, { ProblemType } from '~problem'
 import * as _messages from '~messages'
 import { mockObj, mockCtor } from '~test-helpers'
 
-jest.mock('~messages')
-jest.mock('~problem')
+jest.unmock('./type-validator')
 
 describe('Type validator', () => {
   const ajv = mockObj<Ajv>({ compile: jest.fn() })

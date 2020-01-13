@@ -1,14 +1,17 @@
-import * as yup from 'yup'
-import './methods'
+import { string, number, object } from 'yup'
+import enrichYup from './methods'
+
+jest.unmock('yup')
+jest.unmock('./methods')
+enrichYup()
 
 describe('allowedKeysOnly', () => {
   it('is valid when specified keys are used', () => {
-    const schema = yup
-      .object()
+    const schema = object()
       .allowedKeysOnly()
       .shape({
-        name: yup.string(),
-        age: yup.number(),
+        name: string(),
+        age: number(),
       })
 
     const config = {
@@ -20,11 +23,10 @@ describe('allowedKeysOnly', () => {
   })
 
   it('is invalid when unspecified keys are used ', () => {
-    const schema = yup
-      .object()
+    const schema = object()
       .shape({
-        name: yup.string(),
-        age: yup.number(),
+        name: string(),
+        age: number(),
       })
       .allowedKeysOnly()
 
@@ -42,14 +44,12 @@ describe('allowedKeysOnly', () => {
   })
 
   it('is valid when specified keys are used in nested objects', () => {
-    const schema = yup
-      .object()
+    const schema = object()
       .shape({
-        stuff: yup
-          .object()
+        stuff: object()
           .shape({
-            name: yup.string(),
-            age: yup.number(),
+            name: string(),
+            age: number(),
           })
           .allowedKeysOnly(),
       })
@@ -66,14 +66,12 @@ describe('allowedKeysOnly', () => {
   })
 
   it('it is invalid when unspecified keys are used in nested objects', () => {
-    const schema = yup
-      .object()
+    const schema = object()
       .shape({
-        stuff: yup
-          .object()
+        stuff: object()
           .shape({
-            name: yup.string(),
-            age: yup.number(),
+            name: string(),
+            age: number(),
           })
           .allowedKeysOnly(),
       })
@@ -95,11 +93,10 @@ describe('allowedKeysOnly', () => {
   })
 
   it('is valid when an unspecified key is present but has been ignored', () => {
-    const schema = yup
-      .object()
+    const schema = object()
       .shape({
-        name: yup.string(),
-        age: yup.number(),
+        name: string(),
+        age: number(),
       })
       .allowedKeysOnly('language')
 
@@ -113,11 +110,10 @@ describe('allowedKeysOnly', () => {
   })
 
   it('strips keys that are unspecified and ignored', () => {
-    const schema = yup
-      .object()
+    const schema = object()
       .shape({
-        name: yup.string(),
-        age: yup.number(),
+        name: string(),
+        age: number(),
       })
       .allowedKeysOnly('language')
 
@@ -133,9 +129,9 @@ describe('allowedKeysOnly', () => {
 })
 
 describe('requiredIf', () => {
-  const schema = yup.object().shape({
-    endpoint: yup.string().requiredIfNoSiblings('mockEndpoint'),
-    mockEndpoint: yup.string().requiredIfNoSiblings('endpoint'),
+  const schema = object().shape({
+    endpoint: string().requiredIfNoSiblings('mockEndpoint'),
+    mockEndpoint: string().requiredIfNoSiblings('endpoint'),
   })
 
   it('is true if both options are specified', () => {
@@ -163,10 +159,10 @@ describe('requiredIf', () => {
 })
 
 describe('notAllowedIf', () => {
-  const schema = yup.object().shape({
-    hello: yup.string().notAllowedIfSiblings('world'),
-    world: yup.string().notAllowedIfSiblings('hello'),
-    nice: yup.string().notAllowedIfSiblings('hello', 'world'),
+  const schema = object().shape({
+    hello: string().notAllowedIfSiblings('world'),
+    world: string().notAllowedIfSiblings('hello'),
+    nice: string().notAllowedIfSiblings('hello', 'world'),
   })
 
   it.each(['hello', 'world', 'nice'])('is valid if only %s key is specified', key => {
@@ -199,20 +195,20 @@ describe('notAllowedIf', () => {
 
 describe('startsWith', () => {
   it('does not throw when starts with specified substring', () => {
-    const schema = yup.string().startsWith('hello')
+    const schema = string().startsWith('hello')
 
     expect(() => schema.validateSync('hello world')).not.toThrowError()
   })
 
   it('does throw when does not start with specified substring', () => {
-    const schema = yup.string().startsWith('hello')
+    const schema = string().startsWith('hello')
 
     expect(() => schema.validateSync('yellow world')).toThrowError('this should start with hello')
   })
 })
 
 describe('ofHeaders', () => {
-  const schema = yup.object().ofHeaders()
+  const schema = object().ofHeaders()
 
   it('does not throw when headers are valid types', async () => {
     const headers = {

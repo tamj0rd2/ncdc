@@ -8,17 +8,20 @@ import * as _body from './body'
 import { TypeValidator } from '~validation'
 import { Mode } from './types'
 
+// TODO: fix this yup workaround
+jest.disableAutomock()
 jest.mock('fs')
-jest.mock('js-yaml')
-jest.mock('~io')
 jest.mock('./request')
 jest.mock('./response')
 jest.mock('./body')
+jest.mock('js-yaml')
+jest.mock('~validation')
+jest.mock('~io')
 
 describe('readConfig', () => {
   const { safeLoad } = mockObj(_jsYaml)
   const { readFileAsync } = mockObj(_io)
-  const { mapRequestConfig } = mockObj(_request)
+  const { mapRequestConfig, getRequestSchema } = mockObj(_request)
   const { mapResponseConfig } = mockObj(_response)
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
   const { createGetBodyToUse } = mockObj(_body)
@@ -26,6 +29,7 @@ describe('readConfig', () => {
 
   beforeEach(() => {
     createGetBodyToUse.mockReturnValue(getBodyToUse)
+    getRequestSchema.mockReturnValue({ required: jest.fn() } as any)
   })
 
   afterEach(() => jest.resetAllMocks())

@@ -1,7 +1,7 @@
-import * as yup from 'yup'
+import { object, string, array, bool } from 'yup'
 import { safeLoad } from 'js-yaml'
 import { readFileAsync } from '~io'
-import { mapRequestConfig, RequestConfig, testRequestSchema, serveRequestSchema } from './request'
+import { mapRequestConfig, RequestConfig, getRequestSchema } from './request'
 import { ResponseConfig, mapResponseConfig, testResponseSchema, serveResponseSchema } from './response'
 import { TypeValidator } from '~validation'
 import { createGetBodyToUse } from './body'
@@ -19,13 +19,13 @@ export default async function readConfig(
   mode: Mode.Test | Mode.Serve,
 ): Promise<Config[]> {
   const rawConfig = safeLoad(await readFileAsync(configPath))
-  const configs = await yup
-    .array()
+  const configs = await array()
     .of(
-      yup.object({
-        name: yup.string().required(),
-        serveOnly: yup.bool().default(false),
-        request: (mode === Mode.Test ? testRequestSchema : serveRequestSchema).required(),
+      object({
+        name: string().required(),
+        serveOnly: bool().default(false),
+        // TODO: remove this hardcoding
+        request: getRequestSchema(mode, false).required(),
         response: (mode === Mode.Test ? testResponseSchema : serveResponseSchema).required(),
       }),
     )

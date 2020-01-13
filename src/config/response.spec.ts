@@ -4,6 +4,11 @@ import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
 
+// TODO: remove this yup workaround
+jest.disableAutomock()
+jest.mock('~problem')
+jest.mock('./body')
+
 // TODO: add tests for the schemas themselves
 describe('mapResponseConfig', () => {
   const typeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })

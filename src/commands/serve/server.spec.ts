@@ -66,6 +66,8 @@ describe('server', () => {
       .expect('Content-Type', /text\/html/)
   })
 
+  // NOTE: I disabled logging to this endpoint because I thought it was impacting docker stuff
+  // I was wrong.
   it.skip('logs registration for each configured endpoint', () => {
     const configs = [
       new ConfigBuilder().build(),

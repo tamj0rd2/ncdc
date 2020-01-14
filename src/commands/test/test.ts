@@ -18,6 +18,7 @@ const logTestResults = (baseUrl: string) => (displayName: string, endpoint: stri
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const logTestError = (displayName: string) => ({ stack, message }: Error): void => {
   console.error(chalk.red.bold('FAILED:'), chalk.red(displayName), '-', message)
   // console.error(stack)

@@ -16,7 +16,7 @@ const is = <T extends ProblemContext>(ctx: ProblemContext, prop: keyof T): ctx i
 
 export default class Problem {
   private readonly _path?: string
-  public readonly message?: string
+  public readonly message: string
   public readonly data?: Data
   public readonly schema?: object
   public readonly problemType: ProblemType
@@ -26,7 +26,7 @@ export default class Problem {
 
     if (is<ErrorObject>(ctx, 'dataPath')) {
       this._path = ctx.dataPath
-      this.message = ctx.message
+      this.message = ctx.message as string
       this.data = this.mapData(ctx.data)
       this.schema = ctx.parentSchema
     } else {

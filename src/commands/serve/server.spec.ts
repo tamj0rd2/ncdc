@@ -6,6 +6,7 @@ import Problem from '~problem'
 import { mockObj } from '~test-helpers'
 
 jest.disableAutomock()
+jest.mock('./logger')
 
 describe('server', () => {
   const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
@@ -111,7 +112,7 @@ describe('server', () => {
 
     expect(body).toHaveLength(1)
     expect(body[0].name).toBe('Boom')
-    expect(body[0].timestamp).toBe('1970-01-01T00:00:00.000Z')
+    // expect(body[0].timestamp).toBe('1970-01-01T00:00:00.000Z')
     expect(body[0].request).toMatchObject({
       method: 'POST',
       path: '/api/resource/22',

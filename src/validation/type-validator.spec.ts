@@ -32,7 +32,11 @@ describe('Type validator', () => {
     it.each(simpleFailCases)(
       'returns a problem when the data is not a valid %s',
       async (expectedType, data) => {
-        const mappedProblem: Public<Problem> = { path: 'hello', problemType: ProblemType.Request }
+        const mappedProblem: Public<Problem> = {
+          path: 'hello',
+          problemType: ProblemType.Request,
+          message: 'hi',
+        }
         messages.shouldBe.mockReturnValue('yo')
         problemCtor.mockImplementation(() => mappedProblem as Problem)
 

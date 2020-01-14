@@ -3,6 +3,7 @@ import { Argv, CommandModule } from 'yargs'
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import { readGenerateConfig, GenerateConfigs } from './config'
+import logger from '~logger'
 
 interface GenerateArgs {
   configPath?: string
@@ -48,7 +49,10 @@ const createHandler = (handleError: HandleError) => async (args: GenerateArgs): 
     .filter(x => !builtInTypes.includes(x))
     .filter((x, i, arr) => i === arr.indexOf(x))
 
-  if (!types.length) return console.log('No types were specified in the given config file')
+  if (!types.length) {
+    logger.info('No types were specified in the given config file')
+    return
+  }
 
   let schemaGenerator: SchemaGenerator
 
@@ -63,7 +67,7 @@ const createHandler = (handleError: HandleError) => async (args: GenerateArgs): 
   } catch (err) {
     return handleError(err)
   } finally {
-    console.log('Json schemas have been written to disk')
+    logger.info('Json schemas have been written to disk')
   }
 }
 

@@ -1,6 +1,8 @@
 import { TypeValidator } from '~validation'
 import Problem from '~problem'
-import chalk from 'chalk'
+import { blue } from 'chalk'
+import logger from '~logger'
+import { inspect } from 'util'
 
 export type HandleError = (error: Error) => never
 export type CreateTypeValidator = (
@@ -24,18 +26,14 @@ const groupBy = <T>(items: T[], getKey: (item: T) => string): Map<string, T[]> =
 export const logValidationErrors = (problems: Problem[]): void => {
   groupBy(problems, x => x.path).forEach((groupedProblems, dataPath) => {
     groupBy(groupedProblems, x => x.problemType).forEach((groupedByType, type) => {
-      groupedByType.forEach(({ message }) => console.log(chalk.blue(`${type} ${dataPath}`), message))
-      const { data, schema } = groupedProblems[0]
+      groupedByType.forEach(({ message }) => {
+        const messagePrefix = blue(`${type} ${dataPath}`)
+        logger.info(`${messagePrefix} ${message}`)
+      })
 
-      console.log(chalk.yellow('Data:'))
-      console.dir(data, { depth: dataPath ? 4 : 0 })
-      if (!!dataPath) {
-        console.log(chalk.yellow('Schema:'))
-        console.dir(schema)
-      }
-      console.log()
+      const { data, schema } = groupedProblems[0]
+      if (data) logger.info(`Data: ${inspect(data, false, 4, true)}`)
+      if (schema) logger.info(`Schema: ${inspect(schema, false, 4, true)}`)
     })
   })
-
-  console.log()
 }

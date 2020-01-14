@@ -4,10 +4,10 @@ import { Server } from 'http'
 import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
 import { SupportedMethod, Config } from '~config'
-import serverLogger from './serverLogger'
+import serverLogger from './server-logger'
 import { inspect } from 'util'
 
-export interface Log {
+export interface ReqResLog {
   name?: string
   request: Pick<Request, 'method' | 'path' | 'query' | 'body'>
   response: {
@@ -27,7 +27,7 @@ const mapLog = (
   { method, path, query, body }: Request,
   res: Response,
   responseBody?: Data,
-): Log => ({
+): ReqResLog => ({
   name: name ?? 'N/A',
   request: { method, path, query, body },
   response: {

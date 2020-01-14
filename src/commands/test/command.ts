@@ -5,6 +5,7 @@ import axios from 'axios'
 import readConfig, { Config } from '~config'
 import { testConfigs } from './test'
 import { Mode } from '~config/types'
+import logger from '~logger'
 
 interface TestArgs {
   allErrors: boolean
@@ -56,7 +57,10 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
     return handleError(err)
   }
 
-  if (!configs.length) return console.log('No tests to run')
+  if (!configs.length) {
+    logger.info('No tests to run')
+    return
+  }
 
   testConfigs(baseURL, createHttpClient(axios.create({ baseURL })), configs, typeValidator)
     .then(() => process.exit())

@@ -1,5 +1,4 @@
 import mainYargs from 'yargs'
-import chalk from 'chalk'
 import {
   HandleError,
   CreateTypeValidator,
@@ -10,12 +9,12 @@ import {
 import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import { SchemaGenerator, SchemaLoader } from './schema'
+import logger from '~logger'
 
 export default async function run(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleError: HandleError = ({ stack, message }) => {
-    console.error(chalk.red(message))
-    // console.log(stack) // TODO: add some debug mode toggle to everywhere this happens
+  const handleError: HandleError = error => {
+    logger.error(error.message, error)
     process.exit(1)
   }
 

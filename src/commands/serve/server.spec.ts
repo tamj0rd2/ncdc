@@ -1,16 +1,14 @@
 import request from 'supertest'
-import { configureServer, Log } from './server'
+import { configureServer } from './server'
 import { ConfigBuilder } from '~config'
 import { TypeValidator } from '~validation'
 import Problem from '~problem'
 import { mockObj } from '~test-helpers'
 
 jest.disableAutomock()
-jest.mock('./logger')
+jest.mock('./server-logger')
 
 describe('server', () => {
-  const dateSpy = jest.spyOn(Date, 'now').mockImplementation()
-  const logSpy = jest.spyOn(console, 'log').mockImplementation()
   jest.spyOn(console, 'dir').mockImplementation()
   const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
 

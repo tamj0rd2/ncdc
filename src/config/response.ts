@@ -50,6 +50,7 @@ export const mapResponseConfig = async (
   if (bodyToUse && type) {
     const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Response)
     if (problems) {
+      // TODO: add some problem logging here
       const error = new TypeValidationError(problems)
       throw error
     }

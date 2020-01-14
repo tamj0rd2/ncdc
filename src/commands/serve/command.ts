@@ -5,6 +5,7 @@ import readConfig, { Config } from '~config'
 import { HandleError, CreateTypeValidator } from '../shared'
 import { startServer } from './server'
 import { Mode } from '~config/types'
+import logger from '~logger'
 
 interface ServeArgs {
   configPath?: string
@@ -50,7 +51,7 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
 
   if (isNaN(port)) {
     yargs.showHelp()
-    console.error('\nport must be a number')
+    logger.error('\nport must be a number')
     return process.exit(1)
   }
 
@@ -64,7 +65,10 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
     return handleError(err)
   }
 
-  if (!configs.length) return console.log('No mocks to run')
+  if (!configs.length) {
+    logger.info('No mocks to run')
+    return
+  }
 
   return startServer(port, configs, typeValidator)
     .then(() => process.exit())

@@ -42,3 +42,24 @@ export const logValidationErrors = (problems: ReadonlyArray<Problem>): void => {
     })
   })
 }
+
+export const gatherValidationErrors = (problems: ReadonlyArray<Problem>): string =>
+  Array.from(groupBy(problems, x => x.path))
+    .map(([dataPath, groupedProblems]) =>
+      Array.from(groupBy(groupedProblems, x => x.problemType))
+        .map(([type, groupedByType]) => {
+          const result = groupedByType.map(({ message }) => {
+            const messagePrefix = blue(`${type} ${dataPath}`)
+            return `${messagePrefix} ${message}`
+          })
+
+          const { data, schema } = groupedProblems[0]
+          if (data)
+            result.push(`${yellow('Data:')} ${colorInspect(data, dataPath === Problem.rootPath ? 0 : 4)}`)
+          if (schema) result.push(`${yellow('Schema:')} ${colorInspect(schema, 2)}`)
+
+          return result.join('\n')
+        })
+        .join('\n'),
+    )
+    .join('\n')

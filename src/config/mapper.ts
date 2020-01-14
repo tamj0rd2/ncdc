@@ -6,12 +6,24 @@ import { ConfigSchema } from './schema'
 import { TypeValidator } from '~validation'
 import { GetBodyToUse } from './body'
 
-// TODO: not sure how to get the type for config schema working. It is not possible to be undefined
-export const mapConfig = (
-  { name, request, response }: ConfigSchema,
-  typeValidator: TypeValidator,
-  getBody: GetBodyToUse,
-): Promise<Config[] | ReadonlyArray<Problem>> => {
+const isProblemArray = (x: any): x is ReadonlyArray<Problem> => !!(x[0] as Optional<Problem>)?.path
+
+export interface ProblemResult {
+  name: string
+  problems: ReadonlyArray<Problem>
+}
+
+export const isProblemResult = (x: any): x is ProblemResult =>
+  typeof x === 'object' && (x as ProblemResult).problems !== undefined
+
+export const containsProblemResult = (x: any): x is ReadonlyArray<ProblemResult> =>
+  Array.isArray(x) && !!x.find(isProblemResult)
+
+export const mapConfig = (typeValidator: TypeValidator, getBody: GetBodyToUse) => async ({
+  name,
+  request,
+  response,
+}: ConfigSchema): Promise<Config[] | ProblemResult> => {
   const requestResult = await mapRequestConfig(request, typeValidator, getBody)
   const responseResult = await mapResponseConfig(response, typeValidator, getBody)
 
@@ -19,7 +31,7 @@ export const mapConfig = (
     const problems: Problem[] = []
     if (isProblemArray(requestResult)) problems.push(...requestResult)
     if (isProblemArray(responseResult)) problems.push(...responseResult)
-    return problems
+    return { name, problems }
   }
 
   return requestResult.map<Config>((requestConfig, i) => ({

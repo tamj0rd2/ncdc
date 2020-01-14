@@ -37,7 +37,6 @@ export const mapRequestConfig = async (
   const bodyToUse: Optional<Data> = await getRequestBody(validatedConfig)
 
   if (bodyToUse && type) {
-    // TODO: needs to have some logging
     const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Request)
     if (problems) return problems
   }

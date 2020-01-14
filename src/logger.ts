@@ -1,4 +1,4 @@
-import { createLogger, transports, format } from 'winston'
+import { createLogger, transports, format, addColors, Logger, LeveledLogMethod } from 'winston'
 import { inspect } from 'util'
 import inspector from 'inspector'
 
@@ -23,7 +23,27 @@ const extractStack = format(info => {
   return info
 })
 
+const customLevels = {
+  levels: {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    validationError: 3,
+    error: 4,
+  },
+  colors: {
+    debug: 'blue',
+    info: 'green',
+    warn: 'yellow',
+    validationError: 'red',
+    error: 'red',
+  },
+}
+
+addColors(customLevels.colors)
+
 const logger = createLogger({
+  levels: customLevels.levels,
   exitOnError: false,
   transports: [
     new transports.Console({
@@ -45,4 +65,4 @@ const logger = createLogger({
   ],
 })
 
-export default logger
+export default logger as Logger & Record<keyof typeof customLevels.levels, LeveledLogMethod>

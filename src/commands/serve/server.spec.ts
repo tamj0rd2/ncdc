@@ -67,66 +67,6 @@ describe('server', () => {
       .expect('Content-Type', /text\/html/)
   })
 
-  // NOTE: I disabled logging to this endpoint because I thought it was impacting docker stuff
-  // I was wrong.
-  it.skip('logs registration for each configured endpoint', () => {
-    const configs = [
-      new ConfigBuilder().build(),
-      new ConfigBuilder()
-        .withName('Test2')
-        .withEndpoint('/api/books/:id')
-        .build(),
-    ]
-
-    configureServer('mysite.com', configs, mockTypeValidator)
-
-    expect(logSpy).toBeCalledTimes(2)
-    expect(logSpy.mock.calls[0][0]).toMatch(/Registered mysite.com\/api\/resource from config:.*Test/)
-    expect(logSpy.mock.calls[1][0]).toMatch(/Registered mysite.com\/api\/books\/:id from config:.*Test2/)
-  })
-
-  it.skip('shows logs for previous requests at /logs', async () => {
-    dateSpy.mockReturnValue(0)
-    const configs = [
-      new ConfigBuilder()
-        .withName('Boom')
-        .withMethod('POST')
-        .withEndpoint('/api/resource/:id')
-        .withResponseCode(404)
-        .withResponseBody('Hey!!')
-        .build(),
-    ]
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
-
-    await request(app)
-      .post('/api/resource/22?ayy=lmao')
-      .set('Content-Type', 'text/plain')
-      .send('Woah!')
-      .expect(404)
-    const body = (
-      await request(app)
-        .get('/logs')
-        .expect(200)
-        .expect('Content-Type', /json/)
-    ).body as Log[]
-
-    expect(body).toHaveLength(1)
-    expect(body[0].name).toBe('Boom')
-    // expect(body[0].timestamp).toBe('1970-01-01T00:00:00.000Z')
-    expect(body[0].request).toMatchObject({
-      method: 'POST',
-      path: '/api/resource/22',
-      query: { ayy: 'lmao' },
-      headers: {},
-      body: 'Woah!',
-    })
-    expect(body[0].response).toMatchObject({
-      body: 'Hey!!',
-      status: 404,
-      headers: {},
-    })
-  })
-
   it('sets the response headers when provided', async () => {
     const configs = [
       new ConfigBuilder()

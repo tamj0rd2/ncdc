@@ -28,7 +28,7 @@ const mapLog = (
   res: Response,
   responseBody?: Data,
 ): Log => ({
-  name,
+  name: name ?? 'N/A',
   request: { method, path, query, body },
   response: {
     status: res.statusCode,
@@ -54,16 +54,13 @@ export const configureServer = (
 ): Express => {
   const app = express()
   const ROOT = '/'
-  const LOG_PATH = '/logs'
-  const ignoredLogPaths = [ROOT, LOG_PATH]
+  const ignoredLogPaths = [ROOT]
 
-  // const logs: Log[] = []
   app.use(handleError)
   app.use(express.text())
   app.use(express.json())
   app.use(express.raw())
   app.get(ROOT, (_, res) => res.json(mockConfigs))
-  // app.get(LOG_PATH, (_, res) => res.json(logs.reverse().slice(0, 15)))
 
   mockConfigs.forEach(({ name, request, response }) => {
     const endpoint = request.endpoint.split('?')[0]
@@ -72,8 +69,9 @@ export const configureServer = (
       try {
         if (request.type) {
           const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)
-          logger.warn(`An endpoint for ${req.path} exists but the body did not match the type`, { problems })
-          // TODO: I want to somehow log these problems somewhere. Also, the output should be different from the above
+          logger.warn(`An endpoint for ${req.path} exists but the request body did not match the type`, {
+            problems,
+          })
           if (problems) return next()
         }
 
@@ -82,20 +80,12 @@ export const configureServer = (
 
         if (response.code) res.status(response.code)
         if (response.headers) res.set(response.headers)
-        const { method, path, query, body } = req
 
         if (!ignoredLogPaths.includes(req.path)) {
           const shortenedBody = response.body?.toString().substr(0, 30)
+          const bodyToLog = `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
 
-          // TODO: logging needs to be made much nicer. Just use winston
-          logger.info({
-            request: { method, path, query, body },
-            response: {
-              status: res.statusCode,
-              body: `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`,
-            },
-          })
-          // logs.push(mapLog(name, req, res, response.body))
+          logger.info(mapLog(name, req, res, bodyToLog))
         }
 
         res.send(response.body)
@@ -109,24 +99,16 @@ export const configureServer = (
   app.use((req, res, next) => {
     try {
       res.status(404)
-      const { method, path, query, body } = req
 
-      const response =
-        'NCDC ERROR: Could not find an endpoint to serve this request\n\n' +
-        `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations\n` +
-        `Go to ${baseUrl}${LOG_PATH} to see details about this request\n`
+      const responseBody =
+        'NCDC ERROR: Could not find an endpoint to serve this request.\n\n' +
+        `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations.`
+
       if (!ignoredLogPaths.includes(req.path)) {
-        // TODO: logging needs to be made much nicer. Just use winston
-        logger.error({
-          request: { method, path, query, body },
-          response: {
-            status: res.statusCode,
-            body: 'NCDC ERROR: Could not find an endpoint to serve this request',
-          },
-        })
+        logger.error(mapLog(undefined, req, res, responseBody.replace(/\n+/g, ' ')))
       }
 
-      res.send(response)
+      res.send(responseBody)
     } catch (err) {
       handleError(err, req, res, next)
     }

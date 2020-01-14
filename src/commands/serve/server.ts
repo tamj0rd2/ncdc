@@ -4,7 +4,7 @@ import { Server } from 'http'
 import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
 import { SupportedMethod, Config } from '~config'
-import logger from './logger'
+import serverLogger from './serverLogger'
 import { inspect } from 'util'
 
 export interface Log {
@@ -40,7 +40,7 @@ const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
   if (res.headersSent) return next()
 
   const { method, path, query, headers, body } = req
-  logger.error(
+  serverLogger.error(
     `Error while serving ${inspect({ method, path, query, headers, body }, false, undefined, true)}`,
     err,
   )
@@ -69,9 +69,12 @@ export const configureServer = (
       try {
         if (request.type) {
           const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)
-          logger.warn(`An endpoint for ${req.path} exists but the request body did not match the type`, {
-            problems,
-          })
+          serverLogger.warn(
+            `An endpoint for ${req.path} exists but the request body did not match the type`,
+            {
+              problems,
+            },
+          )
           if (problems) return next()
         }
 
@@ -85,7 +88,7 @@ export const configureServer = (
           const shortenedBody = response.body?.toString().substr(0, 30)
           const bodyToLog = `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
 
-          logger.info(mapLog(name, req, res, bodyToLog))
+          serverLogger.info(mapLog(name, req, res, bodyToLog))
         }
 
         res.send(response.body)
@@ -93,7 +96,7 @@ export const configureServer = (
         handleError(err, req, res, next)
       }
     })
-    logger.info(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
+    serverLogger.info(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
   })
 
   app.use((req, res, next) => {
@@ -105,7 +108,7 @@ export const configureServer = (
         `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations.`
 
       if (!ignoredLogPaths.includes(req.path)) {
-        logger.error(mapLog(undefined, req, res, responseBody.replace(/\n+/g, ' ')))
+        serverLogger.error(mapLog(undefined, req, res, responseBody.replace(/\n+/g, ' ')))
       }
 
       res.send(responseBody)
@@ -131,7 +134,7 @@ export const startServer = (
     })
 
     return app.listen(port, () => {
-      logger.info(`Endpoints are being served on ${serverRoot}`)
+      serverLogger.info(`Endpoints are being served on ${serverRoot}`)
     })
   })
 }

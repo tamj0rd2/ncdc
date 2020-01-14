@@ -3,7 +3,7 @@ import { inspect } from 'util'
 import { blue } from 'chalk'
 import Problem from '~problem'
 
-const logger = createLogger({
+const serverLogger = createLogger({
   exitOnError: false,
   transports: [
     new transports.Console({
@@ -37,4 +37,4 @@ const logger = createLogger({
   ],
 })
 
-export default logger
+export default serverLogger

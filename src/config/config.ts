@@ -6,12 +6,16 @@ import { ResponseConfig, mapResponseConfig, testResponseSchema, serveResponseSch
 import { TypeValidator } from '~validation'
 import { createGetBodyToUse } from './body'
 import { Mode } from './types'
+import Problem from '~problem'
 
 export interface Config {
   name: string
   request: RequestConfig
   response: ResponseConfig
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isProblemArray = (x: any): x is ReadonlyArray<Problem> => !!(x[0] as Optional<Problem>)?.path
 
 export default async function readConfig(
   configPath: string,
@@ -45,14 +49,21 @@ export default async function readConfig(
     configs
       .filter(x => mode === Mode.Serve || !x.serveOnly)
       .map(
-        async ({ name, request, response }): Promise<Config[]> => {
-          const requestConfigs = await mapRequestConfig(request, typeValidator, getBody)
-          const responseConfig = await mapResponseConfig(response, typeValidator, getBody)
+        async ({ name, request, response }): Promise<Config[] | ReadonlyArray<Problem>> => {
+          const requestResult = await mapRequestConfig(request, typeValidator, getBody)
+          const responseResult = await mapResponseConfig(response, typeValidator, getBody)
 
-          return requestConfigs.map<Config>((requestConfig, i) => ({
-            name: requestConfigs.length === 1 ? name : `${name} [${i}]`,
+          if (isProblemArray(requestResult) || isProblemArray(responseResult)) {
+            const problems: Problem[] = []
+            if (isProblemArray(requestResult)) problems.push(...requestResult)
+            if (isProblemArray(responseResult)) problems.push(...responseResult)
+            return problems
+          }
+
+          return requestResult.map<Config>((requestConfig, i) => ({
+            name: requestResult.length === 1 ? name : `${name} [${i}]`,
             request: requestConfig,
-            response: responseConfig,
+            response: responseResult,
           }))
         },
       ),

@@ -1,5 +1,5 @@
-import { TypeValidator, TypeValidationError } from '~validation'
-import { ProblemType } from '~problem'
+import { TypeValidator } from '~validation'
+import Problem, { ProblemType } from '~problem'
 import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from '../body'
 import { TestRequestSchema } from './test-schema'
@@ -31,14 +31,15 @@ export const mapRequestConfig = async (
   validatedConfig: RequestSchema,
   typeValidator: TypeValidator,
   getRequestBody: GetBodyToUse,
-): Promise<RequestConfigArray> => {
+): Promise<RequestConfigArray | ReadonlyArray<Problem>> => {
   const { type, method, headers } = validatedConfig
 
   const bodyToUse: Optional<Data> = await getRequestBody(validatedConfig)
 
   if (bodyToUse && type) {
+    // TODO: needs to have some logging
     const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Request)
-    if (problems) throw new TypeValidationError(problems)
+    if (problems) return problems
   }
 
   const endpointsToUse: PopulatedArray<string> = chooseEndpoints(validatedConfig)

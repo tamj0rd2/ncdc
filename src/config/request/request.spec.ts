@@ -1,4 +1,4 @@
-import { mapRequestConfig, RequestSchema } from './request'
+import { mapRequestConfig, RequestSchema, RequestConfig } from './request'
 import { mockObj, mockFn, mockCtor } from '~test-helpers'
 import { TypeValidator, TypeValidationError } from '~validation'
 import Problem, { ProblemType } from '~problem'
@@ -70,7 +70,9 @@ describe('mapRequestConfig', () => {
       endpoints: ['/endpoint1', '/endpoint2'],
     }
 
-    const configs = await mapRequestConfig(requestSchema, typeValidator, getRequestBody)
+    const configs = (await mapRequestConfig(requestSchema, typeValidator, getRequestBody)) as PopulatedArray<
+      RequestConfig
+    >
 
     expect(configs).toHaveLength(2)
     expect(configs[0].endpoint).toEqual('/endpoint1')
@@ -84,7 +86,9 @@ describe('mapRequestConfig', () => {
       serveEndpoint: 'supa hot',
     }
 
-    const configs = await mapRequestConfig(requestSchema, typeValidator, getRequestBody)
+    const configs = (await mapRequestConfig(requestSchema, typeValidator, getRequestBody)) as PopulatedArray<
+      RequestConfig
+    >
 
     expect(configs).toHaveLength(1)
     expect(configs[0].endpoint).toEqual('supa hot')

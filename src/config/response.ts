@@ -1,7 +1,7 @@
 import { object, number, mixed, string, InferType } from 'yup'
 import { OutgoingHttpHeaders } from 'http'
 import { TypeValidator, TypeValidationError } from '~validation'
-import { ProblemType } from '~problem'
+import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
 import enrichYup from './methods'
 
@@ -42,18 +42,14 @@ export const mapResponseConfig = async (
   validatedConfig: ResponseSchema,
   typeValidator: TypeValidator,
   getResponseBody: GetBodyToUse,
-): Promise<ResponseConfig> => {
+): Promise<ResponseConfig | ReadonlyArray<Problem>> => {
   const { code, type, headers } = validatedConfig
 
   const bodyToUse = await getResponseBody(validatedConfig)
 
   if (bodyToUse && type) {
     const problems = await typeValidator.getProblems(bodyToUse, type, ProblemType.Response)
-    if (problems) {
-      // TODO: add some problem logging here
-      const error = new TypeValidationError(problems)
-      throw error
-    }
+    if (problems) return problems
   }
 
   return {

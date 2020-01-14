@@ -35,7 +35,7 @@ const logger = createLogger({
         normalizeMessage(),
         extractStack(),
         format.printf(info => {
-          let result = `${info.timestamp} - ${info.level}: `
+          let result = `${info.level}: `
           result += info.message
           result += IS_DEBUG_MODE && info?.stack ? `\n${info?.stack}` : ''
           return result

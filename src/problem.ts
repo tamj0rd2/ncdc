@@ -15,6 +15,8 @@ const is = <T extends ProblemContext>(ctx: ProblemContext, prop: keyof T): ctx i
   (ctx as T)[prop] !== undefined
 
 export default class Problem {
+  public static readonly rootPath = '<root>'
+
   private readonly _path?: string
   public readonly message: string
   public readonly data?: Data
@@ -36,18 +38,19 @@ export default class Problem {
   }
 
   public get path(): string {
-    return `<root>${this._path ?? ''}`
+    return `${Problem.rootPath}${this._path ?? ''}`
   }
 
   private mapData = (data: Data): Data => {
+    if (data === null || data === undefined) return data
     if (typeof data === 'string') return data.length >= 50 ? `${data.substring(0, 50)}...` : data
     if (typeof data === 'object')
       return Array.isArray(data)
         ? data.map(this.mapData)
         : Object.keys(data).reduce<DataObject>((accum, key) => {
-            accum[key] = this.mapData(data[key])
-            return accum
-          }, {})
+          accum[key] = this.mapData(data[key])
+          return accum
+        }, {})
     return data
   }
 }

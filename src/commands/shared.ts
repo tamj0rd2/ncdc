@@ -1,6 +1,6 @@
 import { TypeValidator } from '~validation'
 import Problem from '~problem'
-import { blue } from 'chalk'
+import { blue, yellow } from 'chalk'
 import logger from '~logger'
 import { inspect } from 'util'
 
@@ -11,7 +11,7 @@ export type CreateTypeValidator = (
   schemaPath?: string,
 ) => TypeValidator
 
-const groupBy = <T>(items: T[], getKey: (item: T) => string): Map<string, T[]> =>
+const groupBy = <T>(items: ReadonlyArray<T>, getKey: (item: T) => string): Map<string, ReadonlyArray<T>> =>
   items.reduce((map, item) => {
     const key = getKey(item)
     const collection = map.get(key)
@@ -23,17 +23,22 @@ const groupBy = <T>(items: T[], getKey: (item: T) => string): Map<string, T[]> =
     return map
   }, new Map<string, T[]>())
 
-export const logValidationErrors = (problems: Problem[]): void => {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const colorInspect = (obj: any, depth?: number) => inspect(obj, false, depth, true)
+
+export const logValidationErrors = (problems: ReadonlyArray<Problem>): void => {
   groupBy(problems, x => x.path).forEach((groupedProblems, dataPath) => {
     groupBy(groupedProblems, x => x.problemType).forEach((groupedByType, type) => {
-      groupedByType.forEach(({ message }) => {
+      const result = groupedByType.map(({ message }) => {
         const messagePrefix = blue(`${type} ${dataPath}`)
-        logger.info(`${messagePrefix} ${message}`)
+        return `${messagePrefix} ${message}`
       })
 
       const { data, schema } = groupedProblems[0]
-      if (data) logger.info(`Data: ${inspect(data, false, 4, true)}`)
-      if (schema) logger.info(`Schema: ${inspect(schema, false, 4, true)}`)
+      if (data) result.push(`${yellow('Data:')} ${colorInspect(data, dataPath === Problem.rootPath ? 0 : 4)}`)
+      if (schema) result.push(`${yellow('Schema:')} ${colorInspect(schema, 2)}`)
+
+      logger.error(result.join('\n'))
     })
   })
 }

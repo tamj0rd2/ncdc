@@ -8,6 +8,7 @@ interface BodyConfig {
   serveBodyPath?: string
 }
 
+// TODO: rename this silly thing to GetResponseBody
 export type GetBodyToUse = (config: BodyConfig) => Promise<Optional<Data>>
 
 export const createGetBodyToUse = (configPath: string): GetBodyToUse => async config => {

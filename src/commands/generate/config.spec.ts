@@ -4,8 +4,6 @@ import { safeLoad } from 'js-yaml'
 import { readFileAsync } from '~io'
 
 jest.unmock('./config')
-// TODO: fix this yup workaround
-jest.unmock('yup')
 
 describe('readGenerateConfig', () => {
   afterEach(() => jest.resetAllMocks())

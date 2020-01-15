@@ -1,5 +1,5 @@
 import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
-import chalk from 'chalk'
+import { blue } from 'chalk'
 import { Server } from 'http'
 import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
@@ -96,7 +96,7 @@ export const configureServer = (
         handleError(err, req, res, next)
       }
     })
-    serverLogger.info(`Registered ${baseUrl}${endpoint} from config: ${chalk.blue(name)}`)
+    serverLogger.info(`Registered ${baseUrl}${endpoint} from config: ${blue(name)}`)
   })
 
   app.use((req, res, next) => {

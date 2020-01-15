@@ -3,8 +3,6 @@ import { RequestSchema } from '.'
 
 jest.unmock('./test-schema')
 jest.unmock('./schema-shared')
-jest.unmock('../methods')
-jest.unmock('yup')
 
 describe('getTestSchema', () => {
   afterEach(() => {

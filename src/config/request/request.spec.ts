@@ -5,9 +5,6 @@ import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from '../body'
 
 jest.unmock('./request')
-// TODO: remove yup workaround
-jest.unmock('yup')
-jest.unmock('../methods')
 
 describe('mapRequestConfig', () => {
   const getRequestBody = mockFn<GetBodyToUse>()

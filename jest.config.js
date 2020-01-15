@@ -12,6 +12,9 @@ module.exports = {
   },
   unmockedModulePathPatterns: [
     '<rootDir>/src/test-helpers.ts',
+    '<rootDir>/src/config/methods.ts',
+    require.resolve('winston'),
+    require.resolve('yup'),
   ],
   testEnvironment: 'node',
   collectCoverageFrom: [

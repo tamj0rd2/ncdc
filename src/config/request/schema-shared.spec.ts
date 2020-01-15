@@ -1,8 +1,6 @@
 import { baseRequestSchema } from './schema-shared'
 
 jest.unmock('./schema-shared')
-jest.unmock('../methods')
-jest.unmock('yup')
 
 describe('baseRequestSchema', () => {
   afterEach(() => {

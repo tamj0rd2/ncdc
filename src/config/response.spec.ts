@@ -4,10 +4,7 @@ import { TypeValidator, TypeValidationError } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
 
-// TODO: remove this yup workaround
-jest.unmock('yup')
 jest.unmock('./response')
-jest.unmock('./methods')
 
 // TODO: add tests for the schemas themselves
 describe('mapResponseConfig', () => {

@@ -3,8 +3,6 @@ import { RequestSchema } from '.'
 
 jest.unmock('./serve-schema')
 jest.unmock('./schema-shared')
-jest.unmock('../methods')
-jest.unmock('yup')
 
 describe('serveRequestSchema', () => {
   afterEach(() => {

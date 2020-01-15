@@ -1,8 +1,6 @@
 import { string, number, object } from 'yup'
 import enrichYup from './methods'
 
-jest.unmock('yup')
-jest.unmock('./methods')
 enrichYup()
 
 describe('allowedKeysOnly', () => {

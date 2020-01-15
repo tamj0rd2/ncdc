@@ -30,9 +30,12 @@ describe('readConfig', () => {
 
   beforeEach(() => {
     createGetBodyToUse.mockReturnValue(getBodyToUse)
-    // TODO: would be cool to fix these
+    // TODO: would be cool to fix these not to use any
     getTestSchema.mockReturnValue({ required: jest.fn(() => ({ resolve: jest.fn() })) } as any)
     getServeSchema.mockReturnValue({ required: jest.fn(() => ({ resolve: jest.fn() })) } as any)
+
+    mapRequestConfig.mockResolvedValue([{} as _request.RequestConfig])
+    mapResponseConfig.mockResolvedValue({} as _response.ResponseConfig)
   })
 
   afterEach(() => jest.resetAllMocks())
@@ -78,7 +81,6 @@ describe('readConfig', () => {
     ]
 
     safeLoad.mockReturnValue(loadedConfigs)
-    mapRequestConfig.mockResolvedValue([{} as _request.RequestConfig])
 
     await readConfig('path', typeValidator, Mode.Test)
 

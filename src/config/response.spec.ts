@@ -97,10 +97,11 @@ describe('mapResponseConfig', () => {
       const mappedBody = { hello: 'world' }
       getBodyToUse.mockResolvedValue(mappedBody)
 
-      typeValidator.getProblems.mockResolvedValue([{} as Problem])
+      const problems: PopulatedArray<Problem> = [{} as Problem]
+      typeValidator.getProblems.mockResolvedValue(problems)
       mockCtor(TypeValidationError).mockImplementation(() => new Error('Yikes'))
 
-      await expect(mapResponseConfig(rawConfig, typeValidator, getBodyToUse)).rejects.toThrowError('Yikes')
+      await expect(mapResponseConfig(rawConfig, typeValidator, getBodyToUse)).resolves.toEqual(problems)
     })
   })
 })

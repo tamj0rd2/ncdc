@@ -18,7 +18,6 @@
       {
         "root": ["./src"],
         "alias": {
-          // "^@namespace/foo-(.+)": "packages/\\1",
           "~(.*)$": "./src/\\1"
         }
       }

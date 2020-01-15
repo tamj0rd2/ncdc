@@ -8,9 +8,8 @@ import { createGetBodyToUse } from './body'
 import { Mode } from './types'
 import { getConfigSchema } from './schema'
 import { mapConfig, containsProblemResult, isProblemResult } from './mapper'
-import { red } from 'chalk'
-import { logValidationErrors, gatherValidationErrors } from '~commands/shared'
 import logger from '~logger'
+import { validationFailed } from '~messages'
 
 export interface Config {
   name: string
@@ -38,10 +37,7 @@ export default async function readConfig(
 
   if (containsProblemResult(mappingResult)) {
     for (const result of mappingResult.filter(isProblemResult)) {
-      const validationString = gatherValidationErrors(result.problems)
-      // TODO: make this nicer. I miss the big bold red text
-      logger.validationError(`${result.name} failed validation\n${validationString}\n`)
-      // logValidationErrors(result.problems)
+      logger.error(validationFailed(result))
     }
 
     process.exit(1)

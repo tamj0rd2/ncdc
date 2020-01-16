@@ -57,7 +57,7 @@ recognised, so schemas will not be generated for them.
 
 Generating schemas is optional but can be useful for caching purposes.
 
-You can find more information about generating schemas [here](#ncdc-generate)
+You can find more information about generating schemas [here](#generate)
 
 ### Running tests
 
@@ -72,7 +72,7 @@ meet these requirements:
 - It responds with the content-type header set to application/json
 - The response body is an object
 
-You can find more information about test mode [here](#ncdc-test)
+You can find more information about test mode [here](#test)
 
 ### Serving mocks
 
@@ -86,7 +86,7 @@ to `/api/books/*`, any requests starting with
 - content-type header as application/json
 - body as the value of `serveBody`
 
-You can find more information about serve mode [here](#ncdc-serve)
+You can find more information about serve mode [here](#serve)
 
 ## CLI usage
 
@@ -116,76 +116,79 @@ Examples:
 
 ## Modes
 
-### ncdc generate
+### Generate
 
 <details>
-<summary>CLI Usage: npx ncdc generate --help</summary>
+<summary>CLI Usage</summary>
 <pre>
-ncdc generate <configPath>
+$ npx ncdc generate --help
+ncdc generate &lt;configPath&gt;
 
 Generates a json schema for each type specified in the config file
 
 Positionals:
-configPath path to the mock config [string][required]
+  configPath  path to the mock config                        [string] [required]
 
 Options:
---help Show help [boolean]
---tsconfigPath, -c a path to the tsconfig which contains required
-symbols [string][default: "./tsconfig.json"]
---outputPath, -o, --output sets an output folder for the json schemas
-[string][default: "./json-schema"]
-
+  --version                   Show version number                      [boolean]
+  --help                      Show help                                [boolean]
+  --tsconfigPath, -c          a path to the tsconfig which contains required
+                              symbols      [string] [default: "./tsconfig.json"]
+  --outputPath, -o, --output  sets an output folder for the json schemas
+                                             [string] [default: "./json-schema"]
 </pre>
 </details>
 
-### ncdc test
+### Test
 
 <details>
-<summary>CLI Usage: npx ncdc test --help</summary>
+<summary>CLI Usage</summary>
 <pre>
-ncdc test <configPath> <baseURL>
+$ ./bin/ncdc test --help
+ncdc test &lt;configPath&gt; &lt;baseURL&gt;
 
 Tests configured endpoints
 
 Positionals:
-configPath path to the mock config [string][required]
-baseURL the URL that your endpoints should be accessed through
-[string][required]
+  configPath  path to the mock config                        [string] [required]
+  baseURL     the URL that your endpoints should be accessed through
+                                                             [string] [required]
 
 Options:
---help Show help [boolean]
---allErrors, -a show all validation errors per test instead of failing
-fast [boolean][default: false]
---schemaPath specify a path to load json schemas from, rather than
-generating them [string]
---tsconfigPath, -c a path to the tsconfig which contains required symbols
-[string][default: "./tsconfig.json"]
-
+  --version           Show version number                              [boolean]
+  --help              Show help                                        [boolean]
+  --allErrors, -a     show all validation errors per test instead of failing
+                      fast                            [boolean] [default: false]
+  --schemaPath        specify a path to load json schemas from, rather than
+                      generating them                                   [string]
+  --tsconfigPath, -c  a path to the tsconfig which contains required symbols
+                                           [string] [default: "./tsconfig.json"]
 </pre>
 </details>
 
-### ncdc serve
+### Serve
 
 <details>
-<summary>CLI Usage: npx ncdc serve --help</summary>
+<summary>CLI Usage</summary>
 <pre>
-ncdc serve <configPath> [port]
+$ ./bin/ncdc serve --help
+ncdc serve &lt;configPath&gt; [port]
 
 Serves configured endpoints
 
 Positionals:
-configPath path to the mock config [string][required]
-port port to serve the API on [number][default: 4000]
+  configPath  path to the mock config                        [string] [required]
+  port        port to serve the API on                  [number] [default: 4000]
 
 Options:
---help Show help [boolean]
---allErrors, -a show all validation errors per test instead of failing
-fast [boolean][default: false]
---schemaPath specify a path to load json schemas from, rather than
-generating them [string]
---tsconfigPath, -c a path to the tsconfig which contains required symbols
-[string][default: "./tsconfig.json"]
-
+  --version           Show version number                              [boolean]
+  --help              Show help                                        [boolean]
+  --allErrors, -a     show all validation errors per test instead of failing
+                      fast                            [boolean] [default: false]
+  --schemaPath        specify a path to load json schemas from, rather than
+                      generating them                                   [string]
+  --tsconfigPath, -c  a path to the tsconfig which contains required symbols
+                                           [string] [default: "./tsconfig.json"]
 </pre>
 </details>
 

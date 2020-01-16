@@ -1,3 +1,5 @@
+<img align="right" alt="Ajv logo" width="160" src="./icon.png">
+
 # NCDC
 
 NCDC (or node cdc) is a tool that takes a consumer contract (written in yaml)

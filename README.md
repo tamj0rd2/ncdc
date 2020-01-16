@@ -114,69 +114,80 @@ Examples:
                                             match the configured parameters
 ```
 
+## Modes
+
 ### ncdc generate
 
-```
-$ npx ncdc generate --help
+<details>
+<summary>CLI Usage: npx ncdc generate --help</summary>
+<pre>
 ncdc generate <configPath>
 
 Generates a json schema for each type specified in the config file
 
 Positionals:
-  configPath  path to the mock config                        [string] [required]
+configPath path to the mock config [string][required]
 
 Options:
-  --help                      Show help                                [boolean]
-  --tsconfigPath, -c          a path to the tsconfig which contains required
-                              symbols      [string] [default: "./tsconfig.json"]
-  --outputPath, -o, --output  sets an output folder for the json schemas
-                                             [string] [default: "./json-schema"]
-```
+--help Show help [boolean]
+--tsconfigPath, -c a path to the tsconfig which contains required
+symbols [string][default: "./tsconfig.json"]
+--outputPath, -o, --output sets an output folder for the json schemas
+[string][default: "./json-schema"]
+
+</pre>
+</details>
 
 ### ncdc test
 
-```
-$ npx ncdc test --help
+<details>
+<summary>CLI Usage: npx ncdc test --help</summary>
+<pre>
 ncdc test <configPath> <baseURL>
 
 Tests configured endpoints
 
 Positionals:
-  configPath  path to the mock config                        [string] [required]
-  baseURL     the URL that your endpoints should be accessed through
-                                                             [string] [required]
+configPath path to the mock config [string][required]
+baseURL the URL that your endpoints should be accessed through
+[string][required]
 
 Options:
-  --help              Show help                                        [boolean]
-  --allErrors, -a     show all validation errors per test instead of failing
-                      fast                            [boolean] [default: false]
-  --schemaPath        specify a path to load json schemas from, rather than
-                      generating them                                   [string]
-  --tsconfigPath, -c  a path to the tsconfig which contains required symbols
-                                           [string] [default: "./tsconfig.json"]
-```
+--help Show help [boolean]
+--allErrors, -a show all validation errors per test instead of failing
+fast [boolean][default: false]
+--schemaPath specify a path to load json schemas from, rather than
+generating them [string]
+--tsconfigPath, -c a path to the tsconfig which contains required symbols
+[string][default: "./tsconfig.json"]
+
+</pre>
+</details>
 
 ### ncdc serve
 
-```
-$ npx ncdc serve --help
+<details>
+<summary>CLI Usage: npx ncdc serve --help</summary>
+<pre>
 ncdc serve <configPath> [port]
 
 Serves configured endpoints
 
 Positionals:
-  configPath  path to the mock config                        [string] [required]
-  port        port to serve the API on                  [number] [default: 4000]
+configPath path to the mock config [string][required]
+port port to serve the API on [number][default: 4000]
 
 Options:
-  --help              Show help                                        [boolean]
-  --allErrors, -a     show all validation errors per test instead of failing
-                      fast                            [boolean] [default: false]
-  --schemaPath        specify a path to load json schemas from, rather than
-                      generating them                                   [string]
-  --tsconfigPath, -c  a path to the tsconfig which contains required symbols
-                                           [string] [default: "./tsconfig.json"]
-```
+--help Show help [boolean]
+--allErrors, -a show all validation errors per test instead of failing
+fast [boolean][default: false]
+--schemaPath specify a path to load json schemas from, rather than
+generating them [string]
+--tsconfigPath, -c a path to the tsconfig which contains required symbols
+[string][default: "./tsconfig.json"]
+
+</pre>
+</details>
 
 ## Config files
 

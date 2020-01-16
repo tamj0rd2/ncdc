@@ -59,7 +59,7 @@ config.yml:
 
 This configuration file contains a single config with the name Books.
 
-You can find more information about writing configs [here](./CONFIG.md)
+You can find more information about writing configurations [here](./CONFIG.md#config)
 
 ### Generating JSON schemas
 

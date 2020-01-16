@@ -217,15 +217,14 @@ the allowed properties for each config:
 - **Description**: A single endpoint or list of endpoints that can serve the corresponding response
 - **Type**: string or string[]
 - **Required?**: Required in Test mode if serveOnly is false
-- **Example**:
-```yaml
-endpoints: /my/endpoint
-or...
-endpoints:
-- /books/1
-- /books/2
-```
-### something
+- **Example**: `endpoints: /my/endpoint` or...
+  ```
+  endpoints:
+    - /books/1
+    - /books/2
+  ```
+
+#### request.serveEndpoint
 
 - **Description**:
 - **Type**:
@@ -233,7 +232,7 @@ endpoints:
 - **Required?**:
 - **Example**:
 
-### something
+#### request.method
 
 - **Description**:
 - **Type**:
@@ -241,7 +240,7 @@ endpoints:
 - **Required?**:
 - **Example**:
 
-### something
+#### request.type
 
 - **Description**:
 - **Type**:
@@ -249,7 +248,7 @@ endpoints:
 - **Required?**:
 - **Example**:
 
-### something
+#### request.headers
 
 - **Description**:
 - **Type**:
@@ -258,7 +257,82 @@ endpoints:
 - **Example**:
 
 
-### something
+#### request.body
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+
+#### request.bodyPath
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+### response
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+#### response.code
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+#### response.headers
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+#### response.type
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+#### response.body
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+
+#### response.bodyPath
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+#### response.serveBody
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+
+#### response.serveBodyPath
 
 - **Description**:
 - **Type**:

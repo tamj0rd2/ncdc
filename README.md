@@ -19,7 +19,7 @@ mock APIs that don't strongly resemble your live APIs.
 
 ### Example config
 
-config.yaml:
+config.yml:
 
 ```yaml
 - name: Books
@@ -49,7 +49,7 @@ You can find more information about writing configs [here](#config-files)
 
 ### Generating JSON schemas
 
-`npx ncdc generate ./config.yaml --output ./schemas`
+`npx ncdc generate ./config.yml --output ./schemas`
 
 This will create JSON schemas for any request and response types specified in
 your cnofig file. `string`, `number`, `boolean` and `object` are internally
@@ -61,7 +61,7 @@ You can find more information about generating schemas [here](#generate)
 
 ### Running tests
 
-`npx ncdc test ./config.yaml https://example.com`
+`npx ncdc test ./config.yml https://example.com`
 
 This will run tests for each configuration. In this case, it will run a separate
 test for each specified endpoint. It will make sure that GET requests to
@@ -76,7 +76,7 @@ You can find more information about test mode [here](#test)
 
 ### Serving mocks
 
-`npx ncdc serve ./config.yaml 3000`
+`npx ncdc serve ./config.yml 3000`
 
 This will serve each configured endpoint on port 3000. As `serveEndpoint` is set
 to `/api/books/*`, any requests starting with
@@ -186,7 +186,86 @@ Options:
                                            [string] [default: "./tsconfig.json"]
 ```
 
-## Config files
+## Config file
+
+The config file must be a yaml document containing a list of configs. Here are
+the allowed properties for each config:
+
+### name
+
+- **Description**: An identifier for the configuration
+- **Type**: string
+- **Required?**: Yes
+- **Example**: `name: My First Config`
+
+### serveOnly
+
+- **Description**: Indicates that this configuration should not be tested, only served
+- **Type**: boolean
+- **Default value**: false
+- **Required?**: No
+- **Example**: `serveOnly: true`
+
+### request
+
+- **Description**: Contains configuration options for the request
+- **Type**: object
+- **Required?**: Yes
+
+#### request.endpoints
+
+- **Description**: A single endpoint or list of endpoints that can serve the corresponding response
+- **Type**: string or string[]
+- **Required?**: Required in Test mode if serveOnly is false
+- **Example**:
+```yaml
+endpoints: /my/endpoint
+or...
+endpoints:
+- /books/1
+- /books/2
+```
+### something
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+### something
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+### something
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+### something
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
+
+### something
+
+- **Description**:
+- **Type**:
+- **Default value**:
+- **Required?**:
+- **Example**:
+
 
 | Property                | Description                                                                                                                                                                                                                                                            | Type                       | Default | Required?                                                        | Example                                                                            |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------- |

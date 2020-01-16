@@ -118,9 +118,8 @@ Examples:
 
 ### Generate
 
-<details>
-<summary>CLI Usage</summary>
-<pre>
+#### CLI Usage
+```
 $ npx ncdc generate --help
 ncdc generate &lt;configPath&gt;
 
@@ -136,14 +135,12 @@ Options:
                               symbols      [string] [default: "./tsconfig.json"]
   --outputPath, -o, --output  sets an output folder for the json schemas
                                              [string] [default: "./json-schema"]
-</pre>
-</details>
+```
 
 ### Test
 
-<details>
-<summary>CLI Usage</summary>
-<pre>
+#### CLI Usage
+```
 $ ./bin/ncdc test --help
 ncdc test &lt;configPath&gt; &lt;baseURL&gt;
 
@@ -163,14 +160,12 @@ Options:
                       generating them                                   [string]
   --tsconfigPath, -c  a path to the tsconfig which contains required symbols
                                            [string] [default: "./tsconfig.json"]
-</pre>
-</details>
+```
 
 ### Serve
 
-<details>
-<summary>CLI Usage</summary>
-<pre>
+#### CLI Usage
+```
 $ ./bin/ncdc serve --help
 ncdc serve &lt;configPath&gt; [port]
 
@@ -189,8 +184,7 @@ Options:
                       generating them                                   [string]
   --tsconfigPath, -c  a path to the tsconfig which contains required symbols
                                            [string] [default: "./tsconfig.json"]
-</pre>
-</details>
+```
 
 ## Config files
 

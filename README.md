@@ -133,33 +133,37 @@ Examples:
 ### CLI Usage
 ```
 $ npx ncdc generate --help
-ncdc generate &lt;configPath&gt;
+ncdc generate <configPath>
 
 Generates a json schema for each type specified in the config file
 
 Positionals:
-  configPath  path to the mock config                        [string] [required]
+  configPath  path to the ncdc config file                   [string] [required]
 
 Options:
   --version                   Show version number                      [boolean]
   --help                      Show help                                [boolean]
-  --tsconfigPath, -c          a path to the tsconfig which contains required
-                              symbols      [string] [default: "./tsconfig.json"]
+  --tsconfigPath, -c          a path to the tsconfig file which contains the
+                              types specified in the given config file
+                                           [string] [default: "./tsconfig.json"]
   --outputPath, -o, --output  sets an output folder for the json schemas
                                              [string] [default: "./json-schema"]
+
+Examples:
+  ncdc generate ./config.yml  Generates json schemas for any type specified in
+                              config.yml
 ```
 
 ## Test
 
 ### CLI Usage
 ```
-$ ./bin/ncdc test --help
-ncdc test &lt;configPath&gt; &lt;baseURL&gt;
+ncdc test <configPath> <baseURL>
 
 Tests configured endpoints
 
 Positionals:
-  configPath  path to the mock config                        [string] [required]
+  configPath  path to the ncdc config file                   [string] [required]
   baseURL     the URL that your endpoints should be accessed through
                                                              [string] [required]
 
@@ -167,29 +171,41 @@ Options:
   --version           Show version number                              [boolean]
   --help              Show help                                        [boolean]
   --schemaPath        specify a path to load json schemas from, rather than
-                      generating them                                   [string]
-  --tsconfigPath, -c  a path to the tsconfig which contains required symbols
+                      generating schmas for types specified in ncdc config at
+                      runtime                                           [string]
+  --tsconfigPath, -c  a path to the tsconfig file which contains the types
+                      specified in the given config file
                                            [string] [default: "./tsconfig.json"]
+
+Examples:
+  ncdc test ./config.yml                    Tests that the responses for the API
+  https://mysite.com                        endpoints defined in config.yml
+                                            match the configured parameters
 ```
 
 ## Serve
 
 ### CLI Usage
 ```
-$ ./bin/ncdc serve --help
-ncdc serve &lt;configPath&gt; [port]
+ncdc serve <configPath> [port]
 
 Serves configured endpoints
 
 Positionals:
-  configPath  path to the mock config                        [string] [required]
+  configPath  path to the ncdc config file                   [string] [required]
   port        port to serve the API on                  [number] [default: 4000]
 
 Options:
   --version           Show version number                              [boolean]
   --help              Show help                                        [boolean]
   --schemaPath        specify a path to load json schemas from, rather than
-                      generating them                                   [string]
-  --tsconfigPath, -c  a path to the tsconfig which contains required symbols
+                      generating schmas for types specified in ncdc config at
+                      runtime                                           [string]
+  --tsconfigPath, -c  a path to the tsconfig file which contains the types
+                      specified in the given config file
                                            [string] [default: "./tsconfig.json"]
+
+Examples:
+  ncdc serve ./config.yml 4000  Serves the mock API endpoints defined in
+                                config.yml on port 4000
 ```

@@ -4,6 +4,7 @@ import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import { readGenerateConfig, GenerateConfigs } from './config'
 import logger from '~logger'
+import * as consts from '~commands/consts'
 
 interface GenerateArgs {
   configPath?: string
@@ -13,15 +14,15 @@ interface GenerateArgs {
 
 const builder = (yargs: Argv): Argv<GenerateArgs> =>
   yargs
-    .positional('configPath', {
-      describe: 'path to the mock config',
-      type: 'string',
+    .positional(consts.CONFIG_PATH, {
+      describe: consts.CONFIG_PATH_DESCRIBE,
+      type: consts.CONFIG_PATH_TYPE,
     })
-    .option('tsconfigPath', {
-      alias: 'c',
-      type: 'string',
-      description: 'a path to the tsconfig which contains required symbols',
-      default: './tsconfig.json',
+    .option(consts.TSCONFIG_PATH, {
+      alias: consts.TSCONFIG_ALIAS,
+      type: consts.TSCONFIG_TYPE,
+      description: consts.TSCONFIG_DESCRIPTION,
+      default: consts.TSCONFIG_DEFAULT,
     })
     .option('outputPath', {
       alias: ['o', 'output'],
@@ -29,6 +30,7 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
       description: 'sets an output folder for the json schemas',
       default: './json-schema',
     })
+    .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
 
 const createHandler = (handleError: HandleError) => async (args: GenerateArgs): Promise<void> => {
   const { tsconfigPath, configPath, outputPath } = args

@@ -1,15 +1,10 @@
 import { TypeValidator } from '~validation'
 import Problem from '~problem'
 import { blue, yellow } from 'chalk'
-import logger from '~logger'
 import { inspect } from 'util'
 
 export type HandleError = (error: Error) => never
-export type CreateTypeValidator = (
-  allErrors: boolean,
-  tsconfigPath: string,
-  schemaPath?: string,
-) => TypeValidator
+export type CreateTypeValidator = (tsconfigPath: string, schemaPath?: string) => TypeValidator
 
 const groupBy = <T>(items: ReadonlyArray<T>, getKey: (item: T) => string): Map<string, ReadonlyArray<T>> =>
   items.reduce((map, item) => {

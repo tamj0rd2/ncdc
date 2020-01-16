@@ -6,9 +6,9 @@ import readConfig, { Config } from '~config'
 import { testConfigs } from './test'
 import { Mode } from '~config/types'
 import logger from '~logger'
+import * as consts from '~commands/consts'
 
 interface TestArgs {
-  allErrors: boolean
   schemaPath?: string
   tsconfigPath: string
   configPath?: string
@@ -17,38 +17,33 @@ interface TestArgs {
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
-    .option('allErrors', {
-      alias: 'a',
-      type: 'boolean',
-      description: 'show all validation errors per test instead of failing fast',
-      default: false,
-    })
-    .option('schemaPath', {
-      type: 'string',
-      description: 'specify a path to load json schemas from, rather than generating them',
-    })
-    .option('tsconfigPath', {
-      alias: 'c',
-      type: 'string',
-      description: 'a path to the tsconfig which contains required symbols',
-      default: './tsconfig.json',
-    })
-    .positional('configPath', {
-      describe: 'path to the mock config',
-      type: 'string',
+    .positional(consts.CONFIG_PATH, {
+      describe: consts.CONFIG_PATH_DESCRIBE,
+      type: consts.CONFIG_PATH_TYPE,
     })
     .positional('baseURL', {
       describe: 'the URL that your endpoints should be accessed through',
       type: 'string',
     })
+    .option(consts.SCHEMA_PATH, {
+      type: consts.SCHEMA_PATH_TYPE,
+      description: consts.SCHEMA_PATH_DESCRIPTION,
+    })
+    .option(consts.TSCONFIG_PATH, {
+      alias: consts.TSCONFIG_ALIAS,
+      type: consts.TSCONFIG_TYPE,
+      description: consts.TSCONFIG_DESCRIPTION,
+      default: consts.TSCONFIG_DEFAULT,
+    })
+    .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
 
 const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
   args: TestArgs,
 ): Promise<void> => {
-  const { configPath, baseURL, allErrors, tsconfigPath, schemaPath } = args
+  const { configPath, baseURL, tsconfigPath, schemaPath } = args
   if (!configPath || !baseURL) process.exit(1)
 
-  const typeValidator = createTypeValidator(allErrors, tsconfigPath, schemaPath)
+  const typeValidator = createTypeValidator(tsconfigPath, schemaPath)
 
   let configs: Config[]
   try {

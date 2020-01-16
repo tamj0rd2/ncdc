@@ -10,6 +10,7 @@ import TypeValidator from './validation/type-validator'
 import ajv from 'ajv'
 import { SchemaGenerator, SchemaLoader } from './schema'
 import logger from '~logger'
+import * as consts from './commands/consts'
 
 export default async function run(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,9 +19,9 @@ export default async function run(): Promise<void> {
     process.exit(1)
   }
 
-  const createTypeValidator: CreateTypeValidator = (allErrors, tsconfigPath, schemaPath) =>
+  const createTypeValidator: CreateTypeValidator = (tsconfigPath, schemaPath) =>
     new TypeValidator(
-      new ajv({ verbose: true, allErrors }),
+      new ajv({ verbose: true, allErrors: true }),
       schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath),
     )
 
@@ -30,15 +31,9 @@ export default async function run(): Promise<void> {
     .command(createGenerateCommand(handleError))
     .command(createServeCommand(handleError, createTypeValidator))
     .command(createTestCommand(handleError, createTypeValidator))
-    .example('ncdc generate ./config.yml', 'Generates json schemas for any Type specified in config.yml')
-    .example(
-      'ncdc serve ./config.yml 4000',
-      'Serves the mock API endpoints defined in config.yml on port 4000',
-    )
-    .example(
-      'ncdc test ./config.yml https://mysite.com',
-      'Tests that the responses for the API endpoints defined in config.yml match the configured parameters',
-    )
+    .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
+    .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
+    .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
     .demandCommand()
     .strict()
     .help().argv

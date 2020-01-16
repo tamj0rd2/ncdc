@@ -19,6 +19,9 @@ export default async function run(): Promise<void> {
     process.exit(1)
   }
 
+  // TODO: this should be created lazily so that it isn't created until a type
+  // is actually found in the config flie. It's possible some people will not
+  // define types at all. And in that case, this is a complete waste of time
   const createTypeValidator: CreateTypeValidator = (tsconfigPath, schemaPath) =>
     new TypeValidator(
       new ajv({ verbose: true, allErrors: true }),

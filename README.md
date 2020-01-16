@@ -1,6 +1,5 @@
 <img align="right" alt="Ajv logo" width="160" src="./icon.png">
 
-
 # NCDC
 
 NCDC (or node cdc) is a tool that takes a consumer contract (written in yaml)
@@ -11,6 +10,10 @@ The point of using this tool is to ensure that each endpoint you use in
 development is called in the same way and responds in the same way as the
 endpoints in your live environment. There's not much point in testing against
 mock APIs that don't strongly resemble your live APIs.
+
+This tool can easily integrate with typescript to prevent you from having to
+write JSON schemas for your already defined Typescript interfaces, types and
+enums.
 
 ## Contents
 
@@ -69,6 +72,8 @@ This will create JSON schemas for any request and response types specified in
 your cnofig file. `string`, `number`, `boolean` and `object` are internally
 recognised, so schemas will not be generated for them.
 
+<!-- TODO: add some info as to why someone might want to do this and how to 
+utilize is in test/serve mode -->
 Generating schemas is optional but can be useful for caching purposes.
 
 You can find more information about generating schemas [here](#generate)

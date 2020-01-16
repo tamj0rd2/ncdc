@@ -65,7 +65,8 @@ export const configureServer = (
   mockConfigs.forEach(({ name, request, response }) => {
     const endpoint = request.endpoint.split('?')[0]
 
-    // TODO: use app.use or app.all
+    // TODO: use app.use or app.all to handle all methods
+    // TODO: I should start taking query string parameters into account.
     app[verbsMap[request.method]](endpoint, async (req, res, next) => {
       try {
         if (request.type) {

@@ -1,4 +1,4 @@
-<img align="right" alt="Ajv logo" width="160" src="./icon.png">
+<a href="#readme"><img align="right" alt="Ajv logo" width="160" src="./icon.png"/></a>
 
 # NCDC
 

@@ -7,7 +7,7 @@ and tests the specified endpoints against a producer. You can also run a single
 command to mock those endpoints.
 
 The point of using this tool is to ensure that each endpoint you use in
-development is called in the same way and responds in the same way as your
+development is called in the same way and responds in the same way as the
 endpoints in your live environment. There's not much point in testing against
 mock APIs that don't strongly resemble your live APIs.
 
@@ -45,19 +45,19 @@ config.yaml:
 
 This configuration file contains a single config with the name Books.
 
-You can find more information about creating config files [here](#config-files)
+You can find more information about writing configs [here](#config-files)
 
 ### Generating JSON schemas
 
 `npx ncdc generate ./config.yaml --output ./schemas`
 
-This will create JSON schemas for any `type`s specified in the configurations.
-`string`, `number`, `boolean` and `object` are internally recognised, so schemas
-will not be generated for them.
+This will create JSON schemas for any request and response types specified in
+your cnofig file. `string`, `number`, `boolean` and `object` are internally
+recognised, so schemas will not be generated for them.
 
-Generating schemas is an optional step but can be useful for caching purposes.
+Generating schemas is optional but can be useful for caching purposes.
 
-You can find more information about test mode [here](#ncdc-generate)
+You can find more information about generating schemas [here](#ncdc-generate)
 
 ### Running tests
 
@@ -72,7 +72,7 @@ meet these requirements:
 - It responds with the content-type header set to application/json
 - The response body is an object
 
-You can find more information about serve mode [here](#ncdc-test)
+You can find more information about test mode [here](#ncdc-test)
 
 ### Serving mocks
 

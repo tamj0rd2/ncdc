@@ -1,6 +1,7 @@
 import { createLogger, transports, format } from 'winston'
 import { inspect } from 'util'
 import inspector from 'inspector'
+import escapeStringRegex from 'escape-string-regexp'
 
 const IS_DEBUG_MODE = inspector.url()
 
@@ -17,7 +18,10 @@ const extractStack = format(info => {
   if (info.metadata?.stack) {
     const newInfo = { ...info, stack: info.metadata.stack }
     const matchedError = info.metadata?.stack?.match(/Error: (.*)/)
-    if (matchedError) newInfo.message = info.message.replace(new RegExp(`${matchedError[1]}$`), '')
+    if (matchedError) {
+      const escapedSearch = escapeStringRegex(matchedError[1])
+      newInfo.message = info.message.replace(new RegExp(`${escapedSearch}$`), '')
+    }
     return newInfo
   }
   return info

@@ -1,6 +1,6 @@
 import { object, number, mixed, string, InferType } from 'yup'
 import { OutgoingHttpHeaders } from 'http'
-import { TypeValidator, TypeValidationError } from '~validation'
+import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
 import enrichYup from './methods'

@@ -1,30 +1,27 @@
 import { TypeValidator, FetchResource, doItAll } from '~validation'
 import { Config } from '~config'
 import Problem from '~problem'
-import { green, red, blue } from 'chalk'
-import { logValidationErrors } from '../shared'
+import { red, blue } from 'chalk'
 import logger from '~logger'
+import { testPassed, testFailed, testError } from '~messages'
 
+// TODO: why is this returning a number?
 // TODO: reuse this at config type validaiton type
 const logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
   problems: Problem[],
 ): 0 | 1 => {
   const displayEndpoint = blue(`${baseUrl}${endpoint}`)
   if (!problems.length) {
-    const message = [green.bold('PASSED:'), green(displayName), '-', displayEndpoint].join(' ')
-    logger.info(message)
+    logger.info(testPassed(displayName, displayEndpoint))
     return 0
   } else {
-    const message = [red.bold('FAILED:'), red(displayName), '-', displayEndpoint].join(' ')
-    logger.error(message)
-    logValidationErrors(problems)
+    logger.error(testFailed(displayName, displayEndpoint, problems))
     return 1
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const logTestError = (displayName: string) => (err: Error): void => {
-  logger.error(`${red.bold('FAILED:')} ${red(displayName)} - ${err.message}`, err)
+  logger.error(testError(displayName, err.message))
 }
 
 export const testConfigs = async (

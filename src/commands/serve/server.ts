@@ -65,6 +65,7 @@ export const configureServer = (
   mockConfigs.forEach(({ name, request, response }) => {
     const endpoint = request.endpoint.split('?')[0]
 
+    // TODO: use app.use or app.all
     app[verbsMap[request.method]](endpoint, async (req, res, next) => {
       try {
         if (request.type) {
@@ -75,11 +76,12 @@ export const configureServer = (
               problems,
             },
           )
-          if (problems) return next()
+          if (problems) {
+            // TODO: something like this to capture better response codes
+            // res.locals.status = 400
+            return next()
+          }
         }
-
-        // TODO: add this check for body
-        // if (request.body)
 
         if (response.code) res.status(response.code)
         if (response.headers) res.set(response.headers)

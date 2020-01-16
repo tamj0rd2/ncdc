@@ -15,6 +15,7 @@ module.exports = {
     '<rootDir>/src/config/methods.ts',
     require.resolve('winston'),
     require.resolve('yup'),
+    require.resolve('chalk'),
   ],
   testEnvironment: 'node',
   collectCoverageFrom: [

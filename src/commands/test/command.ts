@@ -73,7 +73,7 @@ export default function createTestCommand(
 ): CommandModule<{}, TestArgs> {
   return {
     command: 'test <configPath> <baseURL>',
-    describe: 'Tests API endpoint responses against a json schema',
+    describe: 'Tests configured endpoints',
     builder,
     handler: createHandler(handleError, createTypeValidator),
   }

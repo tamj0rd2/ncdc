@@ -74,7 +74,7 @@ const createHandler = (handleError: HandleError) => async (args: GenerateArgs): 
 export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {
   return {
     command: 'generate <configPath>',
-    describe: 'Generates a json schema for the types specified in the config file',
+    describe: 'Generates a json schema for each type specified in the config file',
     builder,
     handler: createHandler(handleError),
   }

@@ -81,7 +81,7 @@ export default function createServeCommand(
 ): yargs.CommandModule<{}, ServeArgs> {
   return {
     command: 'serve <configPath> [port]',
-    describe: 'Serves mock API responses',
+    describe: 'Serves configured endpoints',
     builder,
     handler: createHandler(handleError, createTypeValidator),
   }

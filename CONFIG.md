@@ -59,7 +59,7 @@ is invalid, you will receive an error message and the program will terminate.
 - **Type**: string or string[]
 - **Required?**: Required in Test mode if serveOnly is false
 - **Example**: `endpoints: /my/endpoint` or...
-  ```
+  ```yaml
   endpoints:
     - /books/1
     - /books/2

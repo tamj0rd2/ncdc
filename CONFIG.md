@@ -24,13 +24,23 @@ is invalid, you will receive an error message and the program will terminate.
   - [response.bodyPath](#responsebodyPath)
   - [response.serveBody](#responseserveBody)
   - [response.serveBodyPath](#responseserveBodyPath)
+<br>
+
+- **Description** - a description of the setting
+- **Type** - the type the value of the setting needs to have
+- **Default** value - the default value for the setting. Omitted if there is no default
+- **Required?** - is the setting required?
+- **Example** - example of what the config setting would look like in yaml
 
 ## name
 
 - **Description**: An identifier for the configuration
 - **Type**: string
 - **Required?**: Yes
-- **Example**: `name: My First Config`
+- **Example**:
+  ```yaml
+  name: My First Config
+  ```
 
 ## serveOnly
 
@@ -39,7 +49,10 @@ is invalid, you will receive an error message and the program will terminate.
 - **Type**: boolean
 - **Default value**: false
 - **Required?**: No
-- **Example**: `serveOnly: true`
+- **Example**:
+ ```yaml
+  serveOnly: true
+  ```
 
 ## request
 
@@ -51,18 +64,18 @@ is invalid, you will receive an error message and the program will terminate.
 ### request.endpoints
 
 - **Description**: A single endpoint or list of endpoints that you'd like to
-  test or serve.
-  
-  In Serve mode, if your configured endpoints contain
-  query strings, the responses will only be served if there are matching query
-  strings present.
+  test or serve.<br>
+  In Serve mode, if your configured endpoints contain query strings, the responses
+  will only be served if there are matching query strings present.
 - **Type**: string or string[]
 - **Required?**: Required in Test mode if serveOnly is false
-- **Example**: `endpoints: /my/endpoint` or...
+- **Example**:
   ```yaml
+  endpoints: /my/endpoint`
+  # Or...
   endpoints:
-    - /books/1
-    - /books/2
+    - /my/endpoint1
+    - /my/endpoint1
   ```
 
 ### request.serveEndpoint
@@ -73,49 +86,57 @@ is invalid, you will receive an error message and the program will terminate.
   `request.endpoints` when in Serve mode.
 - **Type**: string
 - **Required?**: Required in Serve mode if `request.endpoints` is not provided
-- **Example**: `serveEndpoint: /api/books/*`
+- **Example**:
+  ```yaml
+  serveEndpoint: /api/books/*
+  ```
 
 
-<!-- TODO: Add support for other HTTP methods -->
+<!-- TODO: Add support for other HTTP methods and make this work as described -->
 ### request.method
 
-- **Description**: The HTTP method you would call the endpoint/s with. Currentyly,
-  only `GET` and `POST` are supported
+- **Description**: The HTTP method you would call the endpoint/s with. Currently,
+  only `GET` and `POST` are supported<br>
+  In Serve mode, if the endpoint exists but is called with the wrong method, it
+  will return a 405 response with an Allow header.
 - **Type**: string
 - **Required?**: Yes
-- **Example**: `method: GET`
+- **Example**:
+  ```yaml
+  method: GET
+  ```
 
 <!-- TODO: make sure the type actually works like this and gives back a useful error message -->
 ### request.type
 
 - **Description**: The name of a typescript symbol or a JSON schema file
   (excluding the .json). JSON schema files will only be used if the `--schemPath`
-  flag is used while calling `ncdc test` or `ncdc serve`.
-  
-  In Test mode, if `request.body` or `request.bodyPath` are specified along with
-  a type, validation will be done between the type and the mock request body. If
-  validation fails, you will receive an error and the tests will not run.
-  
-  In Serve mode, if `body`, `bodyPath`, `serveBody` or `serveBodyPath` are
-  specified along with a type, validation will be done between the type and the
-  request body. If the request body is invalid, the mock response body for this
-  configuration will not be served. If there are no other matching endpoints
-  found, it will result in a 400 error.
+  flag is used while calling `ncdc test` or `ncdc serve`.<br>
+  In Serve and Test mode, if `request.body` or `request.bodyPath` are specified
+  along with a type, validation will be done between the type and the request
+  body. If validation fails, you will receive an error and the program will
+  terminate.<br>
+  In Serve mode, if a type is specified alongside `request.body` or
+  `request.bodyPath`, the request body will be matched against the type, not the
+  specified body. If the type does not match the request body the endpoint will
+  respond with a 400 status code. Just send the problems back in the response.
 
 - **Type**: string
 - **Required?**: No
-- **Example**: `type: SomeInterfaceName`
+- **Example**:
+  ```yaml
+  type: SomeInterfaceNam
+  ```
 
-<!-- TODO: make this work in the way specified. Decided what error should ocurr in the response -->
+<!-- TODO: make this work in the way specified. Decided what error should occur in the response -->
 
 ### request.headers
 
 - **Description**: The headers you expect to call the endpoint with. Header
-  names are case insensitive.
-
+  names are case insensitive.<br>
   In Test mode, if the expected headers aren't present or there is a mismatch,
-  the test will fail. In Serve mode, the response will not be served.
-
+  the test will fail.<br>
+  In Serve mode, the response will not be served.
 - **Type**: object
 - **Required?**: No
 - **Example**:
@@ -125,10 +146,14 @@ is invalid, you will receive an error message and the program will terminate.
     Cache-Control: no-cache
   ```
 
+<!-- TODO: make this work as described -->
 ### request.body
 
 - **Description**: The body you expect to make requests to the endpoint with.
-  Cannot be specified at the same time as `request.bodyPath`
+  Cannot be specified at the same time as `request.bodyPath`.
+  
+  In Serve mode, if this property is specified without `request.type`, responses
+  will  only be served if the request body matches `request.body`
 - **Type**: string, number, boolean, object or array
 - **Required?**: No
 - **Example**: `body: { hello: 'world' }`
@@ -141,6 +166,9 @@ is invalid, you will receive an error message and the program will terminate.
   with. It must be a JSON file (should be updated to support other files in the
   future). Cannot be specified at the same time as `request.body`. Relative
   paths should be relative to the config file's location
+  
+  In Serve mode, if this property is specified without `request.type`, responses
+  will only be served if the request body matches `request.body`
 - **Type**: string
 - **Required?**: No
 - **Example**: `bodyPath: ./my-response.json` or `bodyPath: /some/absolute/path`

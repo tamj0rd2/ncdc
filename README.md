@@ -2,6 +2,8 @@
 
 # NCDC
 
+[![Build Status](https://travis-ci.com/tamj0rd2/ncdc.svg)](https://travis-ci.com/tamj0rd2/ncdc)
+
 NCDC (or node cdc) is a tool that takes a consumer contract (written in yaml)
 and tests the specified endpoints against a producer. You can also run a single
 command to mock those endpoints.

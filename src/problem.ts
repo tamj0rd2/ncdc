@@ -48,9 +48,9 @@ export default class Problem {
       return Array.isArray(data)
         ? data.map(this.mapData)
         : Object.keys(data).reduce<DataObject>((accum, key) => {
-          accum[key] = this.mapData(data[key])
-          return accum
-        }, {})
+            accum[key] = this.mapData(data[key])
+            return accum
+          }, {})
     return data
   }
 }

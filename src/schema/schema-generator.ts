@@ -4,11 +4,11 @@ import { SchemaRetriever } from './types'
 
 export default class SchemaGenerator implements SchemaRetriever {
   private readonly generator: JsonSchemaGenerator
-  private readonly cache: { [symbol: string]: Definition } = {}
+  private readonly cache = new Map<string, Definition>()
 
   constructor(tsconfigPath: string) {
     const program = programFromConfig(resolve(tsconfigPath))
-    const generator = buildGenerator(program, { required: true })
+    const generator = buildGenerator(program, { required: true, ignoreErrors: true, titles: true })
     if (!generator) {
       throw new Error('Could not build a generator from the given typescript configuration')
     }
@@ -16,8 +16,13 @@ export default class SchemaGenerator implements SchemaRetriever {
   }
 
   public load(symbolName: string): Promise<Definition> {
-    return Promise.resolve(
-      this.cache[symbolName] ?? (this.cache[symbolName] = this.generator.getSchemaForSymbol(symbolName)),
-    )
+    let schema = this.cache.get(symbolName)
+
+    if (!schema) {
+      schema = this.generator.getSchemaForSymbol(symbolName)
+      this.cache.set(symbolName, schema)
+    }
+
+    return Promise.resolve(schema)
   }
 }

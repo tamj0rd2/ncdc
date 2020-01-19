@@ -16,7 +16,7 @@ describe('DetailedProblem', () => {
 
     expect(problem.path).toBe('<root>my.property')
     expect(problem.message).toBe('Hello')
-    expect(problem.data).toStrictEqual({ woah: 'dude' })
+    expect(problem.value).toStrictEqual({ woah: 'dude' })
     expect(problem.schema).toStrictEqual({ $schema: 'my schema' })
   })
 
@@ -40,7 +40,7 @@ describe('DetailedProblem', () => {
 
     expect(problem.path).toBe('<root>')
     expect(problem.message).toBe('Hello, world!')
-    expect(problem.data).toStrictEqual({ woah: 'man' })
+    expect(problem.value).toStrictEqual({ woah: 'man' })
     expect(problem.schema).toBeUndefined()
   })
 
@@ -61,7 +61,7 @@ describe('DetailedProblem', () => {
 
       const problem = new Problem(errorObj as ErrorObject, ProblemType.Response)
 
-      expect(problem.data).toStrictEqual({
+      expect(problem.value).toStrictEqual({
         woah: expectedString,
         nested: { woah: expectedString, array: [expectedString] },
       })
@@ -116,7 +116,7 @@ describe('DetailedProblem', () => {
 
       const problem = new Problem(errorObj as ErrorObject, ProblemType.Response)
 
-      expect(problem.data).toStrictEqual(expected)
+      expect(problem.value).toStrictEqual(expected)
     })
   })
 })

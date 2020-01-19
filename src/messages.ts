@@ -1,4 +1,4 @@
-import { red, green, blue } from 'chalk'
+import { red, green, blue, blueBright } from 'chalk'
 import { ProblemResult } from '~config/mapper'
 import { gatherValidationErrors } from '~commands/shared'
 import Problem from '~problem'
@@ -23,7 +23,8 @@ const testResult = (passed: boolean, name: string, suffix: string): string => {
 }
 
 // TODO: it would be cool to reuse the ProblemResult abstraction here
-export const testPassed = (name: string, endpoint: string): string => testResult(true, name, endpoint)
+export const testPassed = (name: string, endpoint: string): string =>
+  testResult(true, name, blueBright(endpoint))
 export const testFailed = (name: string, endpoint: string, problems: Problem[]): string =>
-  `${testResult(false, name, endpoint)}\n${gatherValidationErrors(problems)}`
+  `${testResult(false, name, blueBright(endpoint))}\n${gatherValidationErrors(problems)}`
 export const testError = (name: string, message: string): string => testResult(false, name, message)

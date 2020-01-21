@@ -24,24 +24,38 @@ export const colorInspect = (obj: any, depth?: number): string => inspect(obj, f
 
 export const gatherValidationErrors = (problems: ReadonlyArray<Problem>): string =>
   Array.from(groupBy(problems, x => x.problemType))
-    .map(([type, groupedProblems]) =>
-      Array.from(groupBy(groupedProblems, x => x.path))
-        .map(([dataPath, groupedByType]) => {
-          const result = groupedByType.map(({ message }) => {
-            const messagePrefix = blue(`${type} ${dataPath}`)
-            return `${messagePrefix} ${message}`
-          })
-
-          const { value, showValue, schema, showSchema, definedBy, allowedValues } = groupedByType[0]
+    .map(([type, groupedByType]) => {
+      return groupedByType
+        .reduce<string[]>((accum, problem, i) => {
+          const { path, message, value, showValue, schema, showSchema, definedBy, allowedValues } = problem
+          const output = [`${blue(type)} ${blue(path)} ${message}`]
 
           if (value && showValue)
-            result.push(`${yellow('Value:')} ${colorInspect(value, dataPath === Problem.rootPath ? 0 : 4)}`)
-          if (allowedValues) result.push(`${yellow('Allowed values')}: ${allowedValues}`)
-          if (definedBy) result.push(`${yellow('Defined by')}: ${definedBy}`)
-          if (schema && showSchema) result.push(`${yellow('Schema:')} ${colorInspect(schema, 2)}`)
+            output.push(`${yellow('Value:')} ${colorInspect(value, path === Problem.rootPath ? 0 : 4)}`)
+          if (allowedValues) output.push(`${yellow('Allowed values')}: ${allowedValues}`)
+          if (definedBy) output.push(`${yellow('Defined by')}: ${definedBy}`)
+          if (schema && showSchema) output.push(`${yellow('Schema:')} ${colorInspect(schema, 2)}`)
 
-          return `${result.join('\n')}\n`
-        })
-        .join('\n'),
-    )
+          const prev = accum[i - 1]
+
+          accum.push(`${output.length > 1 || prev?.startsWith('\n') ? '\n' : ''}${output.join('\n')}`)
+          return accum
+        }, [])
+        .join(`\n`)
+
+      // const result = groupedByPath.map(({ message }) => {
+      //   const messagePrefix = blue(`${type} ${dataPath}`)
+      //   return `${messagePrefix} ${message}`
+      // })
+
+      // const { value, showValue, schema, showSchema, definedBy, allowedValues } = groupedByPath[0]
+
+      // if (value && showValue)
+      //   result.push(`${yellow('Value:')} ${colorInspect(value, dataPath === Problem.rootPath ? 0 : 4)}`)
+      // if (allowedValues) result.push(`${yellow('Allowed values')}: ${allowedValues}`)
+      // if (definedBy) result.push(`${yellow('Defined by')}: ${definedBy}`)
+      // if (schema && showSchema) result.push(`${yellow('Schema:')} ${colorInspect(schema, 2)}`)
+
+      // return `${result.join('\n')}\n`
+    })
     .join('\n')

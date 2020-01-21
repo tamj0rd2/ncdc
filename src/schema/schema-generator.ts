@@ -6,9 +6,10 @@ export default class SchemaGenerator implements SchemaRetriever {
   private readonly generator: JsonSchemaGenerator
   private readonly cache = new Map<string, Definition>()
 
-  constructor(tsconfigPath: string) {
+  constructor(tsconfigPath: string, isDevMode: boolean) {
     const program = programFromConfig(resolve(tsconfigPath))
-    const generator = buildGenerator(program, { required: true, ignoreErrors: true, titles: true })
+    // TODO: after testing remove titles if not needed
+    const generator = buildGenerator(program, { required: true, ignoreErrors: isDevMode, titles: true })
     if (!generator) {
       throw new Error('Could not build a generator from the given typescript configuration')
     }

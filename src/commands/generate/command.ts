@@ -32,7 +32,9 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
     })
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
 
-const createHandler = (handleError: HandleError) => async (args: GenerateArgs): Promise<void> => {
+const createHandler = (handleError: HandleError, isDevMode: boolean) => async (
+  args: GenerateArgs,
+): Promise<void> => {
   const { tsconfigPath, configPath, outputPath } = args
   if (!configPath) process.exit(1)
 
@@ -59,7 +61,7 @@ const createHandler = (handleError: HandleError) => async (args: GenerateArgs): 
   let schemaGenerator: SchemaGenerator
 
   try {
-    schemaGenerator = new SchemaGenerator(tsconfigPath)
+    schemaGenerator = new SchemaGenerator(tsconfigPath, isDevMode)
   } catch (err) {
     handleError(err)
   }
@@ -73,11 +75,14 @@ const createHandler = (handleError: HandleError) => async (args: GenerateArgs): 
   }
 }
 
-export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {
+export default function createGenerateCommand(
+  handleError: HandleError,
+  isDevMode: boolean,
+): CommandModule<{}, GenerateArgs> {
   return {
     command: 'generate <configPath>',
     describe: 'Generates a json schema for each type specified in the config file',
     builder,
-    handler: createHandler(handleError),
+    handler: createHandler(handleError, isDevMode),
   }
 }

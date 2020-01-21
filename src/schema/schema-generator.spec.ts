@@ -24,7 +24,7 @@ describe('SchemaLoader', () => {
     mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
     mockedPath.resolve.mockImplementation(args => args)
 
-    const schemaLoader = new SchemaGenerator('tsconfig path')
+    const schemaLoader = new SchemaGenerator('tsconfig path', true)
     const schema = await schemaLoader.load('DealSchema')
 
     expect(TJS.programFromConfig).toHaveBeenCalledWith('tsconfig path')
@@ -42,7 +42,7 @@ describe('SchemaLoader', () => {
     }
     mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
 
-    const schemaLoader = new SchemaGenerator('tsconfig path')
+    const schemaLoader = new SchemaGenerator('tsconfig path', true)
     const schema1 = await schemaLoader.load('DealSchema')
     const schema2 = await schemaLoader.load('DealSchema')
 
@@ -54,6 +54,6 @@ describe('SchemaLoader', () => {
   it('throws an error if a generator is not created', () => {
     mockedTJS.buildGenerator.mockReturnValue(null)
 
-    expect(() => new SchemaGenerator('tsconfig path')).toThrow(/Could not build a generator/)
+    expect(() => new SchemaGenerator('tsconfig path', true)).toThrow(/Could not build a generator/)
   })
 })

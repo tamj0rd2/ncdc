@@ -11,6 +11,7 @@ import ajv from 'ajv'
 import { SchemaGenerator, SchemaLoader } from './schema'
 import logger from '~logger'
 import * as consts from './commands/consts'
+import inspector from 'inspector'
 
 export default async function run(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -19,19 +20,21 @@ export default async function run(): Promise<void> {
     process.exit(1)
   }
 
+  const isDevMode = !!inspector.url()
+
   // TODO: this should be created lazily so that it isn't created until a type
   // is actually found in the config flie. It's possible some people will not
   // define types at all. And in that case, this is a complete waste of time
   const createTypeValidator: CreateTypeValidator = (tsconfigPath, schemaPath) =>
     new TypeValidator(
       new ajv({ verbose: true, allErrors: true }),
-      schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath),
+      schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath, isDevMode),
     )
 
   // TODO: figure out how I can remove this
   // eslint-disable-next-line no-unused-expressions
   mainYargs
-    .command(createGenerateCommand(handleError))
+    .command(createGenerateCommand(handleError, isDevMode))
     .command(createServeCommand(handleError, createTypeValidator))
     .command(createTestCommand(handleError, createTypeValidator))
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)

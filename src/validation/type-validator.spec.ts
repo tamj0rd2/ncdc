@@ -36,6 +36,8 @@ describe('Type validator', () => {
           path: 'hello',
           problemType: ProblemType.Request,
           message: 'hi',
+          showValue: true,
+          showSchema: true,
         }
         messages.shouldBe.mockReturnValue('yo')
         problemCtor.mockImplementation(() => mappedProblem as Problem)

@@ -5,6 +5,14 @@ document describes the allowed properties for each config. If any config option
 is invalid, you will receive an error message and the program will terminate.
 [Example configuration](./README.md#example-config)
 
+Here's a format that describes each config setting:
+
+- **Description** - a description of the setting
+- **Type** - the type the value of the setting needs to have
+- **Default** value - the default value for the setting. Omitted if there is no default
+- **Required?** - is the setting required?
+- **Example** - example of what the config setting would look like in yaml
+
 ## Contents
 - [name](#name)
 - [serveOnly](#serveOnly)
@@ -112,6 +120,7 @@ is invalid, you will receive an error message and the program will terminate.
   ```
 
 <!-- TODO: make sure the type actually works like this and gives back a useful error message -->
+<!-- TODO: add an option to fail if extra properties are provided  -->
 ### request.type
 
 - **Description**: The name of a typescript symbol or a JSON schema file
@@ -120,7 +129,7 @@ is invalid, you will receive an error message and the program will terminate.
   In Serve and Test mode, if `request.body` or `request.bodyPath` are specified
   along with a type, validation will be done between the type and the request
   body. If validation fails, you will receive an error and the program will
-  terminate.<br>
+  terminate. Validation won't fail if extra properties are provided<br>
   In Serve mode, if a type is specified alongside `request.body` or
   `request.bodyPath`, the request body will be matched against the type, not the
   specified body. If the type does not match the request body the endpoint will

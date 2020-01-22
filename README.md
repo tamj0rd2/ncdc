@@ -19,6 +19,8 @@ This tool can easily integrate with typescript to prevent you from having to
 write JSON schemas for your already defined Typescript interfaces, types and
 enums.
 
+<!-- TODO: add an examples folder with working examples -->
+
 ## Contents
 
 - [Getting Started](#getting-started)
@@ -128,93 +130,32 @@ Options:
   --help     Show help                                                 [boolean]
 
 Examples:
-  ncdc generate ./config.yml                Generates json schemas for any Type
-                                            specified in config.yml
+  ncdc generate ./config.yml                Generates json schemas for any type
+                                            specified in config.yml.
   ncdc serve ./config.yml 4000              Serves the mock API endpoints
-                                            defined in config.yml on port 4000
+                                            defined in config.yml on port 4000.
   ncdc test ./config.yml                    Tests that the responses for the API
-  https://mysite.com                        endpoints defined in config.yml
-                                            match the configured parameters
+  https://example.com                       endpoints defined in config.yml
+                                            match the configured parameters.
 ```
 
 ## Generate
 
 ### CLI Usage
-```
-$ npx ncdc generate --help
-ncdc generate <configPath>
 
-Generates a json schema for each type specified in the config file
-
-Positionals:
-  configPath  path to the ncdc config file                   [string] [required]
-
-Options:
-  --version                   Show version number                      [boolean]
-  --help                      Show help                                [boolean]
-  --tsconfigPath, -c          a path to the tsconfig file which contains the
-                              types specified in the given config file
-                                           [string] [default: "./tsconfig.json"]
-  --outputPath, -o, --output  sets an output folder for the json schemas
-                                             [string] [default: "./json-schema"]
-
-Examples:
-  ncdc generate ./config.yml  Generates json schemas for any type specified in
-                              config.yml
-```
+Run `npx ncdc generate --help` to get contextual usage information and examples
+for this command.
 
 ## Test
 
 ### CLI Usage
-```
-ncdc test <configPath> <baseURL>
 
-Tests configured endpoints
-
-Positionals:
-  configPath  path to the ncdc config file                   [string] [required]
-  baseURL     the URL that your endpoints should be accessed through
-                                                             [string] [required]
-
-Options:
-  --version           Show version number                              [boolean]
-  --help              Show help                                        [boolean]
-  --schemaPath        specify a path to load json schemas from, rather than
-                      generating schmas for types specified in ncdc config at
-                      runtime                                           [string]
-  --tsconfigPath, -c  a path to the tsconfig file which contains the types
-                      specified in the given config file
-                                           [string] [default: "./tsconfig.json"]
-
-Examples:
-  ncdc test ./config.yml                    Tests that the responses for the API
-  https://mysite.com                        endpoints defined in config.yml
-                                            match the configured parameters
-```
+Run `npx ncdc test --help` to get contextual usage information and examples for
+this command.
 
 ## Serve
 
 ### CLI Usage
-```
-ncdc serve <configPath> [port]
 
-Serves configured endpoints
-
-Positionals:
-  configPath  path to the ncdc config file                   [string] [required]
-  port        port to serve the API on                  [number] [default: 4000]
-
-Options:
-  --version           Show version number                              [boolean]
-  --help              Show help                                        [boolean]
-  --schemaPath        specify a path to load json schemas from, rather than
-                      generating schmas for types specified in ncdc config at
-                      runtime                                           [string]
-  --tsconfigPath, -c  a path to the tsconfig file which contains the types
-                      specified in the given config file
-                                           [string] [default: "./tsconfig.json"]
-
-Examples:
-  ncdc serve ./config.yml 4000  Serves the mock API endpoints defined in
-                                config.yml on port 4000
-```
+Run `npx ncdc serve --help` to get contextual usage information and examples for
+this command.

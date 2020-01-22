@@ -2,6 +2,7 @@ import { createLogger, format, transports } from 'winston'
 import { inspect } from 'util'
 import { blue } from 'chalk'
 import Problem from '~problem'
+import escapeStringRegexp from 'escape-string-regexp'
 
 const serverLogger = createLogger({
   exitOnError: false,
@@ -20,7 +21,10 @@ const serverLogger = createLogger({
             typeof info.message === 'object' ? inspect(info.message, false, undefined, true) : info.message
 
           const matchedError = info.stack?.match(/Error: (.*)/)
-          if (matchedError) message = message.replace(new RegExp(`${matchedError[1]}$`), '')
+          if (matchedError && matchedError[1]) {
+            const escapedMatch = escapeStringRegexp(matchedError[1])
+            message = message.replace(new RegExp(`${escapedMatch}$`), '')
+          }
 
           result += message
 

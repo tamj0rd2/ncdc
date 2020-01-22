@@ -18,7 +18,7 @@ const serverLogger = createLogger({
           let result = `${info.timestamp} - ${info.level}: `
 
           let message =
-            typeof info.message === 'object' ? inspect(info.message, false, undefined, true) : info.message
+            typeof info.message === 'object' ? inspect(info.message, false, 4, true) : info.message
 
           const matchedError = info.stack?.match(/Error: (.*)/)
           if (matchedError && matchedError[1]) {

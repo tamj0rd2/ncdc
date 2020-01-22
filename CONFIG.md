@@ -60,13 +60,18 @@ is invalid, you will receive an error message and the program will terminate.
 - **Type**: object
 - **Required?**: Yes
 
-<!-- TODO: make the query string stuff work as described -->
 ### request.endpoints
 
 - **Description**: A single endpoint or list of endpoints that you'd like to
   test or serve.<br>
-  In Serve mode, if your configured endpoints contain query strings, the responses
-  will only be served if there are matching query strings present.
+
+  In Serve mode, if your configured endpoints contain a query string, responses
+  will only be served if your request has matching query params. For example, in
+  order to get responses for the configuration `endpoints: /endpoint?size=5&size=6`,
+  you would need to make a request that include `size=5` and `size=6` as query
+  params. If you leave them out of the request, your response will not be served
+  and you'll receive a 400 status code. Providing extra params does not cause
+  adverse effects.
 - **Type**: string or string[]
 - **Required?**: Required in Test mode if serveOnly is false
 - **Example**:

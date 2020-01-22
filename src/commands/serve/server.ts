@@ -6,6 +6,8 @@ import { ProblemType } from '~problem'
 import { SupportedMethod, Config } from '~config'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
+import { parse } from 'url'
+import { isQueryMismatch } from './utils'
 
 export interface ReqResLog {
   name?: string
@@ -63,12 +65,27 @@ export const configureServer = (
   app.get(ROOT, (_, res) => res.json(mockConfigs))
 
   mockConfigs.forEach(({ name, request, response }) => {
-    const endpoint = request.endpoint.split('?')[0]
+    const endpointWithoutQuery = request.endpoint.split('?')[0]
 
     // TODO: use app.use or app.all to handle all methods
     // TODO: I should start taking query string parameters into account.
-    app[verbsMap[request.method]](endpoint, async (req, res, next) => {
+    app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
       try {
+        // TODO ======= finish up by adding tests. maybe extract it out
+        const actualQuery = parse(req.url, true).query
+        const expectedQuery = parse(request.endpoint, true).query
+
+        const queryMismatches = Object.keys(expectedQuery)
+          .map(key => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
+          .filter((x): x is string => !!x)
+
+        if (queryMismatches.length) {
+          res.locals.message = queryMismatches.join('\n')
+          res.locals.status = 400
+          return next()
+        }
+        // ============================================
+
         if (request.type) {
           const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)
           serverLogger.warn(
@@ -99,16 +116,19 @@ export const configureServer = (
         handleError(err, req, res, next)
       }
     })
-    serverLogger.info(`Registered ${baseUrl}${endpoint} from config: ${blue(name)}`)
+    serverLogger.info(`Registered ${baseUrl}${request.endpoint} from config: ${blue(name)}`)
   })
+
+  const default404Response =
+    'NCDC ERROR: Could not find an endpoint to serve this request.\n\n' +
+    `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations.`
 
   app.use((req, res, next) => {
     try {
-      res.status(404)
+      const status = res.locals.status || 404
+      res.status(status)
 
-      const responseBody =
-        'NCDC ERROR: Could not find an endpoint to serve this request.\n\n' +
-        `Go to ${baseUrl}${ROOT} to see a list of available endpoint configurations.`
+      const responseBody = status === 404 ? default404Response : `NCDC: ${res.locals.message}`
 
       if (!ignoredLogPaths.includes(req.path)) {
         serverLogger.error(mapLog(undefined, req, res, responseBody.replace(/\n+/g, ' ')))

@@ -8,3 +8,4 @@ fixtures
 json-schema
 .DS_Store
 icon.png
+.eslintcache

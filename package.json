@@ -15,7 +15,7 @@
     "prepublishOnly": "npm t && git push",
     "prepare": "npm run build",
     "test": "jest --collectCoverage",
-    "lint": "eslint '**/*.ts' --color --ignore-path .gitignore"
+    "lint": "eslint '**/*.ts' --color --ignore-path .gitignore --cache"
   },
   "husky": {
     "hooks": {
@@ -24,7 +24,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "npm run lint --fix --",
+      "npm run lint -- --fix",
       "git add"
     ]
   },

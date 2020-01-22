@@ -34,11 +34,6 @@ Here's a format that describes each config setting:
   - [response.serveBodyPath](#responseserveBodyPath)
 <br>
 
-- **Description** - a description of the setting
-- **Type** - the type the value of the setting needs to have
-- **Default** value - the default value for the setting. Omitted if there is no default
-- **Required?** - is the setting required?
-- **Example** - example of what the config setting would look like in yaml
 
 ## name
 

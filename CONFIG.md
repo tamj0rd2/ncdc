@@ -163,11 +163,18 @@ Here's a format that describes each config setting:
   Whitespace needs to match exactly.<br>
   This property cannot be specified at the same time as `request.bodyPath`.<br>
   In Serve mode, if this property is specified without `request.type`, responses
-  will  only be served if the request body matches `request.body` exactly
+  will only be served if the request body matches `request.body` exactly
 - **Type**: string, number, boolean, object or array
 - **Required?**: No
 - **Example**: `body: { hello: 'world' }`
-
+  ```yaml
+  body: Hello world :D
+  # or...
+  body: { hello: world }
+  # or...
+  body:
+    hello: world
+  ```
 
 <!-- TODO/FIXME - logic to get this feature working fully needs to be amended -->
 ### request.bodyPath

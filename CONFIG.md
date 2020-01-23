@@ -37,7 +37,7 @@ Here's a format that describes each config setting:
 
 ## name
 
-- **Description**: An identifier for the configuration
+- **Description**: An identifier for the configuration which gets shown in results
 - **Type**: string
 - **Required?**: Yes
 - **Example**:
@@ -79,7 +79,7 @@ Here's a format that describes each config setting:
 - **Required?**: Required in Test mode if serveOnly is false
 - **Example**:
   ```yaml
-  endpoints: /my/endpoint`
+  endpoints: /my/endpoint
   # Or...
   endpoints:
     - /my/endpoint1
@@ -89,8 +89,10 @@ Here's a format that describes each config setting:
 ### request.serveEndpoint
 
 - **Description**: An endpoint to serve the corresponding response. This
-  supports string patterns ([read more](https://expressjs.com/en/guide/routing.html#route-paths)).
-  Regex is not yet supported. This property is ignored in Test mode and overrides
+  supports ExpressJS string patterns
+  ([read more](https://expressjs.com/en/guide/routing.html#route-paths)).
+  Regex is not yet supported.<br>
+  This property is ignored in Test mode and overrides
   `request.endpoints` when in Serve mode.
 - **Type**: string
 - **Required?**: Required in Serve mode if `request.endpoints` is not provided
@@ -134,7 +136,7 @@ Here's a format that describes each config setting:
 - **Required?**: No
 - **Example**:
   ```yaml
-  type: SomeInterfaceNam
+  type: SomeInterfaceName
   ```
 
 <!-- TODO: make this work in the way specified. Decided what error should occur in the response -->
@@ -159,10 +161,10 @@ Here's a format that describes each config setting:
 ### request.body
 
 - **Description**: The body you expect to make requests to the endpoint with.
-  Cannot be specified at the same time as `request.bodyPath`.
-  
+  Whitespace needs to match exactly.<br>
+  This property cannot be specified at the same time as `request.bodyPath`.<br>
   In Serve mode, if this property is specified without `request.type`, responses
-  will  only be served if the request body matches `request.body`
+  will  only be served if the request body matches `request.body` exactly
 - **Type**: string, number, boolean, object or array
 - **Required?**: No
 - **Example**: `body: { hello: 'world' }`
@@ -229,7 +231,6 @@ Here's a format that describes each config setting:
 - **Required?**: No
 - **Example**: `body: Hello world!`
 
-
 ### response.bodyPath
 
 - **Description**: A path to the body you expect the endpoint to respond with.
@@ -240,17 +241,15 @@ Here's a format that describes each config setting:
 - **Required?**: No
 - **Example**: `bodyPath: ./my-response.json` or `bodyPath: /some/absolute/path`
 
-
-
 ### response.serveBody
 
-- **Description**: The body you expect the endpoint to respond with. Cannot be
-  specified at the same time as `response.body`, `respond.bodyPath` or
-  `response.serveBodyPath`. This property will be ignored in Test mode.
+- **Description**: The body you expect the endpoint to respond with. For non-json
+  responses, whitespace needs to match exactly.<br>
+  Cannot be specified at the same time as `response.body`, `response.bodyPath`
+  or `response.serveBodyPath`. This property will be ignored in Test mode.
 - **Type**: string, number, boolean, object or array
 - **Required?**: No
 - **Example**: `serveBody: Hello world!`
-
 
 ### response.serveBodyPath
 

@@ -72,9 +72,9 @@ Here's a format that describes each config setting:
   will only be served if your request has matching query params. For example, in
   order to get responses for the configuration `endpoints: /endpoint?size=5&size=6`,
   you would need to make a request that include `size=5` and `size=6` as query
-  params. If you leave them out of the request, your response will not be served
-  and you'll receive a 400 status code. Providing extra params does not cause
-  adverse effects.
+  params. If you leave either of them out of the request, your response will not
+  be served and you'll receive a 400 status code. Providing extra params does not
+  cause adverse effects.
 - **Type**: string or string[]
 - **Required?**: Required in Test mode if serveOnly is false
 - **Example**:
@@ -83,7 +83,7 @@ Here's a format that describes each config setting:
   # Or...
   endpoints:
     - /my/endpoint1
-    - /my/endpoint1
+    - /my/endpoint2?hello=world # only served if request has query param "hello" with value "world"
   ```
 
 ### request.serveEndpoint
@@ -100,7 +100,6 @@ Here's a format that describes each config setting:
   ```yaml
   serveEndpoint: /api/books/*
   ```
-
 
 <!-- TODO: Add support for other HTTP methods and make this work as described -->
 ### request.method

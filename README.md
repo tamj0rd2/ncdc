@@ -70,21 +70,21 @@ This configuration file contains a single config with the name Books.
 
 You can find more information about writing configurations [here](./CONFIG.md#config)
 
-### Generating JSON schemas
+### Serving mocks using the config file
 
-`npx ncdc generate ./config.yml --output ./schemas`
+`npx ncdc serve ./config.yml 3000`
 
-This will create JSON schemas for any request and response types specified in
-your cnofig file. `string`, `number`, `boolean` and `object` are internally
-recognised, so schemas will not be generated for them.
+This will serve each configured endpoint on port 3000. As `serveEndpoint` is set
+to `/api/books/*`, any requests starting with
+`localhost:3000/api/books/<anything>` will respond with the following:
 
-<!-- TODO: add some info as to why someone might want to do this and how to 
-utilize is in test/serve mode -->
-Generating schemas is optional but can be useful for caching purposes.
+- Status code as 200
+- content-type header as application/json
+- body as the value of `serveBody`
 
-You can find more information about generating schemas [here](#generate)
+You can find more information about serve mode [here](#serve)
 
-### Running tests
+### Testing whether real endpoints match definitions in the config file
 
 `npx ncdc test ./config.yml https://example.com`
 
@@ -99,19 +99,19 @@ meet these requirements:
 
 You can find more information about test mode [here](#test)
 
-### Serving mocks
+### Generating JSON schemas
 
-`npx ncdc serve ./config.yml 3000`
+`npx ncdc generate ./config.yml --output ./schemas`
 
-This will serve each configured endpoint on port 3000. As `serveEndpoint` is set
-to `/api/books/*`, any requests starting with
-`localhost:3000/api/books/<anything>` will respond with the following:
+This will create JSON schemas for any request and response types specified in
+your cnofig file. `string`, `number`, `boolean` and `object` are internally
+recognised, so schemas will not be generated for them.
 
-- Status code as 200
-- content-type header as application/json
-- body as the value of `serveBody`
+<!-- TODO: add some info as to why someone might want to do this and how to 
+utilize is in test/serve mode -->
+Generating schemas is optional but can be useful for caching purposes.
 
-You can find more information about serve mode [here](#serve)
+You can find more information about generating schemas [here](#generate)
 
 ## CLI usage
 

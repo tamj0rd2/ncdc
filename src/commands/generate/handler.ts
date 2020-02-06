@@ -8,6 +8,7 @@ export interface GenerateArgs {
   configPath?: string
   tsconfigPath: string
   outputPath: string
+  force: boolean
 }
 
 export type GetSchemaGenerator = (tsconfigPath: string, isDevMode: boolean) => SchemaGenerator
@@ -20,7 +21,7 @@ const createHandler = (
   generate: Generate,
   logger: Logger,
 ) => async (args: GenerateArgs): Promise<void> => {
-  const { tsconfigPath, configPath, outputPath } = args
+  const { tsconfigPath, configPath, outputPath, force } = args
   if (!configPath) return handleError(new Error('configPath must be specified'))
 
   let configs: GenerateConfig[]
@@ -46,7 +47,7 @@ const createHandler = (
   let schemaGenerator: SchemaGenerator
 
   try {
-    schemaGenerator = getSchemaGenerator(tsconfigPath, isDevMode)
+    schemaGenerator = getSchemaGenerator(tsconfigPath, force || isDevMode)
   } catch (err) {
     handleError(err)
   }

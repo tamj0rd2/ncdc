@@ -25,10 +25,10 @@ export default async function run(): Promise<void> {
   // TODO: this should be created lazily so that it isn't created until a type
   // is actually found in the config flie. It's possible some people will not
   // define types at all. And in that case, this is a complete waste of time
-  const createTypeValidator: CreateTypeValidator = (tsconfigPath, schemaPath) =>
+  const createTypeValidator: CreateTypeValidator = (tsconfigPath, force, schemaPath) =>
     new TypeValidator(
       new ajv({ verbose: true, allErrors: true }),
-      schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath, isDevMode),
+      schemaPath ? new SchemaLoader(schemaPath) : new SchemaGenerator(tsconfigPath, force || isDevMode),
     )
 
   // TODO: figure out how I can remove this

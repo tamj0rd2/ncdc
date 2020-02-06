@@ -13,6 +13,7 @@ interface TestArgs {
   tsconfigPath: string
   configPath?: string
   baseURL?: string
+  force: boolean
 }
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
@@ -35,15 +36,21 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
       description: consts.TSCONFIG_DESCRIPTION,
       default: consts.TSCONFIG_DEFAULT,
     })
+    .option(consts.FORCE_GENERATION, {
+      alias: consts.FORCE_GENERATION_ALIAS,
+      type: consts.FORCE_GENERATION_TYPE,
+      default: false,
+      description: consts.FORCE_GENERATION_DESCRIPTION,
+    })
     .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
 
 const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
   args: TestArgs,
 ): Promise<void> => {
-  const { configPath, baseURL, tsconfigPath, schemaPath } = args
+  const { configPath, baseURL, tsconfigPath, schemaPath, force } = args
   if (!configPath || !baseURL) process.exit(1)
 
-  const typeValidator = createTypeValidator(tsconfigPath, schemaPath)
+  const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
 
   let configs: Config[]
   try {

@@ -25,6 +25,12 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
       description: 'sets an output folder for the json schemas',
       default: './json-schema',
     })
+    .option(consts.FORCE_GENERATION, {
+      alias: consts.FORCE_GENERATION_ALIAS,
+      type: consts.FORCE_GENERATION_TYPE,
+      default: false,
+      description: consts.FORCE_GENERATION_DESCRIPTION,
+    })
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
 
 export default function createGenerateCommand(

@@ -13,6 +13,7 @@ interface ServeArgs {
   port: number
   tsconfigPath: string
   schemaPath?: string
+  force: boolean
 }
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
@@ -36,12 +37,18 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       description: consts.TSCONFIG_DESCRIPTION,
       default: consts.TSCONFIG_DEFAULT,
     })
+    .option(consts.FORCE_GENERATION, {
+      alias: consts.FORCE_GENERATION_ALIAS,
+      type: consts.FORCE_GENERATION_TYPE,
+      default: false,
+      description: consts.FORCE_GENERATION_DESCRIPTION,
+    })
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
   args: ServeArgs,
 ): Promise<void> => {
-  const { configPath, port, tsconfigPath, schemaPath } = args
+  const { configPath, port, tsconfigPath, schemaPath, force } = args
   if (!configPath) process.exit(1)
 
   if (isNaN(port)) {
@@ -50,7 +57,7 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
     return process.exit(1)
   }
 
-  const typeValidator = createTypeValidator(tsconfigPath, schemaPath)
+  const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
   const fullConfigPath = resolve(configPath)
 
   let configs: Config[]

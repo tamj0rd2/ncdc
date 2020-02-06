@@ -14,6 +14,13 @@ export const SCHEMA_PATH_TYPE = 'string'
 export const SCHEMA_PATH_DESCRIPTION =
   'specify a path to load json schemas from, rather than generating schmas for types specified in ncdc config at runtime'
 
+export const FORCE_GENERATION = 'force'
+export const FORCE_GENERATION_ALIAS = 'f'
+export const FORCE_GENERATION_TYPE = 'boolean'
+export const FORCE_GENERATION_DEFAULT = false
+export const FORCE_GENERATION_DESCRIPTION =
+  'force schemas to be generated, regardless of typescript compiler errors'
+
 export const EXAMPLE_GENERATE_COMMAND = 'ncdc generate ./config.yml'
 export const EXAMPLE_GENERATE_DESCRIPTION = 'Generates json schemas for any type specified in config.yml.'
 

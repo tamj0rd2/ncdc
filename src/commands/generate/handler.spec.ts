@@ -25,6 +25,7 @@ describe('Generate Command', () => {
     const args: GenerateArgs = {
       outputPath: '',
       tsconfigPath: '',
+      force: false,
     }
     await handler(args)
 
@@ -39,6 +40,7 @@ describe('Generate Command', () => {
       outputPath: '',
       tsconfigPath: '',
       configPath: 'config path',
+      force: false,
     }
 
     readConfigMock.mockResolvedValue([])
@@ -54,6 +56,7 @@ describe('Generate Command', () => {
       outputPath: '',
       tsconfigPath: '',
       configPath: 'config path',
+      force: false,
     }
 
     readConfigMock.mockRejectedValue(new Error('welp'))
@@ -69,6 +72,7 @@ describe('Generate Command', () => {
       outputPath: '',
       tsconfigPath: '',
       configPath: 'config path',
+      force: false,
     }
 
     const configs: DeepPartial<GenerateConfig>[] = [
@@ -88,6 +92,7 @@ describe('Generate Command', () => {
       outputPath: '',
       tsconfigPath: '',
       configPath: 'config path',
+      force: false,
     }
 
     const configs: DeepPartial<GenerateConfig>[] = [
@@ -102,13 +107,14 @@ describe('Generate Command', () => {
   })
 
   it.each([[true], [false]])(
-    'calls the schema generator with the correct args when dev mode is %s',
-    async isDev => {
-      const handler = getHandler(isDev)
+    'calls the schema generator with the correct args when force is %s',
+    async force => {
+      const handler = getHandler(force)
       const args: GenerateArgs = {
         outputPath: 'out',
         tsconfigPath: 'tsconfig',
         configPath: 'config path',
+        force,
       }
 
       const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]
@@ -116,7 +122,7 @@ describe('Generate Command', () => {
 
       await handler(args)
 
-      expect(getSchemaGenMock).toHaveBeenCalledWith('tsconfig', isDev)
+      expect(getSchemaGenMock).toHaveBeenCalledWith('tsconfig', force)
     },
   )
 
@@ -126,6 +132,7 @@ describe('Generate Command', () => {
       outputPath: 'out',
       tsconfigPath: 'tsconfig',
       configPath: 'config path',
+      force: false,
     }
 
     const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]
@@ -146,6 +153,7 @@ describe('Generate Command', () => {
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPath: 'config path',
+      force: false,
     }
 
     const configs: DeepPartial<GenerateConfig>[] = [
@@ -171,6 +179,7 @@ describe('Generate Command', () => {
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPath: 'config path',
+      force: false,
     }
 
     const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]
@@ -187,6 +196,7 @@ describe('Generate Command', () => {
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPath: 'config path',
+      force: false,
     }
 
     const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]

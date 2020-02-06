@@ -4,7 +4,7 @@ import { blue, yellow } from 'chalk'
 import { inspect } from 'util'
 
 export type HandleError = (error: Error) => never
-export type CreateTypeValidator = (tsconfigPath: string, schemaPath?: string) => TypeValidator
+export type CreateTypeValidator = (tsconfigPath: string, force: boolean, schemaPath?: string) => TypeValidator
 
 const groupBy = <T>(items: ReadonlyArray<T>, getKey: (item: T) => string): Map<string, Readonly<T>[]> =>
   [...items]

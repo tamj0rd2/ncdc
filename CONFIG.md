@@ -63,7 +63,7 @@ Here's a format that describes each config setting:
 - **Type**: object
 - **Required?**: Yes
 
-### request.endpoints
+### request.endpoints (pending changes)
 
 - **Description**: A single endpoint or list of endpoints that you'd like to
   test or serve.<br>
@@ -86,7 +86,7 @@ Here's a format that describes each config setting:
     - /my/endpoint2?hello=world # only served if request has query param "hello" with value "world"
   ```
 
-### request.serveEndpoint
+### request.serveEndpoint (pending changes)
 
 - **Description**: An endpoint to serve the corresponding response. This
   supports ExpressJS string patterns
@@ -102,7 +102,7 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO: Add support for other HTTP methods and make this work as described -->
-### request.method
+### request.method (pending changes)
 
 - **Description**: The HTTP method you would call the endpoint/s with. Currently,
   only `GET` and `POST` are supported<br>
@@ -117,7 +117,7 @@ Here's a format that describes each config setting:
 
 <!-- TODO: make sure the type actually works like this and gives back a useful error message -->
 <!-- TODO: add an option to fail if extra properties are provided  -->
-### request.type
+### request.type (pending changes)
 
 - **Description**: The name of a typescript symbol or a JSON schema file
   (excluding the .json). JSON schema files will only be used if the `--schemPath`
@@ -140,7 +140,7 @@ Here's a format that describes each config setting:
 
 <!-- TODO: make this work in the way specified. Decided what error should occur in the response -->
 
-### request.headers
+### request.headers (pending changes)
 
 - **Description**: The headers you expect to call the endpoint with. Header
   names are case insensitive.<br>
@@ -157,7 +157,7 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO: make this work as described -->
-### request.body
+### request.body (pending changes)
 
 - **Description**: The body you expect to make requests to the endpoint with.
   Whitespace needs to match exactly.<br>
@@ -177,7 +177,7 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO/FIXME - logic to get this feature working fully needs to be amended -->
-### request.bodyPath
+### request.bodyPath (pending changes)
 
 - **Description**: A path to the body you expect to make requests to the endpoint
   with. It must be a JSON file (should be updated to support other files in the
@@ -204,7 +204,7 @@ Here's a format that describes each config setting:
 - **Required?**: Yes
 - **Example**: `code: 404`
 
-### response.headers
+### response.headers (pending changes)
 
 - **Description**: The headers you expect to receive from the endpoint. Header
   names are case insensitive

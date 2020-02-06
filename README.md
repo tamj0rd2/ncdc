@@ -159,3 +159,8 @@ this command.
 
 Run `npx ncdc serve --help` to get contextual usage information and examples for
 this command.
+
+## Direction/priorities
+
+- Improved problem logging (serve and test mode)
+- Improved request/response logging (serve mode)

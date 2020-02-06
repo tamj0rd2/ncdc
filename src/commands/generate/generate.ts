@@ -16,3 +16,5 @@ export const generate = async (
     writeFileSync(resolve(outDir, `${type}.json`), formatted, 'utf8')
   }
 }
+
+export type Generate = typeof generate

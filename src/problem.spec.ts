@@ -4,7 +4,7 @@ import Problem, { ProblemContext, ProblemType } from './problem'
 jest.unmock('./problem')
 
 // TODO: because the problems stuff is a big ol WIP
-xdescribe('DetailedProblem', () => {
+describe('DetailedProblem', () => {
   it('can be constructed from an ErrorObject', () => {
     const errorObj: Partial<ErrorObject> = {
       dataPath: 'my.property',

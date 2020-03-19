@@ -40,7 +40,7 @@ const createHandler = (
     .filter((x, i, arr) => i === arr.indexOf(x))
 
   if (!types.length) {
-    logger.info('No types were specified in the given config file')
+    logger.info('No custom types were specified in the given config file')
     return
   }
 

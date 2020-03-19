@@ -83,7 +83,7 @@ describe('Generate Command', () => {
 
     await handler(args)
 
-    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('No types were specified'))
+    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('No custom types were specified'))
   })
 
   it('logs a message if there are only built-in types in the config', async () => {
@@ -103,7 +103,7 @@ describe('Generate Command', () => {
 
     await handler(args)
 
-    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('No types were specified'))
+    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('No custom types were specified'))
   })
 
   it.each([[true], [false]])(

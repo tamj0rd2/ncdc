@@ -196,7 +196,6 @@ Here's a format that describes each config setting:
 - **Type**: object
 - **Required?**: Yes
 
-<!-- TODO: Read all of this over from here. -->
 ### response.code
 
 - **Description**: The response code you expect the endpoint to respond with

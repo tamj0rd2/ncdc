@@ -77,7 +77,7 @@
     "escape-string-regexp": "^2.0.0",
     "express": "^4.17.1",
     "js-yaml": "^3.13.1",
-    "typescript-json-schema": "^0.41.0",
+    "typescript-json-schema": "^0.42.0",
     "winston": "^3.2.1",
     "yargs": "^14.2.0",
     "yup": "^0.28.3"

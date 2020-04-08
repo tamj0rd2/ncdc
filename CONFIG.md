@@ -101,13 +101,12 @@ Here's a format that describes each config setting:
   serveEndpoint: /api/books/*
   ```
 
-<!-- TODO: Add support for other HTTP methods and make this work as described -->
 ### request.method (pending changes)
 
-- **Description**: The HTTP method you would call the endpoint/s with. Currently,
-  only `GET` and `POST` are supported<br>
+- **Description**: The HTTP method you would call the endpoint/s with. Supported
+  HTTP methods: `GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD`<br>
   In Serve mode, if the endpoint exists but is called with the wrong method, it
-  will return a 405 response with an Allow header.
+  will return a 405 response with an Allow header. 
 - **Type**: string
 - **Required?**: Yes
 - **Example**:

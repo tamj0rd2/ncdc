@@ -18,9 +18,16 @@ export interface ReqResLog {
   }
 }
 
-const verbsMap: { [K in SupportedMethod]: 'get' | 'post' } = {
+export type PossibleMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head'
+
+export const verbsMap: Record<SupportedMethod, PossibleMethod> = {
   GET: 'get',
   POST: 'post',
+  PUT: 'put',
+  DELETE: 'delete',
+  PATCH: 'patch',
+  OPTIONS: 'options',
+  HEAD: 'head',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

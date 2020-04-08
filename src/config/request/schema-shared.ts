@@ -10,11 +10,20 @@ export const endpointsSchema = array()
   .of(endpointSchema)
   .transform((_, oValue) => (Array.isArray(oValue) ? oValue : [oValue]))
 
-export type SupportedMethod = 'GET' | 'POST'
+export type SupportedMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD'
+export const supportedMethods: SupportedMethod[] = [
+  'GET',
+  'POST',
+  'PUT',
+  'DELETE',
+  'PATCH',
+  'OPTIONS',
+  'HEAD',
+]
 
 export const baseRequestSchema = object({
   method: mixed<SupportedMethod>()
-    .oneOf(['GET', 'POST'])
+    .oneOf(supportedMethods)
     .required(),
   type: string()
     .test('withoutSpaces', '${path} should not contain spaces', (value = '') => value.indexOf(' ') === -1)

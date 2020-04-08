@@ -1,4 +1,4 @@
-import { baseRequestSchema } from './schema-shared'
+import { baseRequestSchema, supportedMethods } from './schema-shared'
 
 jest.unmock('./schema-shared')
 
@@ -7,7 +7,7 @@ describe('baseRequestSchema', () => {
     jest.resetAllMocks()
   })
 
-  const basicCases: [object][] = [
+  const basicCases: [Record<string, any>][] = [
     [
       {
         method: 'GET',
@@ -33,6 +33,16 @@ describe('baseRequestSchema', () => {
       },
     ],
   ]
+
+  basicCases.unshift(
+    ...supportedMethods.map<[Record<string, string>]>(method => [
+      {
+        method,
+        type: 'MyType',
+        body: 'Some body',
+      },
+    ]),
+  )
 
   it.each(basicCases)('does not throw when given the config %o', async rawConfig => {
     const result = await baseRequestSchema.validate(rawConfig)

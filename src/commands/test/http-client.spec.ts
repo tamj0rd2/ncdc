@@ -1,5 +1,5 @@
 import { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
-import { Config } from '~config'
+import { Config, SupportedMethod } from '~config'
 import * as _messages from '~messages'
 import { FetchResource } from '~validation'
 import { createHttpClient } from './http-client'
@@ -19,35 +19,60 @@ describe('CDC Tester', () => {
     fetchResource = createHttpClient(loader)
   })
 
-  it('calls the loader with the correct args for a GET request', async () => {
-    const config: Partial<Config> = {
-      request: {
-        method: 'GET',
-        endpoint: '/blah',
+  describe('For http request methods that do not have a body', () => {
+    const casesWithoutBody: [SupportedMethod, 'get' | 'delete' | 'options' | 'head'][] = [
+      ['GET', 'get'],
+      ['DELETE', 'delete'],
+      ['OPTIONS', 'options'],
+      ['HEAD', 'head'],
+    ]
+
+    it.each(casesWithoutBody)(
+      'calls the loader with the correct args for a %s request',
+      async (method, func) => {
+        const config: Partial<Config> = {
+          request: {
+            method,
+            endpoint: '/blah',
+          },
+          response: { code: 200 },
+        }
+        loader[func] = jest.fn()
+        loader[func].mockResolvedValue({ status: 200 })
+
+        await fetchResource(config as Config)
+
+        expect(loader[func]).toBeCalledWith('/blah')
       },
-      response: { code: 200 },
-    }
-    loader.get.mockResolvedValue({ status: 200 })
-
-    await fetchResource(config as Config)
-
-    expect(loader.get).toBeCalledWith('/blah')
+    )
   })
 
-  it('calls the loader with the correct args for a POST request', async () => {
-    const config: Partial<Config> = {
-      request: {
-        method: 'POST',
-        endpoint: '/blah',
-        body: 'Ello',
+  describe('For http requests that can have a body', () => {
+    const casesWithBody: [SupportedMethod, 'post' | 'put' | 'patch'][] = [
+      ['POST', 'post'],
+      ['PUT', 'put'],
+      ['PATCH', 'patch'],
+    ]
+
+    it.each(casesWithBody)(
+      'calls the loader with the correct args for a %s request',
+      async (method, func) => {
+        const config: Partial<Config> = {
+          request: {
+            method,
+            endpoint: '/blah',
+            body: 'Ello',
+          },
+          response: { code: 200 },
+        }
+        loader[func] = jest.fn()
+        loader[func].mockResolvedValue({ status: 200 })
+
+        await fetchResource(config as Config)
+
+        expect(loader[func]).toBeCalledWith('/blah', 'Ello')
       },
-      response: { code: 200 },
-    }
-    loader.post.mockResolvedValue({ status: 200 })
-
-    await fetchResource(config as Config)
-
-    expect(loader.post).toBeCalledWith('/blah', 'Ello')
+    )
   })
 
   describe('error calling service', () => {

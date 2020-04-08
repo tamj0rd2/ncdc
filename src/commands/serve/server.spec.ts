@@ -1,6 +1,6 @@
 import request from 'supertest'
-import { configureServer } from './server'
-import { ConfigBuilder } from '~config'
+import { configureServer, verbsMap, PossibleMethod } from './server'
+import { ConfigBuilder, SupportedMethod } from '~config'
 import { TypeValidator } from '~validation'
 import Problem from '~problem'
 import { mockObj } from '~test-helpers'
@@ -27,13 +27,53 @@ describe('server', () => {
       .expect(configs)
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { HEAD, ...verbsMinusHead } = verbsMap
+  const methodCases = Object.entries(verbsMinusHead) as [SupportedMethod, PossibleMethod][]
+
+  it.each(methodCases)('handles a basic request with method: %s', async (verb, method) => {
+    const endpoint = '/api/resource'
+
+    const configs = [
+      new ConfigBuilder()
+        .withEndpoint(endpoint)
+        .withMethod(verb)
+        .build(),
+    ]
+
+    const app = configureServer('example.com', configs, mockTypeValidator)
+
+    await request(app)
+      [method](endpoint)
+      .expect(200)
+      .expect('Hello, world!')
+      .expect('Content-Type', /text\/html/)
+  })
+
+  it('handles a basic request with method: HEAD', async () => {
+    const endpoint = '/api/resource'
+
+    const configs = [
+      new ConfigBuilder()
+        .withEndpoint(endpoint)
+        .withMethod('HEAD')
+        .build(),
+    ]
+
+    const app = configureServer('example.com', configs, mockTypeValidator)
+
+    await request(app)
+      .head(endpoint)
+      .expect(200)
+  })
+
   const getCases: [string, string][] = [
     ['/api/resource', '/api/resource'],
     ['/api/resource*', '/api/resource/thing/aling'],
     ['/api/resource/:param', '/api/resource/something'],
   ]
 
-  it.each(getCases)('serves the configured path %s for GET requests', async (endpoint, pathToVisit) => {
+  it.each(getCases)('serves routes matching the configured path %s', async (endpoint, pathToVisit) => {
     const configs = [
       new ConfigBuilder()
         .withEndpoint(endpoint)
@@ -44,22 +84,6 @@ describe('server', () => {
 
     await request(app)
       .get(pathToVisit)
-      .expect(200)
-      .expect('Hello, world!')
-      .expect('Content-Type', /text\/html/)
-  })
-
-  it.each(getCases)('serves the configured path %s for POST requests', async (endpoint, pathToVisit) => {
-    const configs = [
-      new ConfigBuilder()
-        .withEndpoint(endpoint)
-        .withMethod('POST')
-        .build(),
-    ]
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
-
-    await request(app)
-      .post(pathToVisit)
       .expect(200)
       .expect('Hello, world!')
       .expect('Content-Type', /text\/html/)

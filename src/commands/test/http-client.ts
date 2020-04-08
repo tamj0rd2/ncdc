@@ -14,6 +14,16 @@ export const createHttpClient = (loader: AxiosInstance): FetchResource => async 
         return await loader.get(endpoint)
       case 'POST':
         return await loader.post(endpoint, body)
+      case 'PUT':
+        return await loader.put(endpoint, body)
+      case 'DELETE':
+        return await loader.delete(endpoint)
+      case 'PATCH':
+        return await loader.patch(endpoint, body)
+      case 'OPTIONS':
+        return await loader.options(endpoint)
+      case 'HEAD':
+        return await loader.head(endpoint)
     }
   } catch (err) {
     const axiosErr = err as AxiosError

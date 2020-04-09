@@ -9,3 +9,4 @@ json-schema
 .DS_Store
 icon.png
 .eslintcache
+.nyc_output

@@ -24,5 +24,6 @@ module.exports = {
     '!**/dist/**',
     '!**/bin/**'
   ],
+  coverageReporters: ["json"],
   automock: true,
 }

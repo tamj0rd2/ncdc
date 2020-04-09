@@ -1,0 +1,19 @@
+- name: Books
+  request:
+    method: GET
+    endpoints:
+      - /api/books/123
+      - /api/books/456
+    serveEndpoint: /api/books/*
+  response:
+    code: 200
+    headers:
+      content-type: application/json
+    type: Book
+    serveBody:
+      {
+        ISBN: "9780141187761",
+        ISBN_13: 978-0141187761,
+        author: George Orwell,
+        title: 1984 Nineteen Eighty-Four,
+      }

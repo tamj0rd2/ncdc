@@ -20,11 +20,7 @@ describe('server', () => {
 
     const app = configureServer('mysite.com', configs, mockTypeValidator)
 
-    await request(app)
-      .get('/')
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .expect(configs)
+    await request(app).get('/').expect(200).expect('Content-Type', /json/).expect(configs)
   })
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -34,12 +30,7 @@ describe('server', () => {
   it.each(methodCases)('handles a basic request with method: %s', async (verb, method) => {
     const endpoint = '/api/resource'
 
-    const configs = [
-      new ConfigBuilder()
-        .withEndpoint(endpoint)
-        .withMethod(verb)
-        .build(),
-    ]
+    const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod(verb).build()]
 
     const app = configureServer('example.com', configs, mockTypeValidator)
 
@@ -53,18 +44,11 @@ describe('server', () => {
   it('handles a basic request with method: HEAD', async () => {
     const endpoint = '/api/resource'
 
-    const configs = [
-      new ConfigBuilder()
-        .withEndpoint(endpoint)
-        .withMethod('HEAD')
-        .build(),
-    ]
+    const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod('HEAD').build()]
 
     const app = configureServer('example.com', configs, mockTypeValidator)
 
-    await request(app)
-      .head(endpoint)
-      .expect(200)
+    await request(app).head(endpoint).expect(200)
   })
 
   const getCases: [string, string][] = [
@@ -74,12 +58,7 @@ describe('server', () => {
   ]
 
   it.each(getCases)('serves routes matching the configured path %s', async (endpoint, pathToVisit) => {
-    const configs = [
-      new ConfigBuilder()
-        .withEndpoint(endpoint)
-        .withMethod('GET')
-        .build(),
-    ]
+    const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod('GET').build()]
     const app = configureServer('mysite.com', configs, mockTypeValidator)
 
     await request(app)
@@ -131,20 +110,12 @@ describe('server', () => {
 
     const app = configureServer('mysite.com', configs, mockTypeValidator)
 
-    await request(app)
-      .post(configs[0].request.endpoint)
-      .send('Yo dude!')
-      .expect(404)
-      .expect('Noice')
+    await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(404).expect('Noice')
   })
 
   it('gives a 404 when the request body fails type validation', async () => {
     const configs = [
-      new ConfigBuilder()
-        .withMethod('POST')
-        .withEndpoint('/config1')
-        .withRequestType('number')
-        .build(),
+      new ConfigBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
     ]
 
     const problem: Partial<Problem> = { message: 'Welp!' }

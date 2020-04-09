@@ -37,7 +37,7 @@ export default class TypeValidator {
         const isValid = validator(data)
 
         if (isValid || !validator.errors) return
-        return validator.errors.map(error => new Problem(error, problemType)) as PopulatedArray<Problem>
+        return validator.errors.map((error) => new Problem(error, problemType)) as PopulatedArray<Problem>
     }
   }
 

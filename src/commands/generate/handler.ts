@@ -33,10 +33,10 @@ const createHandler = (
 
   const builtInTypes = ['string', 'number', 'boolean', 'object']
   const types = configs
-    .map(x => x.request.type)
-    .concat(configs.map(x => x.response.type))
+    .map((x) => x.request.type)
+    .concat(configs.map((x) => x.response.type))
     .filter((x): x is string => !!x)
-    .filter(x => !builtInTypes.includes(x))
+    .filter((x) => !builtInTypes.includes(x))
     .filter((x, i, arr) => i === arr.indexOf(x))
 
   if (!types.length) {

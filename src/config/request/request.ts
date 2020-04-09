@@ -43,7 +43,7 @@ export const mapRequestConfig = async (
 
   const endpointsToUse: PopulatedArray<string> = chooseEndpoints(validatedConfig)
 
-  return endpointsToUse.map(endpoint => ({
+  return endpointsToUse.map((endpoint) => ({
     body: bodyToUse,
     endpoint,
     method,

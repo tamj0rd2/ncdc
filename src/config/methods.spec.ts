@@ -5,12 +5,10 @@ enrichYup()
 
 describe('allowedKeysOnly', () => {
   it('is valid when specified keys are used', () => {
-    const schema = object()
-      .allowedKeysOnly()
-      .shape({
-        name: string(),
-        age: number(),
-      })
+    const schema = object().allowedKeysOnly().shape({
+      name: string(),
+      age: number(),
+    })
 
     const config = {
       name: 'Name',
@@ -163,7 +161,7 @@ describe('notAllowedIf', () => {
     nice: string().notAllowedIfSiblings('hello', 'world'),
   })
 
-  it.each(['hello', 'world', 'nice'])('is valid if only %s key is specified', key => {
+  it.each(['hello', 'world', 'nice'])('is valid if only %s key is specified', (key) => {
     const config = {
       [key]: key,
     }
@@ -226,7 +224,7 @@ describe('ofHeaders', () => {
     [{ key: { hello: 'world' } }],
   ]
 
-  it.each(invalidHeaderCases)('throws an error when headers are invalid %s', async headers => {
+  it.each(invalidHeaderCases)('throws an error when headers are invalid %s', async (headers) => {
     await expect(schema.validate(headers)).rejects.toThrowError('object.key should be of type:')
   })
 })

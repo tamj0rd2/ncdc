@@ -22,7 +22,7 @@ describe('SchemaLoader', () => {
       getSchemaForSymbol: jest.fn().mockReturnValue(someSchema),
     }
     mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
-    mockedPath.resolve.mockImplementation(args => args)
+    mockedPath.resolve.mockImplementation((args) => args)
 
     const schemaLoader = new SchemaGenerator('tsconfig path', true)
     const schema = await schemaLoader.load('DealSchema')
@@ -35,10 +35,7 @@ describe('SchemaLoader', () => {
     const someSchema = { $schema: 'schema stuff' }
     const someSchema2 = { $schema: 'schema stuff 2' }
     const mockedGenerator: Partial<TJS.JsonSchemaGenerator> = {
-      getSchemaForSymbol: jest
-        .fn()
-        .mockReturnValueOnce(someSchema)
-        .mockReturnValueOnce(someSchema2),
+      getSchemaForSymbol: jest.fn().mockReturnValueOnce(someSchema).mockReturnValueOnce(someSchema2),
     }
     mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
 

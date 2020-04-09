@@ -34,7 +34,7 @@ export const testConfigs = async (
 
   const resultsLogger = logTestResults(baseURL)
 
-  const testTasks = configs.map(testConfig => {
+  const testTasks = configs.map((testConfig) => {
     return test(testConfig)
       .then(resultsLogger(testConfig.name, testConfig.request.endpoint))
       .catch(logTestError(testConfig.name))

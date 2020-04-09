@@ -21,9 +21,9 @@ const groupBy = <T>(items: ReadonlyArray<T>, getKey: (item: T) => string): Map<s
 const colorInspect = (obj: any, depth?: number): string => inspect(obj, false, depth, true)
 
 export const gatherValidationErrors = (problems: ReadonlyArray<Problem>): string =>
-  Array.from(groupBy(problems, x => x.path))
+  Array.from(groupBy(problems, (x) => x.path))
     .map(([dataPath, groupedProblems]) =>
-      Array.from(groupBy(groupedProblems, x => x.problemType))
+      Array.from(groupBy(groupedProblems, (x) => x.problemType))
         .map(([type, groupedByType]) => {
           const result = groupedByType.map(({ message }) => {
             const messagePrefix = blue(`${type} ${dataPath}`)

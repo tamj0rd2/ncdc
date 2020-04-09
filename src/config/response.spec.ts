@@ -66,7 +66,7 @@ describe('mapResponseConfig', () => {
 
   it.each(combinedConfigCases)(
     'does not throw for config that contains test settings',
-    async combinedConfig => {
+    async (combinedConfig) => {
       await expect(mapResponseConfig(combinedConfig, typeValidator, getBodyToUse)).resolves.not.toThrowError()
     },
   )

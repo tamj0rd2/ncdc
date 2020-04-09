@@ -5,7 +5,7 @@ import escapeStringRegex from 'escape-string-regexp'
 
 const IS_DEBUG_MODE = inspector.url()
 
-const normalizeMessage = format(info => {
+const normalizeMessage = format((info) => {
   const message =
     typeof info.message === 'object'
       ? (info.message = inspect(info.message, false, undefined, true))
@@ -14,7 +14,7 @@ const normalizeMessage = format(info => {
   return { ...info, message: message }
 })
 
-const extractStack = format(info => {
+const extractStack = format((info) => {
   if (info.metadata?.stack) {
     const newInfo = { ...info, stack: info.metadata.stack }
     const matchedError = info.metadata?.stack?.match(/Error: (.*)/)
@@ -38,7 +38,7 @@ const logger = createLogger({
         format.metadata(),
         normalizeMessage(),
         extractStack(),
-        format.printf(info => {
+        format.printf((info) => {
           let result = `${info.level}: `
           result += info.message
           result += IS_DEBUG_MODE && info?.stack ? `\n${info?.stack}` : ''

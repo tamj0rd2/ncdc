@@ -177,7 +177,7 @@ describe('readConfig', () => {
         },
       }
 
-      getTestSchema.mockImplementation(serveOnly => (!serveOnly ? object() : number()) as any)
+      getTestSchema.mockImplementation((serveOnly) => (!serveOnly ? object() : number()) as any)
 
       safeLoad.mockReturnValue([rawConfig])
       mapRequestConfig.mockResolvedValue([rawConfig as any])
@@ -197,7 +197,7 @@ describe('readConfig', () => {
         },
       }
 
-      getTestSchema.mockImplementation(serveOnly => (serveOnly ? object() : number()) as any)
+      getTestSchema.mockImplementation((serveOnly) => (serveOnly ? object() : number()) as any)
 
       safeLoad.mockReturnValue([rawConfig])
       mapRequestConfig.mockResolvedValue([rawConfig as any])

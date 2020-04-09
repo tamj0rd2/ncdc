@@ -18,9 +18,7 @@ const baseResponseSchema = object({
   code: number().required(),
   body: mixed<Data>().notAllowedIfSiblings('bodyPath'),
   bodyPath: string().notAllowedIfSiblings('body'),
-  headers: object<OutgoingHttpHeaders>()
-    .ofHeaders()
-    .notRequired(),
+  headers: object<OutgoingHttpHeaders>().ofHeaders().notRequired(),
   type: string().notRequired(),
 })
 

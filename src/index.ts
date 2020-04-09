@@ -15,7 +15,7 @@ import inspector from 'inspector'
 
 export default async function run(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleError: HandleError = error => {
+  const handleError: HandleError = (error) => {
     logger.error(error.message, error)
     process.exit(1)
   }

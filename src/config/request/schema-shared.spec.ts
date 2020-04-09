@@ -35,7 +35,7 @@ describe('baseRequestSchema', () => {
   ]
 
   basicCases.unshift(
-    ...supportedMethods.map<[Record<string, string>]>(method => [
+    ...supportedMethods.map<[Record<string, string>]>((method) => [
       {
         method,
         type: 'MyType',
@@ -44,7 +44,7 @@ describe('baseRequestSchema', () => {
     ]),
   )
 
-  it.each(basicCases)('does not throw when given the config %o', async rawConfig => {
+  it.each(basicCases)('does not throw when given the config %o', async (rawConfig) => {
     const result = await baseRequestSchema.validate(rawConfig)
 
     expect(result).toMatchObject(rawConfig)

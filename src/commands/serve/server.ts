@@ -83,7 +83,7 @@ export const configureServer = (
         const expectedQuery = parse(request.endpoint, true).query
 
         const queryMismatches = Object.keys(expectedQuery)
-          .map(key => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
+          .map((key) => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
           .filter((x): x is string => !!x)
 
         if (queryMismatches.length) {
@@ -155,7 +155,7 @@ export const startServer = (
   routes: Config[],
   typeValidator: TypeValidator,
 ): Promise<Server> => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const serverRoot = `http://localhost:${port}`
     const app = configureServer(serverRoot, routes, typeValidator)
 

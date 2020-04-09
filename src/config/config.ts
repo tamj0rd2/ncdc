@@ -25,14 +25,12 @@ export default async function readConfig(
   const rawConfigs = safeLoad(await readFileAsync(configPath))
   if (!Array.isArray(rawConfigs)) throw new Error('Config file should contain an array of configurations')
 
-  const configs = await array()
-    .of(getConfigSchema(mode))
-    .validate(rawConfigs)
+  const configs = await array().of(getConfigSchema(mode)).validate(rawConfigs)
 
   const getBody = createGetBodyToUse(configPath)
 
   const mappingResult = await Promise.all(
-    configs.filter(x => mode === Mode.Serve || !x.serveOnly).map(mapConfig(typeValidator, getBody)),
+    configs.filter((x) => mode === Mode.Serve || !x.serveOnly).map(mapConfig(typeValidator, getBody)),
   )
 
   if (containsProblemResult(mappingResult)) {

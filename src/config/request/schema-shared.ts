@@ -22,15 +22,11 @@ export const supportedMethods: SupportedMethod[] = [
 ]
 
 export const baseRequestSchema = object({
-  method: mixed<SupportedMethod>()
-    .oneOf(supportedMethods)
-    .required(),
+  method: mixed<SupportedMethod>().oneOf(supportedMethods).required(),
   type: string()
     .test('withoutSpaces', '${path} should not contain spaces', (value = '') => value.indexOf(' ') === -1)
     .notRequired(),
   body: mixed<Data>().notAllowedIfSiblings('bodyPath'),
   bodyPath: string().notAllowedIfSiblings('body'),
-  headers: object<IncomingHttpHeaders>()
-    .ofHeaders()
-    .notRequired(),
+  headers: object<IncomingHttpHeaders>().ofHeaders().notRequired(),
 }).allowedKeysOnly()

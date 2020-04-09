@@ -14,7 +14,7 @@ const serverLogger = createLogger({
         format.colorize(),
         format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         format.errors({ stack: true }),
-        format.printf(info => {
+        format.printf((info) => {
           let result = `${info.timestamp} - ${info.level}: `
 
           let message =

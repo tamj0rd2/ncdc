@@ -108,7 +108,7 @@ describe('Generate Command', () => {
 
   it.each([[true], [false]])(
     'calls the schema generator with the correct args when force is %s',
-    async force => {
+    async (force) => {
       const handler = getHandler(force)
       const args: GenerateArgs = {
         outputPath: 'out',

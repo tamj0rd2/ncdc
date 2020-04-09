@@ -7,9 +7,9 @@ export default function enrichYup(): void {
 
   enriched = true
 
-  addMethod(mixed, 'requiredIfNoSiblings', function(this: Schema<MixedSchema>, ...siblings: string[]) {
-    return this.test('requiredIf', '', function(value) {
-      const allSiblingsDefined = siblings.filter(x => !this.parent[x]).length === 0
+  addMethod(mixed, 'requiredIfNoSiblings', function (this: Schema<MixedSchema>, ...siblings: string[]) {
+    return this.test('requiredIf', '', function (value) {
+      const allSiblingsDefined = siblings.filter((x) => !this.parent[x]).length === 0
 
       const isValid = allSiblingsDefined || !!value
 
@@ -25,11 +25,11 @@ export default function enrichYup(): void {
     })
   })
 
-  addMethod(mixed, 'notAllowedIfSiblings', function(this: Schema<MixedSchema>, ...siblings: string[]) {
-    return this.test('notAllowedIf', '', function(value) {
+  addMethod(mixed, 'notAllowedIfSiblings', function (this: Schema<MixedSchema>, ...siblings: string[]) {
+    return this.test('notAllowedIf', '', function (value) {
       if (!value) return true
 
-      const siblingIsDefined = siblings.find(x => !!this.parent[x])
+      const siblingIsDefined = siblings.find((x) => !!this.parent[x])
       if (!siblingIsDefined) return true
 
       return this.createError({
@@ -41,8 +41,8 @@ export default function enrichYup(): void {
     })
   })
 
-  addMethod(object, 'allowedKeysOnly', function(...ignoredKeys: string[]) {
-    return this.transform(value => {
+  addMethod(object, 'allowedKeysOnly', function (...ignoredKeys: string[]) {
+    return this.transform((value) => {
       const strippedValue = { ...value }
 
       for (const key of ignoredKeys) {
@@ -50,11 +50,11 @@ export default function enrichYup(): void {
       }
 
       return strippedValue
-    }).test('allowedKeysOnly', '', function(value) {
+    }).test('allowedKeysOnly', '', function (value) {
       if (!value) return true
 
       const known = Object.keys((this.schema as any).fields)
-      const unknownKeys = Object.keys(value).filter(key => known.indexOf(key) === -1)
+      const unknownKeys = Object.keys(value).filter((key) => known.indexOf(key) === -1)
 
       if (!unknownKeys.length) return true
       return this.createError({
@@ -64,13 +64,13 @@ export default function enrichYup(): void {
     })
   })
 
-  addMethod(object, 'ofHeaders', function() {
-    return this.test('hasValidHeaders', '', function(headers) {
-      const firstInvalidField = Object.keys(headers ?? {}).find(key => {
+  addMethod(object, 'ofHeaders', function () {
+    return this.test('hasValidHeaders', '', function (headers) {
+      const firstInvalidField = Object.keys(headers ?? {}).find((key) => {
         const value = headers[key]
 
         return Array.isArray(value)
-          ? value.find(x => typeof x !== 'string') !== undefined
+          ? value.find((x) => typeof x !== 'string') !== undefined
           : !['string', 'undefined'].includes(typeof value)
       })
 
@@ -85,11 +85,11 @@ export default function enrichYup(): void {
     })
   })
 
-  addMethod(string, 'startsWith', function(substring: string) {
+  addMethod(string, 'startsWith', function (substring: string) {
     return this.test(
       'startsWith',
       `\${path} should start with ${substring}`,
-      value => !value || value.startsWith(substring),
+      (value) => !value || value.startsWith(substring),
     )
   })
 }

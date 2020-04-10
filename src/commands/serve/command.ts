@@ -7,6 +7,8 @@ import { startServer } from './server'
 import { Mode } from '~config/types'
 import logger from '~logger'
 import * as consts from '~commands/consts'
+import chokidar from 'chokidar'
+import { Server } from 'http'
 
 interface ServeArgs {
   configPath?: string
@@ -14,6 +16,7 @@ interface ServeArgs {
   tsconfigPath: string
   schemaPath?: string
   force: boolean
+  watch: boolean
 }
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
@@ -43,6 +46,11 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       default: false,
       description: consts.FORCE_GENERATION_DESCRIPTION,
     })
+    .option(consts.WATCH, {
+      type: consts.WATCH_TYPE,
+      description: consts.WATCH_DESCRIPTION,
+      default: consts.WATCH_DEFAULT,
+    })
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
@@ -57,24 +65,40 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
     return process.exit(1)
   }
 
-  const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
   const fullConfigPath = resolve(configPath)
 
-  let configs: Config[]
-  try {
-    configs = await readConfig(fullConfigPath, typeValidator, Mode.Serve)
-  } catch (err) {
-    return handleError(err)
+  const runServer = async (): Promise<Server> => {
+    const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
+
+    let configs: Config[]
+    try {
+      configs = await readConfig(fullConfigPath, typeValidator, Mode.Serve)
+    } catch (err) {
+      return handleError(err)
+    }
+
+    return startServer(port, configs, typeValidator)
   }
 
-  if (!configs.length) {
-    logger.info('No mocks to run')
-    return
-  }
+  let server = await runServer()
 
-  return startServer(port, configs, typeValidator)
-    .then(() => process.exit())
-    .catch(handleError)
+  chokidar
+    .watch(fullConfigPath)
+    .on('all', (e, path) => {
+      logger.info({ e, path })
+    })
+    .on('add', () => {
+      // theThingsToDo()
+    })
+    .on('change', () => {
+      logger.info('Restarting server.')
+      // logger.info({ path, stats })
+      server.close(async (err) => {
+        if (err) return handleError(err)
+
+        server = await runServer()
+      })
+    })
 }
 
 export default function createServeCommand(

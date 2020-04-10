@@ -71,6 +71,10 @@ export const configureServer = (
   app.use(express.raw())
   app.get(ROOT, (_, res) => res.json(mockConfigs))
 
+  if (mockConfigs.length === 0) {
+    serverLogger.info('No mocks to serve')
+  }
+
   mockConfigs.forEach(({ name, request, response }) => {
     const endpointWithoutQuery = request.endpoint.split('?')[0]
 
@@ -150,21 +154,11 @@ export const configureServer = (
   return app
 }
 
-export const startServer = (
-  port: number,
-  routes: Config[],
-  typeValidator: TypeValidator,
-): Promise<Server> => {
-  return new Promise((resolve) => {
-    const serverRoot = `http://localhost:${port}`
-    const app = configureServer(serverRoot, routes, typeValidator)
+export const startServer = (port: number, routes: Config[], typeValidator: TypeValidator): Server => {
+  const serverRoot = `http://localhost:${port}`
+  const app = configureServer(serverRoot, routes, typeValidator)
 
-    app.on('exit', () => {
-      resolve()
-    })
-
-    return app.listen(port, () => {
-      serverLogger.info(`Endpoints are being served on ${serverRoot}`)
-    })
+  return app.listen(port, () => {
+    serverLogger.info(`Endpoints are being served on ${serverRoot}`)
   })
 }

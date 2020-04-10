@@ -10,3 +10,4 @@ json-schema
 icon.png
 .eslintcache
 .nyc_output
+acceptance-tests/books-fixture/config.yml

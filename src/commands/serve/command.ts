@@ -56,7 +56,7 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
 const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
   args: ServeArgs,
 ): Promise<void> => {
-  const { configPath, port, tsconfigPath, schemaPath, force } = args
+  const { configPath, port, tsconfigPath, schemaPath, force, watch } = args
   if (!configPath) process.exit(1)
 
   if (isNaN(port)) {
@@ -69,36 +69,52 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
 
   const runServer = async (): Promise<Server> => {
     const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
-
-    let configs: Config[]
-    try {
-      configs = await readConfig(fullConfigPath, typeValidator, Mode.Serve)
-    } catch (err) {
-      return handleError(err)
-    }
-
+    const configs = await readConfig(fullConfigPath, typeValidator, Mode.Serve)
     return startServer(port, configs, typeValidator)
   }
 
+  if (!watch) {
+    try {
+      await runServer()
+    } catch (err) {
+      handleError(err)
+    }
+    return
+  }
+
   let server = await runServer()
-
-  chokidar
-    .watch(fullConfigPath)
-    .on('all', (e, path) => {
-      logger.info({ e, path })
-    })
-    .on('add', () => {
-      // theThingsToDo()
-    })
-    .on('change', () => {
-      logger.info('Restarting server.')
-      // logger.info({ path, stats })
+  const restartServer = () =>
+    new Promise<void>((resolve, reject) => {
       server.close(async (err) => {
-        if (err) return handleError(err)
+        if (err) return reject(err)
 
-        server = await runServer()
+        try {
+          server = await runServer()
+        } catch (err) {
+          return reject(err)
+        }
+        resolve()
       })
     })
+
+  chokidar.watch(fullConfigPath).on('all', async (e, path) => {
+    switch (e) {
+      case 'change':
+      case 'unlink':
+        logger.info('Restarting ncdc serve')
+
+        try {
+          await restartServer()
+        } catch (err) {
+          if (err.code === 'ENOENT') {
+            return logger.error(`Could not start server - no such file or directory ${fullConfigPath}`)
+          }
+          handleError(err)
+        }
+
+        break
+    }
+  })
 }
 
 export default function createServeCommand(

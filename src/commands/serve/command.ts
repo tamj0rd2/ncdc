@@ -71,7 +71,7 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
   const restartServer = (): Promise<void> =>
     new Promise<void>((resolve, reject) => {
       server.close(async (err) => {
-        if (err) return reject(err)
+        if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') return reject(err)
 
         try {
           server = await runServer()
@@ -83,7 +83,10 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
     })
 
   chokidar.watch(fullConfigPath).on('all', async (e) => {
+    logger.debug({ e })
+
     switch (e) {
+      case 'add':
       case 'change':
       case 'unlink':
         logger.info('Restarting ncdc serve')

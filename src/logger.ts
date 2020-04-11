@@ -3,7 +3,7 @@ import { inspect } from 'util'
 import inspector from 'inspector'
 import escapeStringRegex from 'escape-string-regexp'
 
-const IS_DEBUG_MODE = inspector.url()
+const IS_DEBUG_MODE = inspector.url() || process.env.LOG_LEVEL === 'debug'
 
 const normalizeMessage = format((info) => {
   const message =

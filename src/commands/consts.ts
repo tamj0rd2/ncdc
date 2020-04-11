@@ -21,11 +21,6 @@ export const FORCE_GENERATION_DEFAULT = false
 export const FORCE_GENERATION_DESCRIPTION =
   'force schemas to be generated, regardless of typescript compiler errors'
 
-export const WATCH = 'watch'
-export const WATCH_TYPE = 'boolean'
-export const WATCH_DESCRIPTION = 'watches your yaml config file for changes and restarts the serve command'
-export const WATCH_DEFAULT = false
-
 export const EXAMPLE_GENERATE_COMMAND = 'ncdc generate ./config.yml'
 export const EXAMPLE_GENERATE_DESCRIPTION = 'Generates json schemas for any type specified in config.yml.'
 

@@ -117,49 +117,47 @@ describe('ncdc serve', () => {
     expect(res.status).toBe(200)
   })
 
-  describe('when --watch is specified', () => {
-    it('restarts when config.yml is changed', async () => {
-      const baseConfig = readFileSync(TEMPLATE_FILE, 'utf-8')
-      writeFileSync(CONFIG_FILE, baseConfig)
+  it('restarts when config.yml is changed', async () => {
+    const baseConfig = readFileSync(TEMPLATE_FILE, 'utf-8')
+    writeFileSync(CONFIG_FILE, baseConfig)
 
-      const { waitForOutput, waitUntilAvailable } = await startServing('--watch')
-      const resInitial = await fetch(`${SERVE_HOST}/api/books/789`)
-      expect(resInitial.status).toBe(200)
+    const { waitForOutput, waitUntilAvailable } = await startServing()
+    const resInitial = await fetch(`${SERVE_HOST}/api/books/789`)
+    expect(resInitial.status).toBe(200)
 
-      const editedConfig = baseConfig.replace('code: 200', 'code: 234')
-      writeFileSync(CONFIG_FILE, editedConfig)
-      await waitForOutput('Restarting ncdc serve')
-      await waitUntilAvailable()
+    const editedConfig = baseConfig.replace('code: 200', 'code: 234')
+    writeFileSync(CONFIG_FILE, editedConfig)
+    await waitForOutput('Restarting ncdc serve')
+    await waitUntilAvailable()
 
-      const resPostEdit = await fetch(`${SERVE_HOST}/api/books/789`)
-      expect(resPostEdit.status).toBe(234)
-    })
-
-    it('logs a message and kills the server when config.yml has been deleted', async () => {
-      const baseConfig = readFileSync(TEMPLATE_FILE, 'utf-8')
-      writeFileSync(CONFIG_FILE, baseConfig)
-
-      const { getOutput, waitForOutput } = await startServing('--watch')
-      const resInitial = await fetch(`${SERVE_HOST}/api/books/yay`)
-      expect(resInitial.status).toBe(200)
-
-      unlinkSync(CONFIG_FILE)
-      await waitForOutput('Restarting ncdc serve')
-      await waitForOutput('Could not start server')
-      const output = getOutput()
-
-      // Assert
-      expect(output).toMatch(/no such file or directory .+config\.yml/)
-      await expect(fetch(`${SERVE_HOST}/api/books/yay`)).rejects.toThrowError()
-    })
-
-    it.todo('can recover from config.yml being deleted')
-    it.todo('restarts the server when a path referenced by the config file changes')
-
-    // TODO: oooooh. This could actually have a caching folder!!! Then generate
-    // would just become the default :D
-    // typescript-json-schema getSourceFile could really help with this too
-
-    it.todo('restarts when a source file containing types changes')
+    const resPostEdit = await fetch(`${SERVE_HOST}/api/books/789`)
+    expect(resPostEdit.status).toBe(234)
   })
+
+  it('logs a message and kills the server when config.yml has been deleted', async () => {
+    const baseConfig = readFileSync(TEMPLATE_FILE, 'utf-8')
+    writeFileSync(CONFIG_FILE, baseConfig)
+
+    const { getOutput, waitForOutput } = await startServing()
+    const resInitial = await fetch(`${SERVE_HOST}/api/books/yay`)
+    expect(resInitial.status).toBe(200)
+
+    unlinkSync(CONFIG_FILE)
+    await waitForOutput('Restarting ncdc serve')
+    await waitForOutput('Could not start server')
+    const output = getOutput()
+
+    // Assert
+    expect(output).toMatch(/no such file or directory .+config\.yml/)
+    await expect(fetch(`${SERVE_HOST}/api/books/yay`)).rejects.toThrowError()
+  })
+
+  it.todo('can recover from config.yml being deleted')
+  it.todo('restarts the server when a path referenced by the config file changes')
+
+  // TODO: oooooh. This could actually have a caching folder!!! Then generate
+  // would just become the default :D
+  // typescript-json-schema getSourceFile could really help with this too
+
+  it.todo('restarts when a source file containing types changes')
 })

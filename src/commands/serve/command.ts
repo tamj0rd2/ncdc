@@ -16,7 +16,6 @@ interface ServeArgs {
   tsconfigPath: string
   schemaPath?: string
   force: boolean
-  watch: boolean
 }
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
@@ -46,17 +45,12 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       default: false,
       description: consts.FORCE_GENERATION_DESCRIPTION,
     })
-    .option(consts.WATCH, {
-      type: consts.WATCH_TYPE,
-      description: consts.WATCH_DESCRIPTION,
-      default: consts.WATCH_DEFAULT,
-    })
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
   args: ServeArgs,
 ): Promise<void> => {
-  const { configPath, port, tsconfigPath, schemaPath, force, watch } = args
+  const { configPath, port, tsconfigPath, schemaPath, force } = args
   if (!configPath) process.exit(1)
 
   if (isNaN(port)) {
@@ -73,17 +67,8 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
     return startServer(port, configs, typeValidator)
   }
 
-  if (!watch) {
-    try {
-      await runServer()
-    } catch (err) {
-      handleError(err)
-    }
-    return
-  }
-
   let server = await runServer()
-  const restartServer = () =>
+  const restartServer = (): Promise<void> =>
     new Promise<void>((resolve, reject) => {
       server.close(async (err) => {
         if (err) return reject(err)
@@ -97,7 +82,7 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
       })
     })
 
-  chokidar.watch(fullConfigPath).on('all', async (e, path) => {
+  chokidar.watch(fullConfigPath).on('all', async (e) => {
     switch (e) {
       case 'change':
       case 'unlink':

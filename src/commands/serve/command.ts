@@ -82,8 +82,8 @@ const createHandler = (handleError: HandleError, createTypeValidator: CreateType
       })
     })
 
-  chokidar.watch(fullConfigPath).on('all', async (e) => {
-    logger.debug({ e })
+  chokidar.watch(fullConfigPath, { ignoreInitial: true }).on('all', async (e) => {
+    logger.debug(`Chokdar event - ${e}`)
 
     switch (e) {
       case 'add':

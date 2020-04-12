@@ -1,6 +1,5 @@
 import { ChildProcess, exec } from 'child_process'
 import strip from 'strip-ansi'
-import { readFileSync, writeFileSync, unlinkSync as deleteFileSync } from 'fs'
 import isomorphicUnfetch from 'isomorphic-unfetch'
 
 const waitForX = (condition: () => Promise<boolean> | boolean, message = '', timeout = 10): Promise<void> =>
@@ -36,8 +35,7 @@ const waitForX = (condition: () => Promise<boolean> | boolean, message = '', tim
   })
 
 const FIXTURE_FOLDER = './acceptance-tests/books-fixture'
-const TEMPLATE_FILE = `${FIXTURE_FOLDER}/config.template.yml`
-const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
+export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
 export const SERVE_HOST = 'http://localhost:4000'
 
 export const MESSAGE_RESTARTING = 'Restarting ncdc server'
@@ -96,7 +94,3 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
   if (checkAvailability) await waitUntilAvailable()
   return { getOutput: formatOutput, waitForOutput, waitUntilAvailable }
 }
-
-export const readConfigTemplate = (): string => readFileSync(TEMPLATE_FILE, 'utf-8')
-export const writeConfig = (content = readConfigTemplate()): void => writeFileSync(CONFIG_FILE, content)
-export const deleteConfig = (): void => deleteFileSync(CONFIG_FILE)

@@ -1,5 +1,6 @@
-import { fetch, SERVE_HOST, deleteConfig } from './cli-wrapper'
-import { readConfigTemplate, writeConfig, CleanupTask, prepareServe } from './cli-wrapper'
+import { fetch, SERVE_HOST } from './cli-wrapper'
+import { CleanupTask, prepareServe } from './cli-wrapper'
+import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
 jest.disableAutomock()
 jest.setTimeout(45000)
@@ -15,11 +16,9 @@ describe('ncdc serve', () => {
     }
   })
 
-  afterAll(deleteConfig)
-
   it('starts serving on port 4000', async () => {
     // arrange
-    writeConfig()
+    new ConfigWrapper().addConfig()
 
     // act
     const { getOutput } = await serve()
@@ -35,16 +34,13 @@ describe('ncdc serve', () => {
 
   it('restarts when config.yml is changed', async () => {
     // arrange
-    const baseConfig = readConfigTemplate()
-    writeConfig(baseConfig)
-
+    const configWrapper = new ConfigWrapper().addConfig()
     const { waitForOutput, waitUntilAvailable } = await serve()
     const resInitial = await fetch('/api/books/789')
     expect(resInitial.status).toBe(200)
 
     // act
-    const editedConfig = baseConfig.replace('code: 200', 'code: 234')
-    writeConfig(editedConfig)
+    configWrapper.editConfig('Books', (c) => ({ ...c, response: { ...c.response, code: 234 } }))
     await waitForOutput('Restarting ncdc serve')
     await waitUntilAvailable()
     const resPostEdit = await fetch('/api/books/789')
@@ -55,13 +51,13 @@ describe('ncdc serve', () => {
 
   it('logs a message and kills the server when config.yml has been deleted', async () => {
     // arrange
-    writeConfig()
+    const configWrapper = new ConfigWrapper().addConfig()
     const { getOutput, waitForOutput } = await serve()
     const resInitial = await fetch('/api/books/yay')
     expect(resInitial.status).toBe(200)
 
     // act
-    deleteConfig()
+    configWrapper.deleteFile()
     await waitForOutput('Restarting ncdc serve')
     await waitForOutput('Could not start server')
     const output = getOutput()
@@ -74,18 +70,16 @@ describe('ncdc serve', () => {
   // TODO: refactor these tests to use js-yaml safeDump and config builder
   it('can recover from config.yml being deleted when file is re-added', async () => {
     // arrange
-    const baseConfig = readConfigTemplate()
-    writeConfig(baseConfig)
-
+    const configWrapper = new ConfigWrapper().addConfig()
     const { waitForOutput } = await serve()
-    deleteConfig()
+    configWrapper.deleteFile()
     await waitForOutput('Could not start server')
 
-    // // act
-    const editedConfig = baseConfig.replace('name: Books', 'name: Cooks').replace('code: 200', 'code: 404')
-    writeConfig(editedConfig)
+    // act
+    const newConfig = new ConfigBuilder().withName('Cooks').withCode(404).build()
+    configWrapper.addConfig(newConfig)
 
-    // // assert
+    // assert
     await waitForOutput(`Registered ${SERVE_HOST}/api/books/* from config: Cooks`)
     const { status } = await fetch('/api/books/noice')
     expect(status).toEqual(404)

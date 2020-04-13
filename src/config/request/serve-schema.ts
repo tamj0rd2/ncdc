@@ -10,8 +10,6 @@ export const getServeSchema = () =>
     .shape({
       endpoints: endpointsSchema.requiredIfNoSiblings('serveEndpoint'),
       serveEndpoint: endpointSchema.requiredIfNoSiblings('endpoints'),
-      serveBody: mixed<Data>().notAllowedIfSiblings('body', 'bodyPath', 'serveBodyPath'),
-      serveBodyPath: string().notAllowedIfSiblings('body', 'bodyPath', 'serveBody'),
     })
     .allowedKeysOnly()
 

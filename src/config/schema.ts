@@ -2,6 +2,7 @@ import { object, string, bool, InferType } from 'yup'
 import { TestRequestSchema, getTestSchema, getServeSchema } from './request'
 import { Mode } from './types'
 import { testResponseSchema, serveResponseSchema } from './response'
+import { ServeRequestSchema } from './request/serve-schema'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const getConfigSchema = (mode: Mode) => {
@@ -9,7 +10,7 @@ export const getConfigSchema = (mode: Mode) => {
   return object({
     name: string().required(),
     serveOnly: bool().default(false),
-    request: object<TestRequestSchema>()
+    request: object<TestRequestSchema | ServeRequestSchema>()
       .when('serveOnly', {
         is: false,
         then: mode === Mode.Test ? getTestSchema().required() : serveSchema.required(),

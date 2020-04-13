@@ -1,6 +1,6 @@
 import { OutgoingHttpHeaders } from 'http'
-import { existsSync, unlinkSync, writeFileSync } from 'fs'
-import { CONFIG_FILE } from './cli-wrapper'
+import { existsSync, unlinkSync, writeFileSync, rmdirSync, mkdirSync } from 'fs'
+import { CONFIG_FILE, FIXTURE_FOLDER } from './cli-wrapper'
 import jsyaml from 'js-yaml'
 
 export interface Config {
@@ -14,7 +14,8 @@ export interface Config {
     code: number
     headers: OutgoingHttpHeaders
     type: string
-    serveBody: any
+    serveBody?: any
+    serveBodyPath?: string
   }
 }
 
@@ -49,6 +50,25 @@ export class ConfigBuilder {
     return this
   }
 
+  public withServeBody(serveBody: any): ConfigBuilder {
+    if (!serveBody) {
+      delete this.config.response.serveBody
+      return this
+    }
+
+    this.config.response.serveBody = serveBody
+    return this
+  }
+
+  public withFixture(name = 'response'): ConfigBuilder {
+    if (this.config.response.serveBodyPath) {
+      throw new Error('Response serveBodyPath already set to ' + this.config.response.serveBodyPath)
+    }
+
+    this.config.response.serveBodyPath = `./responses/${name}.json`
+    return this
+  }
+
   public build(): Config {
     return this.config
   }
@@ -57,8 +77,13 @@ export class ConfigBuilder {
 export class ConfigWrapper {
   private configs: Config[] = []
 
+  private static ResponsesFolder = `${FIXTURE_FOLDER}/responses`
+
   constructor() {
-    if (existsSync(CONFIG_FILE)) this.deleteFile()
+    if (existsSync(CONFIG_FILE)) this.deleteYaml()
+    if (existsSync(ConfigWrapper.ResponsesFolder))
+      rmdirSync(ConfigWrapper.ResponsesFolder, { recursive: true })
+    mkdirSync(ConfigWrapper.ResponsesFolder)
   }
 
   public addConfig(config = new ConfigBuilder().build()): ConfigWrapper {
@@ -83,7 +108,17 @@ export class ConfigWrapper {
     return this
   }
 
-  public deleteFile(): ConfigWrapper {
+  public addFixture(name: string, content: any): ConfigWrapper {
+    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    if (existsSync(filePath)) {
+      throw new Error(`${filePath} already exists`)
+    }
+
+    writeFileSync(filePath, JSON.stringify(content, null, 2))
+    return this
+  }
+
+  public deleteYaml(): ConfigWrapper {
     unlinkSync(CONFIG_FILE)
     this.configs = []
     return this

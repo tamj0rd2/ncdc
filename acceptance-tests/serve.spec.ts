@@ -32,6 +32,27 @@ describe('ncdc serve', () => {
     expect(output).not.toContain('Restarting ncdc serve')
   })
 
+  it('serves an endpoint from a fixture file', async () => {
+    // arrange
+    new ConfigWrapper()
+      .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture('response').build())
+      .addFixture('response', {
+        title: 'nice meme lol',
+        ISBN: 'asdf',
+        ISBN_13: 'asdf',
+        author: 'me',
+      })
+
+    // act
+    await serve()
+    const res = await fetch('/api/books/cooldude')
+    const json = await res.json()
+
+    // assert
+    expect(res.status).toBe(200)
+    expect(json.title).toBe('nice meme lol')
+  })
+
   it('restarts when config.yml is changed', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
@@ -57,7 +78,7 @@ describe('ncdc serve', () => {
     expect(resInitial.status).toBe(200)
 
     // act
-    configWrapper.deleteFile()
+    configWrapper.deleteYaml()
     await waitForOutput('Restarting ncdc serve')
     await waitForOutput('Could not start server')
     const output = getOutput()
@@ -72,7 +93,7 @@ describe('ncdc serve', () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
     const { waitForOutput } = await serve()
-    configWrapper.deleteFile()
+    configWrapper.deleteYaml()
     await waitForOutput('Could not start server')
 
     // act
@@ -85,7 +106,9 @@ describe('ncdc serve', () => {
     expect(status).toEqual(404)
   })
 
-  it.todo('restarts the server when a path referenced by the config file changes')
+  it('restarts the server when a path referenced by the config file changes', () => {
+    const configWrapper = new ConfigWrapper()
+  })
 
   // TODO: oooooh. This could actually have a caching folder!!! Then generate
   // would just become the default :D

@@ -11,3 +11,4 @@ icon.png
 .eslintcache
 .nyc_output
 acceptance-tests/books-fixture/config.yml
+acceptance-tests/books-fixture/responses

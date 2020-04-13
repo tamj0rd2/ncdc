@@ -257,8 +257,8 @@ Here's a format that describes each config setting:
 
 - **Description**: A path to the body you expect the endpoint to respond with.
   It must be a JSON file (should be updated to support other files in the future).
-  Cannot be specified at the same time as `request.body`, `request.bodyPath` or
-  `request.serveBody`. Relative paths should be relative to the config file
+  Cannot be specified at the same time as `response.body`, `response.bodyPath` or
+  `response.serveBody`. Relative paths should be relative to the config file
   location. This property will be ignored in Test mode
 - **Type**: string
 - **Required?**: No

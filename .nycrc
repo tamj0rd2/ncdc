@@ -1,0 +1,17 @@
+{
+  "reporter": [
+    "lcov",
+    "text",
+    "text-summary"
+  ],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "src/test-helpers.ts",
+    "src/config/config-builder.ts",
+    "**/*.spec.ts",
+    "**/*.d.ts"
+  ],
+  "tempDirectory": "./coverage"
+}

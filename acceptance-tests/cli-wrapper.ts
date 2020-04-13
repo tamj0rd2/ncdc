@@ -56,7 +56,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
   args = '',
 ): Promise<ServeResult> => {
   const command = `serve ${CONFIG_FILE} -c ${FIXTURE_FOLDER}/tsconfig.json ${args}`
-  const process: ChildProcess = exec(`LOG_LEVEL=debug nyc --reporter lcov ./bin/ncdc ${command}`)
+  const process: ChildProcess = exec(`LOG_LEVEL=debug ./bin/ncdc ${command}`)
   const output: string[] = []
   const getRawOutput = (): string => output.join('')
   const formatOutput = (): string => strip(getRawOutput())

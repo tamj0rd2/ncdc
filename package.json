@@ -7,26 +7,17 @@
     "ncdc": "./bin/ncdc"
   },
   "scripts": {
-    "clean": "rm -rf ./dist",
-    "typecheck": "tsc",
-    "typecheck:watch": "tsc --watch",
+    "clean": "rm -rf ./dist ./coverage",
+    "typecheck": "tsc && tsc -p ./tsconfig.acceptance.json",
     "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
-    "build": "run-s clean typecheck compile",
-    "prepublishOnly": "npm t && git push",
-    "prepare": "npm run build",
-    "test": "nyc jest --collectCoverage",
+    "prepublishOnly": "./build.sh",
+    "test": "jest",
+    "cover": "nyc jest --coverage",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore --cache"
-  },
-  "nyc": {
-    "reporter": [
-      "lcov",
-      "text"
-    ],
-    "tempDirectory": "./coverage"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged && ./build.sh"
     }
   },
   "lint-staged": {
@@ -47,10 +38,13 @@
   "devDependencies": {
     "@babel/cli": "^7.7.7",
     "@babel/core": "^7.7.7",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-nullish-coalescing-operator": "^7.7.4",
     "@babel/plugin-proposal-optional-chaining": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/preset-typescript": "^7.7.4",
+    "@babel/register": "^7.9.0",
+    "@istanbuljs/nyc-config-babel": "^3.0.0",
     "@types/ajv": "^1.0.0",
     "@types/express": "^4.17.2",
     "@types/jest": "^25.2.1",
@@ -62,6 +56,7 @@
     "@typescript-eslint/eslint-plugin": "^2.7.0",
     "@typescript-eslint/parser": "^2.7.0",
     "babel-jest": "^25.3.0",
+    "babel-plugin-istanbul": "^6.0.0",
     "babel-plugin-module-resolver": "^4.0.0",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",

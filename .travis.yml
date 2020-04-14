@@ -3,7 +3,5 @@ jobs:
   include:
     - stage: test
       script:
-        - npm run lint
-        - npm run typecheck
-        - npm run test --coverage
+        - ./build.sh
       after_script: bash <(curl -s https://codecov.io/bash)

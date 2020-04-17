@@ -1,11 +1,11 @@
-import { fetch, SERVE_HOST } from './cli-wrapper'
+import { fetch, SERVE_HOST, MESSAGE_RESTARTING } from './cli-wrapper'
 import { CleanupTask, prepareServe } from './cli-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
 jest.disableAutomock()
 jest.setTimeout(45000)
 
-describe('ncdc serve', () => {
+describe.skip('ncdc serve', () => {
   const cleanupTasks: CleanupTask[] = []
   const serve = prepareServe(cleanupTasks)
 
@@ -29,7 +29,7 @@ describe('ncdc serve', () => {
     expect(output).toContain(`Registered ${SERVE_HOST}/api/books/* from config: Books`)
     expect(output).toContain(`Endpoints are being served on ${SERVE_HOST}`)
     expect(res.status).toBe(200)
-    expect(output).not.toContain('Restarting ncdc serve')
+    expect(output).not.toContain(MESSAGE_RESTARTING)
   })
 
   it('serves an endpoint from a fixture file', async () => {
@@ -62,7 +62,7 @@ describe('ncdc serve', () => {
 
     // act
     configWrapper.editConfig('Books', (c) => ({ ...c, response: { ...c.response, code: 234 } }))
-    await waitForOutput('Restarting ncdc serve')
+    await waitForOutput(MESSAGE_RESTARTING)
     await waitUntilAvailable()
     const resPostEdit = await fetch('/api/books/789')
 
@@ -79,7 +79,7 @@ describe('ncdc serve', () => {
 
     // act
     configWrapper.deleteYaml()
-    await waitForOutput('Restarting ncdc serve')
+    await waitForOutput(MESSAGE_RESTARTING)
     await waitForOutput('Could not start server')
     const output = getOutput()
 
@@ -106,8 +106,32 @@ describe('ncdc serve', () => {
     expect(status).toEqual(404)
   })
 
-  it('restarts the server when a path referenced by the config file changes', () => {
+  // TODO: figure out why this is passing. it;s weirrd
+  it('restarts the server when a path referenced by the config file changes', async () => {
+    // arrange
+    const fixtureName = 'response'
     const configWrapper = new ConfigWrapper()
+      .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+      .addFixture(fixtureName, {
+        title: 'nice meme lol',
+        ISBN: 'asdf',
+        ISBN_13: 'asdf',
+        author: 'me',
+      })
+
+    // act
+    const { getOutput, waitForOutput, waitUntilAvailable } = await serve()
+    configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'shit meme' }))
+
+    await waitForOutput(MESSAGE_RESTARTING)
+    await waitUntilAvailable()
+    const res = await fetch('/api/books/memes')
+    const json = await res.json()
+
+    // assert
+    expect(getOutput()).toContain('Meme books')
+    console.log(getOutput())
+    expect(json.title).toBe('shit meme')
   })
 
   // TODO: oooooh. This could actually have a caching folder!!! Then generate

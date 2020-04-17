@@ -3,7 +3,7 @@ const commonSettings = {
     '<rootDir>/bin',
     '<rootDir>/coverage',
     '<rootDir>/dist/',
-    '<rootDir>/node_modules/'
+    '<rootDir>/node_modules/',
   ],
   moduleNameMapper: {
     '~(.*)$': '<rootDir>/src/$1'
@@ -48,9 +48,13 @@ const integrationTestSettings = {
 }
 
 const acceptanceTestSettings = {
+  ...commonSettings,
   displayName: 'Acceptance',
   testMatch: [
     '<rootDir>/acceptance-tests/**/*.spec.ts'
+  ],
+  watchPathIgnorePatterns: [
+    '<rootDir>/acceptance-tests/books-fixture.*'
   ]
 }
 

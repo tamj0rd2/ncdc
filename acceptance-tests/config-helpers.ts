@@ -76,6 +76,7 @@ export class ConfigBuilder {
 
 export class ConfigWrapper {
   private configs: Config[] = []
+  private fixtures: Record<string, object> = {}
 
   private static ResponsesFolder = `${FIXTURE_FOLDER}/responses`
 
@@ -92,7 +93,7 @@ export class ConfigWrapper {
     }
 
     this.configs.push(config)
-    this.commitConfig()
+    this.commitConfigs()
     return this
   }
 
@@ -104,17 +105,37 @@ export class ConfigWrapper {
     }
 
     this.configs[configIndex] = mutate(this.configs[configIndex])
-    this.commitConfig()
+    this.commitConfigs()
     return this
   }
 
-  public addFixture(name: string, content: any): ConfigWrapper {
-    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
-    if (existsSync(filePath)) {
-      throw new Error(`${filePath} already exists`)
+  public addFixture(name: string, content: object): ConfigWrapper {
+    if (this.fixtures[name]) {
+      throw new Error(`Fixture with name ${name} already exists`)
     }
 
-    writeFileSync(filePath, JSON.stringify(content, null, 2))
+    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    if (existsSync(filePath)) {
+      throw new Error(`${filePath} already exists on disk`)
+    }
+
+    this.commitFixture(name, content)
+    return this
+  }
+
+  public editFixture(name: string, mutate: (f: object) => object): ConfigWrapper {
+    const fixture = this.fixtures[name]
+
+    if (!fixture) {
+      throw new Error(`Fixture with name ${name} is not registered`)
+    }
+
+    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    if (!existsSync(filePath)) {
+      throw new Error(`${filePath} does not exist on disk`)
+    }
+
+    this.commitFixture(name, mutate(fixture))
     return this
   }
 
@@ -124,8 +145,14 @@ export class ConfigWrapper {
     return this
   }
 
-  private commitConfig(): void {
+  private commitConfigs(): void {
     const yaml = jsyaml.safeDump(this.configs)
     writeFileSync(CONFIG_FILE, yaml)
+  }
+
+  private commitFixture(name: string, content: object): void {
+    this.fixtures[name] = content
+    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    writeFileSync(filePath, JSON.stringify(content, null, 2))
   }
 }

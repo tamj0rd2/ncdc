@@ -38,7 +38,7 @@ export const FIXTURE_FOLDER = './acceptance-tests/books-fixture'
 export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
 export const SERVE_HOST = 'http://localhost:4000'
 
-export const MESSAGE_RESTARTING = 'Restarting ncdc server'
+export const MESSAGE_RESTARTING = 'Restarting ncdc serve'
 
 type ServeResult = {
   getOutput(): string

@@ -17,12 +17,13 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && ./build.sh"
+      "pre-commit": "lint-staged"
     }
   },
   "lint-staged": {
     "*.ts": [
-      "npm run lint -- --fix"
+      "npm run lint -- --fix",
+      "./build.sh"
     ]
   },
   "repository": {

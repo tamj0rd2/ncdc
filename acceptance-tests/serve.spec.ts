@@ -5,7 +5,7 @@ import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 jest.disableAutomock()
 jest.setTimeout(45000)
 
-describe.skip('ncdc serve', () => {
+describe('ncdc serve', () => {
   const cleanupTasks: CleanupTask[] = []
   const serve = prepareServe(cleanupTasks)
 
@@ -107,7 +107,7 @@ describe.skip('ncdc serve', () => {
   })
 
   // TODO: figure out why this is passing. it;s weirrd
-  it('restarts the server when a path referenced by the config file changes', async () => {
+  it.skip('restarts the server when a path referenced by the config file changes', async () => {
     // arrange
     const fixtureName = 'response'
     const configWrapper = new ConfigWrapper()

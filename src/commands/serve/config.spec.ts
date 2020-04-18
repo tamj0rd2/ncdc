@@ -117,7 +117,11 @@ describe('request', () => {
     )
 
     it('casts it to an array of strings if it is a single string', () => {
-      const config = { name: 'hmm', request: { method: 'post', endpoints: '/hello' }, response: {} }
+      const config = {
+        name: 'hmm',
+        request: { method: 'post', endpoints: '/hello' },
+        response: { code: 200 },
+      }
       const result = validate([config])
 
       if (!result.success) {
@@ -158,7 +162,11 @@ describe('request', () => {
 
   describe('serveOnly', () => {
     it('is false by default if not supplied', () => {
-      const config = { name: 'My Config', request: { method: 'get', endpoints: '/api' }, response: {} }
+      const config = {
+        name: 'My Config',
+        request: { method: 'get', endpoints: '/api' },
+        response: { code: 200 },
+      }
       const validationResult = expectNotToGetErrorsConcerning(config, 'serveOnly')
 
       if (!validationResult.success) {
@@ -223,6 +231,103 @@ describe('request', () => {
       expectValidationErors(
         config,
         'config[0].request contains a conflict between optional exclusive peers [body, bodyPath]',
+      )
+    })
+  })
+})
+
+describe('response', () => {
+  it('returns an error if response is missing', () => {
+    expectValidationErors({}, 'config[0].response is required')
+  })
+
+  it('returns an error if response is not an object', () => {
+    const config = { response: 'ayy' }
+    expectValidationErors(config, 'config[0].response must be of type object')
+  })
+
+  it('does not allow unknown fields', () => {
+    const config = { response: { what: 'the' } }
+    expectValidationErors(config, 'config[0].response.what is not allowed')
+  })
+
+  describe('response.code', () => {
+    const goodCodes = [0, '200', 500]
+    it.each(goodCodes.map((x) => [x]))('allows numbers', (code) => {
+      const config = { response: { code } }
+      expectNotToGetErrorsConcerning(config, 'response.code')
+    })
+  })
+
+  describe('response.type', () => {
+    it('is a string with no spaces', () => {
+      const config = { response: { type: 'hello' } }
+      expectNotToGetErrorsConcerning(config, 'response.type')
+    })
+  })
+
+  describe('response.headers', () => {
+    it('is an object', () => {
+      const config = { response: { headers: { 'content-type': 'application/json' } } }
+      expectNotToGetErrorsConcerning(config, 'response.headers')
+    })
+  })
+
+  describe('response.body', () => {
+    it('can be a string', () => {
+      const config = { response: { body: 'Hey dude!!!' } }
+      expectNotToGetErrorsConcerning(config, 'response.body')
+    })
+
+    const objectCases = [`{ "hello": "world" }`, { hello: 'world' }]
+    it.each(objectCases.map((x) => [x]))('can be an object like %o', (body) => {
+      const config = { response: { body } }
+      expectNotToGetErrorsConcerning(config, 'response.body')
+    })
+
+    it('is not required', () => {
+      const config = { response: {} }
+      expectNotToGetErrorsConcerning(config, 'response.body')
+    })
+  })
+
+  describe('response.serveBody', () => {
+    it('can be a string', () => {
+      const config = { response: { serveBody: 'Hey dude!!!' } }
+      expectNotToGetErrorsConcerning(config, 'response.serveBody')
+    })
+
+    const objectCases = [`{ "hello": "world" }`, { hello: 'world' }]
+    it.each(objectCases.map((x) => [x]))('can be an object like %o', (serveBody) => {
+      const config = { response: { serveBody } }
+      expectNotToGetErrorsConcerning(config, 'response.serveBody')
+    })
+
+    it('is not required', () => {
+      const config = { response: {} }
+      expectNotToGetErrorsConcerning(config, 'response.serveBody')
+    })
+  })
+
+  describe('all response body types', () => {
+    it('only one can be defined', () => {
+      const config = {
+        response: { body: 'ello', bodyPath: 'path1', serveBody: 'cya', serveBodyPath: 'path2' },
+      }
+      expectValidationErors(
+        config,
+        'config[0].response contains a conflict between optional exclusive peers [body, bodyPath, serveBody, serveBodyPath]',
+      )
+    })
+
+    it('none are required', () => {
+      const config = { response: {} }
+      expectNotToGetErrorsConcerning(
+        config,
+        'response.body',
+        'response.bodyPath',
+        'response.serveBody',
+        'response.serveBodyPath',
       )
     })
   })

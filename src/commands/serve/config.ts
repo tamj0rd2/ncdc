@@ -5,8 +5,6 @@ import dot from 'dot-object'
 export const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
 type SupportedMethod = typeof supportedMethods[number]
 
-type RequestBodyOptionals = { body?: Data } | { bodyPath?: string }
-
 interface ValidatedServeConfig {
   name: string
   serveOnly: boolean // value should default to true if it does not exist
@@ -56,7 +54,6 @@ const formatMessage = (config: object, { details }: Joi.ValidationError): string
       return `${pathPrefix}${message.replace(/(".*" )/, '')}`
     })
 
-  // console.log(inspect(details, false, 100, true))
   return messages
 }
 
@@ -83,6 +80,8 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
     otherwise: Joi.array().items(endpointSchema).min(1), // only required when serveOnly is true
   })
 
+  const bodySchema = [Joi.string(), Joi.object()]
+
   const schema = Joi.array()
     .items(
       Joi.object({
@@ -103,7 +102,7 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
             })
             .custom((value) => (typeof value === 'string' ? [value] : value)),
           serveEndpoint: endpointSchema,
-          body: [Joi.string(), Joi.object()],
+          body: bodySchema,
           bodyPath: Joi.string(),
         })
           .required()
@@ -112,7 +111,15 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
             then: Joi.object().or('endpoints', 'serveEndpoint'),
           })
           .oxor('body', 'bodyPath'),
-        response: Joi.object().required(),
+        response: Joi.object({
+          code: Joi.number().required(),
+          type: Joi.string(),
+          headers: Joi.object(),
+          body: bodySchema,
+          serveBody: bodySchema,
+        })
+          .required()
+          .oxor('body', 'bodyPath', 'serveBody', 'serveBodyPath'),
       }),
     )
     .required()

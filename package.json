@@ -7,7 +7,7 @@
     "ncdc": "./bin/ncdc"
   },
   "scripts": {
-    "clean": "rm -rf ./dist ./coverage",
+    "clean": "rm -rf ./dist ./coverage/*",
     "typecheck": "tsc && tsc -p ./tsconfig.acceptance.json",
     "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "prepublishOnly": "./build.sh",

@@ -1,22 +1,8 @@
 import { Argv } from 'yargs'
-import yargs from 'yargs'
-import { resolve } from 'path'
-import readConfig, { Config } from '~config'
 import { HandleError, CreateTypeValidator } from '../shared'
-import { startServer } from './server'
-import { Mode } from '~config/types'
-import logger from '~logger'
 import * as consts from '~commands/consts'
-import chokidar from 'chokidar'
-import { Server } from 'http'
-
-interface ServeArgs {
-  configPath?: string
-  port: number
-  tsconfigPath: string
-  schemaPath?: string
-  force: boolean
-}
+import createHandler, { ServeArgs } from './handler'
+import { startServer } from './server'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -47,72 +33,15 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
     })
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
-const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
-  args: ServeArgs,
-): Promise<void> => {
-  const { configPath, port, tsconfigPath, schemaPath, force } = args
-  if (!configPath) process.exit(1)
-
-  if (isNaN(port)) {
-    yargs.showHelp()
-    logger.error('\nport must be a number')
-    return process.exit(1)
-  }
-
-  const fullConfigPath = resolve(configPath)
-
-  const runServer = async (): Promise<Server> => {
-    const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
-    const configs = await readConfig(fullConfigPath, typeValidator, Mode.Serve)
-    return startServer(port, configs, typeValidator)
-  }
-
-  let server = await runServer()
-  const restartServer = (): Promise<void> =>
-    new Promise<void>((resolve, reject) => {
-      server.close(async (err) => {
-        if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') return reject(err)
-
-        try {
-          server = await runServer()
-        } catch (err) {
-          return reject(err)
-        }
-        resolve()
-      })
-    })
-
-  chokidar.watch(fullConfigPath, { ignoreInitial: true }).on('all', async (e) => {
-    logger.debug(`Chokdar event - ${e}`)
-
-    switch (e) {
-      case 'add':
-      case 'change':
-      case 'unlink':
-        logger.info('Restarting ncdc serve')
-
-        try {
-          await restartServer()
-        } catch (err) {
-          if (err.code === 'ENOENT') {
-            return logger.error(`Could not start server - no such file or directory ${fullConfigPath}`)
-          }
-          handleError(err)
-        }
-
-        break
-    }
-  })
-}
-
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export default function createServeCommand(
   handleError: HandleError,
   createTypeValidator: CreateTypeValidator,
-): yargs.CommandModule<{}, ServeArgs> {
+) {
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves configured endpoints',
     builder,
-    handler: createHandler(handleError, createTypeValidator),
+    handler: createHandler(handleError, createTypeValidator, startServer),
   }
 }

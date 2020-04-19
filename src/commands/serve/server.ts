@@ -59,7 +59,7 @@ const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
 export const configureServer = (
   baseUrl: string,
   mockConfigs: Config[],
-  typeValidator: TypeValidator,
+  typeValidator?: TypeValidator,
 ): Express => {
   const app = express()
   const ROOT = '/'
@@ -97,7 +97,7 @@ export const configureServer = (
         }
         // ============================================
 
-        if (request.type) {
+        if (typeValidator && request.type) {
           const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)
           serverLogger.warn(
             `An endpoint for ${req.path} exists but the request body did not match the type`,
@@ -154,7 +154,7 @@ export const configureServer = (
   return app
 }
 
-export const startServer = (port: number, routes: Config[], typeValidator: TypeValidator): Server => {
+export const startServer = (port: number, routes: Config[], typeValidator?: TypeValidator): Server => {
   const serverRoot = `http://localhost:${port}`
   const app = configureServer(serverRoot, routes, typeValidator)
 

@@ -92,8 +92,9 @@ Here's a format that describes each config setting:
   supports ExpressJS string patterns
   ([read more](https://expressjs.com/en/guide/routing.html#route-paths)).
   Regex is not yet supported.<br>
-  This property is ignored in Test mode and overrides
-  `request.endpoints` when in Serve mode.
+  This property is ignored in Test mode.
+  In Serve Mode, your config will be served on the `request.endpoints`
+  and also this endpoint.
 - **Type**: string
 - **Required?**: Required in Serve mode if `request.endpoints` is not provided
 - **Example**:

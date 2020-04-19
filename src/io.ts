@@ -1,4 +1,5 @@
 import { readFile } from 'fs'
+import { safeLoad } from 'js-yaml'
 
 export const readFileAsync = (path: string): Promise<string> => {
   return new Promise<string>((resolve, reject) => {
@@ -16,3 +17,5 @@ export const readFileAsync = (path: string): Promise<string> => {
 
 export const readJsonAsync = async <TOut = object>(path: string): Promise<TOut> =>
   JSON.parse(await readFileAsync(path))
+
+export const readYamlAsync = async <TOut>(path: string): Promise<TOut> => safeLoad(await readFileAsync(path))

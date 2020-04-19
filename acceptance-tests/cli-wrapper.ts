@@ -2,7 +2,11 @@ import { ChildProcess, exec } from 'child_process'
 import strip from 'strip-ansi'
 import isomorphicUnfetch from 'isomorphic-unfetch'
 
-const waitForX = (condition: () => Promise<boolean> | boolean, message = '', timeout = 10): Promise<void> =>
+const waitForX = (
+  condition: () => Promise<boolean> | boolean,
+  getMessage: () => string,
+  timeout = 10,
+): Promise<void> =>
   new Promise<void>((resolve, reject) => {
     const retryPeriod = 0.5
     let tries = 0
@@ -25,7 +29,7 @@ const waitForX = (condition: () => Promise<boolean> | boolean, message = '', tim
       if (tries >= timeout / retryPeriod) {
         clearInterval(interval)
         const err = recentError || new Error()
-        const prefix = message || `Condition not met within ${timeout}s timeout`
+        const prefix = getMessage() || `Condition not met within ${timeout}s timeout`
         err.message = `${prefix} ${err}`
         return reject(err)
       }
@@ -67,7 +71,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
 
   process.on('exit', (code, signal) => {
     hasExited = true
-    if (code || signal !== 'SIGTERM') {
+    if (code || (!!signal && signal !== 'SIGTERM')) {
       const quickInfo = `Code: ${code} | Signal: ${signal}`
       throw new Error(`${quickInfo}\n\n${getRawOutput()}`)
     }
@@ -82,14 +86,17 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
   const waitForOutput: ServeResult['waitForOutput'] = (target) =>
     waitForX(
       () => formatOutput().includes(target),
-      `Did not find the string "${target}" in the output\n\n${getRawOutput()}`,
+      () => `Did not find the string "${target}" in the output:\n\n${getRawOutput()}`,
     )
 
   const waitUntilAvailable: ServeResult['waitUntilAvailable'] = () =>
-    waitForX(async () => {
-      const { status } = await fetch('/')
-      return status === 200
-    }, `The ncdc server was not contactable\n\n${getRawOutput()}`)
+    waitForX(
+      async () => {
+        const { status } = await fetch('/')
+        return status === 200
+      },
+      () => `The ncdc server was not contactable. Output:\n\n${getRawOutput()}`,
+    )
 
   if (checkAvailability) await waitUntilAvailable()
   return { getOutput: formatOutput, waitForOutput, waitUntilAvailable }

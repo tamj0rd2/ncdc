@@ -89,7 +89,6 @@ describe('ncdc serve', () => {
     await expect(fetch('/api/books/yay')).rejects.toThrowError()
   })
 
-  // TODO: refactor these tests to use js-yaml safeDump and config builder
   it('can recover from config.yml being deleted when file is re-added', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
@@ -136,7 +135,7 @@ describe('ncdc serve', () => {
   })
 
   // TODO: oooooh. This could actually have a caching folder!!! Then generate
-  // would just become the default :D
+  // would just become the default because why the hell not? :D
   // typescript-json-schema getSourceFile could really help with this too
 
   it.todo('restarts when a source file containing types changes')

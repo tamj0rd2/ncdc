@@ -78,8 +78,6 @@ export const configureServer = (
   mockConfigs.forEach(({ name, request, response }) => {
     const endpointWithoutQuery = request.endpoint.split('?')[0]
 
-    // TODO: use app.use or app.all to handle all methods
-    // TODO: I should start taking query string parameters into account.
     app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
       try {
         // TODO ======= finish up by adding tests. maybe extract it out

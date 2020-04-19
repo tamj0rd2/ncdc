@@ -114,7 +114,6 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO: make sure the type actually works like this and gives back a useful error message -->
-<!-- TODO: add an option to fail if extra properties are provided  -->
 ### request.type (pending changes)
 
 - **Description**: The name of a typescript symbol or a JSON schema file

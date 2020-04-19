@@ -3,7 +3,7 @@ jobs:
     - stage: tests
       services: docker
       before_script:
-        - docker-comose build tests
+        - docker-compose build tests
       script:
         - docker-compose run tests
       # TODO: https://docs.codecov.io/docs/testing-with-docker

@@ -82,7 +82,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
   cleanupTasks.push(cleanup)
 
   const failNicely = (message: string, err: Error): never => {
-    console.error(`${message}. Output:\n\n ${getStrippedOutput()}`)
+    console.error(`${message}. Output:\n\n${getStrippedOutput()}`)
     cleanup()
     throw err
   }

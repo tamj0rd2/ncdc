@@ -1,9 +1,10 @@
-language: node_js
 jobs:
   include:
     - stage: tests
       services: docker
+      before_script:
+        - docker-comose build tests
       script:
-        - docker-compose up --build tests
+        - docker-compose run tests
       # TODO: https://docs.codecov.io/docs/testing-with-docker
       after_script: bash <(curl -s https://codecov.io/bash)

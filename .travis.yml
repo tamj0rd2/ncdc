@@ -4,7 +4,8 @@ jobs:
       services: docker
       before_script:
         - docker-compose build tests
+        - ci_env=`bash <(curl -s https://codecov.io/env)`
       script:
-        - docker-compose run tests
+        - docker-compose run $ci_env tests
       # TODO: https://docs.codecov.io/docs/testing-with-docker
       after_script: bash <(curl -s https://codecov.io/bash)

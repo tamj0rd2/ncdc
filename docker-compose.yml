@@ -2,4 +2,7 @@ version: "3.7"
 services:
   tests:
     build: .
-    command: ./build.sh && bash <(curl -s https://codecov.io/bash)
+    command: ./build.sh --hello
+    environment:
+      - CODECOV_TOKEN
+      - CI

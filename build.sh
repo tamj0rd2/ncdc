@@ -22,11 +22,11 @@ trap finish EXIT
 print 'cleaning'
 npm run clean
 
-print 'linting'
-npm run lint
+# print 'linting'
+# npm run lint
 
-print 'typechecking'
-npm run typecheck
+# print 'typechecking'
+# npm run typecheck
 
 print 'compiling'
 npm run compile
@@ -34,5 +34,11 @@ npm run compile
 # reminder than --verbose can be super useful for debugging
 print 'testing and coverage'
 npm run cover
+
+if [ "$CI" = "true" ];
+then
+  print 'uploading coverage'
+  bash <(curl -s https://codecov.io/bash)
+fi
 
 # TODO: update node version

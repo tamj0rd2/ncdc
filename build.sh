@@ -20,16 +20,18 @@ function finish {
 trap finish EXIT
 
 print 'cleaning'
-npm run clean
+yarn clean
 
 print 'linting'
-npm run lint
+yarn lint
 
 print 'typechecking'
-npm run typecheck
+yarn typecheck
 
 print 'compiling'
-npm run compile
+yarn compile
 
 print 'testing and coverage'
-npm run cover
+yarn cover --detectOpenHandles --runInBand
+
+print 'All Done :D' $GREEN

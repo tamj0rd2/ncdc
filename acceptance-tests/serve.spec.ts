@@ -3,18 +3,18 @@ import { CleanupTask, prepareServe } from './cli-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
 jest.disableAutomock()
-jest.useRealTimers()
 jest.setTimeout(45000)
 
 describe('ncdc serve', () => {
   const cleanupTasks: CleanupTask[] = []
   const serve = prepareServe(cleanupTasks)
 
-  afterEach(() => {
+  afterEach((done) => {
     while (cleanupTasks.length) {
       const task = cleanupTasks.shift()
       task && task()
     }
+    done()
   })
 
   it.only('starts serving on port 4000', async () => {
@@ -23,14 +23,14 @@ describe('ncdc serve', () => {
 
     // act
     const { getOutput } = await serve()
-    // const res = await fetch('/api/books/hooray')
-    // const output = getOutput()
+    const res = await fetch('/api/books/hooray')
+    const output = getOutput()
 
-    // // assert
-    // expect(output).toContain(`Registered ${SERVE_HOST}/api/books/* from config: Books`)
-    // expect(output).toContain(`Endpoints are being served on ${SERVE_HOST}`)
-    // expect(res.status).toBe(200)
-    // expect(output).not.toContain(MESSAGE_RESTARTING)
+    // assert
+    expect(output).toContain(`Registered ${SERVE_HOST}/api/books/* from config: Books`)
+    expect(output).toContain(`Endpoints are being served on ${SERVE_HOST}`)
+    expect(res.status).toBe(200)
+    expect(output).not.toContain(MESSAGE_RESTARTING)
   })
 
   it('serves an endpoint from a fixture file', async () => {

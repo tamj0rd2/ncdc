@@ -20,18 +20,19 @@ function finish {
 trap finish EXIT
 
 print 'cleaning'
-yarn clean
+npm run clean
 
 print 'linting'
-yarn lint
+npm run lint
 
 print 'typechecking'
-yarn typecheck
+npm run typecheck
 
 print 'compiling'
-yarn compile
+npm run compile
 
+# reminder than --verbose can be super useful for debugging
 print 'testing and coverage'
-yarn cover --detectOpenHandles --runInBand
+npm run cover
 
-print 'All Done :D' $GREEN
+# TODO: update node version

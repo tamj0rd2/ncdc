@@ -12,7 +12,7 @@
     "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "prepublishOnly": "./build.sh",
     "test": "jest",
-    "cover": "nyc jest --coverage",
+    "cover": "nyc jest --coverage --runInBand --detectOpenHandles",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore --cache"
   },
   "husky": {

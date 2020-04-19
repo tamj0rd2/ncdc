@@ -1,0 +1,7 @@
+version: "3.7"
+services:
+  test:
+    build: .
+    command: ./build.sh
+    environment:
+      - SERVE_HOST=http://test

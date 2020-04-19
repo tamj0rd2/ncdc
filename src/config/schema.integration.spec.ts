@@ -1,8 +1,6 @@
 import { getConfigSchema } from './schema'
 import { Mode } from './types'
 
-jest.disableAutomock()
-
 // TODO: save this for the big config rewrite. god it hurts my head.
 describe.skip('serve mode', () => {
   it('throws when serveBody and serveBodyPath are both specified', async () => {

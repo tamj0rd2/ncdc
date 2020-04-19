@@ -2,19 +2,18 @@ import { fetch, SERVE_HOST, MESSAGE_RESTARTING } from './cli-wrapper'
 import { CleanupTask, prepareServe } from './cli-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
-jest.disableAutomock()
+jest.useRealTimers()
 jest.setTimeout(45000)
 
 describe('ncdc serve', () => {
   const cleanupTasks: CleanupTask[] = []
   const serve = prepareServe(cleanupTasks)
 
-  afterEach((done) => {
+  afterEach(() => {
     while (cleanupTasks.length) {
       const task = cleanupTasks.shift()
       task && task()
     }
-    done()
   })
 
   it.only('starts serving on port 4000', async () => {
@@ -27,7 +26,7 @@ describe('ncdc serve', () => {
     const output = getOutput()
 
     // assert
-    expect(output).toContain(`Registered ${SERVE_HOST}/api/books/* from config: Books`)
+    expect(output).toMatch(/Registered .*\/api\/books\/\* from config: Books/)
     expect(output).toContain(`Endpoints are being served on ${SERVE_HOST}`)
     expect(res.status).toBe(200)
     expect(output).not.toContain(MESSAGE_RESTARTING)

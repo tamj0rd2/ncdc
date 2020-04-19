@@ -153,7 +153,7 @@ export const configureServer = (
 }
 
 export const startServer = (port: number, routes: Config[], typeValidator?: TypeValidator): Server => {
-  const serverRoot = `http://localhost:${port}`
+  const serverRoot = `${process.env.SERVE_HOST || 'http://localhost'}:${port}`
   const app = configureServer(serverRoot, routes, typeValidator)
 
   return app.listen(port, () => {

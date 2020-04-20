@@ -16,7 +16,7 @@ describe('ncdc serve', () => {
     }
   })
 
-  it.only('starts serving on port 4000', async () => {
+  it('starts serving on port 4000', async () => {
     // arrange
     new ConfigWrapper().addConfig()
 
@@ -32,7 +32,7 @@ describe('ncdc serve', () => {
     expect(output).not.toContain(MESSAGE_RESTARTING)
   })
 
-  it('serves an endpoint from a fixture file', async () => {
+  it.skip('serves an endpoint from a fixture file', async () => {
     // arrange
     new ConfigWrapper()
       .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture('response').build())
@@ -53,7 +53,7 @@ describe('ncdc serve', () => {
     expect(json.title).toBe('nice meme lol')
   })
 
-  it('restarts when config.yml is changed', async () => {
+  it.skip('restarts when config.yml is changed', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
     const { waitForOutput, waitUntilAvailable } = await serve()
@@ -70,7 +70,7 @@ describe('ncdc serve', () => {
     expect(resPostEdit.status).toBe(234)
   })
 
-  it('logs a message and kills the server when config.yml has been deleted', async () => {
+  it.skip('logs a message and kills the server when config.yml has been deleted', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
     const { getOutput, waitForOutput } = await serve()
@@ -88,7 +88,7 @@ describe('ncdc serve', () => {
     await expect(fetch('/api/books/yay')).rejects.toThrowError()
   })
 
-  it('can recover from config.yml being deleted when file is re-added', async () => {
+  it.skip('can recover from config.yml being deleted when file is re-added', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
     const { waitForOutput } = await serve()

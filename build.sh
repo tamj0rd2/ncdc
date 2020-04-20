@@ -22,11 +22,11 @@ trap finish EXIT
 print 'cleaning'
 npm run clean
 
-# print 'linting'
-# npm run lint
+print 'linting'
+npm run lint
 
-# print 'typechecking'
-# npm run typecheck
+print 'typechecking'
+npm run typecheck
 
 print 'compiling'
 npm run compile

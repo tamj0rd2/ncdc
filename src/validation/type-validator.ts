@@ -21,12 +21,12 @@ export type TypeValidationFailure = {
 
 export type TypeValidationResult =
   | {
-    success: true
-  }
+      success: true
+    }
   | TypeValidationFailure
 
 export default class TypeValidator {
-  constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) { }
+  constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) {}
 
   public async getProblems(
     data: Optional<Data>,
@@ -53,7 +53,12 @@ export default class TypeValidator {
   }
 
   public async validate(data: Data, type: string): Promise<TypeValidationResult> {
-    throw new Error('not yet implemented')
+    const jsonSchema = await this.schemaRetriever.load(type)
+    const validator = this.validator.compile(jsonSchema)
+    const isValid = validator(data)
+
+    if (isValid || !validator.errors) return { success: true }
+    return { success: false, errors: validator.errors.map((e) => `${e.dataPath} ${e.message}`) }
   }
 
   private mapSimpleProblem(

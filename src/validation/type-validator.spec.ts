@@ -1,9 +1,9 @@
-import TypeValidator from './type-validator'
+import TypeValidator, { TypeValidationFailure } from './type-validator'
 import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
-import { SchemaGenerator } from '~schema'
+import { SchemaGenerator, SchemaRetriever } from '~schema'
 import Problem, { ProblemType } from '~problem'
 import * as _messages from '~messages'
-import { mockObj, mockCtor } from '~test-helpers'
+import { mockObj, mockCtor, randomString, mockFn } from '~test-helpers'
 
 jest.unmock('./type-validator')
 
@@ -104,6 +104,74 @@ describe('Type validator', () => {
       const problems = await typeValidator.getProblems({}, 'AnotherType', ProblemType.Request)
 
       expect(problems).toStrictEqual([error1, error2])
+    })
+  })
+})
+
+describe('validate', () => {
+  const validator = mockObj<Ajv>({ compile: jest.fn() })
+  const schemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
+  const typeValidator = new TypeValidator(validator, schemaRetriever)
+
+  const body = randomString('body')
+  const type = randomString('type')
+
+  beforeEach(() => {
+    validator.compile.mockReturnValue(jest.fn())
+  })
+
+  it('calls the schema retriver with the correct args', async () => {
+    await typeValidator.validate(body, type)
+
+    expect(schemaRetriever.load).toBeCalledWith(type)
+  })
+
+  it('creates a validator function using the correct args', async () => {
+    const schema = { [randomString('key')]: randomString('value') }
+    schemaRetriever.load.mockResolvedValue(schema)
+
+    await typeValidator.validate(body, type)
+
+    expect(validator.compile).toBeCalledWith(schema)
+  })
+
+  it('calls the validator func with the correct args', async () => {
+    const body = randomString('body')
+    const validateFn = mockFn<ValidateFunction>()
+    validator.compile.mockReturnValue(validateFn)
+
+    await typeValidator.validate(body, type)
+
+    expect(validateFn).toBeCalledWith(body)
+  })
+
+  it('returns a success result if the type is valid', async () => {
+    validator.compile.mockReturnValue(mockFn<ValidateFunction>().mockReturnValue(true))
+
+    const result = await typeValidator.validate(body, type)
+
+    expect(result.success).toBe(true)
+  })
+
+  it('returns validation messages if the type is invalid', async () => {
+    const error1: Partial<ErrorObject> = {
+      dataPath: randomString('data path 1'),
+      message: randomString('message 1'),
+    }
+    const error2: Partial<ErrorObject> = {
+      dataPath: randomString('data path 2'),
+      message: randomString('message 2'),
+    }
+
+    const validatorFn: ValidateFunction = mockFn<ValidateFunction>().mockReturnValue(false)
+    validatorFn.errors = [error1, error2] as ErrorObject[]
+    validator.compile.mockReturnValue(validatorFn)
+
+    const result = await typeValidator.validate(body, type)
+
+    expect(result).toMatchObject<TypeValidationFailure>({
+      success: false,
+      errors: [`${error1.dataPath} ${error1.message}`, `${error2.dataPath} ${error2.message}`],
     })
   })
 })

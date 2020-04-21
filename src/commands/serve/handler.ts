@@ -1,10 +1,10 @@
 import { HandleError, CreateTypeValidator } from '~commands'
 import { resolve } from 'path'
-import { validate, ValidationSuccess, transformConfigs } from './config'
+import { validate, transformConfigs } from './config'
 import { readYamlAsync } from '~io'
 import { Config } from '~config'
 import { TypeValidator } from '~validation'
-import { Server, request } from 'http'
+import { Server } from 'http'
 
 export interface ServeArgs {
   configPath?: string
@@ -15,6 +15,48 @@ export interface ServeArgs {
 }
 
 export type StartServer = (port: number, routes: Config[], typeValidator?: TypeValidator) => Server
+
+const CONFIG_ERROR_PREFIX = 'Could not start serving due to config errors:\n\n'
+
+const validateConfigBodies = async (
+  configs: Config[],
+  typeValidator: TypeValidator,
+): Promise<Optional<string>> => {
+  const seenConfigNames = new Set<string>()
+  const uniqueConfigs = configs.filter((config) => {
+    if (seenConfigNames.has(config.name)) return false
+    seenConfigNames.add(config.name)
+    return true
+  })
+
+  let totalValidationError = ''
+  for (const config of uniqueConfigs) {
+    const validationErrors: string[] = []
+
+    if (config.request.body && config.request.type) {
+      const result = await typeValidator.validate(config.request.body, config.request.type)
+      if (!result.success) {
+        const message = `Config '${config.name}' request body failed type validation:\n${result.errors.join(
+          '\n',
+        )}`
+        validationErrors.push(message)
+      }
+    }
+    if (config.response.body && config.response.type) {
+      const result = await typeValidator.validate(config.response.body, config.response.type)
+      if (!result.success) {
+        const message = `Config '${config.name}' response body failed type validation:\n${result.errors.join(
+          '\n',
+        )}`
+        validationErrors.push(message)
+      }
+    }
+
+    totalValidationError += validationErrors.join('\n')
+  }
+
+  if (totalValidationError) return CONFIG_ERROR_PREFIX + totalValidationError
+}
 
 const createHandler = (
   handleError: HandleError,
@@ -30,7 +72,7 @@ const createHandler = (
   const validationResult = validate(await readYamlAsync(absoluteConfigPath))
   if (!validationResult.success) {
     return handleError({
-      message: `Could not start serving due to config errors:\n${validationResult.errors.join('\n')}`,
+      message: `${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`,
     })
   }
 
@@ -40,6 +82,11 @@ const createHandler = (
   const configUsesTypes = validationResult.validatedConfig.find((c) => c.request.type || c.response.type)
   const typeValidator = configUsesTypes && createTypeValidator(tsconfigPath, force, schemaPath)
   const transformedConfigs = await transformConfigs(validationResult.validatedConfig, absoluteConfigPath)
+
+  if (typeValidator) {
+    const bodyValidationMessage = await validateConfigBodies(transformedConfigs, typeValidator)
+    if (bodyValidationMessage) return handleError({ message: bodyValidationMessage })
+  }
 
   startServer(port, transformedConfigs, typeValidator)
 

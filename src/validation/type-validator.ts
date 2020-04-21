@@ -14,8 +14,19 @@ export class TypeValidationError extends Error {
   }
 }
 
+export type TypeValidationFailure = {
+  success: false
+  errors: string[]
+}
+
+export type TypeValidationResult =
+  | {
+    success: true
+  }
+  | TypeValidationFailure
+
 export default class TypeValidator {
-  constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) {}
+  constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) { }
 
   public async getProblems(
     data: Optional<Data>,
@@ -39,6 +50,10 @@ export default class TypeValidator {
         if (isValid || !validator.errors) return
         return validator.errors.map((error) => new Problem(error, problemType)) as PopulatedArray<Problem>
     }
+  }
+
+  public async validate(data: Data, type: string): Promise<TypeValidationResult> {
+    throw new Error('not yet implemented')
   }
 
   private mapSimpleProblem(

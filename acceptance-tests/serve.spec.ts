@@ -32,7 +32,7 @@ describe('ncdc serve', () => {
     expect(output).not.toContain(MESSAGE_RESTARTING)
   })
 
-  it.skip('serves an endpoint from a fixture file', async () => {
+  it('serves an endpoint from a fixture file', async () => {
     // arrange
     new ConfigWrapper()
       .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture('response').build())

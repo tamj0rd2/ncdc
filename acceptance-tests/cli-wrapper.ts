@@ -57,20 +57,20 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
 ): Promise<ServeResult> => {
   let hasExited = false
   const command = `LOG_LEVEL=debug ./bin/ncdc serve ${CONFIG_FILE} -c ${FIXTURE_FOLDER}/tsconfig.json ${args}`
-  const ncdc: ChildProcess = exec(command, (error, stdout, stderr) => {
-    hasExited = true
-
-    if (error && error.signal !== 'SIGTERM') {
-      const quickInfo = `Code: ${error.code} | Signal: ${error.signal}`
-      throw new Error(`${quickInfo}\n\nOutput:${stdout}\n${stderr}`)
-    }
-  })
+  const ncdc: ChildProcess = exec(command)
   const output: string[] = []
   const getRawOutput = (): string => output.join('')
   const getStrippedOutput = (): string => strip(getRawOutput())
 
   ncdc.stdout && ncdc.stdout.on('data', (data) => output.push(data))
   ncdc.stderr && ncdc.stderr.on('data', (data) => output.push(data))
+  ncdc.on('exit', (code, signal) => {
+    hasExited = true
+    if (code !== 0 && signal !== 'SIGTERM') {
+      const quickInfo = `Code: ${code} | Signal: ${signal}`
+      throw new Error(`${quickInfo} | Output:\n\n${getRawOutput()}`)
+    }
+  })
 
   const cleanup = (): void => {
     if (ncdc.killed || hasExited) return

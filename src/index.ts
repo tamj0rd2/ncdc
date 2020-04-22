@@ -35,7 +35,7 @@ export default async function run(): Promise<void> {
   // eslint-disable-next-line no-unused-expressions
   mainYargs
     .command(createGenerateCommand(handleError, isDevMode))
-    .command(createServeCommand(handleError, createTypeValidator))
+    .command(createServeCommand(createTypeValidator))
     .command(createTestCommand(handleError, createTypeValidator))
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)

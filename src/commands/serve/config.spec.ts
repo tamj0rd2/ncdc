@@ -136,7 +136,7 @@ describe('validate', () => {
         const config = {
           name: 'hmm',
           request: { method: 'post', endpoints: '/hello' },
-          response: { code: 200 },
+          response: { code: 200, body: 'ayy' },
         }
         const result = validate([config])
 
@@ -181,7 +181,7 @@ describe('validate', () => {
         const config = {
           name: 'My Config',
           request: { method: 'get', endpoints: '/api' },
-          response: { code: 200 },
+          response: { code: 200, bodyPath: 'lol' },
         }
         const validationResult = expectNotToGetErrorsConcerning(config, 'serveOnly')
 
@@ -326,7 +326,7 @@ describe('validate', () => {
     })
 
     describe('all response body types', () => {
-      it('only one can be defined', () => {
+      test('only one can be defined', () => {
         const config = {
           response: { body: 'ello', bodyPath: 'path1', serveBody: 'cya', serveBodyPath: 'path2' },
         }
@@ -336,7 +336,7 @@ describe('validate', () => {
         )
       })
 
-      it('none are required', () => {
+      test('none are required', () => {
         const config = { response: {} }
         expectNotToGetErrorsConcerning(
           config,
@@ -346,6 +346,37 @@ describe('validate', () => {
           'response.serveBodyPath',
         )
       })
+    })
+  })
+
+  describe('cases that should pass', () => {
+    test('a pretty basic config', () => {
+      const config = {
+        name: 'Books',
+        request: {
+          method: 'GET',
+          endpoints: ['/api/1', '/api/2'],
+          serveEndpoint: '/api/*',
+        },
+        response: {
+          code: 200,
+          headers: {
+            'content-type': 'application/json',
+          },
+          type: 'Book',
+          serveBodyPath: './response/response.json',
+        },
+      }
+
+      const result = validate([config])
+
+      if (!result.success) {
+        expect(result.errors).toBeUndefined()
+        expect(result.success).toBe(true)
+        return
+      }
+
+      expect(result.success).toBe(true)
     })
   })
 })

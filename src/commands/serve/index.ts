@@ -3,6 +3,7 @@ import { HandleError, CreateTypeValidator } from '../shared'
 import * as consts from '~commands/consts'
 import createHandler, { ServeArgs } from './handler'
 import { startServer } from './server'
+import logger from '~logger'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -34,10 +35,12 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export default function createServeCommand(
-  handleError: HandleError,
-  createTypeValidator: CreateTypeValidator,
-) {
+export default function createServeCommand(createTypeValidator: CreateTypeValidator) {
+  const handleError: HandleError = ({ message }) => {
+    logger.error(message)
+    process.exit(1)
+  }
+
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves configured endpoints',

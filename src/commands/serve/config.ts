@@ -93,7 +93,9 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
           type: Joi.string(),
           headers: Joi.object(),
           body: bodySchema,
+          bodyPath: Joi.string(),
           serveBody: bodySchema,
+          serveBodyPath: Joi.string(),
         })
           .required()
           .oxor('body', 'bodyPath', 'serveBody', 'serveBodyPath'),

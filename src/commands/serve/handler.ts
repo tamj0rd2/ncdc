@@ -103,10 +103,16 @@ const createHandler = (
   chokidar.watch(absoluteConfigPath, { ignoreInitial: true, cwd: process.cwd() }).on('all', (e, path) => {
     logger.info('Restarting ncdc server')
     server.close(async (err) => {
-      if (err) return handleError(err)
+      if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
+        return logger.error(`Could not start server: ${err.message}`)
+      }
 
-      const configs = await prepareForServerStart()
-      server = startServer(port, configs, typeValidator)
+      try {
+        const configs = await prepareForServerStart()
+        server = startServer(port, configs, typeValidator)
+      } catch (err) {
+        logger.error(`Could not start server: ${err.message}`)
+      }
     })
   })
 

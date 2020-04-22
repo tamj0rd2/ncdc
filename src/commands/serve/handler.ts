@@ -76,12 +76,10 @@ const createHandler = (
   const prepareForServerStart = async (): Promise<Config[]> => {
     const validationResult = validate(await readYamlAsync(absoluteConfigPath))
     if (!validationResult.success) {
-      return handleError({
-        message: `${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`,
-      })
+      throw new Error(`${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`)
     }
 
-    if (!validationResult.validatedConfig.length) return handleError({ message: 'No configs to serve' })
+    if (!validationResult.validatedConfig.length) throw new Error('No configs to serve')
 
     const configUsesTypes = validationResult.validatedConfig.find((c) => c.request.type || c.response.type)
     if (!typeValidator && configUsesTypes) {
@@ -92,12 +90,18 @@ const createHandler = (
 
     if (typeValidator) {
       const bodyValidationMessage = await validateConfigBodies(transformedConfigs, typeValidator)
-      if (bodyValidationMessage) return handleError({ message: bodyValidationMessage })
+      if (bodyValidationMessage) throw new Error(bodyValidationMessage)
     }
     return transformedConfigs
   }
 
-  const configs = await prepareForServerStart()
+  let configs: Config[]
+  try {
+    configs = await prepareForServerStart()
+  } catch (err) {
+    handleError(err)
+  }
+
   let server = startServer(port, configs, typeValidator)
 
   chokidar.watch(absoluteConfigPath, { ignoreInitial: true, cwd: process.cwd() }).on('all', (e, path) => {

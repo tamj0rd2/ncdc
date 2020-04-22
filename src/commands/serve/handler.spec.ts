@@ -102,9 +102,11 @@ describe('handler', () => {
 
       await handler(args)
 
-      expect(mockHandleError).toBeCalledWith({
-        message: `Could not start serving due to config errors:\n\n${errors[0]}\n${errors[1]}`,
-      })
+      expect(mockHandleError).toBeCalledWith(
+        expect.objectContaining({
+          message: `Could not start serving due to config errors:\n\n${errors[0]}\n${errors[1]}`,
+        }),
+      )
     })
 
     it('logs a message and exits if there are no configs to serve', async () => {
@@ -112,7 +114,7 @@ describe('handler', () => {
 
       await handler(args)
 
-      expect(mockHandleError).toBeCalledWith({ message: 'No configs to serve' })
+      expect(mockHandleError).toBeCalledWith(expect.objectContaining({ message: 'No configs to serve' }))
     })
 
     it('does not create a type validator if no configs have associated types', async () => {
@@ -229,7 +231,9 @@ describe('handler', () => {
         const line2 = `Config '${transformedConfig.name}' request body failed type validation:\n${error1}\n${error2}`
         const line3 = `Config '${transformedConfig.name}' response body failed type validation:\n${error3}`
 
-        expect(mockHandleError).toBeCalledWith({ message: `${line1}\n\n${line2}\n${line3}` })
+        expect(mockHandleError).toBeCalledWith(
+          expect.objectContaining({ message: `${line1}\n\n${line2}\n${line3}` }),
+        )
       })
     })
 
@@ -263,20 +267,4 @@ describe('handler', () => {
       expect(mockHandleError).not.toBeCalled()
     })
   })
-})
-
-it.skip('filters objects with a similar key', () => {
-  type Item = { id: number }
-  const unique = (items: Item[]) => {
-    const seen = new Set<number>()
-    return items.filter((item) => {
-      if (seen.has(item.id)) return false
-      seen.add(item.id)
-      return true
-    })
-  }
-
-  const items: Item[] = [{ id: 1 }, { id: 2 }, { id: 1 }, { id: 3 }, { id: 2 }]
-
-  expect(unique(items)).toEqual([items[0], items[1], items[3]])
 })

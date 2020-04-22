@@ -155,12 +155,12 @@ describe('validate', () => {
 
   it('returns validation messages if the type is invalid', async () => {
     const error1: Partial<ErrorObject> = {
-      dataPath: randomString('data path 1'),
-      message: randomString('message 1'),
+      dataPath: randomString('.datapath1'),
+      message: randomString('.error-message1'),
     }
     const error2: Partial<ErrorObject> = {
-      dataPath: randomString('data path 2'),
-      message: randomString('message 2'),
+      dataPath: randomString(''),
+      message: randomString('.error-message2'),
     }
 
     const validatorFn: ValidateFunction = mockFn<ValidateFunction>().mockReturnValue(false)
@@ -171,7 +171,7 @@ describe('validate', () => {
 
     expect(result).toMatchObject<TypeValidationFailure>({
       success: false,
-      errors: [`${error1.dataPath} ${error1.message}`, `${error2.dataPath} ${error2.message}`],
+      errors: [`<root>${error1.dataPath} ${error1.message}`, `<root>${error2.dataPath} ${error2.message}`],
     })
   })
 })

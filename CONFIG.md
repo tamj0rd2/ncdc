@@ -161,7 +161,15 @@ Here's a format that describes each config setting:
   This property cannot be specified at the same time as `request.bodyPath`.<br>
   In Serve mode, if this property is specified without `request.type`, responses
   will only be served if the request body matches `request.body` exactly
-- **Type**: string, number, boolean, object or array
+  
+  NOTE: This does not yet support using the array syntax in your config file.
+  e.g putting `MyType[]` in your config file will not work. Instead, define a
+  type like `type MyTypeArray = MyType[]` somewhere in your typescript project
+  and use `MyTypeArray` as a type in your config file.
+  
+  <!-- TODO: but are they really? -->
+  The types `number`, `string`, `object`, and `boolean` are recognised by default
+- **Type**: string<br>
 - **Required?**: No
 - **Example**: `body: { hello: 'world' }`
   ```yaml

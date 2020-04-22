@@ -35,6 +35,7 @@ const unitTestSettings = {
     require.resolve('winston'),
     require.resolve('yup'),
     require.resolve('chalk'),
+    require.resolve('strip-ansi'),
   ],
   automock: true,
 }

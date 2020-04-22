@@ -26,7 +26,7 @@ const waitForX = (condition: () => Promise<boolean> | boolean): Promise<void> =>
       if (tries >= timeout / retryPeriod) {
         clearInterval(interval)
         const err = recentError || new Error()
-        err.message = `Condition not met within ${timeout}s timeout} ${err}`
+        err.message = `Condition not met within ${timeout}s timeout ${err}`
         return reject(err)
       }
 

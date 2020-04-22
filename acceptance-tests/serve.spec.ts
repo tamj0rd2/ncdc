@@ -53,7 +53,7 @@ describe('ncdc serve', () => {
     expect(json.title).toBe('nice meme lol')
   })
 
-  it.skip('restarts when config.yml is changed', async () => {
+  it('restarts when config.yml is changed', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
     const { waitForOutput, waitUntilAvailable } = await serve()

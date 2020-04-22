@@ -6,6 +6,7 @@ import { readYamlAsync } from '~io'
 import { ValidationSuccess, validate, transformConfigs, ValidatedServeConfig } from './config'
 import { resolve } from 'path'
 import { Config } from '~config'
+import chokidar, { FSWatcher } from 'chokidar'
 
 jest.unmock('./handler')
 jest.unmock('@hapi/joi')
@@ -32,12 +33,16 @@ describe('handler', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
   const mockCreateTypeValidator = mockFn<CreateTypeValidator>()
   const mockStartServer = mockFn<StartServer>()
+  const mockChokidar = mockObj(chokidar)
 
   const handler = createHandler(mockHandleError, mockCreateTypeValidator, mockStartServer)
 
   beforeEach(() => {
     jest.resetAllMocks()
     mockCreateTypeValidator.mockReturnValue(mockTypeValidator)
+    mockChokidar.watch.mockReturnValue(
+      mockObj<FSWatcher>({ on: jest.fn() }),
+    )
   })
 
   it('handles when a config path is not supplied', async () => {

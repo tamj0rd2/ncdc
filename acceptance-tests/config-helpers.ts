@@ -12,8 +12,8 @@ export interface Config {
   }
   response: {
     code: number
-    headers: OutgoingHttpHeaders
-    type: string
+    headers?: OutgoingHttpHeaders
+    type?: string
     serveBody?: any
     serveBodyPath?: string
   }
@@ -30,7 +30,6 @@ export class ConfigBuilder {
     response: {
       code: 200,
       headers: { 'content-type': 'application/json' },
-      type: 'Book',
       serveBody: {
         ISBN: '9780141187761',
         ISBN_13: '978 - 0141187761',

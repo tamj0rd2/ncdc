@@ -5,6 +5,8 @@ import { readYamlAsync } from '~io'
 import { Config } from '~config'
 import { TypeValidator } from '~validation'
 import { Server } from 'http'
+import chokidar from 'chokidar'
+import logger from '~logger'
 
 export interface ServeArgs {
   configPath?: string
@@ -69,26 +71,44 @@ const createHandler = (
   if (isNaN(port)) return handleError({ message: 'port must be a number' })
 
   const absoluteConfigPath = resolve(configPath)
-  const validationResult = validate(await readYamlAsync(absoluteConfigPath))
-  if (!validationResult.success) {
-    return handleError({
-      message: `${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`,
+  let typeValidator: TypeValidator | undefined
+
+  const prepareForServerStart = async (): Promise<Config[]> => {
+    const validationResult = validate(await readYamlAsync(absoluteConfigPath))
+    if (!validationResult.success) {
+      return handleError({
+        message: `${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`,
+      })
+    }
+
+    if (!validationResult.validatedConfig.length) return handleError({ message: 'No configs to serve' })
+
+    const configUsesTypes = validationResult.validatedConfig.find((c) => c.request.type || c.response.type)
+    if (!typeValidator && configUsesTypes) {
+      typeValidator = configUsesTypes && createTypeValidator(tsconfigPath, force, schemaPath)
+    }
+
+    const transformedConfigs = await transformConfigs(validationResult.validatedConfig, absoluteConfigPath)
+
+    if (typeValidator) {
+      const bodyValidationMessage = await validateConfigBodies(transformedConfigs, typeValidator)
+      if (bodyValidationMessage) return handleError({ message: bodyValidationMessage })
+    }
+    return transformedConfigs
+  }
+
+  const configs = await prepareForServerStart()
+  let server = startServer(port, configs, typeValidator)
+
+  chokidar.watch(absoluteConfigPath, { ignoreInitial: true, cwd: process.cwd() }).on('all', (e, path) => {
+    logger.info('Restarting ncdc server')
+    server.close(async (err) => {
+      if (err) return handleError(err)
+
+      const configs = await prepareForServerStart()
+      server = startServer(port, configs, typeValidator)
     })
-  }
-
-  if (!validationResult.validatedConfig.length) return handleError({ message: 'No configs to serve' })
-
-  // TODO: if config uses types, validate any bodies against their types
-  const configUsesTypes = validationResult.validatedConfig.find((c) => c.request.type || c.response.type)
-  const typeValidator = configUsesTypes && createTypeValidator(tsconfigPath, force, schemaPath)
-  const transformedConfigs = await transformConfigs(validationResult.validatedConfig, absoluteConfigPath)
-
-  if (typeValidator) {
-    const bodyValidationMessage = await validateConfigBodies(transformedConfigs, typeValidator)
-    if (bodyValidationMessage) return handleError({ message: bodyValidationMessage })
-  }
-
-  startServer(port, transformedConfigs, typeValidator)
+  })
 
   // TODO: bring back some better watching logic
   // TODO: also, stop using the shared Config thing in serve. It can have its own interface now.

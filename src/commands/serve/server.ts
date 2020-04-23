@@ -3,11 +3,11 @@ import { blue } from 'chalk'
 import { Server } from 'http'
 import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
-import { SupportedMethod, Config } from '~config'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
 import { parse } from 'url'
 import { isQueryMismatch } from './utils'
+import { SupportedMethod, Config } from './config'
 
 export interface ReqResLog {
   name?: string

@@ -1,12 +1,11 @@
-import { IncomingHttpHeaders, OutgoingHttpHeaders, request } from 'http'
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http'
 import Joi from '@hapi/joi'
 import dot from 'dot-object'
-import { Config } from '~config'
 import { isAbsolute, resolve } from 'path'
 import { readJsonAsync } from '~io'
 
 export const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const
-type SupportedMethod = typeof supportedMethods[number]
+export type SupportedMethod = typeof supportedMethods[number]
 
 export interface ValidatedServeConfig {
   name: string
@@ -194,4 +193,21 @@ export const transformConfigs = async (
       return configTasks
     }),
   )
+}
+
+export interface Config {
+  name: string
+  request: {
+    method: SupportedMethod
+    endpoint: string
+    body?: Data
+    type?: string
+    headers?: IncomingHttpHeaders
+  }
+  response: {
+    code: number
+    body?: Data
+    type?: string
+    headers?: OutgoingHttpHeaders
+  }
 }

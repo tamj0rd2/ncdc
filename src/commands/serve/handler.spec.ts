@@ -3,9 +3,8 @@ import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpe
 import { HandleError, CreateTypeValidator } from '~commands/shared'
 import { TypeValidator } from '~validation'
 import { readYamlAsync } from '~io'
-import { ValidationSuccess, validate, transformConfigs, ValidatedServeConfig } from './config'
+import { ValidationSuccess, validate, transformConfigs, ValidatedServeConfig, Config } from './config'
 import { resolve } from 'path'
-import { Config } from '~config'
 import chokidar, { FSWatcher } from 'chokidar'
 
 jest.unmock('./handler')

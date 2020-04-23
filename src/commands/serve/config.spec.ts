@@ -5,8 +5,8 @@ import {
   ValidationSuccess,
   transformConfigs,
   ValidatedServeConfig,
+  Config,
 } from './config'
-import { Config } from '~config'
 import { randomString, mocked } from '~test-helpers'
 import { isAbsolute, resolve } from 'path'
 import { readJsonAsync } from '~io'

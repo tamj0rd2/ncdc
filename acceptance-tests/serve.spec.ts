@@ -191,9 +191,17 @@ describe('ncdc serve', () => {
     expect(body.ISBN).toBe('123')
   })
 
-  // TODO: oooooh. This could actually have a caching folder!!! Then generate
-  // would just become the default because why the hell not? :D
-  // typescript-json-schema getSourceFile could really help with this too
+  describe('type checking', async () => {
+    it.todo('exits initially if the body type does not match expected')
 
-  it.todo('restarts when a source file containing types changes')
+    it.todo('stops the server if a body stops matching the type')
+
+    it.todo('can recover from incorrect body type validation')
+
+    // TODO: oooooh. This could actually have a caching folder!!! Then generate
+    // would just become the default because why the hell not? :D
+    // typescript-json-schema getSourceFile could really help with this too
+
+    it.todo('restarts when a source file containing types changes')
+  })
 })

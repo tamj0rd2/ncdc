@@ -138,6 +138,21 @@ export class ConfigWrapper {
     return this
   }
 
+  public deleteFixture(name: string): ConfigWrapper {
+    if (!this.fixtures[name]) {
+      throw new Error(`Fixture with name ${name} is not registered`)
+    }
+
+    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    if (!existsSync(filePath)) {
+      throw new Error(`${filePath} does not exist on disk`)
+    }
+
+    delete this.fixtures[name]
+    unlinkSync(filePath)
+    return this
+  }
+
   public deleteYaml(): ConfigWrapper {
     unlinkSync(CONFIG_FILE)
     this.configs = []

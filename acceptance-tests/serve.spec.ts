@@ -143,9 +143,53 @@ describe('ncdc serve', () => {
     expect(json.title).toBe('shit meme')
   })
 
-  it.todo('handles deletion of fixture file')
+  it('handles deletion of fixture file', async () => {
+    // arrange
+    const fixtureName = 'crazy-fixture'
+    const configWrapper = new ConfigWrapper()
+      .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+      .addFixture(fixtureName, {
+        title: 'nice meme lol',
+        ISBN: 'asdf',
+        ISBN_13: 'asdf',
+        author: 'me',
+      })
 
-  it.todo('can recover from fixture file deletion')
+    // act
+    const { waitForOutput } = await serve()
+    configWrapper.deleteFixture(fixtureName)
+
+    // assert
+    await waitForOutput(/Could not start server.* no such file or directory.*crazy-fixture\.json/)
+  })
+
+  it('can recover from fixture file deletion', async () => {
+    // arrange
+    const fixtureName = 'another-fixture'
+    const configWrapper = new ConfigWrapper()
+      .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+      .addFixture(fixtureName, {
+        title: 'nice meme lol',
+        ISBN: 'asdf',
+        ISBN_13: 'asdf',
+        author: 'me',
+      })
+
+    // act
+    const { waitUntilAvailable, waitForOutput } = await serve()
+    configWrapper.deleteFixture(fixtureName)
+    await waitForOutput('Could not start server')
+
+    configWrapper.addFixture(fixtureName, {
+      ISBN: '123',
+    })
+    await waitUntilAvailable()
+
+    // assert
+    const res = await fetch('/api/books/29847234')
+    const body = await res.json()
+    expect(body.ISBN).toBe('123')
+  })
 
   // TODO: oooooh. This could actually have a caching folder!!! Then generate
   // would just become the default because why the hell not? :D

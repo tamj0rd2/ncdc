@@ -1,5 +1,5 @@
 module.exports = {
   parserOptions: {
-    project: './tsconfig.acceptance.json'
+    project: `${__dirname}/tsconfig.json`
   }
 }

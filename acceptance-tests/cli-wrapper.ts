@@ -25,8 +25,12 @@ const waitForX = (condition: () => Promise<boolean> | boolean): Promise<void> =>
 
       if (tries >= timeout / retryPeriod) {
         clearInterval(interval)
-        const err = recentError || new Error()
-        err.message = `Condition not met within ${timeout}s timeout ${err}`
+        if (recentError) {
+          recentError.message = `Condition not met within ${timeout}s timeout ${recentError}`
+          return reject(recentError)
+        }
+
+        const err = new Error(`Condition not met within ${timeout}s timeout`)
         return reject(err)
       }
 
@@ -41,8 +45,8 @@ export const SERVE_HOST = 'http://localhost:4000'
 export const MESSAGE_RESTARTING = 'Restarting ncdc serve'
 
 type ServeResult = {
-  getOutput(): string
-  waitForOutput(target: string, timeout?: number): Promise<void>
+  getAllOutput(): string
+  waitForOutput(target: string | RegExp): Promise<void>
   waitUntilAvailable(): Promise<void>
 }
 
@@ -60,7 +64,6 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
   const ncdc: ChildProcess = exec(command)
   const output: string[] = []
   const getRawOutput = (): string => output.join('')
-  const getStrippedOutput = (): string => strip(getRawOutput())
 
   ncdc.stdout && ncdc.stdout.on('data', (data) => output.push(data))
   ncdc.stderr && ncdc.stderr.on('data', (data) => output.push(data))
@@ -81,23 +84,40 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
 
   cleanupTasks.push(cleanup)
 
-  const failNicely = (message: string, err: Error): never => {
-    console.error(`${message}. Output:\n\n${getStrippedOutput()}`)
+  const failNicely = (message: string) => (err: Error): never => {
+    console.error(`${message}. Output:\n\n${getRawOutput()}`)
     cleanup()
     throw err
   }
 
-  const waitForOutput: ServeResult['waitForOutput'] = (target) =>
-    waitForX(() => getStrippedOutput().includes(target)).catch((err) =>
-      failNicely(`Did not find the string "${target}" in the output}`, err),
+  let outputPointer = 0
+  const waitForOutput: ServeResult['waitForOutput'] = async (target) => {
+    return await waitForX(() => {
+      const currentOutput = [...output]
+      const searchableOutput = currentOutput.slice(outputPointer)
+      const foundIndex = searchableOutput.findIndex((s) => {
+        if (typeof target === 'string') return strip(s).includes(target)
+        return target.test(s)
+      })
+
+      if (foundIndex === -1) {
+        outputPointer = currentOutput.length
+        return false
+      }
+
+      outputPointer += foundIndex + 1
+      return true
+    }).catch(
+      failNicely(`Did not find the string "${target}" in the output on or after message ${outputPointer}`),
     )
+  }
 
   const waitUntilAvailable: ServeResult['waitUntilAvailable'] = () =>
     waitForX(async () => {
       const { status } = await fetch('/')
       return status === 200
-    }).catch((err) => failNicely(`The ncdc server was not contactable at ${SERVE_HOST}/`, err))
+    }).catch(failNicely(`The ncdc server was not contactable at ${SERVE_HOST}/`))
 
   if (checkAvailability) await waitUntilAvailable()
-  return { getOutput: getStrippedOutput, waitForOutput, waitUntilAvailable }
+  return { getAllOutput: () => strip(getRawOutput()), waitForOutput, waitUntilAvailable }
 }

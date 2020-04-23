@@ -21,7 +21,7 @@ describe('ncdc serve', () => {
     new ConfigWrapper().addConfig()
 
     // act
-    const { getOutput } = await serve()
+    const { getAllOutput: getOutput } = await serve()
     const res = await fetch('/api/books/hooray')
     const output = getOutput()
 
@@ -73,17 +73,16 @@ describe('ncdc serve', () => {
   it('logs a message and kills the server when config.yml has been deleted', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
-    const { getOutput, waitForOutput } = await serve()
+    const { waitForOutput } = await serve()
     const resInitial = await fetch('/api/books/yay')
     expect(resInitial.status).toBe(200)
 
     // act
     configWrapper.deleteYaml()
-    await waitForOutput(MESSAGE_RESTARTING)
-    await waitForOutput('Could not start server')
-    await waitForOutput('no such file or directory')
 
     // assert
+    await waitForOutput(MESSAGE_RESTARTING)
+    await waitForOutput(/Could not start server.* no such file or directory/)
     await expect(fetch('/api/books/yay')).rejects.toThrowError()
   })
 
@@ -118,7 +117,7 @@ describe('ncdc serve', () => {
       })
 
     // act
-    const { getOutput, waitForOutput, waitUntilAvailable } = await serve()
+    const { getAllOutput: getOutput, waitForOutput, waitUntilAvailable } = await serve()
     configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'shit meme' }))
 
     await waitForOutput(MESSAGE_RESTARTING)

@@ -36,7 +36,7 @@ export interface ValidatedServeConfig {
 
 export interface ValidationSuccess {
   success: true
-  validatedConfig: ValidatedServeConfig[]
+  validatedConfigs: ValidatedServeConfig[]
 }
 
 export interface ValidationFailure {
@@ -110,7 +110,7 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
   })
 
   if (!validationResult.error) {
-    return { success: true, validatedConfig: validationResult.value }
+    return { success: true, validatedConfigs: validationResult.value }
   }
 
   const formattedErrors = validationResult.error.details

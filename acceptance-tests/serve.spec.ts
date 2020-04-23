@@ -53,6 +53,8 @@ describe('ncdc serve', () => {
     expect(json.title).toBe('nice meme lol')
   })
 
+  it.todo('handles fixture file not existing')
+
   it('restarts when config.yml is changed', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
@@ -103,8 +105,7 @@ describe('ncdc serve', () => {
     expect(status).toEqual(404)
   })
 
-  // TODO: figure out why this is passing. it;s weirrd
-  it.skip('restarts the server when a path referenced by the config file changes', async () => {
+  it('restarts the server when a fixture file changes', async () => {
     // arrange
     const fixtureName = 'response'
     const configWrapper = new ConfigWrapper()
@@ -117,19 +118,22 @@ describe('ncdc serve', () => {
       })
 
     // act
-    const { getAllOutput: getOutput, waitForOutput, waitUntilAvailable } = await serve()
+    const { waitForOutput, waitUntilAvailable } = await serve()
     configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'shit meme' }))
 
+    await waitForOutput(/change event detected for .*response.json/)
     await waitForOutput(MESSAGE_RESTARTING)
     await waitUntilAvailable()
     const res = await fetch('/api/books/memes')
     const json = await res.json()
 
     // assert
-    expect(getOutput()).toContain('Meme books')
-    console.log(getOutput())
     expect(json.title).toBe('shit meme')
   })
+
+  it.todo('handles deletion of fixture file')
+
+  it.todo('can recover from fixture file deletion')
 
   // TODO: oooooh. This could actually have a caching folder!!! Then generate
   // would just become the default because why the hell not? :D

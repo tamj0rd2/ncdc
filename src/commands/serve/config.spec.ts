@@ -147,7 +147,7 @@ describe('validate', () => {
         }
 
         expect(result.success).toBe(true)
-        expect(result.validatedConfig[0].request.endpoints).toStrictEqual(['/hello'])
+        expect(result.validatedConfigs[0].request.endpoints).toStrictEqual(['/hello'])
       })
 
       it('accepts a list of endpoints starting with /', () => {
@@ -192,7 +192,7 @@ describe('validate', () => {
         }
 
         expect(validationResult.success).toBe(true)
-        expect(validationResult.validatedConfig[0].serveOnly).toBe(false)
+        expect(validationResult.validatedConfigs[0].serveOnly).toBe(false)
       })
 
       describe('when false', () => {

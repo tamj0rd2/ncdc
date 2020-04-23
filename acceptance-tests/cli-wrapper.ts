@@ -42,7 +42,7 @@ export const FIXTURE_FOLDER = './acceptance-tests/books-fixture'
 export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
 export const SERVE_HOST = 'http://localhost:4000'
 
-export const MESSAGE_RESTARTING = 'Restarting ncdc serve'
+export const MESSAGE_RESTARTING = 'Attempting to restart ncdc server'
 
 type ServeResult = {
   getAllOutput(): string
@@ -108,7 +108,11 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
       outputPointer += foundIndex + 1
       return true
     }).catch(
-      failNicely(`Did not find the string "${target}" in the output on or after message ${outputPointer}`),
+      failNicely(
+        `Did not find the string "${target}" in the output${
+          outputPointer ? ' on or after message ' + outputPointer : ''
+        }`,
+      ),
     )
   }
 

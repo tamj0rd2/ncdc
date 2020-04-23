@@ -1,5 +1,5 @@
 import { HandleError, CreateTypeValidator } from '~commands'
-import { resolve } from 'path'
+import { resolve, isAbsolute } from 'path'
 import { validate, transformConfigs } from './config'
 import { readYamlAsync } from '~io'
 import { Config } from '~config'
@@ -73,99 +73,87 @@ const createHandler = (
   const absoluteConfigPath = resolve(configPath)
   let typeValidator: TypeValidator | undefined
 
-  const prepareForServerStart = async (): Promise<Config[]> => {
+  type PrepAndStartResult = {
+    server: Server
+    pathsToWatch: string[]
+  }
+
+  const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
     const validationResult = validate(await readYamlAsync(absoluteConfigPath))
     if (!validationResult.success) {
       throw new Error(`${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`)
     }
 
-    if (!validationResult.validatedConfig.length) throw new Error('No configs to serve')
+    if (!validationResult.validatedConfigs.length) throw new Error('No configs to serve')
 
-    const configUsesTypes = validationResult.validatedConfig.find((c) => c.request.type || c.response.type)
+    const configUsesTypes = validationResult.validatedConfigs.find((c) => c.request.type || c.response.type)
     if (!typeValidator && configUsesTypes) {
       typeValidator = configUsesTypes && createTypeValidator(tsconfigPath, force, schemaPath)
     }
 
-    const transformedConfigs = await transformConfigs(validationResult.validatedConfig, absoluteConfigPath)
+    const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, absoluteConfigPath)
 
     if (typeValidator) {
       const bodyValidationMessage = await validateConfigBodies(transformedConfigs, typeValidator)
       if (bodyValidationMessage) throw new Error(bodyValidationMessage)
     }
-    return transformedConfigs
+
+    const server = startServer(port, transformedConfigs, typeValidator)
+    return {
+      server,
+      pathsToWatch: validationResult.validatedConfigs
+        .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
+        .filter((x): x is string => !!x)
+        .map((p) => (isAbsolute(p) ? p : resolve(absoluteConfigPath, '..', p))),
+    }
   }
 
-  let configs: Config[]
+  let result: PrepAndStartResult
   try {
-    configs = await prepareForServerStart()
+    result = await prepAndStartServer()
   } catch (err) {
-    handleError(err)
+    return handleError(err)
   }
 
-  let server = startServer(port, configs, typeValidator)
-
-  chokidar.watch(absoluteConfigPath, { ignoreInitial: true, cwd: process.cwd() }).on('all', (e, path) => {
-    logger.info('Restarting ncdc server')
-    server.close(async (err) => {
-      if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
-        return logger.error(`Could not start server: ${err.message}`)
-      }
-
-      try {
-        const configs = await prepareForServerStart()
-        server = startServer(port, configs, typeValidator)
-      } catch (err) {
-        logger.error(`Could not start server: ${err.message}`)
-      }
-    })
+  const configWatcher = chokidar.watch([absoluteConfigPath, ...result.pathsToWatch], {
+    ignoreInitial: true,
+    cwd: process.cwd(),
   })
 
-  // TODO: bring back some better watching logic
-  // TODO: also, stop using the shared Config thing in serve. It can have its own interface now.
-  // no point muddling up the different contexts again
+  const closeServer = (): Promise<void> =>
+    new Promise((resolve, reject) => {
+      result.server.close((err) => {
+        if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
+          return reject(err)
+        }
 
-  // const runServer = async (): Promise<Server> => {
-  //   const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
-  //   const configs = await readConfig(fullConfigPath, typeValidator, Mode.Serve)
-  //   return startServer(port, configs, typeValidator)
-  // }
+        return resolve()
+      })
+    })
 
-  // let server = await runServer()
-  // const restartServer = (): Promise<void> =>
-  //   new Promise<void>((resolve, reject) => {
-  //     server.close(async (err) => {
-  //       if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') return reject(err)
+  configWatcher.on('all', async (e, path) => {
+    logger.info(`${e} event detected for ${path}`)
+    logger.info('Attempting to restart ncdc server')
 
-  //       try {
-  //         server = await runServer()
-  //       } catch (err) {
-  //         return reject(err)
-  //       }
-  //       resolve()
-  //     })
-  //   })
+    try {
+      await closeServer()
+    } catch (err) {
+      logger.error(`Could not restart the server - ${err.message}`)
+      return
+    }
 
-  // chokidar.watch(fullConfigPath, { ignoreInitial: true }).on('all', async (e) => {
-  //   logger.debug(`Chokdar event - ${e}`)
+    try {
+      result = await prepAndStartServer()
+    } catch (err) {
+      logger.error(`Could not start server: ${err.message}`)
+      return
+    }
 
-  //   switch (e) {
-  //     case 'add':
-  //     case 'change':
-  //     case 'unlink':
-  //       logger.info('Restarting ncdc serve')
-
-  //       try {
-  //         await restartServer()
-  //       } catch (err) {
-  //         if (err.code === 'ENOENT') {
-  //           return logger.error(`Could not start server - no such file or directory ${fullConfigPath}`)
-  //         }
-  //         handleError(err)
-  //       }
-
-  //       break
-  //   }
-  // })
+    const watchedFiles = Object.entries(configWatcher.getWatched()).flat().flat()
+    logger.debug(watchedFiles)
+    configWatcher.unwatch(watchedFiles)
+    configWatcher.add([absoluteConfigPath, ...result.pathsToWatch])
+  })
 }
 
 export default createHandler

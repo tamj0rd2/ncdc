@@ -12,7 +12,7 @@ jest.unmock('./handler')
 jest.unmock('@hapi/joi')
 jest.mock('path')
 
-type RawConfig = ValidationSuccess['validatedConfig']
+type RawConfig = ValidationSuccess['validatedConfigs']
 
 const createRawConfig = (): RawConfig[number] => {
   return {
@@ -71,7 +71,7 @@ describe('handler', () => {
     const mockTransformConfigs = mocked(transformConfigs)
 
     beforeEach(() => {
-      mockValidate.mockReturnValue({ success: true, validatedConfig: [] })
+      mockValidate.mockReturnValue({ success: true, validatedConfigs: [] })
       mockTransformConfigs.mockResolvedValue([
         { name: randomString('name'), request: {}, response: {} } as Config,
       ])
@@ -110,7 +110,7 @@ describe('handler', () => {
     })
 
     it('logs a message and exits if there are no configs to serve', async () => {
-      mockValidate.mockReturnValue({ success: true, validatedConfig: [] })
+      mockValidate.mockReturnValue({ success: true, validatedConfigs: [] })
 
       await handler(args)
 
@@ -119,7 +119,7 @@ describe('handler', () => {
 
     it('does not create a type validator if no configs have associated types', async () => {
       const validatedConfig: RawConfig = [createRawConfig()]
-      mockValidate.mockReturnValue({ success: true, validatedConfig })
+      mockValidate.mockReturnValue({ success: true, validatedConfigs: validatedConfig })
 
       await handler(args)
 
@@ -130,7 +130,7 @@ describe('handler', () => {
       const config1 = createRawConfig()
       config1.response.type = randomString()
       const validatedConfig: RawConfig = [config1]
-      mockValidate.mockReturnValue({ success: true, validatedConfig })
+      mockValidate.mockReturnValue({ success: true, validatedConfigs: validatedConfig })
 
       await handler(args)
 
@@ -140,7 +140,7 @@ describe('handler', () => {
     it('calls the transform func with the correct args', async () => {
       const config = createRawConfig()
       const validatedConfig: ValidatedServeConfig[] = [config]
-      mockValidate.mockReturnValue({ success: true, validatedConfig })
+      mockValidate.mockReturnValue({ success: true, validatedConfigs: validatedConfig })
       const absoulteConfigPath = randomString()
       mockResolve.mockReturnValue(absoulteConfigPath)
 
@@ -152,7 +152,7 @@ describe('handler', () => {
     it('runs the server with the correct args', async () => {
       const config = createRawConfig()
       config.request.type = 'boooring'
-      mockValidate.mockReturnValue({ success: true, validatedConfig: [config] })
+      mockValidate.mockReturnValue({ success: true, validatedConfigs: [config] })
       const transformedConfigs: Partial<Config>[] = [
         {
           name: randomString('name'),
@@ -188,7 +188,7 @@ describe('handler', () => {
       beforeEach(() => {
         mockValidate.mockReturnValue({
           success: true,
-          validatedConfig: [{ request: { type: randomString('type') } } as ValidatedServeConfig],
+          validatedConfigs: [{ request: { type: randomString('type') } } as ValidatedServeConfig],
         })
         mockTransformConfigs.mockResolvedValue([transformedConfig as Config])
       })
@@ -240,7 +240,7 @@ describe('handler', () => {
     it('skips body type validation when a config has no body', async () => {
       mockValidate.mockReturnValue({
         success: true,
-        validatedConfig: [{ request: { type: 'MyType' } }] as ValidatedServeConfig[],
+        validatedConfigs: [{ request: { type: 'MyType' }, response: {} }] as ValidatedServeConfig[],
       })
       mockTransformConfigs.mockResolvedValue([
         { request: { type: 'Jim' }, response: { type: 'Bob' } } as Config,
@@ -255,7 +255,7 @@ describe('handler', () => {
     it('skips body type validation when a config has no type', async () => {
       mockValidate.mockReturnValue({
         success: true,
-        validatedConfig: [{ request: {}, response: {} }] as ValidatedServeConfig[],
+        validatedConfigs: [{ request: {}, response: {} }] as ValidatedServeConfig[],
       })
       mockTransformConfigs.mockResolvedValue([
         { request: { body: 'Jim' }, response: { body: 'Bob' } } as Config,

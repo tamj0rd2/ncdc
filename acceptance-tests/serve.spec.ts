@@ -53,7 +53,19 @@ describe('ncdc serve', () => {
     expect(json.title).toBe('nice meme lol')
   })
 
-  it.todo('handles fixture file not existing')
+  it('logs an error and exists if a fixture file does not exist', async () => {
+    // arrange
+    new ConfigWrapper().addConfig(
+      new ConfigBuilder().withServeBody(undefined).withFixture('my-fixture').build(),
+    )
+
+    // act
+    const { waitForOutput } = await serve(false)
+
+    // assert
+    await waitForOutput('no such file or directory')
+    await expect(fetch('/')).rejects.toThrowError()
+  })
 
   it('restarts when config.yml is changed', async () => {
     // arrange

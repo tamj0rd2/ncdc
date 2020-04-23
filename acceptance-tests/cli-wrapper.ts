@@ -69,7 +69,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
   ncdc.stderr && ncdc.stderr.on('data', (data) => output.push(data))
   ncdc.on('exit', (code, signal) => {
     hasExited = true
-    if (code !== 0 && signal !== 'SIGTERM') {
+    if (code !== 0 && signal !== 'SIGTERM' && checkAvailability) {
       const quickInfo = `Code: ${code} | Signal: ${signal}`
       throw new Error(`${quickInfo} | Output:\n\n${getRawOutput()}`)
     }

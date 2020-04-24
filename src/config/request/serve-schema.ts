@@ -1,4 +1,4 @@
-import { mixed, string, InferType } from 'yup'
+import { InferType } from 'yup'
 import { baseRequestSchema, endpointsSchema, endpointSchema } from './schema-shared'
 import enrichYup from '../methods'
 

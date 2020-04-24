@@ -1,6 +1,6 @@
 import Ajv from 'ajv'
 import { TypeValidator } from '~validation'
-import { mockObj, randomString, mockFn } from '~test-helpers'
+import { mockObj, randomString } from '~test-helpers'
 import { SchemaRetriever } from '~schema'
 import { TypeValidationFailure } from './type-validator'
 

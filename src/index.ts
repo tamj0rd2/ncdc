@@ -32,7 +32,7 @@ export default async function run(): Promise<void> {
     )
 
   // TODO: figure out how I can remove this
-  // eslint-disable-next-line no-unused-expressions
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   mainYargs
     .command(createGenerateCommand(handleError, isDevMode))
     .command(createServeCommand(createTypeValidator))

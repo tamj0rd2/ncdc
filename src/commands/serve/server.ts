@@ -5,8 +5,6 @@ import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
-import { parse } from 'url'
-import { isQueryMismatch } from './utils'
 import { SupportedMethod, Config } from './config'
 
 export interface ReqResLog {

@@ -191,7 +191,7 @@ describe('ncdc serve', () => {
     expect(body.ISBN).toBe('123')
   })
 
-  describe('type checking', async () => {
+  describe('type checking', () => {
     it.todo('exits initially if the body type does not match expected')
 
     it.todo('stops the server if a body stops matching the type')

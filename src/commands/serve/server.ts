@@ -81,18 +81,18 @@ export const configureServer = (
     app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
       try {
         // TODO ======= finish up by adding tests. maybe extract it out
-        const actualQuery = parse(req.url, true).query
-        const expectedQuery = parse(request.endpoint, true).query
+        // const actualQuery = parse(req.url, true).query
+        // const expectedQuery = parse(request.endpoint, true).query
 
-        const queryMismatches = Object.keys(expectedQuery)
-          .map((key) => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
-          .filter((x): x is string => !!x)
+        // const queryMismatches = Object.keys(expectedQuery)
+        //   .map((key) => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
+        //   .filter((x): x is string => !!x)
 
-        if (queryMismatches.length) {
-          res.locals.message = queryMismatches.join('\n')
-          res.locals.status = 400
-          return next()
-        }
+        // if (queryMismatches.length) {
+        //   res.locals.message = queryMismatches.join('\n')
+        //   res.locals.status = 400
+        //   return next()
+        // }
         // ============================================
 
         if (typeValidator && request.type) {

@@ -192,7 +192,7 @@ describe('ncdc serve', () => {
     expect(body.ISBN).toBe('123')
   })
 
-  describe.only('type checking', () => {
+  describe('type checking', () => {
     const typecheckingCleanup: CleanupTask[] = []
     let serve: ServeResult
     let configWrapper: ConfigWrapper

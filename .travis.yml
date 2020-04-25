@@ -9,7 +9,6 @@ jobs:
       script:
         - docker-compose run $ci_env tests
       node_js: lts/*
-      install: skip
       deploy:
         provider: script
         skip_cleanup: true

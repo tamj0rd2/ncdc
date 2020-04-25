@@ -5,7 +5,8 @@ import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
-import { SupportedMethod, Config } from './config'
+import { SupportedMethod, Config } from '../config'
+import validateQuery from './query-validator'
 
 export interface ReqResLog {
   name?: string
@@ -78,6 +79,14 @@ export const configureServer = (
 
     app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
       try {
+        const queryIsValid = validateQuery(request.endpoint, req.query)
+        if (!queryIsValid) {
+          serverLogger.warn(
+            `An endpoint for ${req.path} exists but the query params did not match the configuration`,
+          )
+          next()
+        }
+
         // TODO ======= finish up by adding tests. maybe extract it out
         // const actualQuery = parse(req.url, true).query
         // const expectedQuery = parse(request.endpoint, true).query

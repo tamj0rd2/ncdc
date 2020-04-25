@@ -44,13 +44,19 @@ describe('handler', () => {
   })
 
   it('handles when a config path is not supplied', async () => {
-    await handler({ force: false, port: 8001, tsconfigPath: randomString() })
+    await handler({ force: false, port: 8001, tsconfigPath: randomString(), watch: false })
 
     expect(mockHandleError).toBeCalledWith({ message: 'config path must be supplied' })
   })
 
   it('handles when port is not a number', async () => {
-    await handler({ force: false, port: NaN, tsconfigPath: randomString(), configPath: randomString() })
+    await handler({
+      force: false,
+      port: NaN,
+      tsconfigPath: randomString(),
+      configPath: randomString(),
+      watch: false,
+    })
 
     expect(mockHandleError).toBeCalledWith({ message: 'port must be a number' })
   })
@@ -60,6 +66,7 @@ describe('handler', () => {
     port: 4000,
     tsconfigPath: randomString(),
     configPath: randomString(),
+    watch: false,
   }
 
   describe('runs the server with the correct configs', () => {

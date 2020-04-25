@@ -10,14 +10,16 @@
     "clean": "rm -rf ./dist ./coverage/*",
     "typecheck": "tsc && tsc -p ./tsconfig.acceptance.json",
     "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
-    "prepublishOnly": "./build.sh",
+    "prepublishOnly": "npm run compile",
     "test": "jest",
     "cover": "nyc jest --coverage --runInBand --detectOpenHandles",
-    "lint": "eslint '**/*.ts' --color --ignore-path .gitignore --cache"
+    "lint": "eslint '**/*.ts' --color --ignore-path .gitignore --cache",
+    "semantic-release": "semantic-release"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
     }
   },
   "lint-staged": {
@@ -26,9 +28,14 @@
       "./build.sh"
     ]
   },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tamj0rd2/ncdc.git"
+    "url": "https://github.com/tamj0rd2/ncdc.git"
   },
   "author": "Tamara Jordan",
   "license": "MIT",
@@ -45,6 +52,7 @@
     "@babel/preset-env": "^7.7.4",
     "@babel/preset-typescript": "^7.7.4",
     "@babel/register": "^7.9.0",
+    "@semantic-release/changelog": "^5.0.1",
     "@types/ajv": "^1.0.0",
     "@types/dot-object": "^2.1.0",
     "@types/express": "^4.17.2",
@@ -53,12 +61,15 @@
     "@types/js-yaml": "^3.12.1",
     "@types/node": "^13.11.1",
     "@types/node-fetch": "^2.5.6",
+    "@types/qs": "^6.9.1",
     "@types/supertest": "^2.0.8",
     "@types/yup": "^0.28.0",
     "@typescript-eslint/eslint-plugin": "^2.7.0",
     "@typescript-eslint/parser": "^2.7.0",
     "babel-jest": "^25.3.0",
     "babel-plugin-module-resolver": "^4.0.0",
+    "commitizen": "^4.0.4",
+    "cz-conventional-changelog": "^3.1.0",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-jest": "^23.0.4",
@@ -70,6 +81,7 @@
     "npm-run-all": "^4.1.5",
     "nyc": "^15.0.1",
     "prettier": "^2.0.4",
+    "semantic-release": "^17.0.7",
     "source-map-support": "^0.5.16",
     "strip-ansi": "^6.0.0",
     "supertest": "^4.0.2",
@@ -86,6 +98,7 @@
     "express": "^4.17.1",
     "isomorphic-unfetch": "^3.0.0",
     "js-yaml": "^3.13.1",
+    "qs": "^6.9.3",
     "typescript-json-schema": "^0.42.0",
     "winston": "^3.2.1",
     "yargs": "^15.3.1",

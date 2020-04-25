@@ -1,5 +1,5 @@
 import request from 'supertest'
-import { configureServer, verbsMap, PossibleMethod } from './server'
+import { configureServer, verbsMap, PossibleMethod } from '.'
 import { ConfigBuilder, SupportedMethod } from '~config'
 import { TypeValidator } from '~validation'
 import Problem from '~problem'
@@ -65,6 +65,22 @@ describe('server', () => {
       .expect(200)
       .expect('Hello, world!')
       .expect('Content-Type', /text\/html/)
+  })
+
+  it('gives a 200 when a query matches in a different order', async () => {
+    const configs = [new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build()]
+
+    const app = configureServer('example.com', configs)
+
+    await request(app).get('/api/resource?greetings=bye&greetings=hello').expect(200)
+  })
+
+  it('gives a 404 if a query does not match', async () => {
+    const configs = [new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build()]
+
+    const app = configureServer('example.com', configs)
+
+    await request(app).get('/api/resource?greetings=yellow&greetings=bye').expect(404)
   })
 
   it('sets the response headers when provided', async () => {

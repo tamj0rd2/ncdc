@@ -63,7 +63,7 @@ Here's a format that describes each config setting:
 - **Type**: object
 - **Required?**: Yes
 
-### request.endpoints (pending changes)
+### request.endpoints
 
 - **Description**: A single endpoint or list of endpoints that you'd like to
   test or serve.<br>
@@ -73,7 +73,7 @@ Here's a format that describes each config setting:
   order to get responses for the configuration `endpoints: /endpoint?size=5&size=6`,
   you would need to make a request that include `size=5` and `size=6` as query
   params. If you leave either of them out of the request, your response will not
-  be served and you'll receive a 400 status code. Providing extra params does not
+  be served and you'll receive a 404 status code. Providing extra params does not
   cause adverse effects.
 - **Type**: string or string[]
 - **Required?**: Required in Test mode if serveOnly is false
@@ -86,7 +86,7 @@ Here's a format that describes each config setting:
     - /my/endpoint2?hello=world # only served if request has query param "hello" with value "world"
   ```
 
-### request.serveEndpoint (pending changes)
+### request.serveEndpoint
 
 - **Description**: An endpoint to serve the corresponding response. This
   supports ExpressJS string patterns
@@ -114,7 +114,7 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO: make sure the type actually works like this and gives back a useful error message -->
-### request.type (pending changes)
+### request.type
 
 - **Description**: The name of a typescript symbol or a JSON schema file
   (excluding the .json). JSON schema files will only be used if the `--schemPath`
@@ -137,7 +137,7 @@ Here's a format that describes each config setting:
 
 <!-- TODO: make this work in the way specified. Decided what error should occur in the response -->
 
-### request.headers (pending changes)
+### request.headers
 
 - **Description**: The headers you expect to call the endpoint with. Header
   names are case insensitive.<br>
@@ -154,7 +154,7 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO: make this work as described -->
-### request.body (pending changes)
+### request.body
 
 - **Description**: The body you expect to make requests to the endpoint with.
   Whitespace needs to match exactly.<br>
@@ -182,7 +182,7 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO/FIXME - logic to get this feature working fully needs to be amended -->
-### request.bodyPath (pending changes)
+### request.bodyPath
 
 - **Description**: A path to the body you expect to make requests to the endpoint
   with. It must be a JSON file (should be updated to support other files in the
@@ -208,7 +208,7 @@ Here's a format that describes each config setting:
 - **Required?**: Yes
 - **Example**: `code: 404`
 
-### response.headers (pending changes)
+### response.headers
 
 - **Description**: The headers you expect to receive from the endpoint. Header
   names are case insensitive

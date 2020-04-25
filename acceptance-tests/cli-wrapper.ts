@@ -44,7 +44,7 @@ export const SERVE_HOST = 'http://localhost:4000'
 
 export const MESSAGE_RESTARTING = 'Attempting to restart ncdc server'
 
-type ServeResult = {
+export type ServeResult = {
   getAllOutput(): string
   waitForOutput(target: string | RegExp): Promise<void>
   waitUntilAvailable(): Promise<void>

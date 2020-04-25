@@ -1,4 +1,4 @@
-import { fetch, SERVE_HOST, MESSAGE_RESTARTING } from './cli-wrapper'
+import { fetch, SERVE_HOST, MESSAGE_RESTARTING, ServeResult } from './cli-wrapper'
 import { CleanupTask, prepareServe } from './cli-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
@@ -192,17 +192,68 @@ describe('ncdc serve', () => {
     expect(body.ISBN).toBe('123')
   })
 
-  describe('type checking', () => {
-    it.todo('exits initially if the body type does not match expected')
+  describe.only('type checking', () => {
+    const typecheckingCleanup: CleanupTask[] = []
+    let serve: ServeResult
+    let configWrapper: ConfigWrapper
 
-    it.todo('stops the server if a body stops matching the type')
+    afterAll(() => {
+      typecheckingCleanup.forEach((task) => task())
+    })
 
-    it.todo('can recover from incorrect body type validation')
+    it('it serves when the type matches the body', async () => {
+      configWrapper = new ConfigWrapper()
+        .addConfig(new ConfigBuilder().withType('Book').build())
+        .addType('Book', {
+          ISBN: 'string',
+          ISBN_13: 'string',
+          author: 'string',
+          title: 'string',
+        })
 
-    // TODO: oooooh. This could actually have a caching folder!!! Then generate
+      serve = await prepareServe(typecheckingCleanup)()
+
+      await expect(fetch('/api/books/hello')).resolves.toMatchObject({ status: 200 })
+    })
+
+    it('stops the server if a body stops matching the type', async () => {
+      configWrapper.editConfig('Books', (config) => ({
+        ...config,
+        response: {
+          ...config.response,
+          serveBody: {
+            title: 123,
+          },
+        },
+      }))
+
+      await serve.waitForOutput(MESSAGE_RESTARTING)
+      await serve.waitForOutput(/Could not start server.*due to config errors/)
+      await expect(fetch('/api/books/aldksj')).rejects.toThrowError()
+    })
+
+    it('can recover from incorrect body type validation', async () => {
+      configWrapper.editConfig('Books', (config) => ({
+        ...config,
+        response: {
+          ...config.response,
+          serveBody: {
+            ISBN: 'ISBN',
+            ISBN_13: 'ISBN_13',
+            author: 'author',
+            title: 'title',
+          },
+        },
+      }))
+
+      await serve.waitForOutput(MESSAGE_RESTARTING)
+
+      await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+    })
+
+    // TODO: oooooh. NCDC could actually have a caching folder!!! Then generate
     // would just become the default because why the hell not? :D
     // typescript-json-schema getSourceFile could really help with this too
-
     it.todo('restarts when a source file containing types changes')
   })
 })

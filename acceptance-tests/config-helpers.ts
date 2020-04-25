@@ -1,5 +1,5 @@
 import { OutgoingHttpHeaders } from 'http'
-import { existsSync, unlinkSync, writeFileSync, rmdirSync, mkdirSync } from 'fs'
+import { existsSync, unlinkSync, writeFileSync, rmdirSync, mkdirSync, appendFileSync } from 'fs'
 import { CONFIG_FILE, FIXTURE_FOLDER } from './cli-wrapper'
 import jsyaml from 'js-yaml'
 
@@ -68,6 +68,15 @@ export class ConfigBuilder {
     return this
   }
 
+  public withType(typeName: string): ConfigBuilder {
+    if (this.config.response.type) {
+      throw new Error('Response type already set to ' + this.config.response.type)
+    }
+
+    this.config.response.type = typeName
+    return this
+  }
+
   public build(): Config {
     return this.config
   }
@@ -76,14 +85,20 @@ export class ConfigBuilder {
 export class ConfigWrapper {
   private configs: Config[] = []
   private fixtures: Record<string, object> = {}
+  private types: Record<string, object> = {}
 
   private static ResponsesFolder = `${FIXTURE_FOLDER}/responses`
+  private static TypesFile = `${FIXTURE_FOLDER}/types.ts`
 
   constructor() {
     if (existsSync(CONFIG_FILE)) this.deleteYaml()
-    if (existsSync(ConfigWrapper.ResponsesFolder))
+
+    if (existsSync(ConfigWrapper.ResponsesFolder)) {
       rmdirSync(ConfigWrapper.ResponsesFolder, { recursive: true })
+    }
     mkdirSync(ConfigWrapper.ResponsesFolder)
+
+    writeFileSync(ConfigWrapper.TypesFile, '')
   }
 
   public addConfig(config = new ConfigBuilder().build()): ConfigWrapper {
@@ -156,6 +171,24 @@ export class ConfigWrapper {
   public deleteYaml(): ConfigWrapper {
     unlinkSync(CONFIG_FILE)
     this.configs = []
+    return this
+  }
+
+  public addType(name: string, content: object): ConfigWrapper {
+    if (this.types[name]) {
+      throw new Error(`The type ${name} is already registered`)
+    }
+
+    this.types[name] = content
+    appendFileSync(
+      ConfigWrapper.TypesFile,
+      `
+      interface ${name} {
+        ${Object.entries(content).map(([key, value]) => `${key}: ${value}`)}
+      }
+    `,
+    )
+
     return this
   }
 

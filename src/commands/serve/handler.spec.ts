@@ -16,7 +16,6 @@ type RawConfig = ValidationSuccess['validatedConfigs']
 const createRawConfig = (): RawConfig[number] => {
   return {
     name: randomString(),
-    serveOnly: false,
     request: {
       method: 'GET',
     },

@@ -9,8 +9,6 @@ export type SupportedMethod = typeof supportedMethods[number]
 
 export interface ValidatedServeConfig {
   name: string
-  // TODO: technically we don't care about this at all if we've run ncdc serve
-  serveOnly: boolean // value should default to true if it does not exist
   request: {
     method: SupportedMethod
     type?: string
@@ -24,8 +22,6 @@ export interface ValidatedServeConfig {
     code: number
     type?: string
     headers?: OutgoingHttpHeaders
-
-    // only 1 of these can be defined
     body?: Data
     bodyPath?: string
     serveBody?: Data
@@ -50,19 +46,13 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
     .ruleset.pattern(/^\//)
     .message('must start with /')
 
-  const endpointsSchema = Joi.alternatives().conditional('.', {
-    is: Joi.string().allow(''),
-    then: endpointSchema,
-    otherwise: Joi.array().items(endpointSchema).min(1), // only required when serveOnly is true
-  })
-
   const bodySchema = [Joi.string(), Joi.object()]
 
   const schema = Joi.array()
     .items(
       Joi.object({
         name: Joi.string().required(),
-        serveOnly: Joi.bool().empty().default(false),
+        serveOnly: Joi.bool(),
         request: Joi.object({
           method: Joi.string()
             .valid(...supportedMethods)
@@ -71,10 +61,10 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
           type: Joi.string(),
           headers: Joi.object(),
           endpoints: Joi.alternatives()
-            .conditional('...serveOnly', {
-              is: Joi.valid(false),
-              then: endpointsSchema.required(),
-              otherwise: endpointsSchema,
+            .conditional('.', {
+              is: Joi.string().allow(''),
+              then: endpointSchema,
+              otherwise: Joi.array().items(endpointSchema).min(1),
             })
             .custom((value) => (typeof value === 'string' ? [value] : value)),
           serveEndpoint: endpointSchema,
@@ -82,10 +72,7 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
           bodyPath: Joi.string(),
         })
           .required()
-          .when('serveOnly', {
-            is: Joi.valid(true),
-            then: Joi.object().or('endpoints', 'serveEndpoint'),
-          })
+          .or('endpoints', 'serveEndpoint')
           .oxor('body', 'bodyPath'),
         response: Joi.object({
           code: Joi.number().required(),

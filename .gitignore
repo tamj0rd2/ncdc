@@ -12,3 +12,4 @@ icon.png
 .nyc_output
 acceptance-tests/books-fixture/config.yml
 acceptance-tests/books-fixture/responses
+acceptance-tests/books-fixture/types.ts

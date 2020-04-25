@@ -1,5 +1,5 @@
 import request from 'supertest'
-import { configureServer, verbsMap, PossibleMethod } from './server'
+import { configureServer, verbsMap, PossibleMethod } from '.'
 import { ConfigBuilder, SupportedMethod } from '~config'
 import { TypeValidator } from '~validation'
 import Problem from '~problem'

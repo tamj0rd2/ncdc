@@ -5,7 +5,7 @@ import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
-import { SupportedMethod, Config } from './config'
+import { SupportedMethod, Config } from '../config'
 
 export interface ReqResLog {
   name?: string

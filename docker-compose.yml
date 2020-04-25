@@ -1,0 +1,18 @@
+version: "3.7"
+services:
+  tests:
+    build: .
+    command: ./build.sh --hello
+    environment:
+      - CODECOV_TOKEN
+
+  watch-acceptance:
+    build:
+      context: .
+      target: base
+    tty: true
+    command: yarn test --watchAll
+    environment:
+      - TEST_MODE=acceptance
+    volumes:
+      - ./:/usr/src/app

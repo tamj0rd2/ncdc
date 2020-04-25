@@ -19,7 +19,6 @@ const chooseEndpoints = ({
 export interface RequestConfig {
   method: SupportedMethod
   endpoint: string
-  // TODO: in serve move, only check either Type or Body. not both
   body?: Data
   type?: string
   headers?: IncomingHttpHeaders

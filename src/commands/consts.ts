@@ -18,8 +18,7 @@ export const FORCE_GENERATION = 'force'
 export const FORCE_GENERATION_ALIAS = 'f'
 export const FORCE_GENERATION_TYPE = 'boolean'
 export const FORCE_GENERATION_DEFAULT = false
-export const FORCE_GENERATION_DESCRIPTION =
-  'force schemas to be generated, regardless of typescript compiler errors'
+export const FORCE_GENERATION_DESCRIPTION = 'ignores typescript compiler errors during schema creation'
 
 export const EXAMPLE_GENERATE_COMMAND = 'ncdc generate ./config.yml'
 export const EXAMPLE_GENERATE_DESCRIPTION = 'Generates json schemas for any type specified in config.yml.'

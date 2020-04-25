@@ -26,7 +26,7 @@ export default function enrichYup(): void {
   })
 
   addMethod(mixed, 'notAllowedIfSiblings', function (this: Schema<MixedSchema>, ...siblings: string[]) {
-    return this.test('notAllowedIf', '', function (value) {
+    return this.test('notAllowedIfSiblings', '', function (value) {
       if (!value) return true
 
       const siblingIsDefined = siblings.find((x) => !!this.parent[x])

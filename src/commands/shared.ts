@@ -3,7 +3,7 @@ import Problem from '~problem'
 import { blue, yellow } from 'chalk'
 import { inspect } from 'util'
 
-export type HandleError = (error: Error) => never
+export type HandleError = (error: { message: string }) => never
 export type CreateTypeValidator = (tsconfigPath: string, force: boolean, schemaPath?: string) => TypeValidator
 
 const groupBy = <T>(items: ReadonlyArray<T>, getKey: (item: T) => string): Map<string, ReadonlyArray<T>> =>

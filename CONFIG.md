@@ -92,8 +92,9 @@ Here's a format that describes each config setting:
   supports ExpressJS string patterns
   ([read more](https://expressjs.com/en/guide/routing.html#route-paths)).
   Regex is not yet supported.<br>
-  This property is ignored in Test mode and overrides
-  `request.endpoints` when in Serve mode.
+  This property is ignored in Test mode.
+  In Serve Mode, your config will be served on the `request.endpoints`
+  and also this endpoint.
 - **Type**: string
 - **Required?**: Required in Serve mode if `request.endpoints` is not provided
 - **Example**:
@@ -113,7 +114,6 @@ Here's a format that describes each config setting:
   ```
 
 <!-- TODO: make sure the type actually works like this and gives back a useful error message -->
-<!-- TODO: add an option to fail if extra properties are provided  -->
 ### request.type (pending changes)
 
 - **Description**: The name of a typescript symbol or a JSON schema file
@@ -161,7 +161,15 @@ Here's a format that describes each config setting:
   This property cannot be specified at the same time as `request.bodyPath`.<br>
   In Serve mode, if this property is specified without `request.type`, responses
   will only be served if the request body matches `request.body` exactly
-- **Type**: string, number, boolean, object or array
+  
+  NOTE: This does not yet support using the array syntax in your config file.
+  e.g putting `MyType[]` in your config file will not work. Instead, define a
+  type like `type MyTypeArray = MyType[]` somewhere in your typescript project
+  and use `MyTypeArray` as a type in your config file.
+  
+  <!-- TODO: but are they really? -->
+  The types `number`, `string`, `object`, and `boolean` are recognised by default
+- **Type**: string<br>
 - **Required?**: No
 - **Example**: `body: { hello: 'world' }`
   ```yaml
@@ -257,8 +265,8 @@ Here's a format that describes each config setting:
 
 - **Description**: A path to the body you expect the endpoint to respond with.
   It must be a JSON file (should be updated to support other files in the future).
-  Cannot be specified at the same time as `request.body`, `request.bodyPath` or
-  `request.serveBody`. Relative paths should be relative to the config file
+  Cannot be specified at the same time as `response.body`, `response.bodyPath` or
+  `response.serveBody`. Relative paths should be relative to the config file
   location. This property will be ignored in Test mode
 - **Type**: string
 - **Required?**: No

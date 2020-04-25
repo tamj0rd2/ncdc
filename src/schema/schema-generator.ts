@@ -8,8 +8,7 @@ export default class SchemaGenerator implements SchemaRetriever {
 
   constructor(tsconfigPath: string, isDevMode: boolean) {
     const program = programFromConfig(resolve(tsconfigPath))
-    // TODO: after testing remove titles if not needed
-    const generator = buildGenerator(program, { required: true, ignoreErrors: isDevMode, titles: true })
+    const generator = buildGenerator(program, { required: true, ignoreErrors: isDevMode })
     if (!generator) {
       throw new Error('Could not build a generator from the given typescript configuration')
     }

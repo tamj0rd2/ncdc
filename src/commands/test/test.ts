@@ -1,12 +1,12 @@
 import { TypeValidator, FetchResource, doItAll } from '~validation'
 import { Config } from '~config'
 import Problem from '~problem'
-import { red, blue } from 'chalk'
+import { blue } from 'chalk'
 import logger from '~logger'
 import { testPassed, testFailed, testError } from '~messages'
 
-// TODO: why is this returning a number?
-// TODO: reuse this at config type validaiton type
+// TODO: why is this returning a number? yeah, what the fuck?
+// TODO: reuse this at config type validaiton type. nononononoooooo
 const logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
   problems: Problem[],
 ): 0 | 1 => {

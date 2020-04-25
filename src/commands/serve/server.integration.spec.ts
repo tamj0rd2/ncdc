@@ -5,7 +5,6 @@ import { TypeValidator } from '~validation'
 import Problem from '~problem'
 import { mockObj } from '~test-helpers'
 
-jest.disableAutomock()
 jest.mock('./server-logger')
 
 describe('server', () => {

@@ -3,11 +3,9 @@ import { blue } from 'chalk'
 import { Server } from 'http'
 import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
-import { SupportedMethod, Config } from '~config'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
-import { parse } from 'url'
-import { isQueryMismatch } from './utils'
+import { SupportedMethod, Config } from './config'
 
 export interface ReqResLog {
   name?: string
@@ -59,7 +57,7 @@ const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
 export const configureServer = (
   baseUrl: string,
   mockConfigs: Config[],
-  typeValidator: TypeValidator,
+  typeValidator?: TypeValidator,
 ): Express => {
   const app = express()
   const ROOT = '/'
@@ -71,29 +69,31 @@ export const configureServer = (
   app.use(express.raw())
   app.get(ROOT, (_, res) => res.json(mockConfigs))
 
+  if (mockConfigs.length === 0) {
+    serverLogger.info('No mocks to serve')
+  }
+
   mockConfigs.forEach(({ name, request, response }) => {
     const endpointWithoutQuery = request.endpoint.split('?')[0]
 
-    // TODO: use app.use or app.all to handle all methods
-    // TODO: I should start taking query string parameters into account.
     app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
       try {
         // TODO ======= finish up by adding tests. maybe extract it out
-        const actualQuery = parse(req.url, true).query
-        const expectedQuery = parse(request.endpoint, true).query
+        // const actualQuery = parse(req.url, true).query
+        // const expectedQuery = parse(request.endpoint, true).query
 
-        const queryMismatches = Object.keys(expectedQuery)
-          .map((key) => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
-          .filter((x): x is string => !!x)
+        // const queryMismatches = Object.keys(expectedQuery)
+        //   .map((key) => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
+        //   .filter((x): x is string => !!x)
 
-        if (queryMismatches.length) {
-          res.locals.message = queryMismatches.join('\n')
-          res.locals.status = 400
-          return next()
-        }
+        // if (queryMismatches.length) {
+        //   res.locals.message = queryMismatches.join('\n')
+        //   res.locals.status = 400
+        //   return next()
+        // }
         // ============================================
 
-        if (request.type) {
+        if (typeValidator && request.type) {
           const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)
           serverLogger.warn(
             `An endpoint for ${req.path} exists but the request body did not match the type`,
@@ -150,21 +150,34 @@ export const configureServer = (
   return app
 }
 
+export interface StartServerResult {
+  server: Server
+  close(): Promise<void>
+}
+
 export const startServer = (
   port: number,
   routes: Config[],
-  typeValidator: TypeValidator,
-): Promise<Server> => {
-  return new Promise((resolve) => {
-    const serverRoot = `http://localhost:${port}`
-    const app = configureServer(serverRoot, routes, typeValidator)
+  typeValidator?: TypeValidator,
+): StartServerResult => {
+  const serverRoot = `http://localhost:${port}`
+  const app = configureServer(serverRoot, routes, typeValidator)
 
-    app.on('exit', () => {
-      resolve()
-    })
-
-    return app.listen(port, () => {
-      serverLogger.info(`Endpoints are being served on ${serverRoot}`)
-    })
+  const server = app.listen(port, () => {
+    serverLogger.info(`Endpoints are being served on ${serverRoot}`)
   })
+
+  return {
+    server,
+    close: (): Promise<void> =>
+      new Promise((resolve, reject) => {
+        server.close((err) => {
+          if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
+            return reject(err)
+          }
+
+          return resolve()
+        })
+      }),
+  }
 }

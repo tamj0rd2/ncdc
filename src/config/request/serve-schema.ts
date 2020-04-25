@@ -1,4 +1,4 @@
-import { mixed, string, InferType } from 'yup'
+import { InferType } from 'yup'
 import { baseRequestSchema, endpointsSchema, endpointSchema } from './schema-shared'
 import enrichYup from '../methods'
 
@@ -10,8 +10,6 @@ export const getServeSchema = () =>
     .shape({
       endpoints: endpointsSchema.requiredIfNoSiblings('serveEndpoint'),
       serveEndpoint: endpointSchema.requiredIfNoSiblings('endpoints'),
-      serveBody: mixed<Data>().notAllowedIfSiblings('body', 'bodyPath', 'serveBodyPath'),
-      serveBodyPath: string().notAllowedIfSiblings('body', 'bodyPath', 'serveBody'),
     })
     .allowedKeysOnly()
 

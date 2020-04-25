@@ -2,6 +2,7 @@ import { Ajv } from 'ajv'
 import { SchemaRetriever } from '~schema'
 import Problem, { ProblemType } from '~problem'
 import { shouldBe } from '~messages'
+import { inspect } from 'util'
 
 export class TypeValidationError extends Error {
   public readonly problems: ROPopulatedArray<Problem>
@@ -13,6 +14,17 @@ export class TypeValidationError extends Error {
     this.problems = problems
   }
 }
+
+export type TypeValidationFailure = {
+  success: false
+  errors: string[]
+}
+
+export type TypeValidationResult =
+  | {
+      success: true
+    }
+  | TypeValidationFailure
 
 export default class TypeValidator {
   constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) {}
@@ -38,6 +50,29 @@ export default class TypeValidator {
 
         if (isValid || !validator.errors) return
         return validator.errors.map((error) => new Problem(error, problemType)) as PopulatedArray<Problem>
+    }
+  }
+
+  public async validate(data: Data, type: string): Promise<TypeValidationResult> {
+    const jsonSchema = await this.schemaRetriever.load(type)
+    const validator = this.validator.compile(jsonSchema)
+    const isValid = validator(data)
+
+    if (isValid || !validator.errors) return { success: true }
+    return {
+      success: false,
+      errors: validator.errors.map((e) => {
+        const baseMessage = `<root>${e.dataPath} ${e.message}`
+        if (e.keyword === 'enum' && 'allowedValues' in e.params) {
+          return `${baseMessage}: ${inspect(e.params.allowedValues, false, 1, true)}`
+        }
+
+        if (e.keyword === 'type') {
+          return `${baseMessage} but got ${typeof e.data}`
+        }
+
+        return baseMessage
+      }),
     }
   }
 

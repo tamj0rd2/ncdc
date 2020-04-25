@@ -154,7 +154,7 @@ describe('requiredIf', () => {
   })
 })
 
-describe('notAllowedIf', () => {
+describe('notAllowedIfSiblings', () => {
   const schema = object().shape({
     hello: string().notAllowedIfSiblings('world'),
     world: string().notAllowedIfSiblings('hello'),

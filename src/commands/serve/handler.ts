@@ -3,9 +3,9 @@ import { resolve, isAbsolute } from 'path'
 import { validate, transformConfigs, Config } from './config'
 import { readYamlAsync } from '~io'
 import { TypeValidator } from '~validation'
-import { Server } from 'http'
 import logger from '~logger'
 import chokidar from 'chokidar'
+import { StartServerResult } from './server'
 
 export interface ServeArgs {
   configPath?: string
@@ -15,7 +15,7 @@ export interface ServeArgs {
   force: boolean
 }
 
-export type StartServer = (port: number, routes: Config[], typeValidator?: TypeValidator) => Server
+export type StartServer = (port: number, routes: Config[], typeValidator?: TypeValidator) => StartServerResult
 
 const CONFIG_ERROR_PREFIX = 'Could not start serving due to config errors:\n\n'
 
@@ -73,7 +73,7 @@ const createHandler = (
   let typeValidator: TypeValidator | undefined
 
   type PrepAndStartResult = {
-    server: Server
+    startServerResult: StartServerResult
     pathsToWatch: string[]
   }
 
@@ -97,9 +97,9 @@ const createHandler = (
       if (bodyValidationMessage) throw new Error(bodyValidationMessage)
     }
 
-    const server = startServer(port, transformedConfigs, typeValidator)
+    const startServerResult = startServer(port, transformedConfigs, typeValidator)
     return {
-      server,
+      startServerResult,
       pathsToWatch: validationResult.validatedConfigs
         .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
         .filter((x): x is string => !!x)
@@ -118,17 +118,6 @@ const createHandler = (
     ignoreInitial: true,
   })
 
-  const closeServer = (): Promise<void> =>
-    new Promise((resolve, reject) => {
-      result.server.close((err) => {
-        if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
-          return reject(err)
-        }
-
-        return resolve()
-      })
-    })
-
   configWatcher.on('all', async (e, path) => {
     logger.info(`${e} event detected for ${path}`)
     logger.info('Attempting to restart ncdc server')
@@ -139,7 +128,7 @@ const createHandler = (
     }
 
     try {
-      await closeServer()
+      await result.startServerResult.close()
     } catch (err) {
       logger.error(`Could not restart the server: ${err.message}`)
       return

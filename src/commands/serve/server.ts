@@ -150,11 +150,34 @@ export const configureServer = (
   return app
 }
 
-export const startServer = (port: number, routes: Config[], typeValidator?: TypeValidator): Server => {
+export interface StartServerResult {
+  server: Server
+  close(): Promise<void>
+}
+
+export const startServer = (
+  port: number,
+  routes: Config[],
+  typeValidator?: TypeValidator,
+): StartServerResult => {
   const serverRoot = `http://localhost:${port}`
   const app = configureServer(serverRoot, routes, typeValidator)
 
-  return app.listen(port, () => {
+  const server = app.listen(port, () => {
     serverLogger.info(`Endpoints are being served on ${serverRoot}`)
   })
+
+  return {
+    server,
+    close: (): Promise<void> =>
+      new Promise((resolve, reject) => {
+        server.close((err) => {
+          if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
+            return reject(err)
+          }
+
+          return resolve()
+        })
+      }),
+  }
 }

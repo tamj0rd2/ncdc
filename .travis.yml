@@ -1,16 +1,15 @@
 language: node_js
 jobs:
   include:
-    - stage: tests
+    - stage: release
       services: docker
       before_script:
         - docker-compose build tests
         - ci_env=`bash <(curl -s https://codecov.io/env)`
       script:
         - docker-compose run $ci_env tests
-    - stage: release
       node_js: lts/*
-      script: skip
+      install: skip
       deploy:
         provider: script
         skip_cleanup: true

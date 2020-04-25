@@ -5,4 +5,15 @@ services:
     command: ./build.sh --hello
     environment:
       - CODECOV_TOKEN
-      - CI
+      - CHOKIDAR_USEPOLLING
+
+  watch-acceptance:
+    build:
+      context: .
+      target: base
+    tty: true
+    command: yarn test --watchAll
+    environment:
+      - TEST_MODE=acceptance
+    volumes:
+      - ./:/usr/src/app

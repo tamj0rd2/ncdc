@@ -60,7 +60,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
   args = '',
 ): Promise<ServeResult> => {
   let hasExited = false
-  const command = `LOG_LEVEL=debug ./bin/ncdc serve ${CONFIG_FILE} -c ${FIXTURE_FOLDER}/tsconfig.json ${args}`
+  const command = `LOG_LEVEL=debug CHOKIDAR_USEPOLLING=1 ./bin/ncdc serve ${CONFIG_FILE} -c ${FIXTURE_FOLDER}/tsconfig.json ${args}`
   const ncdc: ChildProcess = exec(command)
   const output: string[] = []
   const getRawOutput = (): string => output.join('')

@@ -175,14 +175,15 @@ describe('ncdc serve', () => {
         author: 'me',
       })
 
-    // act
-    const { waitUntilAvailable, waitForOutput } = await serve()
+    const { waitForOutput, waitUntilAvailable } = await serve()
     configWrapper.deleteFixture(fixtureName)
     await waitForOutput('Could not start server')
 
+    // act
     configWrapper.addFixture(fixtureName, {
       ISBN: '123',
     })
+    await waitForOutput(MESSAGE_RESTARTING)
     await waitUntilAvailable()
 
     // assert

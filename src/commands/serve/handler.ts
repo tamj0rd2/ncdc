@@ -4,8 +4,9 @@ import { validate, transformConfigs, Config } from './config'
 import { readYamlAsync } from '~io'
 import { TypeValidator } from '~validation'
 import { Server } from 'http'
-import chokidar from 'chokidar'
 import logger from '~logger'
+import { inspect } from 'util'
+import chokidar from 'chokidar'
 
 export interface ServeArgs {
   configPath?: string
@@ -104,6 +105,7 @@ const createHandler = (
         .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
         .filter((x): x is string => !!x)
         .map((p) => (isAbsolute(p) ? p : resolve(absoluteConfigPath, '..', p))),
+      // .map((p) => dirname(p)),
     }
   }
 
@@ -116,7 +118,6 @@ const createHandler = (
 
   const configWatcher = chokidar.watch([absoluteConfigPath, ...result.pathsToWatch], {
     ignoreInitial: true,
-    cwd: process.cwd(),
   })
 
   const closeServer = (): Promise<void> =>
@@ -134,12 +135,20 @@ const createHandler = (
     logger.info(`${e} event detected for ${path}`)
     logger.info('Attempting to restart ncdc server')
 
+    if (e === 'unlink') {
+      // makes sure that we can still watch the file for changes after its deletion
+      configWatcher.add(path)
+    }
+
     try {
       await closeServer()
     } catch (err) {
       logger.error(`Could not restart the server - ${err.message}`)
       return
     }
+
+    logger.debug('before server start')
+    logger.debug(inspect(configWatcher.getWatched(), false, 2, true))
 
     try {
       result = await prepAndStartServer()
@@ -148,10 +157,10 @@ const createHandler = (
       return
     }
 
-    const watchedFiles = Object.entries(configWatcher.getWatched()).flat().flat()
-    logger.debug(watchedFiles)
-    configWatcher.unwatch(watchedFiles)
+    configWatcher.unwatch('**/*')
     configWatcher.add([absoluteConfigPath, ...result.pathsToWatch])
+    logger.debug('after server start')
+    logger.debug(inspect(configWatcher.getWatched(), false, 2, true))
   })
 }
 

@@ -35,7 +35,7 @@ npm run compile
 print 'testing and coverage'
 npm run cover
 
-if [ "$CI" = "true" ];
+if [ "$CODECOV_TOKEN" = "true" ];
 then
   print 'uploading coverage'
   bash <(curl -s https://codecov.io/bash)

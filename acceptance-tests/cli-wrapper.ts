@@ -43,6 +43,7 @@ export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
 export const SERVE_HOST = 'http://localhost:4000'
 
 export const MESSAGE_RESTARTING = 'Attempting to restart ncdc server'
+export const MESSAGE_RSTARTING_FAILURE = 'Could not restart ncdc server'
 
 export type ServeResult = {
   getAllOutput(): string

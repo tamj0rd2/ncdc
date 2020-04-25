@@ -1,4 +1,4 @@
-import { fetch, SERVE_HOST, MESSAGE_RESTARTING, ServeResult } from './cli-wrapper'
+import { fetch, SERVE_HOST, MESSAGE_RESTARTING, ServeResult, MESSAGE_RSTARTING_FAILURE } from './cli-wrapper'
 import { CleanupTask, prepareServe } from './cli-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
@@ -96,7 +96,7 @@ describe('ncdc serve', () => {
 
     // assert
     await waitForOutput(MESSAGE_RESTARTING)
-    await waitForOutput(/Could not start server.* no such file or directory/)
+    await waitForOutput(/Could not restart ncdc server.* no such file or directory/)
     await expect(fetch('/api/books/yay')).rejects.toThrowError()
   })
 
@@ -105,7 +105,7 @@ describe('ncdc serve', () => {
     const configWrapper = new ConfigWrapper().addConfig()
     const { waitForOutput } = await serve()
     configWrapper.deleteYaml()
-    await waitForOutput('Could not start server')
+    await waitForOutput(MESSAGE_RSTARTING_FAILURE)
 
     // act
     const newConfig = new ConfigBuilder().withName('Cooks').withCode(404).build()
@@ -160,7 +160,7 @@ describe('ncdc serve', () => {
     configWrapper.deleteFixture(fixtureName)
 
     // assert
-    await waitForOutput(/Could not start server.* no such file or directory.*crazy-fixture\.json/)
+    await waitForOutput(/Could not restart ncdc server.* no such file or directory.*crazy-fixture\.json/)
   })
 
   it('can recover from fixture file deletion', async () => {
@@ -177,7 +177,7 @@ describe('ncdc serve', () => {
 
     const { waitForOutput, waitUntilAvailable } = await serve()
     configWrapper.deleteFixture(fixtureName)
-    await waitForOutput('Could not start server')
+    await waitForOutput(MESSAGE_RSTARTING_FAILURE)
 
     // act
     configWrapper.addFixture(fixtureName, {
@@ -228,7 +228,7 @@ describe('ncdc serve', () => {
       }))
 
       await serve.waitForOutput(MESSAGE_RESTARTING)
-      await serve.waitForOutput(/Could not start server.*due to config errors/)
+      await serve.waitForOutput(/Could not restart ncdc server.*due to config errors/)
       await expect(fetch('/api/books/aldksj')).rejects.toThrowError()
     })
 

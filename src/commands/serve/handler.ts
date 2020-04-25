@@ -5,7 +5,6 @@ import { readYamlAsync } from '~io'
 import { TypeValidator } from '~validation'
 import { Server } from 'http'
 import logger from '~logger'
-import { inspect } from 'util'
 import chokidar from 'chokidar'
 
 export interface ServeArgs {
@@ -105,7 +104,6 @@ const createHandler = (
         .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
         .filter((x): x is string => !!x)
         .map((p) => (isAbsolute(p) ? p : resolve(absoluteConfigPath, '..', p))),
-      // .map((p) => dirname(p)),
     }
   }
 
@@ -143,24 +141,19 @@ const createHandler = (
     try {
       await closeServer()
     } catch (err) {
-      logger.error(`Could not restart the server - ${err.message}`)
+      logger.error(`Could not restart the server: ${err.message}`)
       return
     }
-
-    logger.debug('before server start')
-    logger.debug(inspect(configWatcher.getWatched(), false, 2, true))
 
     try {
       result = await prepAndStartServer()
     } catch (err) {
-      logger.error(`Could not start server: ${err.message}`)
+      logger.error(`Could not restart ncdc server: ${err.message}`)
       return
     }
 
     configWatcher.unwatch('**/*')
     configWatcher.add([absoluteConfigPath, ...result.pathsToWatch])
-    logger.debug('after server start')
-    logger.debug(inspect(configWatcher.getWatched(), false, 2, true))
   })
 }
 

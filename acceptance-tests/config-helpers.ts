@@ -14,7 +14,7 @@ export interface Config {
     code: number
     headers?: OutgoingHttpHeaders
     type?: string
-    serveBody?: any
+    serveBody?: unknown
     serveBodyPath?: string
   }
 }
@@ -49,7 +49,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withServeBody(serveBody: any): ConfigBuilder {
+  public withServeBody(serveBody: unknown): ConfigBuilder {
     if (!serveBody) {
       delete this.config.response.serveBody
       return this

@@ -15,6 +15,7 @@ describe('Generate Command', () => {
   const generateStub = mockFn<Generate>()
   const loggerStub = mockObj<Logger>({ info: jest.fn() })
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const getHandler = (isDev = false) =>
     createHandler(handleErrorStub, isDev, readConfigMock, getSchemaGenMock, generateStub, loggerStub)
 

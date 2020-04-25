@@ -2,9 +2,8 @@ import { ChildProcess, exec } from 'child_process'
 import strip from 'strip-ansi'
 import isomorphicUnfetch from 'isomorphic-unfetch'
 
-const waitForX = (condition: () => Promise<boolean> | boolean): Promise<void> =>
+const waitForX = (condition: () => Promise<boolean> | boolean, timeout: number): Promise<void> =>
   new Promise<void>((resolve, reject) => {
-    const timeout = 10
     const retryPeriod = 0.5
     let tries = 0
 
@@ -56,9 +55,9 @@ export type CleanupTask = () => void
 export const fetch = (endpoint: string, init?: RequestInit): Promise<Response> =>
   isomorphicUnfetch(`${SERVE_HOST}${endpoint}`, init)
 
-export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
-  checkAvailability = true,
+export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async (
   args = '',
+  checkAvailability = true,
 ): Promise<ServeResult> => {
   let hasExited = false
   const command = `LOG_LEVEL=debug CHOKIDAR_USEPOLLING=1 ./bin/ncdc serve ${CONFIG_FILE} -c ${FIXTURE_FOLDER}/tsconfig.json ${args}`
@@ -99,7 +98,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
       const foundIndex = searchableOutput.findIndex((s) => {
         if (typeof target === 'string') return strip(s).includes(target)
         return target.test(s)
-      })
+      }, timeout)
 
       if (foundIndex === -1) {
         outputPointer = currentOutput.length
@@ -108,7 +107,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
 
       outputPointer += foundIndex + 1
       return true
-    }).catch(
+    }, timeout).catch(
       failNicely(
         `Did not find the string "${target}" in the output${
           outputPointer ? ' on or after message ' + outputPointer : ''
@@ -121,7 +120,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[]) => async (
     waitForX(async () => {
       const { status } = await fetch('/')
       return status === 200
-    }).catch(failNicely(`The ncdc server was not contactable at ${SERVE_HOST}/`))
+    }, timeout).catch(failNicely(`The ncdc server was not contactable at ${SERVE_HOST}/`))
 
   if (checkAvailability) await waitUntilAvailable()
   return { getAllOutput: () => strip(getRawOutput()), waitForOutput, waitUntilAvailable }

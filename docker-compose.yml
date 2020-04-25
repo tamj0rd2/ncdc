@@ -16,3 +16,9 @@ services:
       - TEST_MODE=acceptance
     volumes:
       - ./:/usr/src/app
+
+  acceptance:
+    build: .
+    command: bash -c 'yarn compile && yarn test'
+    environment:
+      - TEST_MODE=acceptance

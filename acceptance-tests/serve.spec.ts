@@ -60,7 +60,7 @@ describe('ncdc serve', () => {
     )
 
     // act
-    const { waitForOutput } = await serve(false)
+    const { waitForOutput } = await serve('', false)
 
     // assert
     await waitForOutput('no such file or directory')
@@ -70,7 +70,7 @@ describe('ncdc serve', () => {
   it('restarts when config.yml is changed', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
-    const { waitForOutput, waitUntilAvailable } = await serve()
+    const { waitForOutput, waitUntilAvailable } = await serve('--watch')
     const resInitial = await fetch('/api/books/789')
     expect(resInitial.status).toBe(200)
 
@@ -87,7 +87,7 @@ describe('ncdc serve', () => {
   it('logs a message and kills the server when config.yml has been deleted', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
-    const { waitForOutput } = await serve()
+    const { waitForOutput } = await serve('--watch')
     const resInitial = await fetch('/api/books/yay')
     expect(resInitial.status).toBe(200)
 
@@ -103,7 +103,7 @@ describe('ncdc serve', () => {
   it('can recover from config.yml being deleted when file is re-added', async () => {
     // arrange
     const configWrapper = new ConfigWrapper().addConfig()
-    const { waitForOutput } = await serve()
+    const { waitForOutput } = await serve('--watch')
     configWrapper.deleteYaml()
     await waitForOutput(MESSAGE_RSTARTING_FAILURE)
 
@@ -130,7 +130,7 @@ describe('ncdc serve', () => {
       })
 
     // act
-    const { waitForOutput, waitUntilAvailable } = await serve()
+    const { waitForOutput, waitUntilAvailable } = await serve('--watch')
     configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'shit meme' }))
 
     await waitForOutput(/change event detected for .*response.json/)
@@ -156,7 +156,7 @@ describe('ncdc serve', () => {
       })
 
     // act
-    const { waitForOutput } = await serve()
+    const { waitForOutput } = await serve('--watch')
     configWrapper.deleteFixture(fixtureName)
 
     // assert
@@ -175,7 +175,7 @@ describe('ncdc serve', () => {
         author: 'me',
       })
 
-    const { waitForOutput, waitUntilAvailable } = await serve()
+    const { waitForOutput, waitUntilAvailable } = await serve('--watch')
     configWrapper.deleteFixture(fixtureName)
     await waitForOutput(MESSAGE_RSTARTING_FAILURE)
 
@@ -211,7 +211,7 @@ describe('ncdc serve', () => {
           title: 'string',
         })
 
-      serve = await prepareServe(typecheckingCleanup)()
+      serve = await prepareServe(typecheckingCleanup, 10)('--watch')
 
       await expect(fetch('/api/books/hello')).resolves.toMatchObject({ status: 200 })
     })

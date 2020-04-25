@@ -13,6 +13,7 @@ export interface ServeArgs {
   tsconfigPath: string
   schemaPath?: string
   force: boolean
+  watch: boolean
 }
 
 export type StartServer = (port: number, routes: Config[], typeValidator?: TypeValidator) => StartServerResult
@@ -64,7 +65,7 @@ const createHandler = (
   createTypeValidator: CreateTypeValidator,
   startServer: StartServer,
 ) => async (args: ServeArgs): Promise<void> => {
-  const { configPath, port, tsconfigPath, schemaPath, force } = args
+  const { configPath, port, tsconfigPath, schemaPath, force, watch } = args
 
   if (!configPath) return handleError({ message: 'config path must be supplied' })
   if (isNaN(port)) return handleError({ message: 'port must be a number' })
@@ -114,36 +115,38 @@ const createHandler = (
     return handleError(err)
   }
 
-  const configWatcher = chokidar.watch([absoluteConfigPath, ...result.pathsToWatch], {
-    ignoreInitial: true,
-  })
+  if (watch) {
+    const configWatcher = chokidar.watch([absoluteConfigPath, ...result.pathsToWatch], {
+      ignoreInitial: true,
+    })
 
-  configWatcher.on('all', async (e, path) => {
-    logger.info(`${e} event detected for ${path}`)
-    logger.info('Attempting to restart ncdc server')
+    configWatcher.on('all', async (e, path) => {
+      logger.info(`${e} event detected for ${path}`)
+      logger.info('Attempting to restart ncdc server')
 
-    if (e === 'unlink') {
-      // makes sure that we can still watch the file for changes after its deletion
-      configWatcher.add(path)
-    }
+      if (e === 'unlink') {
+        // makes sure that we can still watch the file for changes after its deletion
+        configWatcher.add(path)
+      }
 
-    try {
-      await result.startServerResult.close()
-    } catch (err) {
-      logger.error(`Could not restart the server: ${err.message}`)
-      return
-    }
+      try {
+        await result.startServerResult.close()
+      } catch (err) {
+        logger.error(`Could not restart the server: ${err.message}`)
+        return
+      }
 
-    try {
-      result = await prepAndStartServer()
-    } catch (err) {
-      logger.error(`Could not restart ncdc server: ${err.message}`)
-      return
-    }
+      try {
+        result = await prepAndStartServer()
+      } catch (err) {
+        logger.error(`Could not restart ncdc server: ${err.message}`)
+        return
+      }
 
-    configWatcher.unwatch('**/*')
-    configWatcher.add([absoluteConfigPath, ...result.pathsToWatch])
-  })
+      configWatcher.unwatch('**/*')
+      configWatcher.add([absoluteConfigPath, ...result.pathsToWatch])
+    })
+  }
 }
 
 export default createHandler

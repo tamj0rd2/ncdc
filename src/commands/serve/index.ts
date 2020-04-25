@@ -16,6 +16,11 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       type: 'number',
       default: 4000,
     })
+    .option('watch', {
+      describe: 'watches the provided config file and fixtures then restarts if there are changes',
+      type: 'boolean',
+      default: false,
+    })
     .option(consts.SCHEMA_PATH, {
       type: consts.SCHEMA_PATH_TYPE,
       description: consts.SCHEMA_PATH_DESCRIPTION,

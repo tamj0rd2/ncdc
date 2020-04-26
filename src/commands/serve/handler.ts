@@ -80,7 +80,15 @@ const createHandler = (
   }
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
-    const validationResult = validate(await readYamlAsync(absoluteConfigPath))
+    let rawConfigFile: unknown
+
+    try {
+      rawConfigFile = await readYamlAsync(absoluteConfigPath)
+    } catch (err) {
+      throw new Error(`Problem reading your config file: ${err.message}`)
+    }
+
+    const validationResult = validate(rawConfigFile)
     if (!validationResult.success) {
       throw new Error(`${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`)
     }

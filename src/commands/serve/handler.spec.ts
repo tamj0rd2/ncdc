@@ -92,6 +92,18 @@ describe('handler', () => {
       expect(mockReadYamlAsync).toBeCalledWith(resolvedPath)
     })
 
+    it('throws a useful error when readYamlAsync fails', async () => {
+      mockReadYamlAsync.mockRejectedValue(new Error('that aint right'))
+
+      await handler(args)
+
+      expect(mockHandleError).toBeCalledWith(
+        expect.objectContaining({
+          message: 'Problem reading your config file: that aint right',
+        }),
+      )
+    })
+
     it('calls validate with the correct args', async () => {
       const rawConfigs: unknown[] = [{ name: 'My Raw Config' }]
       mockReadYamlAsync.mockResolvedValue(rawConfigs)

@@ -11,6 +11,7 @@ import { randomString, mocked } from '~test-helpers'
 import { isAbsolute, resolve } from 'path'
 import { readJsonAsync } from '~io'
 import dot from 'dot-object'
+import strip from 'strip-ansi'
 
 jest.unmock('./config')
 jest.unmock('@hapi/joi')
@@ -21,8 +22,10 @@ describe('validate', () => {
   const expectValidationErors = (config?: object, ...expectedErrors: string[]): string[] => {
     const { success, errors } = validate([config]) as ValidationFailure
     expect(success).toBe(false)
+
+    const strippedErrors = errors.map((e) => strip(e))
     for (const expectedError of expectedErrors) {
-      expect(errors).toContain(expectedError)
+      expect(strippedErrors).toContain(expectedError)
     }
     return errors
   }
@@ -34,7 +37,7 @@ describe('validate', () => {
     const validationResult = validate([config])
     if (validationResult.success) return validationResult
 
-    const allErrors = validationResult.errors.join('\n')
+    const allErrors = strip(validationResult.errors.join('\n'))
     for (const unexpectedString of unexpectedStrings) {
       expect(allErrors).not.toContain(unexpectedString)
     }
@@ -68,7 +71,7 @@ describe('validate', () => {
 
   it('shows the config name in errors if supplied', () => {
     const config = { name: 'Yo fam', fake: 'property' }
-    expectValidationErors(config, "'Yo fam'.fake is not allowed")
+    expectValidationErors(config, 'config[Yo fam].fake is not allowed')
   })
 
   describe('request', () => {

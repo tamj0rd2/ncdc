@@ -6,6 +6,7 @@ import { TypeValidator } from '~validation'
 import logger from '~logger'
 import chokidar from 'chokidar'
 import { StartServerResult } from './server'
+import { red } from 'chalk'
 
 export interface ServeArgs {
   configPath?: string
@@ -18,7 +19,7 @@ export interface ServeArgs {
 
 export type StartServer = (port: number, routes: Config[], typeValidator?: TypeValidator) => StartServerResult
 
-const CONFIG_ERROR_PREFIX = 'Could not start serving due to config errors:\n\n'
+const CONFIG_ERROR_PREFIX = red.bold('Could not start serving due to config errors:') + '\n\n'
 
 const validateConfigBodies = async (
   configs: Config[],

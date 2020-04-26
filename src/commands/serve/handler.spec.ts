@@ -107,11 +107,11 @@ describe('handler', () => {
 
       await handler(args)
 
-      expect(mockHandleError).toBeCalledWith(
-        expect.objectContaining({
-          message: `Could not start serving due to config errors:\n\n${errors[0]}\n${errors[1]}`,
-        }),
+      expect(mockHandleError).toBeCalled()
+      expect(mockHandleError.mock.calls[0][0].message).toContain(
+        'Could not start serving due to config errors:',
       )
+      expect(mockHandleError.mock.calls[0][0].message).toContain(`${errors[0]}\n${errors[1]}`)
     })
 
     it('logs a message and exits if there are no configs to serve', async () => {
@@ -232,13 +232,14 @@ describe('handler', () => {
 
         await handler(args)
 
-        const line1 = 'Could not start serving due to config errors:'
-        const line2 = `Config '${transformedConfig.name}' request body failed type validation:\n${error1}\n${error2}`
-        const line3 = `Config '${transformedConfig.name}' response body failed type validation:\n${error3}`
+        const errLine1 = `Config '${transformedConfig.name}' request body failed type validation:\n${error1}\n${error2}`
+        const errLine2 = `Config '${transformedConfig.name}' response body failed type validation:\n${error3}`
 
-        expect(mockHandleError).toBeCalledWith(
-          expect.objectContaining({ message: `${line1}\n\n${line2}\n${line3}` }),
+        expect(mockHandleError).toBeCalled()
+        expect(mockHandleError.mock.calls[0][0].message).toContain(
+          'Could not start serving due to config errors:',
         )
+        expect(mockHandleError.mock.calls[0][0].message).toContain(`\n\n${errLine1}\n${errLine2}`)
       })
     })
 

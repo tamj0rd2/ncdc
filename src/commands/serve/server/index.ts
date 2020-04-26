@@ -121,8 +121,12 @@ export const configureServer = (
         if (response.headers) res.set(response.headers)
 
         if (!ignoredLogPaths.includes(req.path)) {
-          const shortenedBody = response.body?.toString().substr(0, 30)
-          const bodyToLog = `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
+          let bodyToLog: Data | undefined = response.body
+
+          if (!!response.body) {
+            const shortenedBody = response.body?.toString().substr(0, 30)
+            bodyToLog = `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
+          }
 
           serverLogger.info(mapLog(name, req, res, bodyToLog))
         }

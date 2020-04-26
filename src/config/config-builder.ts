@@ -33,7 +33,7 @@ export default class ConfigBuilder {
     return this
   }
 
-  public withResponseBody(body: Data): ConfigBuilder {
+  public withResponseBody(body?: Data): ConfigBuilder {
     this.config.response.body = body
     return this
   }

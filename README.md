@@ -2,9 +2,9 @@
 
 # NCDC
 
-[![Build Status](https://travis-ci.com/tamj0rd2/ncdc.svg?branch=rewrite)](https://travis-ci.com/tamj0rd2/ncdc)
+[![Build Status](https://travis-ci.com/tamj0rd2/ncdc.svg)](https://travis-ci.com/tamj0rd2/ncdc)
 [![npm version](https://badge.fury.io/js/ncdc.svg)](https://badge.fury.io/js/ncdc)
-[![codecov](https://codecov.io/gh/tamj0rd2/ncdc/branch/rewrite/graph/badge.svg)](https://codecov.io/gh/tamj0rd2/ncdc)
+[![codecov](https://codecov.io/gh/tamj0rd2/ncdc/branch/master/graph/badge.svg)](https://codecov.io/gh/tamj0rd2/ncdc)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 NCDC (or node cdc) is a tool that takes a consumer contract (written in yaml)

@@ -77,6 +77,11 @@ export class ConfigBuilder {
     return this
   }
 
+  public withEndpoints(...endpoints: string[]): ConfigBuilder {
+    this.config.request.endpoints = endpoints
+    return this
+  }
+
   public build(): Config {
     return this.config
   }

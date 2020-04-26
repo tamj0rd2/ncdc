@@ -117,7 +117,8 @@ const createHandler = (
   }
 
   if (watch) {
-    const configWatcher = chokidar.watch([absoluteConfigPath, ...result.pathsToWatch], {
+    const fixturesToWatch = [...result.pathsToWatch]
+    const configWatcher = chokidar.watch([absoluteConfigPath, ...fixturesToWatch], {
       ignoreInitial: true,
     })
 
@@ -126,7 +127,8 @@ const createHandler = (
       logger.info('Attempting to restart ncdc server')
 
       if (e === 'unlink') {
-        // makes sure that we can still watch the file for changes after its deletion
+        // required on some systems https://github.com/paulmillr/chokidar/issues/591
+        await configWatcher.unwatch(path)
         configWatcher.add(path)
       }
 
@@ -144,8 +146,18 @@ const createHandler = (
         return
       }
 
-      configWatcher.unwatch('**/*')
-      configWatcher.add([absoluteConfigPath, ...result.pathsToWatch])
+      for (const filePath of result.pathsToWatch) {
+        if (!fixturesToWatch.includes(filePath)) {
+          configWatcher.add(filePath)
+        }
+      }
+
+      for (const filePath of fixturesToWatch) {
+        if (!result.pathsToWatch.includes(filePath)) {
+          // according to the chokidar docs, unwatch is async
+          await configWatcher.unwatch(filePath)
+        }
+      }
     })
   }
 }

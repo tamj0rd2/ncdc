@@ -21,15 +21,13 @@ describe('ncdc serve', () => {
     new ConfigWrapper().addConfig()
 
     // act
-    const { getAllOutput: getOutput } = await serve()
+    const { waitForOutput } = await serve()
     const res = await fetch('/api/books/hooray')
-    const output = getOutput()
 
     // assert
-    expect(output).toMatch(/Registered .*\/api\/books\/\* from config: Books/)
-    expect(output).toContain(`Endpoints are being served on ${SERVE_HOST}`)
+    await waitForOutput(/Registered .*\/api\/books\/\* from config: Books/)
+    await waitForOutput(`Endpoints are being served on ${SERVE_HOST}`)
     expect(res.status).toBe(200)
-    expect(output).not.toContain(MESSAGE_RESTARTING)
   })
 
   it('serves an endpoint from a fixture file', async () => {
@@ -117,9 +115,31 @@ describe('ncdc serve', () => {
       const { status } = await fetch('/api/books/noice')
       expect(status).toEqual(404)
     })
+
+    it('restarts each time config.yml is changed', async () => {
+      const initialName = 'Initial'
+      const configWrapper = new ConfigWrapper().addConfig(new ConfigBuilder().withName(initialName).build())
+      const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+
+      await waitForOutput(new RegExp(`Registered .* from config: ${initialName}`))
+      await waitUntilAvailable()
+
+      const editNameAndVerify = async (previousName: string, editedName: string): Promise<void> => {
+        configWrapper.editConfig(previousName, (c) => ({ ...c, name: editedName }))
+        await waitForOutput(MESSAGE_RESTARTING)
+        await waitForOutput(new RegExp(`Registered .* from config: ${editedName}`))
+        await waitUntilAvailable()
+      }
+
+      await editNameAndVerify(initialName, 'edit_Eat')
+      await editNameAndVerify('edit_Eat', 'edit_My')
+      await editNameAndVerify('edit_My', 'edit_Shorts')
+      await editNameAndVerify('edit_Shorts', 'edit_Please')
+    })
   })
 
   describe('watching fixture files', () => {
+    // TODO: fix
     it('restarts the server when a fixture file changes', async () => {
       // arrange
       const fixtureName = 'response'
@@ -166,6 +186,7 @@ describe('ncdc serve', () => {
       await waitForOutput(/Could not restart ncdc server.* no such file or directory.*crazy-fixture\.json/)
     })
 
+    // TODO: fix
     it('can recover from fixture file deletion', async () => {
       // arrange
       const fixtureName = 'another-fixture'
@@ -193,6 +214,35 @@ describe('ncdc serve', () => {
       const res = await fetch('/api/books/29847234')
       const body = await res.json()
       expect(body.ISBN).toBe('123')
+    })
+
+    // TODO: fix
+    it('restarts each time a fixture file is changed or deleted', async () => {
+      const fixtureName = 'MyFixture'
+      const configWrapper = new ConfigWrapper()
+        .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+        .addFixture(fixtureName, { title: 'Freddy' })
+      const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+
+      const verifyFixture = async (title: string, withRestartMessage = true): Promise<void> => {
+        if (withRestartMessage) await waitForOutput(MESSAGE_RESTARTING)
+        await waitUntilAvailable()
+        const res = await fetch('/api/books/abc')
+        expect(res.status).toBe(200)
+        await expect(res.json()).resolves.toMatchObject({ title })
+      }
+
+      await verifyFixture('Freddy', false)
+      configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'Eat' }))
+      await verifyFixture('Eat')
+      configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'My' }))
+      await verifyFixture('My')
+      configWrapper.deleteFixture(fixtureName)
+      await waitForOutput(MESSAGE_RSTARTING_FAILURE)
+      configWrapper.addFixture(fixtureName, { title: 'Shorts' })
+      await verifyFixture('Shorts')
+      configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'Please' }))
+      await verifyFixture('Please')
     })
   })
 

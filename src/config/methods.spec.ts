@@ -206,7 +206,7 @@ describe('startsWith', () => {
 describe('ofHeaders', () => {
   const schema = object().ofHeaders()
 
-  it('does not throw when headers are valid types', async () => {
+  it('does not throw when headers are valid types', () => {
     const headers = {
       header1: 'value1',
       header2: ['woah', 'dude'],

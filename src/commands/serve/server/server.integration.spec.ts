@@ -22,7 +22,6 @@ describe('server', () => {
     await request(app).get('/').expect(200).expect('Content-Type', /json/).expect(configs)
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { HEAD, ...verbsMinusHead } = verbsMap
   const methodCases = Object.entries(verbsMinusHead) as [SupportedMethod, PossibleMethod][]
 
@@ -67,41 +66,7 @@ describe('server', () => {
       .expect('Content-Type', /text\/html/)
   })
 
-  it('gives a 200 when a query matches in a different order', async () => {
-    const configs = [new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build()]
-
-    const app = configureServer('example.com', configs)
-
-    await request(app).get('/api/resource?greetings=bye&greetings=hello').expect(200)
-  })
-
-  it('gives a 404 if a query does not match', async () => {
-    const configs = [new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build()]
-
-    const app = configureServer('example.com', configs)
-
-    await request(app).get('/api/resource?greetings=yellow&greetings=bye').expect(404)
-  })
-
-  it('sets the response headers when provided', async () => {
-    const configs = [
-      new ConfigBuilder()
-        .withResponseHeaders({
-          'content-type': 'application/xml',
-          'another-header': 'my value',
-        })
-        .build(),
-    ]
-
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
-
-    await request(app)
-      .get(configs[0].request.endpoint)
-      .expect('Content-Type', /application\/xml/)
-      .expect('another-header', 'my value')
-  })
-
-  it('returns a custom 404 when the requested endpoint could not be found', async () => {
+  it('returns a 404 when the requested endpoint could not be found', async () => {
     const configs = [new ConfigBuilder().withEndpoint('/almost/correct').build()]
 
     const app = configureServer('mysite.com', configs, mockTypeValidator)
@@ -112,36 +77,80 @@ describe('server', () => {
       .expect(404)
   })
 
-  it('returns the desired response when the request body passes validation', async () => {
-    const configs = [
-      new ConfigBuilder()
-        .withMethod('POST')
-        .withEndpoint('/config1')
-        .withRequestType('number')
-        .withResponseCode(404)
-        .withResponseBody('Noice')
-        .build(),
-    ]
+  describe('headers', () => {
+    it('sets the response headers when provided', async () => {
+      const configs = [
+        new ConfigBuilder()
+          .withResponseHeaders({
+            'content-type': 'application/xml',
+            'another-header': 'my value',
+          })
+          .build(),
+      ]
 
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
+      const app = configureServer('mysite.com', configs, mockTypeValidator)
 
-    await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(404).expect('Noice')
+      await request(app)
+        .get(configs[0].request.endpoint)
+        .expect('Content-Type', /application\/xml/)
+        .expect('another-header', 'my value')
+    })
   })
 
-  it('gives a 404 when the request body fails type validation', async () => {
-    const configs = [
-      new ConfigBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
-    ]
+  describe('request query strings', () => {
+    it('gives a 200 when a query matches in a different order', async () => {
+      const configs = [
+        new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
+      ]
 
-    const problem: Partial<Problem> = { message: 'Welp!' }
-    mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
+      const app = configureServer('example.com', configs)
 
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
+      await request(app).get('/api/resource?greetings=bye&greetings=hello').expect(200)
+    })
 
-    await request(app)
-      .post(configs[0].request.endpoint)
-      .send('Yo dude!')
-      .expect(404)
-      .expect(/NCDC ERROR: Could not find an endpoint/)
+    it('gives a 404 if a query does not match', async () => {
+      const configs = [
+        new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
+      ]
+
+      const app = configureServer('example.com', configs)
+
+      await request(app).get('/api/resource?greetings=yellow&greetings=bye').expect(404)
+    })
+  })
+
+  describe('type validation', () => {
+    it('returns the desired response when the request body passes type validation', async () => {
+      const configs = [
+        new ConfigBuilder()
+          .withMethod('POST')
+          .withEndpoint('/config1')
+          .withRequestType('number')
+          .withResponseCode(404)
+          .withResponseBody('Noice')
+          .build(),
+      ]
+
+      const app = configureServer('mysite.com', configs, mockTypeValidator)
+
+      await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(404).expect('Noice')
+    })
+
+    it('gives a 404 when the request body fails type validation', async () => {
+      const configs = [
+        new ConfigBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
+      ]
+
+      const problem: Partial<Problem> = { message: 'Welp!' }
+      mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
+
+      const app = configureServer('mysite.com', configs, mockTypeValidator)
+
+      await request(app)
+        .post(configs[0].request.endpoint)
+        .send('Yo dude!')
+        .expect(404)
+        .expect(/NCDC ERROR: Could not find an endpoint/)
+    })
   })
 })

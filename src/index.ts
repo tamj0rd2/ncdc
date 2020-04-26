@@ -13,7 +13,7 @@ import logger from '~logger'
 import * as consts from './commands/consts'
 import inspector from 'inspector'
 
-export default async function run(): Promise<void> {
+export default function run(): void {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleError: HandleError = (error) => {
     logger.error(error.message, error)

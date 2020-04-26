@@ -1,4 +1,5 @@
 {
+  "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2018,
@@ -14,6 +15,7 @@
   ],
   "rules": {
     "no-unused-expressions": "off",
+    "require-await": "off",
     "prefer-promise-reject-errors": "error",
     "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/explicit-function-return-type": [
@@ -45,7 +47,8 @@
         "allowShortCircuit": true,
         "allowTernary": true
       }
-    ]
+    ],
+    "@typescript-eslint/require-await": "error"
   },
   "overrides": [
     {

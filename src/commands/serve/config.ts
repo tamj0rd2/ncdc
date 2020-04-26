@@ -3,6 +3,7 @@ import Joi from '@hapi/joi'
 import dot from 'dot-object'
 import { isAbsolute, resolve } from 'path'
 import { readJsonAsync } from '~io'
+import { blue, bold } from 'chalk'
 
 export const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const
 export type SupportedMethod = typeof supportedMethods[number]
@@ -105,17 +106,13 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
 
   const formattedErrors = validationResult.error.details
     .map((p) => {
-      const defaultConigname = 'config'
       const configName: string = dot.pick(`${p.path[0]}.name`, config)
       const fullPath =
         p.path.length &&
-        p.path.reduce<string>(
-          (accum, next, i) => {
-            if (i === 0 && typeof next === 'number' && !!configName) return accum
-            return typeof next === 'number' ? `${accum}[${next}]` : `${accum}.${next}`
-          },
-          configName ? `'${configName}'` : defaultConigname,
-        )
+        p.path.reduce<string>((accum, next, i) => {
+          if (i === 0 && typeof next === 'number') return bold(`config[${configName || next}]`)
+          return typeof next === 'number' ? `${accum}[${next}]` : `${accum}.${next}`
+        }, '')
       return { ...p, fullPath }
     })
     .sort((a, b) => {
@@ -125,7 +122,7 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
     })
     .map(({ message, fullPath }) => {
       const pathPrefix = fullPath ? `${fullPath} ` : ''
-      return `${pathPrefix}${message.replace(/(".*" )/, '')}`
+      return `${blue(pathPrefix)}${message.replace(/(".*" )/, '')}`
     })
 
   return { success: false, errors: formattedErrors }

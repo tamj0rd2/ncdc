@@ -1,9 +1,10 @@
 import request from 'supertest'
-import { configureServer, verbsMap, PossibleMethod } from '.'
+import { configureServer, verbsMap, PossibleMethod, ReqResLog } from '.'
 import { ConfigBuilder, SupportedMethod } from '~config'
 import { TypeValidator } from '~validation'
 import Problem from '~problem'
-import { mockObj } from '~test-helpers'
+import { mockObj, mocked } from '~test-helpers'
+import serverLogger from './server-logger'
 
 jest.mock('./server-logger')
 
@@ -75,6 +76,29 @@ describe('server', () => {
       .get('/nearly/correct')
       .expect(/NCDC ERROR: Could not find an endpoint/)
       .expect(404)
+  })
+
+  it('logs successful requests', async () => {
+    const configs = [new ConfigBuilder().withEndpoint('/api/resource').withResponseBody(undefined).build()]
+
+    const app = configureServer('example.com', configs)
+    await request(app).get('/api/resource?what=up').expect(200)
+
+    const mockedLogger = mocked(serverLogger.info)
+    expect(mockedLogger).toBeCalled()
+    expect(mockedLogger.mock.calls[1][0]).toMatchObject<ReqResLog>({
+      name: configs[0].name,
+      request: {
+        method: 'GET',
+        body: {},
+        path: '/api/resource',
+        query: { what: 'up' },
+      },
+      response: {
+        status: 200,
+        body: undefined,
+      },
+    })
   })
 
   describe('headers', () => {

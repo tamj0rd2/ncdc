@@ -246,6 +246,44 @@ describe('ncdc serve', () => {
     })
   })
 
+  it('handles switching from a fixture file to an inline body', async () => {
+    const configWrapper = new ConfigWrapper()
+      .addConfig(
+        new ConfigBuilder().withName('config').withServeBody(undefined).withFixture('fixture').build(),
+      )
+      .addFixture('fixture', { hello: 'world' })
+    const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+
+    configWrapper.editConfig('config', (c) => ({
+      ...c,
+      response: { serveBody: 'somebody', code: c.response.code },
+    }))
+    await waitForOutput(MESSAGE_RESTARTING)
+    await waitUntilAvailable()
+
+    const res = await fetch('/api/books/blah')
+    expect(res.status).toBe(200)
+    await expect(res.text()).resolves.toBe('somebody')
+  })
+
+  it('handles switching from an inline body to a fixture file', async () => {
+    const configWrapper = new ConfigWrapper().addConfig(new ConfigBuilder().withName('config').build())
+    const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+
+    configWrapper
+      .editConfig('config', (c) => ({
+        ...c,
+        response: { serveBodyPath: './responses/my-fixture.json', code: c.response.code },
+      }))
+      .addFixture('my-fixture', { hello: 'world' })
+    await waitForOutput(MESSAGE_RESTARTING)
+    await waitUntilAvailable()
+
+    const res = await fetch('/api/books/blah')
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({ hello: 'world' })
+  })
+
   describe('type checking', () => {
     const typecheckingCleanup: CleanupTask[] = []
     let serve: ServeResult

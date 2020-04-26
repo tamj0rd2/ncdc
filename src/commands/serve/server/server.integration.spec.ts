@@ -122,7 +122,7 @@ describe('server', () => {
   })
 
   describe('request query strings', () => {
-    it('gives a 200 when a query matches in a different order', async () => {
+    it('still responds when a query matches in a different order', async () => {
       const configs = [
         new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
       ]
@@ -132,7 +132,27 @@ describe('server', () => {
       await request(app).get('/api/resource?greetings=bye&greetings=hello').expect(200)
     })
 
-    it('gives a 404 if a query does not match', async () => {
+    it('responds when a query matches a different config', async () => {
+      const configs = [
+        new ConfigBuilder()
+          .withName('Config1')
+          .withEndpoint('/api/resource?greetings=hello&greetings=bye')
+          .withResponseBody('nope')
+          .build(),
+        new ConfigBuilder()
+          .withName('Config2')
+          .withEndpoint('/api/resource?greetings=hi&greetings=bye')
+          .withResponseCode(202)
+          .withResponseBody('YES')
+          .build(),
+      ]
+
+      const app = configureServer('example.com', configs)
+
+      await request(app).get('/api/resource?greetings=hi&greetings=bye').expect(202).expect('YES')
+    })
+
+    it('gives a 404 if a query does not match any config', async () => {
       const configs = [
         new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
       ]

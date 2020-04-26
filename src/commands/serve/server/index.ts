@@ -84,23 +84,8 @@ export const configureServer = (
           serverLogger.warn(
             `An endpoint for ${req.path} exists but the query params did not match the configuration`,
           )
-          next()
+          return next()
         }
-
-        // TODO ======= finish up by adding tests. maybe extract it out
-        // const actualQuery = parse(req.url, true).query
-        // const expectedQuery = parse(request.endpoint, true).query
-
-        // const queryMismatches = Object.keys(expectedQuery)
-        //   .map((key) => isQueryMismatch(key, expectedQuery[key], actualQuery[key]))
-        //   .filter((x): x is string => !!x)
-
-        // if (queryMismatches.length) {
-        //   res.locals.message = queryMismatches.join('\n')
-        //   res.locals.status = 400
-        //   return next()
-        // }
-        // ============================================
 
         if (typeValidator && request.type) {
           const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)

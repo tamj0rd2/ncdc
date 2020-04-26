@@ -42,6 +42,14 @@ describe('validate', () => {
     return validationResult
   }
 
+  it('returns a helpful error if the config is empty', () => {
+    const { success, errors } = validate(undefined) as ValidationFailure
+
+    expect(success).toBe(false)
+    expect(errors).toContain('Your config file cannot be empty')
+    expect(errors).toHaveLength(1)
+  })
+
   it('returns an error when the config file is an empty array', () => {
     const { success, errors } = validate([]) as ValidationFailure
 

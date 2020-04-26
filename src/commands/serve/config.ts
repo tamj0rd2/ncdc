@@ -41,6 +41,10 @@ export interface ValidationFailure {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const validate = (config: any): ValidationSuccess | ValidationFailure => {
+  if (!config) {
+    return { success: false, errors: ['Your config file cannot be empty'] }
+  }
+
   const endpointSchema = Joi.string()
     .uri({ relativeOnly: true })
     .ruleset.pattern(/^\//)
@@ -102,7 +106,7 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
   const formattedErrors = validationResult.error.details
     .map((p) => {
       const defaultConigname = 'config'
-      const configName = dot.pick(`${p.path[0]}.name`, config)
+      const configName: string = dot.pick(`${p.path[0]}.name`, config)
       const fullPath =
         p.path.length &&
         p.path.reduce<string>(

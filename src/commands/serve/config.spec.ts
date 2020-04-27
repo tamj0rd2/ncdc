@@ -19,8 +19,8 @@ jest.unmock('dot-object')
 jest.mock('path')
 
 describe('validate', () => {
-  const expectValidationErors = (config?: object, ...expectedErrors: string[]): string[] => {
-    const { success, errors } = validate([config]) as ValidationFailure
+  const expectValidationErors = (config?: object | object[], ...expectedErrors: string[]): string[] => {
+    const { success, errors } = validate(Array.isArray(config) ? config : [config]) as ValidationFailure
     expect(success).toBe(false)
 
     const strippedErrors = errors.map((e) => strip(e))
@@ -31,10 +31,10 @@ describe('validate', () => {
   }
 
   const expectNotToGetErrorsConcerning = (
-    config?: object,
+    config?: object | object[],
     ...unexpectedStrings: string[]
   ): ValidationSuccess | ValidationFailure => {
-    const validationResult = validate([config])
+    const validationResult = validate(Array.isArray(config) ? config : [config])
     if (validationResult.success) return validationResult
 
     const allErrors = strip(validationResult.errors.join('\n'))
@@ -72,6 +72,20 @@ describe('validate', () => {
   it('shows the config name in errors if supplied', () => {
     const config = { name: 'Yo fam', fake: 'property' }
     expectValidationErors(config, 'config[Yo fam].fake is not allowed')
+  })
+
+  it('accepts configs with different names', () => {
+    const configs = [{ name: 'Noice' }, { name: 'Toight' }]
+    expectNotToGetErrorsConcerning(
+      configs,
+      'config[Noice] must have a unique name',
+      'config[Toight] must have a unique name',
+    )
+  })
+
+  it('returns an error if any configs have the same name', () => {
+    const configs = [{ name: 'Noice' }, { name: 'Noice' }]
+    expectValidationErors(configs, 'config[Noice] must have a unique name')
   })
 
   describe('request', () => {

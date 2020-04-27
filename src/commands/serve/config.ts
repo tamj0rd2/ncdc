@@ -93,6 +93,8 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
       }),
     )
     .required()
+    .ruleset.unique('name')
+    .message('must have a unique name')
     .ruleset.min(1)
     .message('Your config file must contain at least 1 config item')
 

@@ -18,7 +18,8 @@ mock APIs that don't strongly resemble your live APIs.
 
 This tool can easily integrate with typescript to prevent you from having to
 write JSON schemas for your already defined Typescript interfaces, types and
-enums.
+enums. With this, you're guaranteed that your code, mock API endpoints and
+real endpoints are all consistent with eachother.
 
 <!-- TODO: add an examples folder with working examples -->
 

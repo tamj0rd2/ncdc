@@ -3,6 +3,7 @@ import { TypeValidator } from '~validation'
 import { mockObj, randomString } from '~test-helpers'
 import { SchemaRetriever } from '~schema'
 import { TypeValidationFailure } from './type-validator'
+import strip from 'strip-ansi'
 
 jest.unmock('ajv')
 jest.mock('util', () => {
@@ -28,12 +29,11 @@ describe('error messages', () => {
     })
     const data = { allowed: 'hello' }
 
-    const result = await typeValidator.validate(data, type)
+    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
 
-    expect(result).toMatchObject<TypeValidationFailure>({
-      success: false,
-      errors: [`<root> should have required property 'proud'`],
-    })
+    expect(result.success).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(strip(result.errors[0])).toBe(`<root> should have required property 'proud'`)
   })
 
   test('wrong type', async () => {
@@ -46,12 +46,11 @@ describe('error messages', () => {
     })
     const data = { hello: 123 }
 
-    const result = await typeValidator.validate(data, type)
+    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
 
-    expect(result).toMatchObject<TypeValidationFailure>({
-      success: false,
-      errors: [`<root>.hello should be string but got number`],
-    })
+    expect(result.success).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(strip(result.errors[0])).toBe(`<root>.hello should be string but got number`)
   })
 
   test('enum', async () => {
@@ -64,12 +63,11 @@ describe('error messages', () => {
     })
     const data = { hello: 123 }
 
-    const result = await typeValidator.validate(data, type)
+    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
 
-    expect(result).toMatchObject<TypeValidationFailure>({
-      success: false,
-      errors: ['<root>.hello should be equal to one of the allowed values: 1,5,7'],
-    })
+    expect(result.success).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(strip(result.errors[0])).toBe('<root>.hello should be equal to one of the allowed values: 1,5,7')
   })
 
   test('object enum', async () => {
@@ -82,11 +80,10 @@ describe('error messages', () => {
     })
     const data = { hello: { success: false } }
 
-    const result = await typeValidator.validate(data, type)
+    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
 
-    expect(result).toMatchObject<TypeValidationFailure>({
-      success: false,
-      errors: [expect.stringMatching('<root>.hello should be equal to one of the allowed values: ')],
-    })
+    expect(result.success).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(strip(result.errors[0])).toContain('<root>.hello should be equal to one of the allowed values: ')
   })
 })

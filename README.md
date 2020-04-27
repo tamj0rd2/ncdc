@@ -27,13 +27,13 @@ enums.
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Example config](#example-config)
+  - [Serving mocks](#serving-mocks-using-the-config-file)
+  - [Running tests](#testing-real-endpoints-against-the-config)
   - [Generating JSON schemas](#generating-json-schemas)
-  - [Running tests](#running-tests)
-  - [Serving mocks](#serving-mocks)
 - [CLI Usage](#cli-usage)
 - [Generate command](#generate)
-- [Test command](#test)
 - [Serve command](#serve)
+- [Test command](#test)
 
 ## Getting started
 
@@ -69,7 +69,8 @@ config.yml:
 
 This configuration file contains a single config with the name Books.
 
-You can find more information about writing configurations [here](./CONFIG.md#config)
+**You can find more information about writing your config file [HERE](./CONFIG.md#config),
+as well as what all of the options do.**
 
 ### Serving mocks using the config file
 
@@ -85,7 +86,7 @@ to `/api/books/*`, any requests starting with
 
 You can find more information about serve mode [here](#serve)
 
-### Testing whether real endpoints match definitions in the config file
+### Testing real endpoints against the config
 
 `npx ncdc test ./config.yml https://example.com`
 
@@ -147,13 +148,6 @@ Examples:
 Run `npx ncdc generate --help` to get contextual usage information and examples
 for this command.
 
-## Test
-
-### CLI Usage
-
-Run `npx ncdc test --help` to get contextual usage information and examples for
-this command.
-
 ## Serve
 
 ### CLI Usage
@@ -161,7 +155,9 @@ this command.
 Run `npx ncdc serve --help` to get contextual usage information and examples for
 this command.
 
-## Direction/priorities
+## Test
 
-- Improved problem logging (serve and test mode)
-- Improved request/response logging (serve mode)
+### CLI Usage
+
+Run `npx ncdc test --help` to get contextual usage information and examples for
+this command.

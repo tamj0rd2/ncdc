@@ -38,6 +38,7 @@ Here's a format that describes each config setting:
 ## name
 
 - **Description**: An identifier for the configuration which gets shown in results
+  This must be unique - no two configurations can have the same name
 - **Type**: string
 - **Required?**: Yes
 - **Example**:

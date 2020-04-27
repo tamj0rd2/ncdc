@@ -4,6 +4,7 @@ import { SchemaGenerator, SchemaRetriever } from '~schema'
 import Problem, { ProblemType } from '~problem'
 import * as _messages from '~messages'
 import { mockObj, mockCtor, randomString, mockFn } from '~test-helpers'
+import strip from 'strip-ansi'
 
 jest.unmock('./type-validator')
 
@@ -156,22 +157,22 @@ describe('validate', () => {
   it('returns validation messages if the type is invalid', async () => {
     const error1: Partial<ErrorObject> = {
       dataPath: randomString('.datapath1'),
-      message: randomString('.error-message1'),
+      message: randomString('error-message1'),
     }
     const error2: Partial<ErrorObject> = {
-      dataPath: randomString(''),
-      message: randomString('.error-message2'),
+      dataPath: '',
+      message: randomString('error-message2'),
     }
 
     const validatorFn: ValidateFunction = mockFn<ValidateFunction>().mockReturnValue(false)
     validatorFn.errors = [error1, error2] as ErrorObject[]
     validator.compile.mockReturnValue(validatorFn)
 
-    const result = await typeValidator.validate(body, type)
+    const result = (await typeValidator.validate(body, type)) as TypeValidationFailure
 
-    expect(result).toMatchObject<TypeValidationFailure>({
-      success: false,
-      errors: [`<root>${error1.dataPath} ${error1.message}`, `<root>${error2.dataPath} ${error2.message}`],
-    })
+    expect(result.success).toBe(false)
+    expect(result.errors).toHaveLength(2)
+    expect(strip(result.errors[0])).toBe(`<root>${error1.dataPath} ${error1.message}`)
+    expect(strip(result.errors[1])).toBe(`<root> ${error2.message}`)
   })
 })

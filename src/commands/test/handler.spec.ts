@@ -108,7 +108,7 @@ it('logs a message if there are no configs to run', async () => {
   expect(mockedLogger.warn).toBeCalledWith('No tests to run')
 })
 
-it.only('calls testConfigs with the correct arguments', async () => {
+it('calls testConfigs with the correct arguments', async () => {
   const configs: Config[] = [mockObj<Config>({ name: randomString('name') })]
   mockedReadConfig.mockResolvedValue(configs)
 

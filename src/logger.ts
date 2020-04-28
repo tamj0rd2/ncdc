@@ -49,4 +49,6 @@ const logger = createLogger({
   ],
 })
 
+export type NCDCLogger = typeof logger
+
 export default logger

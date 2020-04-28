@@ -44,3 +44,5 @@ export const testConfigs = async (
 
   if ((await results).includes(1)) throw new Error('Not all tests passed')
 }
+
+export type TestConfigs = typeof testConfigs

@@ -4,5 +4,5 @@
     "rootDir": "./acceptance-tests"
   },
   "include": ["./acceptance-tests/**/*.ts"],
-  "exclude": ["books-fixtures"]
+  "exclude": ["serve-fixtures"]
 }

@@ -55,7 +55,7 @@ const acceptanceTestSettings = {
     '<rootDir>/acceptance-tests/**/*.spec.ts'
   ],
   watchPathIgnorePatterns: [
-    '<rootDir>/acceptance-tests/books-fixture.*'
+    '<rootDir>/acceptance-tests/serve-fixture.*'
   ]
 }
 

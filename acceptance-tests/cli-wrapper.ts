@@ -37,7 +37,7 @@ const waitForX = (condition: () => Promise<boolean> | boolean, timeout: number):
     }, retryPeriod * 1000)
   })
 
-export const FIXTURE_FOLDER = './acceptance-tests/books-fixture'
+export const FIXTURE_FOLDER = './acceptance-tests/serve-fixture'
 export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
 export const SERVE_HOST = 'http://localhost:4000'
 

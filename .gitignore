@@ -8,6 +8,6 @@ json-schema
 .DS_Store
 icon.png
 .eslintcache
-acceptance-tests/books-fixture/config.yml
-acceptance-tests/books-fixture/responses
-acceptance-tests/books-fixture/types.ts
+acceptance-tests/serve-fixture/config.yml
+acceptance-tests/serve-fixture/responses
+acceptance-tests/serve-fixture/types.ts

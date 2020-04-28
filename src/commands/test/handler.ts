@@ -1,8 +1,8 @@
 import { HandleError, CreateTypeValidator } from '~commands'
 import readConfig, { Config } from '~config'
 import { Mode } from '~config/types'
-import logger from '~logger'
-import { testConfigs } from './test'
+import { NCDCLogger } from '~logger'
+import { TestConfigs } from './test'
 import { createHttpClient } from './http-client'
 import axios from 'axios'
 import { existsSync } from 'fs'
@@ -16,9 +16,12 @@ export interface TestArgs {
   force: boolean
 }
 
-export const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
-  args: TestArgs,
-): Promise<void> => {
+export const createHandler = (
+  handleError: HandleError,
+  createTypeValidator: CreateTypeValidator,
+  logger: NCDCLogger,
+  testConfigs: TestConfigs,
+) => async (args: TestArgs): Promise<void> => {
   const { configPath, baseURL, tsconfigPath, schemaPath, force } = args
   if (!configPath) return handleError({ message: `configPath must be specified` })
   if (!baseURL) return handleError({ message: 'baseURL must be specified' })
@@ -38,11 +41,13 @@ export const createHandler = (handleError: HandleError, createTypeValidator: Cre
   }
 
   if (!configs.length) {
-    logger.info('No tests to run')
+    logger.warn('No tests to run')
     return
   }
 
-  testConfigs(baseURL, createHttpClient(axios.create({ baseURL })), configs, typeValidator)
-    .then(() => process.exit())
-    .catch(handleError)
+  try {
+    await testConfigs(baseURL, createHttpClient(axios.create({ baseURL })), configs, typeValidator)
+  } catch (err) {
+    return handleError(err)
+  }
 }

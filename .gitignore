@@ -11,3 +11,5 @@ icon.png
 acceptance-tests/serve-fixture/config.yml
 acceptance-tests/serve-fixture/responses
 acceptance-tests/serve-fixture/types.ts
+acceptance-tests/test-fixture/config.yml
+acceptance-tests/test-fixture/types.ts

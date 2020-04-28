@@ -1,6 +1,5 @@
 import { OutgoingHttpHeaders } from 'http'
 import { existsSync, unlinkSync, writeFileSync, rmdirSync, mkdirSync, appendFileSync } from 'fs'
-import { CONFIG_FILE, FIXTURE_FOLDER } from './cli-wrapper'
 import jsyaml from 'js-yaml'
 
 export interface Config {
@@ -87,23 +86,30 @@ export class ConfigBuilder {
   }
 }
 
-export class ConfigWrapper {
+export abstract class ConfigWrapper {
   private configs: Config[] = []
   private fixtures: Record<string, object> = {}
   private types: Record<string, object> = {}
 
-  private static ResponsesFolder = `${FIXTURE_FOLDER}/responses`
-  private static TypesFile = `${FIXTURE_FOLDER}/types.ts`
+  private readonly CONFIG_FILE: string
+  private readonly FIXTURE_FOLDER: string
+  private readonly TYPES_FILE: string
+  private readonly RESPONSES_FOLDER: string
 
-  constructor() {
-    if (existsSync(CONFIG_FILE)) this.deleteYaml()
+  constructor(configFile: string, fixtureFolder: string) {
+    this.CONFIG_FILE = configFile
+    this.FIXTURE_FOLDER = fixtureFolder
+    this.TYPES_FILE = `${this.FIXTURE_FOLDER}/types.ts`
+    this.RESPONSES_FOLDER = `${this.FIXTURE_FOLDER}/responses`
 
-    if (existsSync(ConfigWrapper.ResponsesFolder)) {
-      rmdirSync(ConfigWrapper.ResponsesFolder, { recursive: true })
+    if (existsSync(this.CONFIG_FILE)) this.deleteYaml()
+
+    if (existsSync(this.RESPONSES_FOLDER)) {
+      rmdirSync(this.RESPONSES_FOLDER, { recursive: true })
     }
-    mkdirSync(ConfigWrapper.ResponsesFolder)
+    mkdirSync(this.RESPONSES_FOLDER)
 
-    writeFileSync(ConfigWrapper.TypesFile, '')
+    writeFileSync(this.TYPES_FILE, '')
   }
 
   public addConfig(config = new ConfigBuilder().build()): ConfigWrapper {
@@ -133,7 +139,7 @@ export class ConfigWrapper {
       throw new Error(`Fixture with name ${name} already exists`)
     }
 
-    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    const filePath = `${this.RESPONSES_FOLDER}/${name}.json`
     if (existsSync(filePath)) {
       throw new Error(`${filePath} already exists on disk`)
     }
@@ -149,7 +155,7 @@ export class ConfigWrapper {
       throw new Error(`Fixture with name ${name} is not registered`)
     }
 
-    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    const filePath = `${this.RESPONSES_FOLDER}/${name}.json`
     if (!existsSync(filePath)) {
       throw new Error(`${filePath} does not exist on disk`)
     }
@@ -163,7 +169,7 @@ export class ConfigWrapper {
       throw new Error(`Fixture with name ${name} is not registered`)
     }
 
-    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    const filePath = `${this.RESPONSES_FOLDER}/${name}.json`
     if (!existsSync(filePath)) {
       throw new Error(`${filePath} does not exist on disk`)
     }
@@ -174,7 +180,7 @@ export class ConfigWrapper {
   }
 
   public deleteYaml(): ConfigWrapper {
-    unlinkSync(CONFIG_FILE)
+    unlinkSync(this.CONFIG_FILE)
     this.configs = []
     return this
   }
@@ -186,7 +192,7 @@ export class ConfigWrapper {
 
     this.types[name] = content
     appendFileSync(
-      ConfigWrapper.TypesFile,
+      this.TYPES_FILE,
       `
       interface ${name} {
         ${Object.entries(content).map(([key, value]) => `${key}: ${value}`)}
@@ -199,12 +205,12 @@ export class ConfigWrapper {
 
   private commitConfigs(): void {
     const yaml = jsyaml.safeDump(this.configs)
-    writeFileSync(CONFIG_FILE, yaml)
+    writeFileSync(this.CONFIG_FILE, yaml)
   }
 
   private commitFixture(name: string, content: object): void {
     this.fixtures[name] = content
-    const filePath = `${ConfigWrapper.ResponsesFolder}/${name}.json`
+    const filePath = `${this.RESPONSES_FOLDER}/${name}.json`
     writeFileSync(filePath, JSON.stringify(content, null, 2))
   }
 }

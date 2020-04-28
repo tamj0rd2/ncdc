@@ -1,9 +1,23 @@
-import { fetch, SERVE_HOST, MESSAGE_RESTARTING, ServeResult, MESSAGE_RSTARTING_FAILURE } from './cli-wrapper'
-import { CleanupTask, prepareServe } from './cli-wrapper'
+import {
+  fetch,
+  SERVE_HOST,
+  MESSAGE_RESTARTING,
+  ServeResult,
+  MESSAGE_RSTARTING_FAILURE,
+  CONFIG_FILE,
+  FIXTURE_FOLDER,
+} from './serve-wrapper'
+import { CleanupTask, prepareServe } from './serve-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
 jest.useRealTimers()
 jest.setTimeout(25000)
+
+class ServeConfigWrapper extends ConfigWrapper {
+  constructor() {
+    super(CONFIG_FILE, FIXTURE_FOLDER)
+  }
+}
 
 describe('ncdc serve', () => {
   const cleanupTasks: CleanupTask[] = []
@@ -18,7 +32,7 @@ describe('ncdc serve', () => {
 
   it('starts serving on port 4000', async () => {
     // arrange
-    new ConfigWrapper().addConfig()
+    new ServeConfigWrapper().addConfig()
 
     // act
     const { waitForOutput } = await serve()
@@ -32,7 +46,7 @@ describe('ncdc serve', () => {
 
   it('serves an endpoint from a fixture file', async () => {
     // arrange
-    new ConfigWrapper()
+    new ServeConfigWrapper()
       .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture('response').build())
       .addFixture('response', {
         title: 'nice meme lol',
@@ -53,7 +67,7 @@ describe('ncdc serve', () => {
 
   it('logs an error and exists if a fixture file does not exist', async () => {
     // arrange
-    new ConfigWrapper().addConfig(
+    new ServeConfigWrapper().addConfig(
       new ConfigBuilder().withServeBody(undefined).withFixture('my-fixture').build(),
     )
 
@@ -68,7 +82,7 @@ describe('ncdc serve', () => {
   describe('watching config.yml', () => {
     it('restarts when config.yml is changed', async () => {
       // arrange
-      const configWrapper = new ConfigWrapper().addConfig()
+      const configWrapper = new ServeConfigWrapper().addConfig()
       const { waitForOutput, waitUntilAvailable } = await serve('--watch')
       const resInitial = await fetch('/api/books/789')
       expect(resInitial.status).toBe(200)
@@ -85,7 +99,7 @@ describe('ncdc serve', () => {
 
     it('logs a message and kills the server when config.yml has been deleted', async () => {
       // arrange
-      const configWrapper = new ConfigWrapper().addConfig()
+      const configWrapper = new ServeConfigWrapper().addConfig()
       const { waitForOutput } = await serve('--watch')
       const resInitial = await fetch('/api/books/yay')
       expect(resInitial.status).toBe(200)
@@ -101,7 +115,7 @@ describe('ncdc serve', () => {
 
     it('can recover from config.yml being deleted when file is re-added', async () => {
       // arrange
-      const configWrapper = new ConfigWrapper().addConfig()
+      const configWrapper = new ServeConfigWrapper().addConfig()
       const { waitForOutput } = await serve('--watch')
       configWrapper.deleteYaml()
       await waitForOutput(MESSAGE_RSTARTING_FAILURE)
@@ -118,7 +132,9 @@ describe('ncdc serve', () => {
 
     it('restarts each time config.yml is changed', async () => {
       const initialName = 'Initial'
-      const configWrapper = new ConfigWrapper().addConfig(new ConfigBuilder().withName(initialName).build())
+      const configWrapper = new ServeConfigWrapper().addConfig(
+        new ConfigBuilder().withName(initialName).build(),
+      )
       const { waitForOutput, waitUntilAvailable } = await serve('--watch')
 
       await waitForOutput(`from config: ${initialName}`)
@@ -143,7 +159,7 @@ describe('ncdc serve', () => {
     it('restarts the server when a fixture file changes', async () => {
       // arrange
       const fixtureName = 'response'
-      const configWrapper = new ConfigWrapper()
+      const configWrapper = new ServeConfigWrapper()
         .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
@@ -169,7 +185,7 @@ describe('ncdc serve', () => {
     it('handles deletion of fixture file', async () => {
       // arrange
       const fixtureName = 'crazy-fixture'
-      const configWrapper = new ConfigWrapper()
+      const configWrapper = new ServeConfigWrapper()
         .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
@@ -190,7 +206,7 @@ describe('ncdc serve', () => {
     it('can recover from fixture file deletion', async () => {
       // arrange
       const fixtureName = 'another-fixture'
-      const configWrapper = new ConfigWrapper()
+      const configWrapper = new ServeConfigWrapper()
         .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
@@ -219,7 +235,7 @@ describe('ncdc serve', () => {
     // TODO: fix
     it('restarts each time a fixture file is changed or deleted', async () => {
       const fixtureName = 'MyFixture'
-      const configWrapper = new ConfigWrapper()
+      const configWrapper = new ServeConfigWrapper()
         .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
         .addFixture(fixtureName, { title: 'Freddy' })
       const { waitForOutput, waitUntilAvailable } = await serve('--watch')
@@ -247,7 +263,7 @@ describe('ncdc serve', () => {
   })
 
   it('handles switching from a fixture file to an inline body', async () => {
-    const configWrapper = new ConfigWrapper()
+    const configWrapper = new ServeConfigWrapper()
       .addConfig(
         new ConfigBuilder().withName('config').withServeBody(undefined).withFixture('fixture').build(),
       )
@@ -267,7 +283,7 @@ describe('ncdc serve', () => {
   })
 
   it('handles switching from an inline body to a fixture file', async () => {
-    const configWrapper = new ConfigWrapper().addConfig(new ConfigBuilder().withName('config').build())
+    const configWrapper = new ServeConfigWrapper().addConfig(new ConfigBuilder().withName('config').build())
     const { waitForOutput, waitUntilAvailable } = await serve('--watch')
 
     configWrapper
@@ -287,14 +303,14 @@ describe('ncdc serve', () => {
   describe('type checking', () => {
     const typecheckingCleanup: CleanupTask[] = []
     let serve: ServeResult
-    let configWrapper: ConfigWrapper
+    let configWrapper: ServeConfigWrapper
 
     afterAll(() => {
       typecheckingCleanup.forEach((task) => task())
     })
 
     it('it serves when the type matches the body', async () => {
-      configWrapper = new ConfigWrapper()
+      configWrapper = new ServeConfigWrapper()
         .addConfig(new ConfigBuilder().withType('Book').build())
         .addType('Book', {
           ISBN: 'string',

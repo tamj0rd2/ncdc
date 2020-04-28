@@ -3,7 +3,7 @@ import { CleanupTask, prepareServe } from './cli-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 
 jest.useRealTimers()
-jest.setTimeout(45000)
+jest.setTimeout(25000)
 
 describe('ncdc serve', () => {
   const cleanupTasks: CleanupTask[] = []
@@ -25,7 +25,7 @@ describe('ncdc serve', () => {
     const res = await fetch('/api/books/hooray')
 
     // assert
-    await waitForOutput(/Registered .*\/api\/books\/\* from config: Books/)
+    await waitForOutput('/api/books/123 from config: Books')
     await waitForOutput(`Endpoints are being served on ${SERVE_HOST}`)
     expect(res.status).toBe(200)
   })
@@ -121,13 +121,13 @@ describe('ncdc serve', () => {
       const configWrapper = new ConfigWrapper().addConfig(new ConfigBuilder().withName(initialName).build())
       const { waitForOutput, waitUntilAvailable } = await serve('--watch')
 
-      await waitForOutput(new RegExp(`Registered .* from config: ${initialName}`))
+      await waitForOutput(`from config: ${initialName}`)
       await waitUntilAvailable()
 
       const editNameAndVerify = async (previousName: string, editedName: string): Promise<void> => {
         configWrapper.editConfig(previousName, (c) => ({ ...c, name: editedName }))
         await waitForOutput(MESSAGE_RESTARTING)
-        await waitForOutput(new RegExp(`Registered .* from config: ${editedName}`))
+        await waitForOutput(`/api/books/123 from config: ${editedName}`)
         await waitUntilAvailable()
       }
 

@@ -1,9 +1,12 @@
 import { ChildProcess, exec } from 'child_process'
+import { ConfigWrapper } from './config-helpers'
+import { Server } from 'http'
+import express from 'express'
 
 export const FIXTURE_FOLDER = './acceptance-tests/test-fixture'
 export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
 export const TSCONFIG_FILE = `${FIXTURE_FOLDER}/tsconfig.json`
-export const REAL_SERVER_HOST = 'http://localhost:4000'
+export const REAL_SERVER_HOST = 'http://localhost:5000'
 
 export const runTestCommand = (): Promise<string> =>
   new Promise<string>((resolve, reject) => {
@@ -24,3 +27,30 @@ export const runTestCommand = (): Promise<string> =>
       resolve(getRawOutput())
     })
   })
+
+export class TestConfigWrapper extends ConfigWrapper {
+  constructor() {
+    super(CONFIG_FILE, FIXTURE_FOLDER)
+  }
+}
+
+export class RealServerBuilder {
+  private readonly app = express()
+  private port = 5000
+
+  public withPort(port: number): RealServerBuilder {
+    this.port = port
+    return this
+  }
+
+  public withGetEndpoint(endpoint: string, status: number, content: unknown): RealServerBuilder {
+    this.app.get(endpoint, (req, res) => {
+      res.status(status).send(content)
+    })
+    return this
+  }
+
+  public start(): Server {
+    return this.app.listen(this.port)
+  }
+}

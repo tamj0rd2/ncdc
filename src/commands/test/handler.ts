@@ -1,0 +1,48 @@
+import { HandleError, CreateTypeValidator } from '~commands'
+import readConfig, { Config } from '~config'
+import { Mode } from '~config/types'
+import logger from '~logger'
+import { testConfigs } from './test'
+import { createHttpClient } from './http-client'
+import axios from 'axios'
+import { existsSync } from 'fs'
+import { resolve } from 'path'
+
+export interface TestArgs {
+  schemaPath?: string
+  tsconfigPath: string
+  configPath?: string
+  baseURL?: string
+  force: boolean
+}
+
+export const createHandler = (handleError: HandleError, createTypeValidator: CreateTypeValidator) => async (
+  args: TestArgs,
+): Promise<void> => {
+  const { configPath, baseURL, tsconfigPath, schemaPath, force } = args
+  if (!configPath) return handleError({ message: `configPath must be specified` })
+  if (!baseURL) return handleError({ message: 'baseURL must be specified' })
+
+  const fullTsconfigPath = resolve(tsconfigPath)
+  if (!existsSync(fullTsconfigPath)) {
+    return handleError({ message: `${fullTsconfigPath} does not exist` })
+  }
+
+  const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
+
+  let configs: Config[]
+  try {
+    configs = await readConfig(configPath, typeValidator, Mode.Test)
+  } catch (err) {
+    return handleError(err)
+  }
+
+  if (!configs.length) {
+    logger.info('No tests to run')
+    return
+  }
+
+  testConfigs(baseURL, createHttpClient(axios.create({ baseURL })), configs, typeValidator)
+    .then(() => process.exit())
+    .catch(handleError)
+}

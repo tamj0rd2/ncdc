@@ -36,7 +36,7 @@ export default function run(): void {
   mainYargs
     .command(createGenerateCommand(handleError, isDevMode))
     .command(createServeCommand(createTypeValidator))
-    .command(createTestCommand(handleError, createTypeValidator))
+    .command(createTestCommand(createTypeValidator))
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
     .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)

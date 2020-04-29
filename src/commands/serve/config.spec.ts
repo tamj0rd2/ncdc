@@ -149,6 +149,11 @@ describe('validate', () => {
         expectNotToGetErrorsConcerning(config, 'request.endpoints')
       })
 
+      it('accepts weird brace syntax for query strings', () => {
+        const config = { request: { endpoints: '/api/whatevs?thingies[]=thing1&thingies[]=thing2' } }
+        expectNotToGetErrorsConcerning(config, 'request.endpoints')
+      })
+
       it.each(badEndpoints.map((x) => [x]))(
         'returns an error if the endpoint does not start with a / like in %s',
         (endpoint) => {

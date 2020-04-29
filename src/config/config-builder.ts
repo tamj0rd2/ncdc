@@ -28,6 +28,11 @@ export default class ConfigBuilder {
     return this
   }
 
+  public withRequestBody(body: Data): ConfigBuilder {
+    this.config.request.body = body
+    return this
+  }
+
   public withResponseCode(code: number): ConfigBuilder {
     this.config.response.code = code
     return this

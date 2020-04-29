@@ -1,7 +1,7 @@
 import TypeValidator from './type-validator'
 import Problem, { ProblemType } from '~problem'
 import { Config } from '~config'
-import { shouldBe } from '~messages'
+import { shouldBe, problemFetching } from '~messages'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: Config) => Promise<LoaderResponse>
@@ -13,7 +13,20 @@ export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource
     const { response: responseConfig } = config
 
     const problems: Problem[] = []
-    const response = await getResponse(config)
+    let response: LoaderResponse
+
+    try {
+      response = await getResponse(config)
+    } catch (err) {
+      return [
+        new Problem(
+          {
+            message: problemFetching(err.message),
+          },
+          ProblemType.Response,
+        ),
+      ]
+    }
 
     if (responseConfig.code && response.status !== responseConfig.code) {
       problems.push(

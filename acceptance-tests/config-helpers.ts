@@ -93,6 +93,11 @@ export class ConfigBuilder {
     return this
   }
 
+  public withResponseHeaders(headers: OutgoingHttpHeaders): ConfigBuilder {
+    this.config.response.headers = headers
+    return this
+  }
+
   public build(): Config {
     return this.config
   }

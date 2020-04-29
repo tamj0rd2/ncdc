@@ -1,41 +1,31 @@
 import { FetchResource, LoaderResponse } from '~validation'
-import { AxiosError, AxiosInstance } from 'axios'
-import { errorNoResponse, errorBadStatusCode, errorWrongStatusCode } from '~messages'
+import fetch, { RequestInit, Response } from 'node-fetch'
 
-export const createHttpClient = (loader: AxiosInstance): FetchResource => async ({
+export const createHttpClient = (baseUrl: string): FetchResource => async ({
   request,
   response,
 }): Promise<LoaderResponse> => {
   const { method, endpoint, body } = request
-  const { code } = response
-  try {
-    switch (method) {
-      case 'GET':
-        return await loader.get(endpoint)
-      case 'POST':
-        return await loader.post(endpoint, body)
-      case 'PUT':
-        return await loader.put(endpoint, body)
-      case 'DELETE':
-        return await loader.delete(endpoint)
-      case 'PATCH':
-        return await loader.patch(endpoint, body)
-      case 'OPTIONS':
-        return await loader.options(endpoint)
-      case 'HEAD':
-        return await loader.head(endpoint)
-    }
-  } catch (err) {
-    const axiosErr = err as AxiosError
-    const fullUri = loader.defaults.baseURL + endpoint
+  const fullUrl = `${baseUrl}${endpoint}`
 
-    if (!axiosErr.response) throw new Error(errorNoResponse(fullUri))
-
-    if (!code) throw new Error(errorBadStatusCode(fullUri, axiosErr.response.status))
-
-    if (code !== axiosErr.response.status)
-      throw new Error(errorWrongStatusCode(fullUri, code, axiosErr.response.status))
-
-    return axiosErr.response
+  const requestInit: RequestInit = {
+    method,
+    body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
   }
+
+  let res: Response
+  try {
+    res = await fetch(fullUrl, requestInit)
+  } catch (err) {
+    return { status: 0 }
+  }
+
+  let data: Data
+  if (response.headers?.['content-type']?.toString().includes('application/json')) {
+    data = await res.json()
+  } else {
+    data = await res.text()
+  }
+
+  return { status: res.status, data }
 }

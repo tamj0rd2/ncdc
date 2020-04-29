@@ -19,7 +19,11 @@ describe('ncdc test', () => {
   it('can run the test command', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, 'eat my shorts!').start()
     new TestConfigWrapper().addConfig(
-      new ConfigBuilder().withName('Shorts').withEndpoints('/api/resource').build(),
+      new ConfigBuilder()
+        .withName('Shorts')
+        .withEndpoints('/api/resource')
+        .withResponseHeaders({ 'content-type': 'text/plain' })
+        .build(),
     )
 
     const output = await runTestCommand()

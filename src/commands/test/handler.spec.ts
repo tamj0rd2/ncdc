@@ -10,7 +10,6 @@ import { NCDCLogger } from '~logger'
 import { TestConfigs } from './test'
 
 jest.unmock('./handler')
-jest.unmock('axios')
 jest.mock('fs')
 jest.mock('path')
 jest.mock('~config')

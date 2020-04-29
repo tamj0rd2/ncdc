@@ -47,7 +47,7 @@ export const validate = (config: any): ValidationSuccess | ValidationFailure => 
   }
 
   const endpointSchema = Joi.string()
-    .uri({ relativeOnly: true })
+    .uri({ relativeOnly: true, allowQuerySquareBrackets: true })
     .ruleset.pattern(/^\//)
     .message('must start with /')
 

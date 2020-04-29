@@ -96,7 +96,7 @@ const createHandler = (
     if (!validationResult.validatedConfigs.length) throw new Error('No configs to serve')
 
     const configUsesTypes = validationResult.validatedConfigs.find((c) => c.request.type || c.response.type)
-    if (!typeValidator && configUsesTypes) {
+    if (configUsesTypes && (schemaPath || !typeValidator)) {
       typeValidator = configUsesTypes && createTypeValidator(tsconfigPath, force, schemaPath)
     }
 
@@ -126,7 +126,10 @@ const createHandler = (
 
   if (watch) {
     const fixturesToWatch = [...result.pathsToWatch]
-    const configWatcher = chokidar.watch([absoluteConfigPath, ...fixturesToWatch], {
+    const chokidarWatchPaths = [absoluteConfigPath, ...fixturesToWatch]
+    if (schemaPath) chokidarWatchPaths.push(resolve(schemaPath))
+
+    const configWatcher = chokidar.watch(chokidarWatchPaths, {
       ignoreInitial: true,
     })
 

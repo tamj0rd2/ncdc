@@ -13,6 +13,7 @@ export interface Config {
     code: number
     headers?: OutgoingHttpHeaders
     type?: string
+    body?: unknown
     serveBody?: unknown
     serveBodyPath?: string
   }
@@ -48,6 +49,17 @@ export class ConfigBuilder {
     return this
   }
 
+  public withBody(body: unknown): ConfigBuilder {
+    if (!body) {
+      delete this.config.response.body
+      return this
+    }
+
+    delete this.config.response.serveBody
+    this.config.response.body = body
+    return this
+  }
+
   public withServeBody(serveBody: unknown): ConfigBuilder {
     if (!serveBody) {
       delete this.config.response.serveBody
@@ -58,7 +70,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withFixture(name = 'response'): ConfigBuilder {
+  public withServeBodyPath(name = 'response'): ConfigBuilder {
     if (this.config.response.serveBodyPath) {
       throw new Error('Response serveBodyPath already set to ' + this.config.response.serveBodyPath)
     }
@@ -90,17 +102,20 @@ export abstract class ConfigWrapper {
   private configs: Config[] = []
   private fixtures: Record<string, object> = {}
   private types: Record<string, object> = {}
+  private schemas: Record<string, object> = {}
 
   private readonly CONFIG_FILE: string
   private readonly FIXTURE_FOLDER: string
   private readonly TYPES_FILE: string
   private readonly RESPONSES_FOLDER: string
+  public readonly JSON_SCHEMAS_FOLDER: string
 
   constructor(configFile: string, fixtureFolder: string) {
     this.CONFIG_FILE = configFile
     this.FIXTURE_FOLDER = fixtureFolder
     this.TYPES_FILE = `${this.FIXTURE_FOLDER}/types.ts`
     this.RESPONSES_FOLDER = `${this.FIXTURE_FOLDER}/responses`
+    this.JSON_SCHEMAS_FOLDER = `${this.FIXTURE_FOLDER}/json-schemas`
 
     if (existsSync(this.CONFIG_FILE)) this.deleteYaml()
 
@@ -108,6 +123,11 @@ export abstract class ConfigWrapper {
       rmdirSync(this.RESPONSES_FOLDER, { recursive: true })
     }
     mkdirSync(this.RESPONSES_FOLDER)
+
+    if (existsSync(this.JSON_SCHEMAS_FOLDER)) {
+      rmdirSync(this.JSON_SCHEMAS_FOLDER, { recursive: true })
+    }
+    mkdirSync(this.JSON_SCHEMAS_FOLDER)
 
     writeFileSync(this.TYPES_FILE, '')
   }
@@ -200,6 +220,27 @@ export abstract class ConfigWrapper {
     `,
     )
 
+    return this
+  }
+
+  public addSchemaFile(name: string, content: object): ConfigWrapper {
+    if (this.schemas[name]) {
+      throw new Error(`The schema ${name} is already registered`)
+    }
+
+    this.schemas[name] = content
+
+    writeFileSync(`${this.JSON_SCHEMAS_FOLDER}/${name}.json`, JSON.stringify(content, undefined, 2))
+    return this
+  }
+
+  public editSchemaFile(name: string, content: object): ConfigWrapper {
+    if (!this.schemas[name]) {
+      throw new Error(`The schema ${name} is not registered`)
+    }
+
+    this.schemas[name] = content
+    writeFileSync(`${this.JSON_SCHEMAS_FOLDER}/${name}.json`, JSON.stringify(content, undefined, 2))
     return this
   }
 

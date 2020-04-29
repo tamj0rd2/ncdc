@@ -3,5 +3,5 @@
 .dependabot
 .vscode
 coverage
-dist
+lib
 .npmrc

@@ -2,14 +2,14 @@
   "name": "ncdc",
   "version": "0.0.14",
   "description": "",
-  "main": "dist/index.js",
+  "main": "lib/index.js",
   "bin": {
     "ncdc": "./bin/ncdc"
   },
   "scripts": {
-    "clean": "rm -rf ./dist ./coverage/*",
+    "clean": "rm -rf ./lib ./coverage/*",
     "typecheck": "tsc && tsc -p ./tsconfig.acceptance.json",
-    "compile": "babel src --out-dir dist --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
+    "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "prepublishOnly": "npm run compile",
     "test": "jest",
     "cover": "nyc jest --coverage --runInBand --detectOpenHandles",

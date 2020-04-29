@@ -6,6 +6,9 @@
   "bin": {
     "ncdc": "./bin/ncdc"
   },
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "clean": "rm -rf ./lib ./coverage/*",
     "typecheck": "tsc && tsc -p ./tsconfig.acceptance.json",

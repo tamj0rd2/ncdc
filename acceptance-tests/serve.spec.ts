@@ -3,7 +3,7 @@ import {
   SERVE_HOST,
   MESSAGE_RESTARTING,
   ServeResult,
-  MESSAGE_RSTARTING_FAILURE,
+  MESSAGE_RSTARTING_FAILURE as MESSAGE_RESTARTING_FAILURE,
   CONFIG_FILE,
   FIXTURE_FOLDER,
 } from './serve-wrapper'
@@ -47,7 +47,7 @@ describe('ncdc serve', () => {
   it('serves an endpoint from a fixture file', async () => {
     // arrange
     new ServeConfigWrapper()
-      .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture('response').build())
+      .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('response').build())
       .addFixture('response', {
         title: 'nice meme lol',
         ISBN: 'asdf',
@@ -68,7 +68,7 @@ describe('ncdc serve', () => {
   it('logs an error and exists if a fixture file does not exist', async () => {
     // arrange
     new ServeConfigWrapper().addConfig(
-      new ConfigBuilder().withServeBody(undefined).withFixture('my-fixture').build(),
+      new ConfigBuilder().withServeBody(undefined).withServeBodyPath('my-fixture').build(),
     )
 
     // act
@@ -118,7 +118,7 @@ describe('ncdc serve', () => {
       const configWrapper = new ServeConfigWrapper().addConfig()
       const { waitForOutput } = await serve('--watch')
       configWrapper.deleteYaml()
-      await waitForOutput(MESSAGE_RSTARTING_FAILURE)
+      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
 
       // act
       const newConfig = new ConfigBuilder().withName('Cooks').withCode(404).build()
@@ -160,7 +160,7 @@ describe('ncdc serve', () => {
       // arrange
       const fixtureName = 'response'
       const configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
           ISBN: 'asdf',
@@ -186,7 +186,7 @@ describe('ncdc serve', () => {
       // arrange
       const fixtureName = 'crazy-fixture'
       const configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
           ISBN: 'asdf',
@@ -207,7 +207,7 @@ describe('ncdc serve', () => {
       // arrange
       const fixtureName = 'another-fixture'
       const configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
           ISBN: 'asdf',
@@ -217,7 +217,7 @@ describe('ncdc serve', () => {
 
       const { waitForOutput, waitUntilAvailable } = await serve('--watch')
       configWrapper.deleteFixture(fixtureName)
-      await waitForOutput(MESSAGE_RSTARTING_FAILURE)
+      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
 
       // act
       configWrapper.addFixture(fixtureName, {
@@ -236,7 +236,7 @@ describe('ncdc serve', () => {
     it('restarts each time a fixture file is changed or deleted', async () => {
       const fixtureName = 'MyFixture'
       const configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withServeBody(undefined).withFixture(fixtureName).build())
+        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
         .addFixture(fixtureName, { title: 'Freddy' })
       const { waitForOutput, waitUntilAvailable } = await serve('--watch')
 
@@ -254,7 +254,7 @@ describe('ncdc serve', () => {
       configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'My' }))
       await verifyFixture('My')
       configWrapper.deleteFixture(fixtureName)
-      await waitForOutput(MESSAGE_RSTARTING_FAILURE)
+      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
       configWrapper.addFixture(fixtureName, { title: 'Shorts' })
       await verifyFixture('Shorts')
       configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'Please' }))
@@ -265,7 +265,7 @@ describe('ncdc serve', () => {
   it('handles switching from a fixture file to an inline body', async () => {
     const configWrapper = new ServeConfigWrapper()
       .addConfig(
-        new ConfigBuilder().withName('config').withServeBody(undefined).withFixture('fixture').build(),
+        new ConfigBuilder().withName('config').withServeBody(undefined).withServeBodyPath('fixture').build(),
       )
       .addFixture('fixture', { hello: 'world' })
     const { waitForOutput, waitUntilAvailable } = await serve('--watch')
@@ -301,67 +301,109 @@ describe('ncdc serve', () => {
   })
 
   describe('type checking', () => {
-    const typecheckingCleanup: CleanupTask[] = []
-    let serve: ServeResult
-    let configWrapper: ServeConfigWrapper
+    describe('with schema loading from json files', () => {
+      const typecheckingCleanup: CleanupTask[] = []
+      let serve: ServeResult
+      let configWrapper: ServeConfigWrapper
+      const schemaName = 'Book'
 
-    afterAll(() => {
-      typecheckingCleanup.forEach((task) => task())
+      afterAll(() => {
+        typecheckingCleanup.forEach((task) => task())
+      })
+
+      it('serves when the type matches the body', async () => {
+        configWrapper = new ServeConfigWrapper()
+          .addConfig(new ConfigBuilder().withType(schemaName).withBody('Hello!').build())
+          .addSchemaFile(schemaName, { type: 'string' })
+
+        serve = await prepareServe(typecheckingCleanup)(
+          `--watch --schemaPath ${configWrapper.JSON_SCHEMAS_FOLDER}`,
+        )
+
+        const res = await fetch('/api/books/123')
+        expect(res.status).toBe(200)
+        await expect(res.text()).resolves.toBe('Hello!')
+      })
+
+      it('restarts when the json schema changes', async () => {
+        configWrapper.editSchemaFile(schemaName, { type: 'number' })
+        await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+      })
+
+      it('can recover if the json schema matches the body again', async () => {
+        configWrapper.editSchemaFile(schemaName, { type: 'string' })
+        await serve.waitForOutput(MESSAGE_RESTARTING)
+        await serve.waitUntilAvailable()
+
+        const res = await fetch('/api/books/123')
+        expect(res.status).toBe(200)
+        await expect(res.text()).resolves.toBe('Hello!')
+      })
     })
 
-    it('it serves when the type matches the body', async () => {
-      configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withType('Book').build())
-        .addType('Book', {
-          ISBN: 'string',
-          ISBN_13: 'string',
-          author: 'string',
-          title: 'string',
-        })
+    describe('with schema generation', () => {
+      const typecheckingCleanup: CleanupTask[] = []
+      let serve: ServeResult
+      let configWrapper: ServeConfigWrapper
 
-      serve = await prepareServe(typecheckingCleanup, 10)('--watch')
+      afterAll(() => {
+        typecheckingCleanup.forEach((task) => task())
+      })
 
-      await expect(fetch('/api/books/hello')).resolves.toMatchObject({ status: 200 })
-    })
+      it('it serves when the type matches the body', async () => {
+        configWrapper = new ServeConfigWrapper()
+          .addConfig(new ConfigBuilder().withType('Book').build())
+          .addType('Book', {
+            ISBN: 'string',
+            ISBN_13: 'string',
+            author: 'string',
+            title: 'string',
+          })
 
-    it('stops the server if a body stops matching the type', async () => {
-      configWrapper.editConfig('Books', (config) => ({
-        ...config,
-        response: {
-          ...config.response,
-          serveBody: {
-            title: 123,
+        serve = await prepareServe(typecheckingCleanup, 10)('--watch')
+
+        await expect(fetch('/api/books/hello')).resolves.toMatchObject({ status: 200 })
+      })
+
+      it('stops the server if a body stops matching the type', async () => {
+        configWrapper.editConfig('Books', (config) => ({
+          ...config,
+          response: {
+            ...config.response,
+            serveBody: {
+              title: 123,
+            },
           },
-        },
-      }))
+        }))
 
-      await serve.waitForOutput(MESSAGE_RESTARTING)
-      await serve.waitForOutput(/Could not restart ncdc server.*due to config errors/)
-      await expect(fetch('/api/books/aldksj')).rejects.toThrowError()
-    })
+        await serve.waitForOutput(MESSAGE_RESTARTING)
+        await serve.waitForOutput(/Could not restart ncdc server.*due to config errors/)
+        await expect(fetch('/api/books/aldksj')).rejects.toThrowError()
+      })
 
-    it('can recover from incorrect body type validation', async () => {
-      configWrapper.editConfig('Books', (config) => ({
-        ...config,
-        response: {
-          ...config.response,
-          serveBody: {
-            ISBN: 'ISBN',
-            ISBN_13: 'ISBN_13',
-            author: 'author',
-            title: 'title',
+      it('can recover from incorrect body type validation', async () => {
+        configWrapper.editConfig('Books', (config) => ({
+          ...config,
+          response: {
+            ...config.response,
+            serveBody: {
+              ISBN: 'ISBN',
+              ISBN_13: 'ISBN_13',
+              author: 'author',
+              title: 'title',
+            },
           },
-        },
-      }))
+        }))
 
-      await serve.waitForOutput(MESSAGE_RESTARTING)
+        await serve.waitForOutput(MESSAGE_RESTARTING)
 
-      await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+        await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+      })
+
+      // TODO: oooooh. NCDC could actually have a caching folder!!! Then generate
+      // would just become the default because why the hell not? :D
+      // typescript-json-schema getSourceFile could really help with this too
+      it.todo('restarts when a source file containing types changes')
     })
-
-    // TODO: oooooh. NCDC could actually have a caching folder!!! Then generate
-    // would just become the default because why the hell not? :D
-    // typescript-json-schema getSourceFile could really help with this too
-    it.todo('restarts when a source file containing types changes')
   })
 })

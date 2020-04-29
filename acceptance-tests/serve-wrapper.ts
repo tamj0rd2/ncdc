@@ -123,5 +123,5 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
     }, timeout).catch(failNicely(`The ncdc server was not contactable at ${SERVE_HOST}/`))
 
   if (checkAvailability) await waitUntilAvailable()
-  return { getAllOutput: () => getRawOutput(), waitForOutput, waitUntilAvailable }
+  return { getAllOutput: getRawOutput, waitForOutput, waitUntilAvailable }
 }

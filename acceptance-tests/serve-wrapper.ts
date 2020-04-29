@@ -119,7 +119,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
   const waitUntilAvailable: ServeResult['waitUntilAvailable'] = () =>
     waitForX(async () => {
       const { status } = await fetch('/')
-      return status === 200
+      return status === 200 && !strip(getRawOutput()).includes('EADDRINUSE')
     }, timeout).catch(failNicely(`The ncdc server was not contactable at ${SERVE_HOST}/`))
 
   if (checkAvailability) await waitUntilAvailable()

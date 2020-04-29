@@ -4,7 +4,6 @@ import { Mode } from '~config/types'
 import { NCDCLogger } from '~logger'
 import { TestConfigs } from './test'
 import { createHttpClient } from './http-client'
-import axios from 'axios'
 import { existsSync } from 'fs'
 import { resolve } from 'path'
 
@@ -46,7 +45,7 @@ export const createHandler = (
   }
 
   try {
-    await testConfigs(baseURL, createHttpClient(axios.create({ baseURL })), configs, typeValidator)
+    await testConfigs(baseURL, createHttpClient(baseURL), configs, typeValidator)
   } catch (err) {
     return handleError(err)
   }

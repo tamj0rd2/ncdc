@@ -1,139 +1,100 @@
-import { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
-import { Config, SupportedMethod } from '~config'
-import * as _messages from '~messages'
-import { FetchResource } from '~validation'
+import ConfigBuilder from '~config/config-builder'
+import { LoaderResponse } from '~validation'
 import { createHttpClient } from './http-client'
-import { mockObj } from '~test-helpers'
+import { randomString, mocked, mockObj, mockFn } from '~test-helpers'
+import fetch, { Response } from 'node-fetch'
 
 jest.unmock('./http-client')
+jest.unmock('~config/config-builder')
 
-describe('CDC Tester', () => {
-  const loader = mockObj<AxiosInstance>({ get: jest.fn(), post: jest.fn() })
-  const messages = mockObj(_messages)
+describe('http client', () => {
+  const mockedFetch = mocked(fetch)
+  const mockedJson = mockFn<Response['json']>()
+  const mockedText = mockFn<Response['text']>()
 
-  let fetchResource: FetchResource
+  const baseUrl = randomString('base-url')
+
+  const fetchResource = createHttpClient(baseUrl)
 
   beforeEach(() => {
     jest.resetAllMocks()
-    loader.defaults = { baseURL: 'some url' }
-    fetchResource = createHttpClient(loader)
-  })
-
-  describe('For http request methods that do not have a body', () => {
-    const casesWithoutBody: [SupportedMethod, 'get' | 'delete' | 'options' | 'head'][] = [
-      ['GET', 'get'],
-      ['DELETE', 'delete'],
-      ['OPTIONS', 'options'],
-      ['HEAD', 'head'],
-    ]
-
-    it.each(casesWithoutBody)(
-      'calls the loader with the correct args for a %s request',
-      async (method, func) => {
-        const config: Partial<Config> = {
-          request: {
-            method,
-            endpoint: '/blah',
-          },
-          response: { code: 200 },
-        }
-        loader[func] = jest.fn()
-        loader[func].mockResolvedValue({ status: 200 })
-
-        await fetchResource(config as Config)
-
-        expect(loader[func]).toBeCalledWith('/blah')
-      },
+    mockedFetch.mockResolvedValue(
+      mockObj<Response>({ json: mockedJson, text: mockedText }),
     )
   })
 
-  describe('For http requests that can have a body', () => {
-    const casesWithBody: [SupportedMethod, 'post' | 'put' | 'patch'][] = [
-      ['POST', 'post'],
-      ['PUT', 'put'],
-      ['PATCH', 'patch'],
-    ]
+  it('calls fetch with the correct params when there is no request body', async () => {
+    const config = new ConfigBuilder().build()
 
-    it.each(casesWithBody)(
-      'calls the loader with the correct args for a %s request',
-      async (method, func) => {
-        const config: Partial<Config> = {
-          request: {
-            method,
-            endpoint: '/blah',
-            body: 'Ello',
-          },
-          response: { code: 200 },
-        }
-        loader[func] = jest.fn()
-        loader[func].mockResolvedValue({ status: 200 })
+    await fetchResource(config)
 
-        await fetchResource(config as Config)
-
-        expect(loader[func]).toBeCalledWith('/blah', 'Ello')
-      },
+    expect(mockedFetch).toBeCalledWith(
+      baseUrl + config.request.endpoint,
+      expect.objectContaining({
+        method: 'GET',
+        body: undefined,
+      }),
     )
   })
 
-  describe('error calling service', () => {
-    it('throws an error when there is no service response', async () => {
-      const config: Partial<Config> = {
-        request: {
-          method: 'GET',
-          endpoint: '/some/endpoint',
-        },
-        response: {
-          code: 200,
-        },
-      }
+  it('calls fetch with the correct params when there is a non-json request body', async () => {
+    const body = randomString('body')
+    const config = new ConfigBuilder().withRequestBody(body).build()
 
-      const endpoint = '/some/endpoint'
-      const baseURL = 'my-site.com'
-      loader.defaults = { baseURL }
+    await fetchResource(config)
 
-      loader.get.mockRejectedValue(new Error('welp'))
-      messages.errorNoResponse.mockReturnValue('error msg')
+    expect(mockedFetch).toBeCalledWith(
+      baseUrl + config.request.endpoint,
+      expect.objectContaining({
+        method: 'GET',
+        body,
+      }),
+    )
+  })
 
-      await expect(fetchResource(config as Config)).rejects.toThrowError('error msg')
-      expect(messages.errorNoResponse).toBeCalledWith(baseURL + endpoint)
-    })
+  it('calls fetch with the correct params when there is a json request body', async () => {
+    const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).build()
 
-    it('throws an error when the response code does not match expected', async () => {
-      const config: Partial<Config> = {
-        request: {
-          method: 'GET',
-          endpoint: '/some/endpoint',
-        },
-        response: { code: 404 },
-      }
+    await fetchResource(config)
 
-      const baseURL = 'woah.dude'
-      loader.defaults = { baseURL }
+    expect(mockedFetch).toBeCalledWith(
+      baseUrl + config.request.endpoint,
+      expect.objectContaining({
+        method: 'GET',
+        body: '{"allo":"mate"}',
+      }),
+    )
+  })
 
-      const response: Partial<AxiosResponse> = { status: 503 }
-      const error: Partial<AxiosError> = { response: response as AxiosResponse }
-      loader.get.mockRejectedValue(error)
-      messages.errorWrongStatusCode.mockReturnValue('error msg2')
+  it('returns status 0 if there is a connection error', async () => {
+    const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).build()
+    mockedFetch.mockRejectedValue(new Error('yipes'))
 
-      await expect(fetchResource(config as Config)).rejects.toThrowError('error msg2')
-      expect(messages.errorWrongStatusCode).toBeCalledWith(baseURL + config.request!.endpoint, 404, 503)
-    })
+    const res = await fetchResource(config)
 
-    it('returns the response if the response code matches', async () => {
-      const config: Partial<Config> = {
-        request: {
-          method: 'GET',
-          endpoint: 'endpoint',
-        },
-        response: { code: 404 },
-      }
-      const response: Partial<AxiosResponse> = { status: 404, data: 'get out' }
-      const error: Partial<AxiosError> = { response: response as AxiosResponse }
-      loader.get.mockRejectedValue(error)
+    expect(res).toEqual<LoaderResponse>({ status: 0 })
+  })
 
-      const result = await fetchResource(config as Config)
+  it('returns a json object if the application/json content-type is given', async () => {
+    const config = new ConfigBuilder()
+      .withRequestBody({ allo: 'mate' })
+      .withResponseHeaders({ 'content-type': 'application/json' })
+      .build()
+    mockedJson.mockResolvedValue({ some: 'json' })
 
-      expect(result).toBe(response)
-    })
+    const res = await fetchResource(config)
+
+    expect(mockedJson).toBeCalled()
+    expect(res.data).toEqual({ some: 'json' })
+  })
+
+  it('returns a json object if the application/json content-type is not given', async () => {
+    const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).withResponseHeaders({}).build()
+    mockedText.mockResolvedValue('some text')
+
+    const res = await fetchResource(config)
+
+    expect(mockedText).toBeCalled()
+    expect(res.data).toEqual('some text')
   })
 })

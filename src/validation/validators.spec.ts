@@ -1,11 +1,13 @@
 import { doItAll, FetchResource } from './validators'
 import TypeValidator from './type-validator'
 import { Config } from '~config'
+import ConfigBuilder from '~config/config-builder'
 import Problem, { ProblemType } from '~problem'
 import * as messages from '~messages'
 import { mockObj, mockFn } from '~test-helpers'
 
 jest.unmock('./validators')
+jest.unmock('~config/config-builder')
 
 describe('validators', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
@@ -90,5 +92,15 @@ describe('validators', () => {
     const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
 
     expect(results).toStrictEqual([problem])
+  })
+
+  it('does not blow up if an error is thrown while getting a response', async () => {
+    const config = new ConfigBuilder().build()
+    mockFetchResource.mockRejectedValue(new Error('whoops'))
+
+    const results = await doItAll(mockTypeValidator, mockFetchResource)(config)
+
+    expect(results).toHaveLength(1)
+    expect(mockMessages.problemFetching).toHaveBeenCalledWith('whoops')
   })
 })

@@ -5,6 +5,8 @@ import Problem from '~problem'
 
 export const errorNoResponse = (uri: string): string => `Could not reach ${blue(uri)}`
 
+export const problemFetching = (message: string): string => `${red('Problem with the response')} - ${message}`
+
 export const errorBadStatusCode = (uri: string, actual: number): string =>
   `Received status code ${red(actual)} from ${blue(uri)}`
 

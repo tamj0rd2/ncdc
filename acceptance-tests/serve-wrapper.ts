@@ -1,6 +1,6 @@
 import { ChildProcess, exec } from 'child_process'
 import strip from 'strip-ansi'
-import isomorphicUnfetch from 'isomorphic-unfetch'
+import nodeFetch, { RequestInit, Response } from 'node-fetch'
 
 const waitForX = (condition: () => Promise<boolean> | boolean, timeout: number): Promise<void> =>
   new Promise<void>((resolve, reject) => {
@@ -53,7 +53,7 @@ export type ServeResult = {
 export type CleanupTask = () => void
 
 export const fetch = (endpoint: string, init?: RequestInit): Promise<Response> =>
-  isomorphicUnfetch(`${SERVE_HOST}${endpoint}`, init)
+  nodeFetch(`${SERVE_HOST}${endpoint}`, init)
 
 export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async (
   args = '',

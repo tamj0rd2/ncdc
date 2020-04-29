@@ -2,7 +2,7 @@ const commonSettings = {
   testPathIgnorePatterns: [
     '<rootDir>/bin',
     '<rootDir>/coverage',
-    '<rootDir>/dist/',
+    '<rootDir>/lib/',
     '<rootDir>/node_modules/',
   ],
   moduleNameMapper: {
@@ -15,7 +15,7 @@ const commonSettings = {
     '!acceptance-tests/**',
     '!**/node_modules/**',
     '!**/coverage/**',
-    '!**/dist/**',
+    '!**/lib/**',
     '!**/bin/**'
   ],
   testEnvironment: 'node',

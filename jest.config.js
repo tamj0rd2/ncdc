@@ -34,8 +34,10 @@ const unitTestSettings = {
     '<rootDir>/src/shared/.*\.ts',
     require.resolve('winston'),
     require.resolve('yup'),
+    require.resolve('@hapi/joi'),
     require.resolve('chalk'),
     require.resolve('strip-ansi'),
+    require.resolve('dot-object'),
   ],
   automock: true,
 }

@@ -1,5 +1,5 @@
 import { TypeValidator, FetchResource, doItAll } from '~validation'
-import { Config } from '~config'
+import { Config } from '~config-old'
 import Problem from '~problem'
 import { blue } from 'chalk'
 import logger from '~logger'

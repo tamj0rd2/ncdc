@@ -1,5 +1,5 @@
 import { red, green, blue } from 'chalk'
-import { ProblemResult } from '~config/mapper'
+import { ProblemResult } from '~config-old/mapper'
 import { gatherValidationErrors } from '~commands/shared'
 import Problem from '~problem'
 

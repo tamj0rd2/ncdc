@@ -1,6 +1,6 @@
 import { HandleError, CreateTypeValidator } from '~commands'
-import readConfig, { Config } from '~config'
-import { Mode } from '~config/types'
+import readConfig, { Config } from '~config-old'
+import { Mode } from '~config-old/types'
 import { NCDCLogger } from '~logger'
 import { TestConfigs } from './test'
 import { createHttpClient } from './http-client'

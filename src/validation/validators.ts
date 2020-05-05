@@ -1,6 +1,6 @@
 import TypeValidator from './type-validator'
 import Problem, { ProblemType } from '~problem'
-import { Config } from '~config'
+import { Config } from '~config-old'
 import { shouldBe, problemFetching } from '~messages'
 
 export type LoaderResponse = { status: number; data?: Data }

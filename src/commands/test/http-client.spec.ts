@@ -1,4 +1,4 @@
-import ConfigBuilder from '~config/config-builder'
+import ConfigBuilder from '~config-old/config-builder'
 import { LoaderResponse } from '~validation'
 import { createHttpClient } from './http-client'
 import { randomString, mocked, mockObj, mockFn } from '~test-helpers'

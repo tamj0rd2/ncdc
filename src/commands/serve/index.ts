@@ -4,6 +4,7 @@ import * as consts from '~commands/consts'
 import createHandler, { ServeArgs } from './handler'
 import { startServer } from './server'
 import logger from '~logger'
+import loadConfig from '~config/load'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -50,6 +51,6 @@ export default function createServeCommand(createTypeValidator: CreateTypeValida
     command: 'serve <configPath> [port]',
     describe: 'Serves configured endpoints',
     builder,
-    handler: createHandler(handleError, createTypeValidator, startServer),
+    handler: createHandler(handleError, createTypeValidator, startServer, loadConfig),
   }
 }

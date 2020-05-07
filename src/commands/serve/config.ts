@@ -1,4 +1,3 @@
-import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http'
 import Joi from '@hapi/joi'
 import dot from 'dot-object'
 import { isAbsolute, resolve } from 'path'
@@ -13,7 +12,7 @@ export interface ValidatedServeConfig {
   request: {
     method: SupportedMethod
     type?: string
-    headers?: IncomingHttpHeaders
+    headers?: StringDict
     endpoints?: string[]
     serveEndpoint?: string
     body?: Data
@@ -22,7 +21,7 @@ export interface ValidatedServeConfig {
   response: {
     code: number
     type?: string
-    headers?: OutgoingHttpHeaders
+    headers?: StringDict
     body?: Data
     bodyPath?: string
     serveBody?: Data
@@ -192,12 +191,12 @@ export interface Config {
     endpoint: string
     body?: Data
     type?: string
-    headers?: IncomingHttpHeaders
+    headers?: StringDict
   }
   response: {
     code: number
     body?: Data
     type?: string
-    headers?: OutgoingHttpHeaders
+    headers?: StringDict
   }
 }

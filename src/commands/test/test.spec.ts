@@ -1,11 +1,11 @@
 import { testConfigs } from './test'
 import { randomString, mockFn, mockObj, mocked } from '~test-helpers'
 import { FetchResource, TypeValidator, doItAll } from '~validation'
-import { Config } from '~config'
 import { TestFn } from '~validation/validators'
 import logger from '~logger'
 import stripAnsi from 'strip-ansi'
 import { ProblemType } from '~problem'
+import { Config } from '~config-old'
 
 jest.unmock('./test')
 jest.unmock('~messages')

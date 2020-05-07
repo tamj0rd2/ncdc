@@ -1,7 +1,7 @@
-import { Config, supportedMethods } from './types'
+import { CommonConfig, supportedMethods } from './types'
 import { TypeValidator } from '~validation'
 import Joi from '@hapi/joi'
-import { blue, bold } from 'chalk'
+import { blue, bold, red } from 'chalk'
 import dot from 'dot-object'
 
 export interface ValidationSuccess<T = ValidatedRawConfig> {
@@ -18,9 +18,12 @@ export interface ValidatedRawConfig {
   request: {
     type?: string
     endpoints?: string[]
+    bodyPath?: string
   }
   response: {
     type?: string
+    bodyPath?: string
+    serveBodyPath?: string
   }
 }
 
@@ -117,7 +120,7 @@ export const validateRawConfig = <TOut extends ValidatedRawConfig = ValidatedRaw
 }
 
 export const validateConfigBodies = async (
-  configs: Config[],
+  configs: CommonConfig[],
   typeValidator: TypeValidator,
 ): Promise<Optional<string>> => {
   const seenConfigNames = new Set<string>()
@@ -127,31 +130,29 @@ export const validateConfigBodies = async (
     return true
   })
 
-  let totalValidationError = ''
+  const totalValidationErrors: string[] = []
   for (const config of uniqueConfigs) {
     const validationErrors: string[] = []
 
     if (config.request.body && config.request.type) {
       const result = await typeValidator.validate(config.request.body, config.request.type)
       if (!result.success) {
-        const message = `Config '${config.name}' request body failed type validation:\n${result.errors.join(
-          '\n',
-        )}`
+        const prefix = red(`Config ${bold(config.name)} request body failed type validation:`)
+        const message = `${prefix}\n${result.errors.join('\n')}`
         validationErrors.push(message)
       }
     }
     if (config.response.body && config.response.type) {
       const result = await typeValidator.validate(config.response.body, config.response.type)
       if (!result.success) {
-        const message = `Config '${config.name}' response body failed type validation:\n${result.errors.join(
-          '\n',
-        )}`
+        const prefix = red(`Config ${bold(config.name)} response body failed type validation:`)
+        const message = `${prefix}\n${result.errors.join('\n')}`
         validationErrors.push(message)
       }
     }
 
-    totalValidationError += validationErrors.join('\n')
+    if (validationErrors.length) totalValidationErrors.push(validationErrors.join('\n'))
   }
 
-  return totalValidationError
+  if (totalValidationErrors.length) return totalValidationErrors.join('\n\n')
 }

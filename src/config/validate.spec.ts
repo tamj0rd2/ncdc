@@ -1,6 +1,9 @@
-import { validateRawConfig, ValidationFailure, ValidationSuccess } from './validate'
+import { validateRawConfig, ValidationFailure, ValidationSuccess, validateConfigBodies } from './validate'
 import strip from 'strip-ansi'
-import { supportedMethods } from './types'
+import { supportedMethods, CommonConfig } from './types'
+import { randomString, randomNumber, mockObj } from '~test-helpers'
+import stripAnsi from 'strip-ansi'
+import { TypeValidator } from '~validation'
 
 jest.unmock('./validate')
 jest.unmock('./types')
@@ -377,5 +380,96 @@ describe('validate', () => {
 
       expect(result.success).toBe(true)
     })
+  })
+})
+
+describe('validate config bodies', () => {
+  const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
+  const createConfig = (): CommonConfig => ({
+    name: randomString('name'),
+    request: {
+      type: randomString('request-type'),
+      body: randomString('request-body'),
+      endpoint: randomString(),
+      method: 'GET',
+    },
+    response: {
+      type: 'response type',
+      body: 'response body',
+      code: randomNumber(),
+    },
+  })
+
+  beforeEach(() => jest.resetAllMocks())
+
+  describe('when a config has a type and body', () => {
+    it('calls the body validator with the correct arguments', async () => {
+      const config = createConfig()
+      mockTypeValidator.validate.mockResolvedValue({ success: true })
+
+      await validateConfigBodies([config], mockTypeValidator)
+
+      expect(mockTypeValidator.validate).toBeCalledWith(config.request?.body, config.request?.type)
+      expect(mockTypeValidator.validate).toBeCalledWith(config.response?.body, config.response?.type)
+    })
+
+    // This can happen if the original raw config had more than 1 endpoint, or an additional serve endpoint
+    it('only runs the validation once in the case two transformed configs have the same name', async () => {
+      const config1 = createConfig()
+      const config2 = createConfig()
+      config2.name = config1.name
+
+      mockTypeValidator.validate.mockResolvedValue({ success: true })
+      await validateConfigBodies([config1, config2], mockTypeValidator)
+
+      expect(mockTypeValidator.validate).toBeCalledTimes(2)
+    })
+
+    it('returns undefined when there are no validation issues', async () => {
+      const config = createConfig()
+      mockTypeValidator.validate.mockResolvedValue({ success: true })
+
+      const result = await validateConfigBodies([config], mockTypeValidator)
+
+      expect(result).toBeUndefined()
+    })
+
+    it('returns errors if a config body fails type validation', async () => {
+      const config = createConfig()
+      const error1 = randomString('error-message-1')
+      const error2 = randomString('error-message-2')
+      const error3 = randomString('error-message-3')
+      mockTypeValidator.validate.mockResolvedValueOnce({ success: false, errors: [error1, error2] })
+      mockTypeValidator.validate.mockResolvedValueOnce({ success: false, errors: [error3] })
+
+      mockTypeValidator.validate.mockResolvedValue({ success: true })
+      const result = await validateConfigBodies([config], mockTypeValidator)
+
+      const errPart1 = `Config ${config.name} request body failed type validation:\n${error1}\n${error2}`
+      const errPart2 = `Config ${config.name} response body failed type validation:\n${error3}`
+      expect(stripAnsi(result!)).toEqual(`${errPart1}\n${errPart2}`)
+    })
+  })
+
+  it('skips body type validation when a config has no body', async () => {
+    const config = createConfig()
+    config.request.body = undefined
+    config.response.body = undefined
+
+    const result = await validateConfigBodies([config], mockTypeValidator)
+
+    expect(mockTypeValidator.validate).not.toBeCalled()
+    expect(result).toBeUndefined()
+  })
+
+  it('skips body type validation when a config has no type', async () => {
+    const config = createConfig()
+    config.request.type = undefined
+    config.response.type = undefined
+
+    const result = await validateConfigBodies([config], mockTypeValidator)
+
+    expect(mockTypeValidator.validate).not.toBeCalled()
+    expect(result).toBeUndefined()
   })
 })

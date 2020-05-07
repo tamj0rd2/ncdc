@@ -1,11 +1,10 @@
-import ConfigBuilder from '~config-old/config-builder'
+import { ConfigBuilder } from '~config/types'
 import { LoaderResponse } from '~validation'
 import { createHttpClient } from './http-client'
 import { randomString, mocked, mockObj, mockFn } from '~test-helpers'
 import fetch, { Response } from 'node-fetch'
 
 jest.unmock('./http-client')
-jest.unmock('~config/config-builder')
 
 describe('http client', () => {
   const mockedFetch = mocked(fetch)

@@ -109,7 +109,8 @@ describe('ncdc serve', () => {
 
       // assert
       await waitForOutput(MESSAGE_RESTARTING)
-      await waitForOutput(/Could not restart ncdc server.* no such file or directory/)
+      await waitForOutput('Could not restart ncdc server')
+      await waitForOutput(/no such file or directory.*config\.yml/)
       await expect(fetch('/api/books/yay')).rejects.toThrowError()
     })
 
@@ -199,7 +200,8 @@ describe('ncdc serve', () => {
       configWrapper.deleteFixture(fixtureName)
 
       // assert
-      await waitForOutput(/Could not restart ncdc server.* no such file or directory.*crazy-fixture\.json/)
+      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
+      await waitForOutput(/no such file or directory.*crazy-fixture\.json/)
     })
 
     // TODO: fix
@@ -377,7 +379,8 @@ describe('ncdc serve', () => {
         }))
 
         await serve.waitForOutput(MESSAGE_RESTARTING)
-        await serve.waitForOutput(/Could not restart ncdc server.*due to config errors/)
+        await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+        await serve.waitForOutput('Config Books response body failed type validation')
         await expect(fetch('/api/books/aldksj')).rejects.toThrowError()
       })
 

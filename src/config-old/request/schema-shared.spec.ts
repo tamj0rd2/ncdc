@@ -7,7 +7,7 @@ describe('baseRequestSchema', () => {
     jest.resetAllMocks()
   })
 
-  const basicCases: [Record<string, any>][] = [
+  const basicCases: [Record<string, unknown>][] = [
     [
       {
         method: 'GET',
@@ -35,7 +35,7 @@ describe('baseRequestSchema', () => {
   ]
 
   basicCases.unshift(
-    ...supportedMethods.map<[Record<string, string>]>((method) => [
+    ...supportedMethods.map<[StringDict]>((method) => [
       {
         method,
         type: 'MyType',

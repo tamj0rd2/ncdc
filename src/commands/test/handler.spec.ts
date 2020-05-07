@@ -12,7 +12,6 @@ import { TestConfigs } from './test'
 jest.unmock('./handler')
 jest.mock('fs')
 jest.mock('path')
-jest.mock('~config')
 
 const mockedHandleError = mockFn<HandleError>()
 const mockedTypeValidator = mockObj<TypeValidator>({})

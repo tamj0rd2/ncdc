@@ -1,42 +1,35 @@
 import { mocked, randomString, mockObj, mockFn } from '~test-helpers'
 import { readYamlAsync } from '~io'
-import { resolve } from 'path'
-import { Config } from './types'
-import loadConfig, { LoadArgs, LoadConfigResponse, TransformConfigs } from './load'
+import { resolve, isAbsolute } from 'path'
+import { CommonConfig } from './types'
+import loadConfig, { LoadConfigResponse, TransformConfigs, GetTypeValidator, LoadConfigStatus } from './load'
 import { TypeValidator } from '~validation'
-import { CreateTypeValidator } from '~commands'
-import { validateRawConfig } from './validate'
+import { validateRawConfig, ValidatedRawConfig, validateConfigBodies } from './validate'
 
 jest.unmock('./load')
 jest.mock('path')
-
-const createDefaultArgs = (): LoadArgs => ({
-  configPath: randomString('configPath'),
-  force: false,
-  tsconfigPath: randomString('tsconfigPath'),
-  schemaPath: randomString('schemaPath'),
-})
 
 describe('loadConfig', () => {
   const mockReadYamlAsync = mocked(readYamlAsync)
   const mockResolve = mocked(resolve)
   const mockValidate = mocked(validateRawConfig)
-  const mockTransformConfigs = mockFn<TransformConfigs>()
+  const mockValidateBodies = mocked(validateConfigBodies)
+  const mockTransformConfigs = mockFn<TransformConfigs<unknown>>()
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
-  const mockCreateTypeValidator = mockFn<CreateTypeValidator>()
+  const mockCreateTypeValidator = mockFn<GetTypeValidator>()
+  const mockIsAbsolute = mocked(isAbsolute)
+
+  const configPath = randomString('configPath')
+  const transformedConfigDummy = { name: randomString('name'), request: {}, response: {} } as CommonConfig
+  const act = async (): Promise<LoadConfigResponse> =>
+    loadConfig(configPath, mockCreateTypeValidator, mockTransformConfigs)
 
   beforeEach(() => {
     jest.resetAllMocks()
     mockValidate.mockReturnValue({ success: true, validatedConfigs: [] })
-    mockTransformConfigs.mockResolvedValue([
-      { name: randomString('name'), request: {}, response: {} } as Config,
-    ])
+    mockTransformConfigs.mockResolvedValue([transformedConfigDummy])
     mockCreateTypeValidator.mockReturnValue(mockTypeValidator)
   })
-
-  const defaultArgs = createDefaultArgs()
-  const act = async (): Promise<LoadConfigResponse> =>
-    loadConfig(defaultArgs, mockCreateTypeValidator, mockTransformConfigs)
 
   it('calls readYamlAsync with the correct config path', async () => {
     const resolvedPath = 'wot m8'
@@ -44,7 +37,7 @@ describe('loadConfig', () => {
 
     await act()
 
-    expect(mockResolve).toBeCalledWith(defaultArgs.configPath)
+    expect(mockResolve).toBeCalledWith(configPath)
     expect(mockReadYamlAsync).toBeCalledWith(resolvedPath)
   })
 
@@ -54,8 +47,8 @@ describe('loadConfig', () => {
     const result = await act()
 
     expect(result).toStrictEqual<LoadConfigResponse>({
-      type: 'failure',
-      message: 'Problem reading your config file: that aint right',
+      type: LoadConfigStatus.ProblemReadingConfig,
+      message: 'There was a problem reading your config file:\n\nthat aint right',
     })
   })
 
@@ -75,7 +68,7 @@ describe('loadConfig', () => {
     const result = await act()
 
     expect(result).toStrictEqual<LoadConfigResponse>({
-      type: 'failure',
+      type: LoadConfigStatus.InvalidConfig,
       message: `Your config file is invalid:\n\n${errors[0]}\n${errors[1]}`,
     })
   })
@@ -85,34 +78,15 @@ describe('loadConfig', () => {
 
     const result = await act()
 
-    expect(result).toStrictEqual<LoadConfigResponse>({
-      type: 'warning',
-      message: 'You have no configs to run against',
-    })
+    expect(result).toStrictEqual<LoadConfigResponse>({ type: LoadConfigStatus.NoConfigs })
   })
 
-  // TODO: use a different validate function
   it('does not create a type validator if no configs have associated types', async () => {
     mockValidate.mockReturnValue({ success: true, validatedConfigs: [{ request: {}, response: {} }] })
 
     await act()
 
     expect(mockCreateTypeValidator).not.toBeCalled()
-  })
-
-  it('creates a type validator with the correct args when types are present in any config', async () => {
-    mockValidate.mockReturnValue({
-      success: true,
-      validatedConfigs: [{ request: { type: randomString('type') }, response: {} }],
-    })
-
-    await act()
-
-    expect(mockCreateTypeValidator).toBeCalledWith(
-      defaultArgs.tsconfigPath,
-      defaultArgs.force,
-      defaultArgs.schemaPath,
-    )
   })
 
   it('calls the transform func with the correct args', async () => {
@@ -124,5 +98,64 @@ describe('loadConfig', () => {
     await act()
 
     expect(mockTransformConfigs).toBeCalledWith(validatedConfigs, absoulteConfigPath)
+  })
+
+  it('creates a type validator with the correct args when types are present in any config', async () => {
+    mockValidate.mockReturnValue({
+      success: true,
+      validatedConfigs: [{ request: {}, response: {} }],
+    })
+    mockTransformConfigs.mockResolvedValue([
+      { request: { type: randomString() }, response: {} } as CommonConfig,
+    ])
+
+    await act()
+
+    expect(mockCreateTypeValidator).toBeCalled()
+  })
+
+  it('returns a failure response is there are body validation issues', async () => {
+    mockValidate.mockReturnValue({
+      success: true,
+      validatedConfigs: [{ request: {}, response: {} }],
+    })
+    mockTransformConfigs.mockResolvedValue([
+      { request: { type: randomString() }, response: {} } as CommonConfig,
+    ])
+    const validationError = randomString('oops')
+    mockValidateBodies.mockResolvedValue(validationError)
+
+    const result = await act()
+
+    expect(result).toStrictEqual<LoadConfigResponse>({
+      type: LoadConfigStatus.InvalidBodies,
+      message: `One or more of your configured bodies do not match the correct type:\n\n${validationError}`,
+    })
+  })
+
+  describe('when everything else goes ok', () => {
+    it('returns a response with configs and fixture paths', async () => {
+      const fixturePath1 = randomString('fixture1')
+      const fixturePath2 = randomString('fixture2')
+      const fixturePath3 = randomString('fixture3')
+      const expectedAbsPath = randomString('some abs path')
+      const validatedConfigs: ValidatedRawConfig[] = [
+        {
+          request: { bodyPath: fixturePath1 },
+          response: { bodyPath: fixturePath2, serveBodyPath: fixturePath3 },
+        },
+      ]
+      mockValidate.mockReturnValue({ success: true, validatedConfigs })
+      mockIsAbsolute.mockReturnValueOnce(true).mockReturnValueOnce(false).mockReturnValue(true)
+      mockResolve.mockReturnValue(expectedAbsPath)
+
+      const result = await act()
+
+      expect(result).toStrictEqual<LoadConfigResponse>({
+        type: LoadConfigStatus.Success,
+        absoluteFixturePaths: [fixturePath1, expectedAbsPath, fixturePath3],
+        configs: [transformedConfigDummy],
+      })
+    })
   })
 })

@@ -1,85 +1,91 @@
 import { readYamlAsync } from '~io'
-import { resolve } from 'path'
+import { resolve, isAbsolute } from 'path'
 import { TypeValidator } from '~validation'
-import { CreateTypeValidator } from '~commands'
 import { validateConfigBodies, validateRawConfig, ValidatedRawConfig } from './validate'
-import { Config } from '~config/types'
+import { CommonConfig } from '~config/types'
 
-export type LoadConfigResponse = LoadConfigFailure | LoadConfigSuccess | LoadConfigWarning
-
-export type LoadArgs = {
-  configPath: string
-  tsconfigPath: string
-  force: boolean
-  schemaPath?: string
+export enum LoadConfigStatus {
+  Success = 'Success',
+  ProblemReadingConfig = 'Problem reading config',
+  InvalidConfig = 'Invalid config',
+  NoConfigs = 'No configs',
+  InvalidBodies = 'Invalid config bodies',
 }
 
-export type TransformConfigs = <T>(configs: T[], absoluteConfigPath: string) => Promise<Config[]>
+export type LoadConfigResponse =
+  | {
+      type: LoadConfigStatus.Success
+      configs: CommonConfig[]
+      absoluteFixturePaths: string[]
+    }
+  | {
+      type: LoadConfigStatus.NoConfigs
+    }
+  | {
+      type:
+        | LoadConfigStatus.InvalidBodies
+        | LoadConfigStatus.InvalidConfig
+        | LoadConfigStatus.ProblemReadingConfig
+      message: string
+    }
 
-const loadConfig = async <TOut extends ValidatedRawConfig>(
-  args: LoadArgs,
-  createTypeValidator: CreateTypeValidator,
-  transformConfigs: TransformConfigs,
+export type TransformConfigs<T> = (configs: T[], absoluteConfigPath: string) => Promise<CommonConfig[]>
+export type GetTypeValidator = () => TypeValidator
+export type LoadConfig<T extends ValidatedRawConfig> = (
+  configPath: string,
+  getTypeValidator: GetTypeValidator,
+  transformConfigs: TransformConfigs<T>,
+) => Promise<LoadConfigResponse>
+
+const loadConfig = async <T extends ValidatedRawConfig>(
+  configPath: string,
+  getTypeValidator: GetTypeValidator,
+  transformConfigs: TransformConfigs<T>,
 ): Promise<LoadConfigResponse> => {
-  const absoluteConfigPath = resolve(args.configPath)
+  const absoluteConfigPath = resolve(configPath)
   let rawConfigFile: unknown
 
   try {
     rawConfigFile = await readYamlAsync(absoluteConfigPath)
   } catch (err) {
     return {
-      type: 'failure',
-      message: `Problem reading your config file: ${err.message}`,
+      type: LoadConfigStatus.ProblemReadingConfig,
+      message: `There was a problem reading your config file:\n\n${err.message}`,
     }
   }
 
-  const validationResult = validateRawConfig<TOut>(rawConfigFile)
+  const validationResult = validateRawConfig<T>(rawConfigFile)
   if (!validationResult.success) {
     return {
-      type: 'failure',
+      type: LoadConfigStatus.InvalidConfig,
       message: `Your config file is invalid:\n\n${validationResult.errors.join('\n')}`,
     }
   }
 
   if (!validationResult.validatedConfigs.length) {
-    return { type: 'warning', message: 'You have no configs to run against' }
-  }
-
-  const configUsesTypes = validationResult.validatedConfigs.find((c) => c.request.type || c.response.type)
-  let typeValidator: TypeValidator | undefined
-
-  if (configUsesTypes && (args.schemaPath || !typeValidator)) {
-    typeValidator = configUsesTypes && createTypeValidator(args.tsconfigPath, args.force, args.schemaPath)
+    return { type: LoadConfigStatus.NoConfigs }
   }
 
   const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, absoluteConfigPath)
 
-  if (typeValidator) {
-    const bodyValidationMessage = await validateConfigBodies(transformedConfigs, typeValidator)
+  if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
+    const bodyValidationMessage = await validateConfigBodies(transformedConfigs, getTypeValidator())
     if (bodyValidationMessage) {
       return {
-        type: 'failure',
-        message: `One or more of your configured bodies do not match the correct type\n\n${bodyValidationMessage}`,
+        type: LoadConfigStatus.InvalidBodies,
+        message: `One or more of your configured bodies do not match the correct type:\n\n${bodyValidationMessage}`,
       }
     }
   }
 
-  return { type: 'success', configs: transformedConfigs }
-}
-
-type LoadConfigFailure = {
-  type: 'failure'
-  message: string
-}
-
-type LoadConfigWarning = {
-  type: 'warning'
-  message: string
-}
-
-type LoadConfigSuccess = {
-  type: 'success'
-  configs: Config[]
+  return {
+    type: LoadConfigStatus.Success,
+    configs: transformedConfigs,
+    absoluteFixturePaths: validationResult.validatedConfigs
+      .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
+      .filter((x): x is string => !!x)
+      .map((p) => (isAbsolute(p) ? p : resolve(absoluteConfigPath, '..', p))),
+  }
 }
 
 export default loadConfig

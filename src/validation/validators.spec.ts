@@ -1,13 +1,12 @@
 import { doItAll, FetchResource } from './validators'
 import TypeValidator from './type-validator'
 import { Config } from '~config-old'
-import ConfigBuilder from '~config-old/config-builder'
+import { ConfigBuilder } from '~config/types'
 import Problem, { ProblemType } from '~problem'
 import * as messages from '~messages'
 import { mockObj, mockFn } from '~test-helpers'
 
 jest.unmock('./validators')
-jest.unmock('~config/config-builder')
 
 describe('validators', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })

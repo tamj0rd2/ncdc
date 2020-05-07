@@ -20,7 +20,7 @@ export interface RequestConfig {
   endpoint: string
   body?: Data
   type?: string
-  headers?: Record<string, string>
+  headers?: StringDict
 }
 
 export type RequestConfigArray = PopulatedArray<RequestConfig>

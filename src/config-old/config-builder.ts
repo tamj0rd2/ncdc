@@ -33,7 +33,7 @@ export default class ConfigBuilder {
     return this
   }
 
-  public withRequestHeaders(headers?: Record<string, string>): ConfigBuilder {
+  public withRequestHeaders(headers?: StringDict): ConfigBuilder {
     this.config.request.headers = headers
     return this
   }

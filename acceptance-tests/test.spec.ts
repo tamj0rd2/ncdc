@@ -30,4 +30,21 @@ describe('ncdc test', () => {
 
     expect(strip(output)).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
   })
+
+  it.only('can test endpoints that return json', async () => {
+    realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 'world' }).start()
+    new TestConfigWrapper().addConfig(
+      new ConfigBuilder()
+        .withName('Hello')
+        .withEndpoints('/api/resource')
+        .withServeBody(undefined)
+        .withBody({ hello: 'world' })
+        .withResponseHeaders({ 'content-type': 'application/json' })
+        .build(),
+    )
+
+    const output = await runTestCommand()
+
+    expect(strip(output)).toContain(`info: PASSED: Hello - ${REAL_SERVER_HOST}/api/resource`)
+  })
 })

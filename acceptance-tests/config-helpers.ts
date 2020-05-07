@@ -29,7 +29,6 @@ export class ConfigBuilder {
     },
     response: {
       code: 200,
-      headers: { 'content-type': 'application/json' },
       serveBody: {
         ISBN: '9780141187761',
         ISBN_13: '978 - 0141187761',

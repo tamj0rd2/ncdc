@@ -23,49 +23,76 @@ describe('http client', () => {
     )
   })
 
-  it('calls fetch with the correct params when there is no request body', async () => {
-    const config = new ConfigBuilder().build()
+  it('calls fetch with the correct params', async () => {
+    const config = new ConfigBuilder().withEndpoint('/spanners/for/days').build()
 
     await fetchResource(config)
 
-    expect(mockedFetch).toBeCalledWith(
-      baseUrl + config.request.endpoint,
-      expect.objectContaining({
-        method: 'GET',
-        body: undefined,
-      }),
-    )
+    expect(mockedFetch).toBeCalledWith(baseUrl + config.request.endpoint, {
+      body: undefined,
+      method: 'GET',
+    })
   })
 
-  it('calls fetch with the correct params when there is a non-json request body', async () => {
-    const body = randomString('body')
-    const config = new ConfigBuilder().withRequestBody(body).build()
+  it('calls fetch with headers when there are headers in the request config', async () => {
+    const headers = { [randomString('key')]: randomString('value') }
+    const config = new ConfigBuilder().withRequestHeaders(headers).build()
 
     await fetchResource(config)
 
-    expect(mockedFetch).toBeCalledWith(
-      baseUrl + config.request.endpoint,
-      expect.objectContaining({
-        method: 'GET',
-        body,
-      }),
-    )
+    expect(mockedFetch).toBeCalledWith<Parameters<typeof mockedFetch>>(baseUrl + config.request.endpoint, {
+      body: undefined,
+      method: 'GET',
+      headers: headers,
+    })
   })
 
-  it('calls fetch with the correct params when there is a json request body', async () => {
-    const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).build()
+  describe('request body', () => {
+    it('calls fetch with the correct params when there is no request body', async () => {
+      const config = new ConfigBuilder().build()
 
-    await fetchResource(config)
+      await fetchResource(config)
 
-    expect(mockedFetch).toBeCalledWith(
-      baseUrl + config.request.endpoint,
-      expect.objectContaining({
-        method: 'GET',
-        body: '{"allo":"mate"}',
-      }),
-    )
+      expect(mockedFetch).toBeCalledWith(
+        baseUrl + config.request.endpoint,
+        expect.objectContaining({
+          method: 'GET',
+          body: undefined,
+        }),
+      )
+    })
+
+    it('calls fetch with the correct params when there is a non-json request body', async () => {
+      const body = randomString('body')
+      const config = new ConfigBuilder().withRequestBody(body).build()
+
+      await fetchResource(config)
+
+      expect(mockedFetch).toBeCalledWith(
+        baseUrl + config.request.endpoint,
+        expect.objectContaining({
+          method: 'GET',
+          body,
+        }),
+      )
+    })
+
+    it('calls fetch with the correct params when there is a json request body', async () => {
+      const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).build()
+
+      await fetchResource(config)
+
+      expect(mockedFetch).toBeCalledWith(
+        baseUrl + config.request.endpoint,
+        expect.objectContaining({
+          method: 'GET',
+          body: '{"allo":"mate"}',
+        }),
+      )
+    })
   })
 
+  it.todo('throws an error if there is a connection error')
   it('returns status 0 if there is a connection error', async () => {
     const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).build()
     mockedFetch.mockRejectedValue(new Error('yipes'))
@@ -88,13 +115,14 @@ describe('http client', () => {
     expect(res.data).toEqual({ some: 'json' })
   })
 
-  it('returns a json object if the application/json content-type is not given', async () => {
+  it('returns a string if the application/json content-type is not given', async () => {
     const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).withResponseHeaders({}).build()
-    mockedText.mockResolvedValue('some text')
+    const expectedData = randomString('some text, does not matter what it is')
+    mockedText.mockResolvedValue(expectedData)
 
     const res = await fetchResource(config)
 
     expect(mockedText).toBeCalled()
-    expect(res.data).toEqual('some text')
+    expect(res.data).toEqual(expectedData)
   })
 })

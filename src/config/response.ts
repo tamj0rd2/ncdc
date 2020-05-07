@@ -1,16 +1,16 @@
 import { object, number, mixed, string, InferType } from 'yup'
-import { OutgoingHttpHeaders } from 'http'
 import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
 import { GetBodyToUse } from './body'
 import enrichYup from './methods'
+import { IncomingHttpHeaders } from 'http'
 
 enrichYup()
 
 export interface ResponseConfig {
   code: number
   body?: Data
-  headers?: OutgoingHttpHeaders // TODO: unused right now. Needs to be checked in test mode and sent in serve mode
+  headers?: IncomingHttpHeaders // TODO: unused right now. Needs to be checked in test mode and sent in serve mode
   type?: string
 }
 
@@ -18,7 +18,7 @@ const baseResponseSchema = object({
   code: number().required(),
   body: mixed<Data>().notAllowedIfSiblings('bodyPath'),
   bodyPath: string().notAllowedIfSiblings('body'),
-  headers: object<OutgoingHttpHeaders>().ofHeaders().notRequired(),
+  headers: object<IncomingHttpHeaders>().ofHeaders().notRequired(),
   type: string().notRequired(),
 })
 

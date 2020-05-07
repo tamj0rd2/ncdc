@@ -1,6 +1,5 @@
 import { TypeValidator } from '~validation'
 import Problem, { ProblemType } from '~problem'
-import { IncomingHttpHeaders } from 'http'
 import { GetBodyToUse } from '../body'
 import { TestRequestSchema } from './test-schema'
 import { ServeRequestSchema } from './serve-schema'
@@ -21,7 +20,7 @@ export interface RequestConfig {
   endpoint: string
   body?: Data
   type?: string
-  headers?: IncomingHttpHeaders
+  headers?: Record<string, string>
 }
 
 export type RequestConfigArray = PopulatedArray<RequestConfig>

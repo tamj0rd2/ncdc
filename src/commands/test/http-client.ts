@@ -1,21 +1,20 @@
 import { FetchResource, LoaderResponse } from '~validation'
-import fetch, { RequestInit, Response } from 'node-fetch'
+import fetch, { Response } from 'node-fetch'
 
 export const createHttpClient = (baseUrl: string): FetchResource => async ({
   request,
   response,
 }): Promise<LoaderResponse> => {
-  const { method, endpoint, body } = request
-  const fullUrl = `${baseUrl}${endpoint}`
-
-  const requestInit: RequestInit = {
-    method,
-    body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
-  }
+  const { body } = request
+  const fullUrl = `${baseUrl}${request.endpoint}`
 
   let res: Response
   try {
-    res = await fetch(fullUrl, requestInit)
+    res = await fetch(fullUrl, {
+      method: request.method,
+      body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
+      headers: request.headers,
+    })
   } catch (err) {
     return { status: 0 }
   }

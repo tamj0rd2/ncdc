@@ -84,7 +84,8 @@ Here's a format that describes each config setting:
   # Or...
   endpoints:
     - /my/endpoint1
-    - /my/endpoint2?hello=world # only served if request has query param "hello" with value "world"
+    # only served if request has query param "hello" with value "world"
+    - /my/endpoint2?hello=world 
   ```
 
 ### request.serveEndpoint
@@ -94,13 +95,23 @@ Here's a format that describes each config setting:
   ([read more](https://expressjs.com/en/guide/routing.html#route-paths)).
   Regex is not yet supported.<br>
   This property is ignored in Test mode.
-  In Serve Mode, your config will be served on the `request.endpoints`
-  and also this endpoint.
+  In Serve Mode, your config will be served on each specified endpoint of 
+  `request.endpoints` and also this endpoint.
 - **Type**: string
 - **Required?**: Required in Serve mode if `request.endpoints` is not provided
 - **Example**:
   ```yaml
+  # will serve any endpoints starting with /api/books/
   serveEndpoint: /api/books/*
+  
+  # to require a query string with key 'hello' and value 'world'
+  serveEndpoint: /api/books/book1?hello=world
+  
+  # to require a query string with key 'hello' set to any value (*)
+  serveEndpoint: /api/books/book1?hello=*
+  
+  # to require multiple query params
+  serveEndpoint: /api/books/book1?hello=world&something=*&spongebob=squarepants
   ```
 
 ### request.method

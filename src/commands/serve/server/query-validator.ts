@@ -6,6 +6,7 @@ const isStringArray = (x: unknown): x is string[] => Array.isArray(x) && typeof 
 
 const compareQuery = (expected: Query[number], actual: Query[number]): boolean => {
   if (typeof expected === 'string') {
+    if (expected === '*') return true
     if (typeof actual === 'string') return expected === actual
     if (isStringArray(actual)) return actual.includes(expected)
     return false

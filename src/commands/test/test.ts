@@ -12,16 +12,16 @@ const logTestResults = (baseUrl: string) => (displayName: string, endpoint: stri
 ): 0 | 1 => {
   const displayEndpoint = blue(`${baseUrl}${endpoint}`)
   if (!problems.length) {
-    logger.info(testPassed(displayName, displayEndpoint))
+    logger.info(testPassed(displayName, displayEndpoint) + '\n')
     return 0
   } else {
-    logger.error(testFailed(displayName, displayEndpoint, problems))
+    logger.error(testFailed(displayName, displayEndpoint, problems) + '\n')
     return 1
   }
 }
 
 const logTestError = (displayName: string) => (err: Error): void => {
-  logger.error(testError(displayName, err.message))
+  logger.error(testError(displayName, err.message) + `\n`)
 }
 
 export const testConfigs = async (

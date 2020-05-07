@@ -6,7 +6,7 @@ import { TypeValidator } from '~validation'
 import logger from '~logger'
 import chokidar from 'chokidar'
 import { StartServerResult } from './server'
-import { red } from 'chalk'
+import { red, bold } from 'chalk'
 
 export interface ServeArgs {
   configPath?: string
@@ -39,18 +39,16 @@ const validateConfigBodies = async (
     if (config.request.body && config.request.type) {
       const result = await typeValidator.validate(config.request.body, config.request.type)
       if (!result.success) {
-        const message = `Config '${config.name}' request body failed type validation:\n${result.errors.join(
-          '\n',
-        )}`
+        const prefix = red(`Config ${bold(config.name)} request body failed type validation:`)
+        const message = `${prefix}\n${result.errors.join('\n')}`
         validationErrors.push(message)
       }
     }
     if (config.response.body && config.response.type) {
       const result = await typeValidator.validate(config.response.body, config.response.type)
       if (!result.success) {
-        const message = `Config '${config.name}' response body failed type validation:\n${result.errors.join(
-          '\n',
-        )}`
+        const prefix = red(`Config ${bold(config.name)} response body failed type validation:`)
+        const message = `${prefix}\n${result.errors.join('\n')}`
         validationErrors.push(message)
       }
     }

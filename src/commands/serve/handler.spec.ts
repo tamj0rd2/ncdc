@@ -6,6 +6,7 @@ import { readYamlAsync } from '~io'
 import { ValidationSuccess, validate, transformConfigs, ValidatedServeConfig, Config } from './config'
 import { resolve } from 'path'
 import chokidar, { FSWatcher } from 'chokidar'
+import stripAnsi from 'strip-ansi'
 
 jest.unmock('./handler')
 jest.unmock('@hapi/joi')
@@ -244,14 +245,14 @@ describe('handler', () => {
 
         await handler(args)
 
-        const errLine1 = `Config '${transformedConfig.name}' request body failed type validation:\n${error1}\n${error2}`
-        const errLine2 = `Config '${transformedConfig.name}' response body failed type validation:\n${error3}`
+        const errPart1 = 'Could not start serving due to config errors:'
+        const errPart2 = `Config '${transformedConfig.name}' request body failed type validation:\n${error1}\n${error2}`
+        const errPart3 = `Config '${transformedConfig.name}' response body failed type validation:\n${error3}`
 
         expect(mockHandleError).toBeCalled()
-        expect(mockHandleError.mock.calls[0][0].message).toContain(
-          'Could not start serving due to config errors:',
+        expect(stripAnsi(mockHandleError.mock.calls[0][0].message)).toEqual(
+          `${errPart1}\n\n${errPart2}\n${errPart3}`,
         )
-        expect(mockHandleError.mock.calls[0][0].message).toContain(`\n\n${errLine1}\n${errLine2}`)
       })
     })
 

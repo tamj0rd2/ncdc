@@ -32,7 +32,7 @@ const validateConfigBodies = async (
     return true
   })
 
-  let totalValidationError = ''
+  const totalValidationErrors: string[] = []
   for (const config of uniqueConfigs) {
     const validationErrors: string[] = []
 
@@ -55,10 +55,10 @@ const validateConfigBodies = async (
       }
     }
 
-    totalValidationError += validationErrors.join('\n')
+    if (validationErrors.length) totalValidationErrors.push(validationErrors.join('\n'))
   }
 
-  if (totalValidationError) return CONFIG_ERROR_PREFIX + totalValidationError
+  if (totalValidationErrors.length) return CONFIG_ERROR_PREFIX + totalValidationErrors.join('\n\n')
 }
 
 const createHandler = (

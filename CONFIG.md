@@ -153,9 +153,12 @@ Here's a format that describes each config setting:
 
 - **Description**: The headers you expect to call the endpoint with. Header
   names are case insensitive.<br>
-  In Test mode, if the expected headers aren't present or there is a mismatch,
-  the test will fail.<br>
-  In Serve mode, the response will not be served.
+  In Test mode, these headers will be sent along in the request to your real API
+  <br>
+  In Serve mode, if you have specified request headers for an endpoint, calling
+  that endpoint without headers will cause the response to not be served.
+  Instead, it will look for another matching endpoint that does satisfy the
+  headers.
 - **Type**: object
 - **Required?**: No
 - **Example**:

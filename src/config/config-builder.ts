@@ -1,5 +1,5 @@
 import { SupportedMethod, Config } from '.'
-import { OutgoingHttpHeaders } from 'http'
+import { IncomingHttpHeaders } from 'http'
 
 export default class ConfigBuilder {
   private config: Config = {
@@ -33,6 +33,11 @@ export default class ConfigBuilder {
     return this
   }
 
+  public withRequestHeaders(headers?: Record<string, string>): ConfigBuilder {
+    this.config.request.headers = headers
+    return this
+  }
+
   public withResponseCode(code: number): ConfigBuilder {
     this.config.response.code = code
     return this
@@ -43,7 +48,7 @@ export default class ConfigBuilder {
     return this
   }
 
-  public withResponseHeaders(headers: OutgoingHttpHeaders): ConfigBuilder {
+  public withResponseHeaders(headers?: IncomingHttpHeaders): ConfigBuilder {
     this.config.response.headers = headers
     return this
   }

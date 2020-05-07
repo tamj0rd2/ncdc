@@ -29,7 +29,7 @@ export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource
     }
 
     if (responseConfig.code && response.status !== responseConfig.code) {
-      problems.push(
+      return [
         new Problem(
           {
             data: response.status,
@@ -37,7 +37,7 @@ export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource
           },
           ProblemType.Response,
         ),
-      )
+      ]
     }
 
     if (responseConfig.body !== undefined && response.data !== responseConfig.body) {

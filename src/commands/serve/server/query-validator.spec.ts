@@ -1,4 +1,5 @@
 import validateQuery from './query-validator'
+import { randomString } from '~test-helpers'
 
 jest.unmock('./query-validator')
 jest.unmock('qs')
@@ -89,4 +90,20 @@ it('returns false if an object does not match deeply', () => {
   const isValid = validateQuery(endpoint, requestQuery)
 
   expect(isValid).toBe(false)
+})
+
+describe('wildcard queries', () => {
+  it('returns true for any value', () => {
+    const endpoint = '/api/resource?hello=*'
+    const query = { hello: randomString() }
+
+    expect(validateQuery(endpoint, query)).toBe(true)
+  })
+
+  it('returns true for an array of any values', () => {
+    const endpoint = '/api/resource?hello=*'
+    const query = { hello: [randomString(), randomString()] }
+
+    expect(validateQuery(endpoint, query)).toBe(true)
+  })
 })

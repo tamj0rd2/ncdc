@@ -18,9 +18,9 @@ const groupBy = <T>(items: ReadonlyArray<T>, getKey: (item: T) => string): Map<s
     return map
   }, new Map<string, T[]>())
 
-const colorInspect = (obj: any, depth?: number): string => inspect(obj, false, depth, true)
+const colorInspect = (obj: unknown, depth?: number): string => inspect(obj, false, depth, true)
 
-export const gatherValidationErrors = (problems: ReadonlyArray<Problem>): string =>
+export const gatherValidationErrors = (problems: ReadonlyArray<Public<Problem>>): string =>
   Array.from(groupBy(problems, (x) => x.path))
     .map(([dataPath, groupedProblems]) =>
       Array.from(groupBy(groupedProblems, (x) => x.problemType))

@@ -22,7 +22,8 @@ export const validationFailed = ({ name, problems }: ProblemResult): string =>
 export const testPassed = (name: string, endpoint: string): string =>
   `${green('PASSED')}: ${name} - ${endpoint}\n`
 
-export const testFailed = (name: string, endpoint: string, problems: Problem[]): string =>
-  `${red.bold('FAILED')}: ${red.bold(name)}\nURL: ${endpoint}\n${gatherValidationErrors(problems)}`
+export const testFailed = (name: string, endpoint: string, problems: Public<Problem>[]): string =>
+  `${red.bold('FAILED')}: ${red.bold(name)}\nURL: ${endpoint}\n${gatherValidationErrors(problems)}\n`
 
-export const testError = (name: string, message: string): string => `${red('FAILED')}: ${name} - ${message}\n`
+export const testError = (name: string, endpoint: string, message: string): string =>
+  `${red.bold('ERROR')}: ${red.bold(name)}\nURL: ${endpoint}\n${message}\n`

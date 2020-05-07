@@ -5,7 +5,7 @@ import { shouldBe, problemFetching } from '~messages'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: Config) => Promise<LoaderResponse>
-export type TestFn = (config: Config) => Promise<Problem[]>
+export type TestFn = (config: Config) => Promise<Public<Problem>[]>
 
 const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
   if (typeof expected === 'object') {

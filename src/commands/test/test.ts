@@ -8,20 +8,16 @@ import { testPassed, testFailed, testError } from '~messages'
 // TODO: why is this returning a number? yeah, what the fuck?
 // TODO: reuse this at config type validaiton type. nononononoooooo
 const logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
-  problems: Problem[],
+  problems: Public<Problem>[],
 ): 0 | 1 => {
   const displayEndpoint = blue(`${baseUrl}${endpoint}`)
   if (!problems.length) {
-    logger.info(testPassed(displayName, displayEndpoint) + '\n')
+    logger.info(testPassed(displayName, displayEndpoint))
     return 0
   } else {
-    logger.error(testFailed(displayName, displayEndpoint, problems) + '\n')
+    logger.error(testFailed(displayName, displayEndpoint, problems))
     return 1
   }
-}
-
-const logTestError = (displayName: string) => (err: Error): void => {
-  logger.error(testError(displayName, err.message) + `\n`)
 }
 
 export const testConfigs = async (
@@ -37,7 +33,10 @@ export const testConfigs = async (
   const testTasks = configs.map((testConfig) => {
     return test(testConfig)
       .then(resultsLogger(testConfig.name, testConfig.request.endpoint))
-      .catch(logTestError(testConfig.name))
+      .catch((err) => {
+        logger.error(testError(testConfig.name, baseURL + testConfig.request.endpoint, err.message))
+        return 1
+      })
   })
 
   const results = Promise.all(testTasks)

@@ -31,7 +31,7 @@ describe('ncdc test', () => {
     expect(strip(output)).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
   })
 
-  it.only('can test endpoints that return json', async () => {
+  it('can test endpoints that return json', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 'world' }).start()
     new TestConfigWrapper().addConfig(
       new ConfigBuilder()

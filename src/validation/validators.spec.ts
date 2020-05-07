@@ -58,22 +58,124 @@ describe('validators', () => {
     expect(mockProblemCtor).toHaveBeenCalledWith({ data: 302, message: 'message' }, ProblemType.Response)
   })
 
-  it('returns problems when response body does not match expected', async () => {
-    const config: Partial<Config> = {
-      response: {
-        body: 'somebody to love',
-        code: 200,
-      },
-    }
+  describe('body validation', () => {
+    describe('when the response body does not match expected', () => {
+      it('returns problems when the body is a string', async () => {
+        const config: Partial<Config> = {
+          response: {
+            body: 'somebody to love',
+            code: 200,
+          },
+        }
 
-    mockFetchResource.mockResolvedValue({ status: 200, data: 'RIP' })
-    mockMessages.shouldBe.mockReturnValue('message2')
+        mockFetchResource.mockResolvedValue({ status: 200, data: 'RIP' })
 
-    const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
+        const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
 
-    expect(results).toHaveLength(1)
-    expect(mockMessages.shouldBe).toHaveBeenCalledWith('body', 'somebody to love', 'RIP')
-    expect(mockProblemCtor).toHaveBeenCalledWith({ data: 'RIP', message: 'message2' }, ProblemType.Response)
+        expect(results).toHaveLength(1)
+        expect(mockProblemCtor).toHaveBeenCalledWith(
+          { data: 'RIP', message: 'was not deeply equal to the configured fixture' },
+          ProblemType.Response,
+        )
+      })
+
+      it('returns problems when the configured body is an object but actual data is a string', async () => {
+        const config: Partial<Config> = {
+          response: {
+            body: { hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 },
+            code: 200,
+          },
+        }
+
+        mockFetchResource.mockResolvedValue({ status: 200, data: 'RIP' })
+        mockMessages.shouldBe.mockReturnValue('message2')
+
+        const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
+
+        expect(results).toHaveLength(1)
+        expect(mockMessages.shouldBe).toHaveBeenCalledWith('body', 'of type object', 'a string')
+        expect(mockProblemCtor).toHaveBeenCalledWith(
+          { data: 'RIP', message: 'message2' },
+          ProblemType.Response,
+        )
+      })
+
+      it('returns problems when the configured body is a string but actual data is an object', async () => {
+        const config: Partial<Config> = {
+          response: {
+            body: 'RIP',
+            code: 200,
+          },
+        }
+
+        mockFetchResource.mockResolvedValue({ status: 200, data: { rip: 'aroo' } })
+        mockMessages.shouldBe.mockReturnValue('message2')
+
+        const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
+
+        expect(results).toHaveLength(1)
+        expect(mockMessages.shouldBe).toHaveBeenCalledWith('body', 'of type string', 'a object')
+        expect(mockProblemCtor).toHaveBeenCalledWith(
+          { data: { rip: 'aroo' }, message: 'message2' },
+          ProblemType.Response,
+        )
+      })
+
+      it('returns problems when the configured body and actual date are both objects', async () => {
+        const config: Partial<Config> = {
+          response: {
+            body: { hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 },
+            code: 200,
+          },
+        }
+
+        const responseData = { hello: 'world' }
+        mockFetchResource.mockResolvedValue({ status: 200, data: responseData })
+
+        const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
+
+        expect(results).toHaveLength(1)
+        expect(mockProblemCtor).toHaveBeenCalledWith(
+          { data: responseData, message: 'was not deeply equal to the configured fixture' },
+          ProblemType.Response,
+        )
+      })
+    })
+
+    describe('when the response body does match the expected', () => {
+      it('does not return problems when both are strings', async () => {
+        const expectedBody = 'coWaBunGa'
+        const config: Partial<Config> = {
+          response: {
+            body: expectedBody,
+            code: 200,
+          },
+        }
+        mockFetchResource.mockResolvedValue({ status: 200, data: expectedBody })
+
+        const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
+
+        expect(results).toHaveLength(0)
+      })
+
+      it('does not return problems when both are objects', async () => {
+        const config: Partial<Config> = {
+          response: {
+            body: { hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 },
+            code: 200,
+          },
+        }
+
+        mockFetchResource.mockResolvedValue({
+          status: 200,
+          data: { hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 },
+        })
+
+        const results = await doItAll(mockTypeValidator, mockFetchResource)(config as Config)
+
+        expect(results).toHaveLength(0)
+      })
+    })
   })
 
   it('returns problems when response type does not match expected', async () => {

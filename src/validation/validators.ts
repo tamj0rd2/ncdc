@@ -7,6 +7,24 @@ export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: Config) => Promise<LoaderResponse>
 export type TestFn = (config: Config) => Promise<Problem[]>
 
+const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
+  if (typeof expected === 'object') {
+    if (!expected) return expected === actual
+    if (typeof actual !== 'object') return false
+    if (!actual) return false
+
+    for (const key in expected) {
+      const expectedValue = expected[key as keyof typeof expected]
+      const actualValue = actual[key as keyof typeof actual]
+      if (!isDeeplyEqual(expectedValue, actualValue)) return false
+    }
+
+    return true
+  }
+
+  return expected === actual
+}
+
 // TODO: get rid of this. it's only used by test mode now
 export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource): TestFn => {
   return async (config): Promise<Problem[]> => {
@@ -40,16 +58,28 @@ export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource
       ]
     }
 
-    if (responseConfig.body !== undefined && response.data !== responseConfig.body) {
-      problems.push(
-        new Problem(
-          {
-            data: response.data,
-            message: shouldBe('body', responseConfig.body, response.data),
-          },
-          ProblemType.Response,
-        ),
-      )
+    if (responseConfig.body !== undefined) {
+      if (typeof responseConfig.body !== typeof response.data) {
+        problems.push(
+          new Problem(
+            {
+              data: response.data,
+              message: shouldBe('body', `of type ${typeof responseConfig.body}`, `a ${typeof response.data}`),
+            },
+            ProblemType.Response,
+          ),
+        )
+      } else if (!isDeeplyEqual(responseConfig.body, response.data)) {
+        problems.push(
+          new Problem(
+            {
+              data: response.data,
+              message: 'was not deeply equal to the configured fixture',
+            },
+            ProblemType.Response,
+          ),
+        )
+      }
     }
 
     if (responseConfig.type) {

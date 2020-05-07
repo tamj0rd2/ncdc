@@ -19,16 +19,10 @@ export const shouldBe = (property: string, expected: Data, actual: Optional<Data
 export const validationFailed = ({ name, problems }: ProblemResult): string =>
   `${red('Validation failed')}: ${name} \n${gatherValidationErrors(problems)}\n`
 
-const testResult = (passed: boolean, name: string, suffix: string): string => {
-  const prefix = passed ? green('PASSED') : red.bold('FAILED')
-  const formattedName = passed ? name : red.bold(name)
-  return `${prefix}: ${formattedName}\n${suffix}\n`
-}
-
 export const testPassed = (name: string, endpoint: string): string =>
-  testResult(true, name, `URL: ${endpoint}`)
+  `${green('PASSED')}: ${name} - ${endpoint}\n`
 
 export const testFailed = (name: string, endpoint: string, problems: Problem[]): string =>
-  `${testResult(false, name, `URL: ${endpoint}`)}\n${gatherValidationErrors(problems)}`
+  `${red.bold('FAILED')}: ${red.bold(name)}\nURL: ${endpoint}\n${gatherValidationErrors(problems)}`
 
-export const testError = (name: string, message: string): string => testResult(false, name, message)
+export const testError = (name: string, message: string): string => `${red('FAILED')}: ${name} - ${message}\n`

@@ -246,8 +246,8 @@ describe('handler', () => {
         await handler(args)
 
         const errPart1 = 'Could not start serving due to config errors:'
-        const errPart2 = `Config '${transformedConfig.name}' request body failed type validation:\n${error1}\n${error2}`
-        const errPart3 = `Config '${transformedConfig.name}' response body failed type validation:\n${error3}`
+        const errPart2 = `Config ${transformedConfig.name} request body failed type validation:\n${error1}\n${error2}`
+        const errPart3 = `Config ${transformedConfig.name} response body failed type validation:\n${error3}`
 
         expect(mockHandleError).toBeCalled()
         expect(stripAnsi(mockHandleError.mock.calls[0][0].message)).toEqual(

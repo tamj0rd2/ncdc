@@ -1,0 +1,6 @@
+blockingLabels:
+  - dependencies
+requiredLabels:
+  - merge
+blockingTitleRegex: '\bWIP\b'
+mergeMethod: rebase

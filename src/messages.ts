@@ -1,7 +1,17 @@
 import { red, green, blue } from 'chalk'
-import { ProblemResult } from '~config-old/mapper'
 import { gatherValidationErrors } from '~commands/shared'
 import Problem from '~problem'
+
+export interface ProblemResult {
+  name: string
+  problems: ReadonlyArray<Problem>
+}
+
+export const isProblemResult = (x: unknown): x is ProblemResult =>
+  typeof x === 'object' && (x as ProblemResult).problems !== undefined
+
+export const containsProblemResult = (x: unknown): x is ReadonlyArray<ProblemResult> =>
+  Array.isArray(x) && !!x.find(isProblemResult)
 
 export const errorNoResponse = (uri: string): string => `Could not reach ${blue(uri)}`
 

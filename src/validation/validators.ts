@@ -1,11 +1,11 @@
 import TypeValidator from './type-validator'
 import Problem, { ProblemType } from '~problem'
-import { Config } from '~config-old'
 import { shouldBe, problemFetching } from '~messages'
+import { TestConfig } from '~commands/test/config'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource = (config: Config) => Promise<LoaderResponse>
-export type TestFn = (config: Config) => Promise<Public<Problem>[]>
+export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
+export type TestFn = (config: TestConfig) => Promise<Public<Problem>[]>
 
 const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
   if (typeof expected === 'object') {

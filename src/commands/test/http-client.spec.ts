@@ -101,27 +101,76 @@ describe('http client', () => {
     expect(res).toEqual<LoaderResponse>({ status: 0 })
   })
 
-  it('returns a json object if the application/json content-type is given', async () => {
-    const config = new ConfigBuilder()
-      .withRequestBody({ allo: 'mate' })
-      .withResponseHeaders({ 'content-type': 'application/json' })
-      .build()
-    mockedJson.mockResolvedValue({ some: 'json' })
+  describe('when a request accept header is specified', () => {
+    it('returns json when application/json is specified', async () => {
+      const config = new ConfigBuilder().withRequestHeaders({ accept: 'application/json' }).build()
+      mockedJson.mockResolvedValue({ some: 'json' })
 
-    const res = await fetchResource(config)
+      const res = await fetchResource(config)
 
-    expect(mockedJson).toBeCalled()
-    expect(res.data).toEqual({ some: 'json' })
+      expect(mockedJson).toBeCalled()
+      expect(res.data).toEqual({ some: 'json' })
+    })
+
+    it('returns text when application/json is not specified', async () => {
+      const config = new ConfigBuilder().withRequestHeaders({ accept: 'partner' }).build()
+      mockedText.mockResolvedValue('woah')
+
+      const res = await fetchResource(config)
+
+      expect(mockedText).toBeCalled()
+      expect(res.data).toEqual('woah')
+    })
   })
 
-  it('returns a string if the application/json content-type is not given', async () => {
-    const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).withResponseHeaders({}).build()
-    const expectedData = randomString('some text, does not matter what it is')
-    mockedText.mockResolvedValue(expectedData)
+  describe('when a response content-type is specified', () => {
+    it('returns a json object if the response application/json content-type is given', async () => {
+      const config = new ConfigBuilder().withResponseHeaders({ 'content-type': 'application/json' }).build()
+      mockedJson.mockResolvedValue({ some: 'json' })
 
-    const res = await fetchResource(config)
+      const res = await fetchResource(config)
 
-    expect(mockedText).toBeCalled()
-    expect(res.data).toEqual(expectedData)
+      expect(mockedJson).toBeCalled()
+      expect(res.data).toEqual({ some: 'json' })
+    })
+
+    it('returns text when application/json is not specified', async () => {
+      const config = new ConfigBuilder().withResponseHeaders({ 'content-type': 'omg' }).build()
+      mockedText.mockResolvedValue('woah')
+
+      const res = await fetchResource(config)
+
+      expect(mockedText).toBeCalled()
+      expect(res.data).toEqual('woah')
+    })
+  })
+
+  describe('when a request accept and response content-type are both unspecified', () => {
+    it('returns an object if the response can be parsed as JSON', async () => {
+      const config = new ConfigBuilder()
+        .withResponseBody('{ "allo": "mate" }')
+        .withResponseHeaders({})
+        .build()
+      const expectedData = { allo: 'mate' }
+      mockedJson.mockResolvedValue(expectedData)
+
+      const res = await fetchResource(config)
+
+      expect(mockedJson).toBeCalled()
+      expect(res.data).toEqual(expectedData)
+    })
+
+    it('returns a string if the data cannot be parsed as json', async () => {
+      const expectedData = '{ "allo: "mate" }'
+      const config = new ConfigBuilder().withResponseBody(expectedData).withResponseHeaders({}).build()
+      mockedJson.mockRejectedValue(new Error('yikes'))
+      mockedText.mockResolvedValue(expectedData)
+
+      const res = await fetchResource(config)
+
+      expect(mockedJson).toBeCalled()
+      expect(mockedText).toBeCalled()
+      expect(res.data).toEqual(expectedData)
+    })
   })
 })

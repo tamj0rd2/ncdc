@@ -19,12 +19,19 @@ export const createHttpClient = (baseUrl: string): FetchResource => async ({
     return { status: 0 }
   }
 
-  let data: Data
-  if (response.headers?.['content-type']?.toString().includes('application/json')) {
-    data = await res.json()
-  } else {
-    data = await res.text()
+  if (request.headers?.['accept']) {
+    const useJson = request.headers['accept'].includes('application/json')
+    return { status: res.status, data: useJson ? await res.json() : await res.text() }
   }
 
-  return { status: res.status, data }
+  if (response.headers?.['content-type']) {
+    const useJson = response.headers['content-type'].includes('application/json')
+    return { status: res.status, data: useJson ? await res.json() : await res.text() }
+  }
+
+  try {
+    return { status: res.status, data: await res.json() }
+  } catch {
+    return { status: res.status, data: await res.text() }
+  }
 }

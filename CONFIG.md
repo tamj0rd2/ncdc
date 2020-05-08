@@ -153,7 +153,9 @@ Here's a format that describes each config setting:
 
 - **Description**: The headers you expect to call the endpoint with. Header
   names are case insensitive.<br>
-  In Test mode, these headers will be sent along in the request to your real API
+  In Test mode, these headers will be sent along in the request to your real API.
+  If an "accept" header is configured and it does not include application/json,
+  the response from your real API will be parsed as plain text.
   <br>
   In Serve mode, if you have specified request headers for an endpoint, calling
   that endpoint without headers will cause the response to not be served.
@@ -164,8 +166,9 @@ Here's a format that describes each config setting:
 - **Example**:
   ```yaml
   headers:
-    content-type: application/json
-    Cache-Control: no-cache
+    # in test mode, the response from your real API will be parsed as JSON
+    # in serve mode, your request will not be served unless a content-type header is specified
+    accept: application/json
   ```
 
 <!-- TODO: make this work as described -->
@@ -226,14 +229,17 @@ Here's a format that describes each config setting:
 ### response.headers
 
 - **Description**: The headers you expect to receive from the endpoint. Header
-  names are case insensitive
+  names are case insensitive<br/>
+  In Test mode, if you've configured a response content-type header and it does
+  not include application/json, your response will be parsed as plain text.
 - **Type**: object
 - **Required?**: No
 - **Example**:
   ```yaml
   headers:
+    # in test mode, the response from your real API will be parsed as JSON
+    # in serve mode, this header will be sent back in the response
     content-type: application/json
-    Cache-Control: no-cache
   ```
 
 ### response.type

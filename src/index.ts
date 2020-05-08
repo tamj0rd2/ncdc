@@ -34,7 +34,7 @@ export default function run(): void {
   // TODO: figure out how I can remove this
   // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   mainYargs
-    .command(createGenerateCommand(handleError, isDevMode))
+    .command(createGenerateCommand(isDevMode))
     .command(createServeCommand(createTypeValidator))
     .command(createTestCommand(createTypeValidator))
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)

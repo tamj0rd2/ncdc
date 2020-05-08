@@ -1,6 +1,6 @@
-import { safeLoad } from 'js-yaml'
-import { readFileAsync } from '~io'
-import Joi from '@hapi/joi'
+import { readYamlAsync } from '~io'
+import { validateRawConfig } from '~config/validate'
+import { red } from 'chalk'
 
 export type GenerateConfig = {
   name: string
@@ -9,23 +9,14 @@ export type GenerateConfig = {
 }
 
 export async function readGenerateConfig(configPath: string): Promise<GenerateConfig[]> {
-  const generateSchema = Joi.array()
-    .required()
-    .ruleset.unique('name')
-    .message('must have a unique name')
-    .ruleset.min(1)
-    .message('Your config file must contain at least 1 config item')
-    .items(
-      Joi.object({
-        name: Joi.string().required(),
-        request: Joi.object({ type: Joi.string() }).required(),
-        response: Joi.object({ type: Joi.string() }).required(),
-      }),
-    )
+  const rawConfig = await readYamlAsync(configPath)
 
-  const rawConfig = safeLoad(await readFileAsync(configPath))
+  const validationResult = validateRawConfig<GenerateConfig>(rawConfig)
+  if (!validationResult.success) {
+    throw new Error(`${red.bold('Invalid config file')}:\n${validationResult.errors.join('\n')}`)
+  }
 
-  return await generateSchema.validateAsync(rawConfig)
+  return validationResult.validatedConfigs
 }
 
 export type ReadGenerateConfig = typeof readGenerateConfig

@@ -1,28 +1,27 @@
-language: node_js
+language: minimal
 branches:
   only:
     - master
     - beta
     - alpha
+
 jobs:
   include:
-    - stage: release
-      services: docker
+    - stage: tests
       before_script:
-        - docker-compose build lint
-        - docker-compose build typecheck
-        - docker-compose build cover
         - docker-compose build release
         - ci_env=`bash <(curl -s https://codecov.io/env)`
       script:
-        - docker-compose run $ci_env lint
-        - docker-compose run $ci_env typecheck
+        - docker-compose run lint
+        - docker-compose run typecheck
         - docker-compose run $ci_env cover
-      install: skip
       deploy:
         provider: script
         skip_cleanup: true
         script:
-          - docker-compose run $ci_env release
+          - docker-compose run release
         on:
-          all_branches: true
+          branch:
+            - master
+            - beta
+            - alpha

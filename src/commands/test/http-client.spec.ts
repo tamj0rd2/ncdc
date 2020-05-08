@@ -143,28 +143,21 @@ describe('http client', () => {
 
   describe('when a request accept and response content-type are both unspecified', () => {
     it('returns an object if the response can be parsed as JSON', async () => {
-      const config = new ConfigBuilder()
-        .withResponseBody('{ "allo": "mate" }')
-        .withResponseHeaders({})
-        .build()
-      const expectedData = { allo: 'mate' }
-      mockedJson.mockResolvedValue(expectedData)
+      const config = new ConfigBuilder().withResponseBody({ allo: 'mate' }).withResponseHeaders({}).build()
+      mockedText.mockResolvedValue('{ "allo": "mate" }')
 
       const res = await fetchResource(config)
 
-      expect(mockedJson).toBeCalled()
-      expect(res.data).toEqual(expectedData)
+      expect(res.data).toEqual({ allo: 'mate' })
     })
 
     it('returns a string if the data cannot be parsed as json', async () => {
       const expectedData = '{ "allo: "mate" }'
       const config = new ConfigBuilder().withResponseBody(expectedData).withResponseHeaders({}).build()
-      mockedJson.mockRejectedValue(new Error('yikes'))
       mockedText.mockResolvedValue(expectedData)
 
       const res = await fetchResource(config)
 
-      expect(mockedJson).toBeCalled()
       expect(mockedText).toBeCalled()
       expect(res.data).toEqual(expectedData)
     })

@@ -6,6 +6,7 @@
 [![npm version](https://badge.fury.io/js/ncdc.svg)](https://badge.fury.io/js/ncdc)
 [![codecov](https://codecov.io/gh/tamj0rd2/ncdc/branch/master/graph/badge.svg)](https://codecov.io/gh/tamj0rd2/ncdc)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=tamj0rd2/ncdc)](https://dependabot.com)
 
 NCDC (or node cdc) is a tool that takes a consumer contract (written in yaml)
 and tests the specified endpoints against a producer. You can also run a single

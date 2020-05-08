@@ -9,7 +9,7 @@ describe('readGenerateConfig', () => {
   afterEach(() => jest.resetAllMocks())
 
   it('calls readFileSync with the correct params', async () => {
-    mockFn(safeLoad).mockReturnValue([])
+    mockFn(safeLoad).mockReturnValue([{ name: 'hello', request: {}, response: {} }])
 
     await readGenerateConfig('./configPath')
 
@@ -18,7 +18,7 @@ describe('readGenerateConfig', () => {
 
   it('calls safe load with the raw configuration', async () => {
     mockFn(readFileAsync).mockResolvedValue('hello moto')
-    mockFn(safeLoad).mockReturnValue([])
+    mockFn(safeLoad).mockReturnValue([{ name: 'world', request: {}, response: {} }])
 
     await readGenerateConfig('path')
 

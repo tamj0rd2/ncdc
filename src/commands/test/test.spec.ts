@@ -1,11 +1,11 @@
 import { testConfigs } from './test'
 import { randomString, mockFn, mockObj, mocked } from '~test-helpers'
 import { FetchResource, TypeValidator, doItAll } from '~validation'
-import { Config } from '~config'
 import { TestFn } from '~validation/validators'
 import logger from '~logger'
 import stripAnsi from 'strip-ansi'
 import { ProblemType } from '~problem'
+import { TestConfig } from './config'
 
 jest.unmock('./test')
 jest.unmock('~messages')
@@ -25,7 +25,9 @@ describe('test configs', () => {
   })
 
   it('calls doItAll with the correct args', async () => {
-    const configs: Config[] = [{ name: 'yo!', request: { endpoint: randomString('endpoint') } } as Config]
+    const configs: TestConfig[] = [
+      { name: 'yo!', request: { endpoint: randomString('endpoint') } } as TestConfig,
+    ]
     mockTest.mockResolvedValue([])
 
     await testConfigs(baseUrl, mockFetchResource, configs, mockTypeValidator)
@@ -34,7 +36,9 @@ describe('test configs', () => {
   })
 
   it('logs when a test passes', async () => {
-    const configs: Config[] = [{ name: 'yo!', request: { endpoint: randomString('endpoint') } } as Config]
+    const configs: TestConfig[] = [
+      { name: 'yo!', request: { endpoint: randomString('endpoint') } } as TestConfig,
+    ]
     mockTest.mockResolvedValue([])
 
     await testConfigs(baseUrl, mockFetchResource, configs, mockTypeValidator)
@@ -45,7 +49,9 @@ describe('test configs', () => {
   })
 
   it('logs when a test fail', async () => {
-    const configs: Config[] = [{ name: 'yo!', request: { endpoint: randomString('endpoint') } } as Config]
+    const configs: TestConfig[] = [
+      { name: 'yo!', request: { endpoint: randomString('endpoint') } } as TestConfig,
+    ]
     mockTest.mockResolvedValue([{ path: 'some.path', problemType: ProblemType.Request, message: 'message' }])
 
     await expect(testConfigs(baseUrl, mockFetchResource, configs, mockTypeValidator)).rejects.toThrowError(
@@ -61,7 +67,9 @@ describe('test configs', () => {
   })
 
   it('logs when a test throws an error', async () => {
-    const configs: Config[] = [{ name: 'yo!', request: { endpoint: randomString('endpoint') } } as Config]
+    const configs: TestConfig[] = [
+      { name: 'yo!', request: { endpoint: randomString('endpoint') } } as TestConfig,
+    ]
     mockTest.mockRejectedValue(new Error('woah dude'))
 
     await expect(testConfigs(baseUrl, mockFetchResource, configs, mockTypeValidator)).rejects.toThrowError(

@@ -4,6 +4,7 @@ import * as consts from '~commands/consts'
 import { createHandler, TestArgs } from './handler'
 import logger from '~logger'
 import { testConfigs } from './test'
+import loadConfig from '~config/load'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
@@ -45,6 +46,6 @@ export default function createTestCommand(
     command: 'test <configPath> <baseURL>',
     describe: 'Tests configured endpoints',
     builder,
-    handler: createHandler(handleError, createTypeValidator, logger, testConfigs),
+    handler: createHandler(handleError, createTypeValidator, logger, testConfigs, loadConfig),
   }
 }

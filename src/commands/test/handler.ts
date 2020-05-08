@@ -1,11 +1,11 @@
 import { HandleError, CreateTypeValidator } from '~commands'
-import readConfig, { Config } from '~config'
-import { Mode } from '~config/types'
 import { NCDCLogger } from '~logger'
 import { TestConfigs } from './test'
 import { createHttpClient } from './http-client'
-import { existsSync } from 'fs'
-import { resolve } from 'path'
+import { LoadConfig, LoadConfigStatus } from '~config/load'
+import { ValidatedTestConfig, transformConfigs } from './config'
+import { red } from 'chalk'
+import { TypeValidator } from '~validation'
 
 export interface TestArgs {
   schemaPath?: string
@@ -20,32 +20,38 @@ export const createHandler = (
   createTypeValidator: CreateTypeValidator,
   logger: NCDCLogger,
   testConfigs: TestConfigs,
+  loadConfig: LoadConfig<ValidatedTestConfig>,
 ) => async (args: TestArgs): Promise<void> => {
   const { configPath, baseURL, tsconfigPath, schemaPath, force } = args
   if (!configPath) return handleError({ message: `configPath must be specified` })
   if (!baseURL) return handleError({ message: 'baseURL must be specified' })
 
-  const fullTsconfigPath = resolve(tsconfigPath)
-  if (!existsSync(fullTsconfigPath)) {
-    return handleError({ message: `${fullTsconfigPath} does not exist` })
+  let typeValidator: TypeValidator | undefined
+
+  const loadResult = await loadConfig(
+    configPath,
+    () => {
+      typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
+      return typeValidator
+    },
+    transformConfigs,
+  )
+
+  switch (loadResult.type) {
+    case LoadConfigStatus.Success:
+      break
+    case LoadConfigStatus.InvalidConfig:
+    case LoadConfigStatus.InvalidBodies:
+    case LoadConfigStatus.ProblemReadingConfig:
+      return handleError({ message: loadResult.message })
+    case LoadConfigStatus.NoConfigs:
+      return handleError({ message: red('No configs to test') })
+    default:
+      return handleError({ message: 'An unknown error ocurred' })
   }
 
-  const typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
-
-  let configs: Config[]
   try {
-    configs = await readConfig(configPath, typeValidator, Mode.Test)
-  } catch (err) {
-    return handleError(err)
-  }
-
-  if (!configs.length) {
-    logger.warn('No tests to run')
-    return
-  }
-
-  try {
-    await testConfigs(baseURL, createHttpClient(baseURL), configs, typeValidator)
+    await testConfigs(baseURL, createHttpClient(baseURL), loadResult.configs, typeValidator)
   } catch (err) {
     return handleError(err)
   }

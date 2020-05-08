@@ -16,7 +16,8 @@ const commonSettings = {
     '!**/node_modules/**',
     '!**/coverage/**',
     '!**/lib/**',
-    '!**/bin/**'
+    '!**/bin/**',
+    '!**/types.ts'
   ],
   testEnvironment: 'node',
   coverageReporters: ["json"],
@@ -30,12 +31,14 @@ const unitTestSettings = {
   ],
   unmockedModulePathPatterns: [
     '<rootDir>/src/test-helpers.ts',
-    '<rootDir>/src/config/methods.ts',
+    '<rootDir>/src/config-old/methods.ts',
+    '<rootDir>/src/config/types.ts',
     '<rootDir>/src/shared/.*\.ts',
     require.resolve('winston'),
-    require.resolve('yup'),
+    require.resolve('@hapi/joi'),
     require.resolve('chalk'),
     require.resolve('strip-ansi'),
+    require.resolve('dot-object'),
   ],
   automock: true,
 }

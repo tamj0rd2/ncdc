@@ -9,9 +9,9 @@
   ],
   "exclude": [
     "src/test-helpers.ts",
-    "src/config/config-builder.ts",
     "**/*.spec.ts",
-    "**/*.d.ts"
+    "**/*.d.ts",
+    "**/types.ts"
   ],
   "tempDirectory": "./coverage"
 }

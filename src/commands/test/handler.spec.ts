@@ -3,16 +3,16 @@ import { HandleError, CreateTypeValidator } from '~commands/shared'
 import { createHandler, TestArgs } from './handler'
 import { resolve } from 'path'
 import { existsSync } from 'fs'
-import readConfig, { Config } from '~config'
 import { TypeValidator } from '~validation'
-import { Mode } from '~config/types'
 import { NCDCLogger } from '~logger'
 import { TestConfigs } from './test'
+import { LoadConfig, LoadConfigStatus } from '~config/load'
+import { ValidatedTestConfig, transformConfigs } from './config'
+import { ConfigBuilder } from '~config/types'
 
 jest.unmock('./handler')
 jest.mock('fs')
 jest.mock('path')
-jest.mock('~config')
 
 const mockedHandleError = mockFn<HandleError>()
 const mockedTypeValidator = mockObj<TypeValidator>({})
@@ -22,7 +22,14 @@ const mockedResolve = mocked(resolve)
 const resolvedTsconfigPath = randomString('resolved-tsconfig')
 const mockedLogger = mockObj<NCDCLogger>({ warn: jest.fn() })
 const mockedTestConfigs = mockFn<TestConfigs>()
-const handler = createHandler(mockedHandleError, mockedCreateTypeValidator, mockedLogger, mockedTestConfigs)
+const mockedLoadConfig = mockFn<LoadConfig<ValidatedTestConfig>>()
+const handler = createHandler(
+  mockedHandleError,
+  mockedCreateTypeValidator,
+  mockedLogger,
+  mockedTestConfigs,
+  mockedLoadConfig,
+)
 
 beforeEach(() => {
   jest.resetAllMocks()
@@ -47,21 +54,6 @@ describe('cli arg validation', () => {
 
     expect(mockedHandleError).toBeCalledWith({ message: 'baseURL must be specified' })
   })
-
-  it('returns an error if the tsconfig path does not exist', async () => {
-    const args: TestArgs = {
-      force: false,
-      tsconfigPath: randomString('tsconfig-path'),
-      configPath: randomString(),
-      baseURL: randomString(),
-    }
-    mockedExistsSync.mockReturnValue(false)
-
-    await handler(args)
-
-    expect(mockedResolve).toBeCalledWith(args.tsconfigPath)
-    expect(mockedHandleError).toBeCalledWith({ message: `${resolvedTsconfigPath} does not exist` })
-  })
 })
 
 const args: TestArgs = {
@@ -72,44 +64,50 @@ const args: TestArgs = {
   schemaPath: randomString('schema-path'),
 }
 
-const mockedReadConfig = mocked(readConfig)
-
-it('calls createTypeValidator with the correct arguments', async () => {
-  mockedReadConfig.mockResolvedValue([])
+it('calls loadConfig with the correct args', async () => {
+  mockedLoadConfig.mockResolvedValue({
+    type: LoadConfigStatus.Success,
+    absoluteFixturePaths: [],
+    configs: [],
+  })
 
   await handler(args)
 
-  expect(mockedCreateTypeValidator).toBeCalledWith(args.tsconfigPath, args.force, args.schemaPath)
+  expect(mockedLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs)
 })
 
-it('calls readConfig with the correct arguments', async () => {
-  mockedReadConfig.mockResolvedValue([])
+const badStatuses = [
+  LoadConfigStatus.InvalidBodies,
+  LoadConfigStatus.InvalidConfig,
+  LoadConfigStatus.ProblemReadingConfig,
+] as const
+badStatuses.forEach((status) => {
+  it(`handles a ${status} response from loadConfig`, async () => {
+    const expectedMessage = randomString('message')
+    mockedLoadConfig.mockResolvedValue({ type: status, message: expectedMessage })
 
-  await handler(args)
+    await handler(args)
 
-  // TODO: deprecate the mode stuff
-  expect(mockedReadConfig).toBeCalledWith(args.configPath, mockedTypeValidator, Mode.Test)
+    expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: expectedMessage }))
+  })
 })
 
-it('handles errors reading the config', async () => {
-  mockedReadConfig.mockRejectedValue(new Error('oh no'))
+it('handles there being no configs to run as an error', async () => {
+  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
 
   await handler(args)
 
-  expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: 'oh no' }))
-})
-
-it('logs a message if there are no configs to run', async () => {
-  mockedReadConfig.mockResolvedValue([])
-
-  await handler(args)
-
-  expect(mockedLogger.warn).toBeCalledWith('No tests to run')
+  expect(mockedHandleError).toBeCalledWith(
+    expect.objectContaining({ message: expect.stringContaining('No configs to test') }),
+  )
 })
 
 it('calls testConfigs with the correct arguments', async () => {
-  const configs: Config[] = [mockObj<Config>({ name: randomString('name') })]
-  mockedReadConfig.mockResolvedValue(configs)
+  const configs = [new ConfigBuilder().build()]
+  mockedLoadConfig.mockImplementation((_, getTypeValidator) => {
+    getTypeValidator()
+    return Promise.resolve({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
+  })
 
   await handler(args)
 
@@ -123,8 +121,11 @@ it('calls testConfigs with the correct arguments', async () => {
 })
 
 it('handles errors thrown by testConfigs', async () => {
-  const configs: Config[] = [mockObj<Config>({ name: randomString('name') })]
-  mockedReadConfig.mockResolvedValue(configs)
+  mockedLoadConfig.mockResolvedValue({
+    type: LoadConfigStatus.Success,
+    absoluteFixturePaths: [],
+    configs: [new ConfigBuilder().build()],
+  })
   mockedTestConfigs.mockRejectedValue(new Error('oops'))
 
   await handler(args)

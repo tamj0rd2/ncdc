@@ -1,9 +1,9 @@
 import { TypeValidator, FetchResource, doItAll } from '~validation'
-import { Config } from '~config'
 import Problem from '~problem'
 import { blue } from 'chalk'
 import logger from '~logger'
 import { testPassed, testFailed, testError } from '~messages'
+import { TestConfig } from './config'
 
 // TODO: why is this returning a number? yeah, what the fuck?
 // TODO: reuse this at config type validaiton type. nononononoooooo
@@ -23,8 +23,8 @@ const logTestResults = (baseUrl: string) => (displayName: string, endpoint: stri
 export const testConfigs = async (
   baseURL: string,
   fetchResource: FetchResource,
-  configs: Config[],
-  typeValidator: TypeValidator,
+  configs: TestConfig[],
+  typeValidator: Optional<TypeValidator>,
 ): Promise<void | void[]> => {
   const test = doItAll(typeValidator, fetchResource)
 

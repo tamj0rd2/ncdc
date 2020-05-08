@@ -1,12 +1,12 @@
 import { HandleError, CreateTypeValidator } from '~commands'
-import { resolve, isAbsolute } from 'path'
-import { validate, transformConfigs, Config } from './config'
-import { readYamlAsync } from '~io'
+import { resolve } from 'path'
+import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import logger from '~logger'
 import chokidar from 'chokidar'
 import { StartServerResult } from './server'
-import { red, bold } from 'chalk'
+import { LoadConfig, LoadConfigStatus } from '~config/load'
+import { red } from 'chalk'
 
 export interface ServeArgs {
   configPath?: string
@@ -17,52 +17,17 @@ export interface ServeArgs {
   watch: boolean
 }
 
-export type StartServer = (port: number, routes: Config[], typeValidator?: TypeValidator) => StartServerResult
-
-const CONFIG_ERROR_PREFIX = red.bold('Could not start serving due to config errors:') + '\n\n'
-
-const validateConfigBodies = async (
-  configs: Config[],
-  typeValidator: TypeValidator,
-): Promise<Optional<string>> => {
-  const seenConfigNames = new Set<string>()
-  const uniqueConfigs = configs.filter((config) => {
-    if (seenConfigNames.has(config.name)) return false
-    seenConfigNames.add(config.name)
-    return true
-  })
-
-  const totalValidationErrors: string[] = []
-  for (const config of uniqueConfigs) {
-    const validationErrors: string[] = []
-
-    if (config.request.body && config.request.type) {
-      const result = await typeValidator.validate(config.request.body, config.request.type)
-      if (!result.success) {
-        const prefix = red(`Config ${bold(config.name)} request body failed type validation:`)
-        const message = `${prefix}\n${result.errors.join('\n')}`
-        validationErrors.push(message)
-      }
-    }
-    if (config.response.body && config.response.type) {
-      const result = await typeValidator.validate(config.response.body, config.response.type)
-      if (!result.success) {
-        const prefix = red(`Config ${bold(config.name)} response body failed type validation:`)
-        const message = `${prefix}\n${result.errors.join('\n')}`
-        validationErrors.push(message)
-      }
-    }
-
-    if (validationErrors.length) totalValidationErrors.push(validationErrors.join('\n'))
-  }
-
-  if (totalValidationErrors.length) return CONFIG_ERROR_PREFIX + totalValidationErrors.join('\n\n')
-}
+export type StartServer = (
+  port: number,
+  routes: ServeConfig[],
+  typeValidator?: TypeValidator,
+) => StartServerResult
 
 const createHandler = (
   handleError: HandleError,
   createTypeValidator: CreateTypeValidator,
   startServer: StartServer,
+  loadConfig: LoadConfig<ValidatedServeConfig>,
 ) => async (args: ServeArgs): Promise<void> => {
   const { configPath, port, tsconfigPath, schemaPath, force, watch } = args
 
@@ -78,40 +43,34 @@ const createHandler = (
   }
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
-    let rawConfigFile: unknown
+    const loadResult = await loadConfig(
+      configPath,
+      () => {
+        if (!typeValidator || schemaPath) {
+          typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
+        }
+        return typeValidator
+      },
+      transformConfigs,
+    )
 
-    try {
-      rawConfigFile = await readYamlAsync(absoluteConfigPath)
-    } catch (err) {
-      throw new Error(`Problem reading your config file: ${err.message}`)
+    switch (loadResult.type) {
+      case LoadConfigStatus.Success:
+        break
+      case LoadConfigStatus.InvalidConfig:
+      case LoadConfigStatus.InvalidBodies:
+      case LoadConfigStatus.ProblemReadingConfig:
+        throw new Error(loadResult.message)
+      case LoadConfigStatus.NoConfigs:
+        throw new Error(red('No configs to serve'))
+      default:
+        throw new Error('An unknown error ocurred')
     }
 
-    const validationResult = validate(rawConfigFile)
-    if (!validationResult.success) {
-      throw new Error(`${CONFIG_ERROR_PREFIX}${validationResult.errors.join('\n')}`)
-    }
-
-    if (!validationResult.validatedConfigs.length) throw new Error('No configs to serve')
-
-    const configUsesTypes = validationResult.validatedConfigs.find((c) => c.request.type || c.response.type)
-    if (configUsesTypes && (schemaPath || !typeValidator)) {
-      typeValidator = configUsesTypes && createTypeValidator(tsconfigPath, force, schemaPath)
-    }
-
-    const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, absoluteConfigPath)
-
-    if (typeValidator) {
-      const bodyValidationMessage = await validateConfigBodies(transformedConfigs, typeValidator)
-      if (bodyValidationMessage) throw new Error(bodyValidationMessage)
-    }
-
-    const startServerResult = startServer(port, transformedConfigs, typeValidator)
+    const startServerResult = startServer(port, loadResult.configs, typeValidator)
     return {
       startServerResult,
-      pathsToWatch: validationResult.validatedConfigs
-        .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
-        .filter((x): x is string => !!x)
-        .map((p) => (isAbsolute(p) ? p : resolve(absoluteConfigPath, '..', p))),
+      pathsToWatch: loadResult.absoluteFixturePaths,
     }
   }
 
@@ -144,14 +103,14 @@ const createHandler = (
       try {
         await result.startServerResult.close()
       } catch (err) {
-        logger.error(`Could not restart the server: ${err.message}`)
+        logger.error(`Could not restart ncdc server\n${err.message}`)
         return
       }
 
       try {
         result = await prepAndStartServer()
       } catch (err) {
-        logger.error(`Could not restart ncdc server: ${err.message}`)
+        logger.error(`Could not restart ncdc server\n${err.message}`)
         return
       }
 

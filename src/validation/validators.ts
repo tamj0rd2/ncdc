@@ -1,11 +1,11 @@
 import TypeValidator from './type-validator'
 import Problem, { ProblemType } from '~problem'
-import { Config } from '~config'
 import { shouldBe, problemFetching } from '~messages'
+import { TestConfig } from '~commands/test/config'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource = (config: Config) => Promise<LoaderResponse>
-export type TestFn = (config: Config) => Promise<Public<Problem>[]>
+export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
+export type TestFn = (config: TestConfig) => Promise<Public<Problem>[]>
 
 const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
   if (typeof expected === 'object') {
@@ -26,7 +26,7 @@ const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
 }
 
 // TODO: get rid of this. it's only used by test mode now
-export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource): TestFn => {
+export const doItAll = (typeValidator: Optional<TypeValidator>, getResponse: FetchResource): TestFn => {
   return async (config): Promise<Problem[]> => {
     const { response: responseConfig } = config
 
@@ -82,7 +82,7 @@ export const doItAll = (typeValidator: TypeValidator, getResponse: FetchResource
       }
     }
 
-    if (responseConfig.type) {
+    if (typeValidator && responseConfig.type) {
       const result = await typeValidator.getProblems(response.data, responseConfig.type, ProblemType.Response)
       if (result) problems.push(...result)
     }

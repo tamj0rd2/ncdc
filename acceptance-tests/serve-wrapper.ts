@@ -63,10 +63,10 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
   const command = `LOG_LEVEL=debug CHOKIDAR_USEPOLLING=1 ./bin/ncdc serve ${CONFIG_FILE} -c ${FIXTURE_FOLDER}/tsconfig.json ${args}`
   const ncdc: ChildProcess = exec(command)
   const output: string[] = []
-  const getRawOutput = (): string => output.join('')
+  const getRawOutput = (): string => output.join('\n')
 
-  ncdc.stdout && ncdc.stdout.on('data', (data) => output.push(data))
-  ncdc.stderr && ncdc.stderr.on('data', (data) => output.push(data))
+  ncdc.stdout && ncdc.stdout.on('data', (data: string) => output.push(...data.split('\n').filter((x) => !!x)))
+  ncdc.stderr && ncdc.stderr.on('data', (data: string) => output.push(...data.split('\n').filter((x) => !!x)))
   ncdc.on('exit', (code, signal) => {
     hasExited = true
     if (code !== 0 && signal !== 'SIGTERM' && checkAvailability) {
@@ -110,7 +110,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
     }, timeout).catch(
       failNicely(
         `Did not find the string "${target}" in the output${
-          outputPointer ? ' on or after message ' + outputPointer : ''
+          outputPointer ? ' on or after line ' + outputPointer : ''
         }`,
       ),
     )

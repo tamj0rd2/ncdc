@@ -1,18 +1,16 @@
-import { transformConfigs, ValidatedServeConfig, ServeConfig } from './config'
-import { randomString, mocked } from '~test-helpers'
-import { isAbsolute, resolve } from 'path'
+import { mocked, randomString } from '~test-helpers'
 import { readJsonAsync } from '~io'
+import { ValidatedTestConfig, transformConfigs, TestConfig } from './config'
+import { isAbsolute, resolve } from 'path'
 import dot from 'dot-object'
 
-jest.unmock('./config')
-jest.unmock('@hapi/joi')
-jest.unmock('dot-object')
 jest.mock('path')
+jest.unmock('./config')
 
 describe('transform configs', () => {
   const mockReadJsonAsync = mocked(readJsonAsync)
 
-  const createBasicConfig = (): ValidatedServeConfig => {
+  const createBasicConfig = (): ValidatedTestConfig => {
     return {
       name: randomString(),
       serveOnly: false,
@@ -37,7 +35,7 @@ describe('transform configs', () => {
     const result = await transformConfigs([config], '')
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject<ServeConfig>({
+    expect(result[0]).toMatchObject<TestConfig>({
       name: config.name,
       request: {
         endpoint: config.request.endpoints![0],
@@ -77,11 +75,9 @@ describe('transform configs', () => {
     expect(body).toBe(dot.pick(key, config))
   })
 
-  // const bodyPathCases = ['request.bodyPath', 'response.bodyPath', 'response.serveBodyPath']
   const bodyPathCases = [
     ['request.bodyPath', 'request.body'],
     ['response.bodyPath', 'response.body'],
-    ['response.serveBodyPath', 'response.body'],
   ]
   describe.each(bodyPathCases.map((x) => [x]))('when %s is present', ([bodyPath, destination]) => {
     const mockIsAbsolute = mocked(isAbsolute)

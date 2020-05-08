@@ -5,3 +5,4 @@ declare type ROPopulatedArray<T> = { 0: T } & ReadonlyArray<T>
 
 declare type DataObject = { [index: string]: Data }
 declare type Data = string | number | boolean | DataObject | Data[]
+declare type StringDict = Record<string, string>

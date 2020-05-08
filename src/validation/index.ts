@@ -1,1 +1,1 @@
-export { default as TypeValidator, TypeValidationError } from './type-validator'
+export { default as TypeValidator } from './type-validator'

@@ -2,7 +2,6 @@ import express, { Express, Request, Response, ErrorRequestHandler } from 'expres
 import { blue } from 'chalk'
 import { Server } from 'http'
 import { TypeValidator } from '~validation'
-import { ProblemType } from '~problem'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
 import { ServeConfig } from '../config'
@@ -89,14 +88,12 @@ export const configureServer = (
         }
 
         if (typeValidator && request.type) {
-          const problems = await typeValidator.getProblems(req.body, request.type, ProblemType.Request)
-          serverLogger.warn(
-            `An endpoint for ${req.path} exists but the request body did not match the type`,
-            {
-              problems,
-            },
-          )
-          if (problems) {
+          const validationResult = await typeValidator.validate(req.body, request.type)
+          if (!validationResult.success) {
+            serverLogger.warn(
+              `An endpoint for ${req.path} exists but the request body did not match the type`,
+            )
+
             // TODO: something like this to capture better response codes
             // res.locals.status = 400
             return next()

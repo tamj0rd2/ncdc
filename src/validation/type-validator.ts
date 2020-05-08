@@ -54,7 +54,7 @@ export default class TypeValidator {
     }
   }
 
-  public async validate(data: Data, type: string): Promise<TypeValidationResult> {
+  public async validate(data: Data | undefined, type: string): Promise<TypeValidationResult> {
     const jsonSchema = await this.schemaRetriever.load(type)
     const validator = this.validator.compile(jsonSchema)
     const isValid = validator(data)

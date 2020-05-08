@@ -315,7 +315,7 @@ describe('ncdc serve', () => {
 
       it('serves when the type matches the body', async () => {
         configWrapper = new ServeConfigWrapper()
-          .addConfig(new ConfigBuilder().withType(schemaName).withBody('Hello!').build())
+          .addConfig(new ConfigBuilder().withResponseType(schemaName).withBody('Hello!').build())
           .addSchemaFile(schemaName, { type: 'string' })
 
         serve = await prepareServe(typecheckingCleanup)(
@@ -354,7 +354,7 @@ describe('ncdc serve', () => {
 
       it('it serves when the type matches the body', async () => {
         configWrapper = new ServeConfigWrapper()
-          .addConfig(new ConfigBuilder().withType('Book').build())
+          .addConfig(new ConfigBuilder().withResponseType('Book').build())
           .addType('Book', {
             ISBN: 'string',
             ISBN_13: 'string',

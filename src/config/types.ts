@@ -50,7 +50,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withRequestHeaders(headers?: StringDict): ConfigBuilder {
+  public withRequestHeaders(headers: Optional<StringDict>): ConfigBuilder {
     this.config.request.headers = headers
     return this
   }
@@ -60,12 +60,17 @@ export class ConfigBuilder {
     return this
   }
 
-  public withResponseBody(body?: Data): ConfigBuilder {
+  public withResponseBody(body: Optional<Data>): ConfigBuilder {
     this.config.response.body = body
     return this
   }
 
-  public withResponseHeaders(headers?: StringDict): ConfigBuilder {
+  public withResponseType(type: Optional<string>): ConfigBuilder {
+    this.config.response.type = type
+    return this
+  }
+
+  public withResponseHeaders(headers: Optional<StringDict>): ConfigBuilder {
     this.config.response.headers = headers
     return this
   }

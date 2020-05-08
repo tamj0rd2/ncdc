@@ -27,9 +27,10 @@ export const createHttpClient = (baseUrl: string): FetchResource => async ({
     return { status: res.status, data: useJson ? await res.json() : await res.text() }
   }
 
+  const data = await res.text()
   try {
-    return { status: res.status, data: await res.json() }
+    return { status: res.status, data: JSON.parse(data) }
   } catch {
-    return { status: res.status, data: await res.text() }
+    return { status: res.status, data }
   }
 }

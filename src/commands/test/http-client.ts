@@ -1,5 +1,8 @@
-import { FetchResource, LoaderResponse } from '~validation'
 import fetch, { Response } from 'node-fetch'
+import { TestConfig } from './config'
+
+export type LoaderResponse = { status: number; data?: Data }
+export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
 
 export const createHttpClient = (baseUrl: string): FetchResource => async ({
   request,

@@ -1,10 +1,11 @@
-import { doItAll, FetchResource } from './validators'
-import TypeValidator from './type-validator'
+import TypeValidator from '../../validation/type-validator'
 import { ConfigBuilder } from '~config/types'
 import Problem, { ProblemType } from '~problem'
 import * as messages from '~messages'
 import { mockObj, mockFn } from '~test-helpers'
 import { TestConfig } from '~commands/test/config'
+import { FetchResource } from './http-client'
+import { doItAll } from './validators'
 
 jest.unmock('./validators')
 

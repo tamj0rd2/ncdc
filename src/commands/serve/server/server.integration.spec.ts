@@ -162,7 +162,7 @@ describe('server', () => {
     })
   })
 
-  describe.only('type validation', () => {
+  describe('type validation', () => {
     it('returns the desired response when the request body passes type validation', async () => {
       const configs = [
         new ConfigBuilder()

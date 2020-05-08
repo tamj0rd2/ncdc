@@ -1,4 +1,4 @@
-import fetch, { Response } from 'node-fetch'
+import fetch from 'node-fetch'
 import { TestConfig } from './config'
 
 export type LoaderResponse = { status: number; data?: Data }
@@ -11,16 +11,11 @@ export const createHttpClient = (baseUrl: string): FetchResource => async ({
   const { body } = request
   const fullUrl = `${baseUrl}${request.endpoint}`
 
-  let res: Response
-  try {
-    res = await fetch(fullUrl, {
-      method: request.method,
-      body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
-      headers: request.headers,
-    })
-  } catch (err) {
-    return { status: 0 }
-  }
+  const res = await fetch(fullUrl, {
+    method: request.method,
+    body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
+    headers: request.headers,
+  })
 
   if (request.headers?.['accept']) {
     const useJson = request.headers['accept'].includes('application/json')

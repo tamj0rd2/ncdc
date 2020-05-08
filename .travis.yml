@@ -16,6 +16,7 @@ jobs:
         - docker-compose run typecheck
         - docker-compose run $ci_env cover
       deploy:
+        install: skip
         provider: script
         skip_cleanup: true
         script:

@@ -1,9 +1,11 @@
-import { TypeValidator, FetchResource, doItAll } from '~validation'
+import { TypeValidator } from '~validation'
 import Problem from '~problem'
 import { blue } from 'chalk'
 import logger from '~logger'
 import { testPassed, testFailed, testError } from '~messages'
 import { TestConfig } from './config'
+import { FetchResource } from './http-client'
+import { doItAll } from './validators'
 
 // TODO: why is this returning a number? yeah, what the fuck?
 // TODO: reuse this at config type validaiton type. nononononoooooo

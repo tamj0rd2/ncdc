@@ -1,6 +1,5 @@
 import { ConfigBuilder } from '~config/types'
-import { LoaderResponse } from '~validation'
-import { createHttpClient } from './http-client'
+import { createHttpClient, LoaderResponse } from './http-client'
 import { randomString, mocked, mockObj, mockFn } from '~test-helpers'
 import fetch, { Response } from 'node-fetch'
 

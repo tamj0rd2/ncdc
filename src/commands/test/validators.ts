@@ -1,10 +1,9 @@
-import TypeValidator from './type-validator'
+import TypeValidator from '../../validation/type-validator'
 import Problem, { ProblemType } from '~problem'
 import { shouldBe, problemFetching } from '~messages'
 import { TestConfig } from '~commands/test/config'
+import { FetchResource, LoaderResponse } from './http-client'
 
-export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
 export type TestFn = (config: TestConfig) => Promise<Public<Problem>[]>
 
 const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {

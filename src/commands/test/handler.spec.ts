@@ -1,11 +1,11 @@
-import { mockFn, randomString, mocked, mockObj } from '~test-helpers'
+import { mockFn, randomString, mocked, mockObj, randomNumber } from '~test-helpers'
 import { HandleError, CreateTypeValidator } from '~commands/shared'
 import { createHandler, TestArgs } from './handler'
 import { resolve } from 'path'
 import { existsSync } from 'fs'
 import { TypeValidator } from '~validation'
 import { NCDCLogger } from '~logger'
-import { TestConfigs } from './test'
+import { RunTests } from './test'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { ConfigBuilder } from '~config/types'
@@ -21,13 +21,13 @@ const mockedExistsSync = mocked(existsSync)
 const mockedResolve = mocked(resolve)
 const resolvedTsconfigPath = randomString('resolved-tsconfig')
 const mockedLogger = mockObj<NCDCLogger>({ warn: jest.fn() })
-const mockedTestConfigs = mockFn<TestConfigs>()
+const mockedRunTests = mockFn<RunTests>()
 const mockedLoadConfig = mockFn<LoadConfig<ValidatedTestConfig>>()
 const handler = createHandler(
   mockedHandleError,
   mockedCreateTypeValidator,
   mockedLogger,
-  mockedTestConfigs,
+  mockedRunTests,
   mockedLoadConfig,
 )
 
@@ -76,6 +76,18 @@ it('calls loadConfig with the correct args', async () => {
   expect(mockedLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs)
 })
 
+it('only creates a type validator once for loading configs', async () => {
+  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
+  await handler(args)
+
+  const getTypeValidatorFn = mockedLoadConfig.mock.calls[0][1]
+  const timesToCall = randomNumber(1, 10)
+  for (let i = 0; i < timesToCall; i++) {
+    getTypeValidatorFn()
+  }
+  expect(mockedCreateTypeValidator).toBeCalledTimes(1)
+})
+
 const badStatuses = [
   LoadConfigStatus.InvalidBodies,
   LoadConfigStatus.InvalidConfig,
@@ -102,22 +114,34 @@ it('handles there being no configs to run as an error', async () => {
   )
 })
 
-it('calls testConfigs with the correct arguments', async () => {
+it('calls runTests with the correct arguments', async () => {
   const configs = [new ConfigBuilder().build()]
-  mockedLoadConfig.mockImplementation((_, getTypeValidator) => {
-    getTypeValidator()
-    return Promise.resolve({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
-  })
+  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
 
   await handler(args)
 
   expect(mockedHandleError).not.toBeCalled()
-  expect(mockedTestConfigs).toBeCalledWith(
+  expect(mockedRunTests).toBeCalledWith(
     args.baseURL,
     expect.objectContaining({}),
     configs,
-    mockedTypeValidator,
+    expect.any(Function),
+    mockedLogger,
   )
+})
+
+it('only creates a type validator once for running the tests', async () => {
+  const configs = [new ConfigBuilder().build()]
+  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
+
+  await handler(args)
+
+  const getTypeValidatorFn = mockedRunTests.mock.calls[0][3]
+  const timesToCall = randomNumber(1, 10)
+  for (let i = 0; i < timesToCall; i++) {
+    getTypeValidatorFn()
+  }
+  expect(mockedCreateTypeValidator).toBeCalledTimes(1)
 })
 
 it('handles errors thrown by testConfigs', async () => {
@@ -126,14 +150,9 @@ it('handles errors thrown by testConfigs', async () => {
     absoluteFixturePaths: [],
     configs: [new ConfigBuilder().build()],
   })
-  mockedTestConfigs.mockRejectedValue(new Error('oops'))
+  mockedRunTests.mockResolvedValue('Failure')
 
   await handler(args)
 
-  expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: 'oops' }))
+  expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: 'Not all tests passed' }))
 })
-
-// TODO: desired behaviour
-it.todo('creates a type validator if there are types in the config')
-
-it.todo('does not create a type validator if there are no types in the config')

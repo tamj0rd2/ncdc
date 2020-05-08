@@ -78,7 +78,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withType(typeName: string): ConfigBuilder {
+  public withResponseType(typeName: string): ConfigBuilder {
     if (this.config.response.type) {
       throw new Error('Response type already set to ' + this.config.response.type)
     }

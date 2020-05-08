@@ -1,49 +1,94 @@
 import { TypeValidator } from '~validation'
-import Problem from '~problem'
-import { blue } from 'chalk'
-import logger from '~logger'
-import { testPassed, testFailed, testError } from '~messages'
+import { red, green, blue } from 'chalk'
 import { TestConfig } from './config'
-import { FetchResource } from './http-client'
-import { doItAll } from './validators'
+import { inspect } from 'util'
+import { Logger } from 'winston'
 
-// TODO: why is this returning a number? yeah, what the fuck?
-// TODO: reuse this at config type validaiton type. nononononoooooo
-const logTestResults = (baseUrl: string) => (displayName: string, endpoint: string) => (
-  problems: Public<Problem>[],
-): 0 | 1 => {
-  const displayEndpoint = blue(`${baseUrl}${endpoint}`)
-  if (!problems.length) {
-    logger.info(testPassed(displayName, displayEndpoint))
-    return 0
-  } else {
-    logger.error(testFailed(displayName, displayEndpoint, problems))
-    return 1
+export type LoaderResponse = { status: number; data?: Data }
+export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
+export type GetTypeValidator = () => TypeValidator
+
+const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
+  if (typeof expected === 'object') {
+    if (!expected) return expected === actual
+    if (typeof actual !== 'object') return false
+    if (!actual) return false
+
+    for (const key in expected) {
+      const expectedValue = expected[key as keyof typeof expected]
+      const actualValue = actual[key as keyof typeof actual]
+      if (!isDeeplyEqual(expectedValue, actualValue)) return false
+    }
+
+    return true
   }
+
+  return expected === actual
 }
 
-export const testConfigs = async (
-  baseURL: string,
+export const runTests = async (
+  baseUrl: string,
   fetchResource: FetchResource,
   configs: TestConfig[],
-  typeValidator: Optional<TypeValidator>,
-): Promise<void | void[]> => {
-  const test = doItAll(typeValidator, fetchResource)
+  getTypeValidator: GetTypeValidator,
+  logger: Logger,
+): Promise<'Success' | 'Failure'> => {
+  // TODO: now I can use the full endpoint if I want to, since baseurl is still currently an argument
 
-  const resultsLogger = logTestResults(baseURL)
+  const testTasks2 = configs.map(
+    async (config): Promise<{ success: boolean; message: string }> => {
+      const failedLine = red.bold(`FAILED: ${config.name}`)
+      const endpointSegment = `- ${blue(baseUrl + config.request.endpoint)}`
 
-  const testTasks = configs.map((testConfig) => {
-    return test(testConfig)
-      .then(resultsLogger(testConfig.name, testConfig.request.endpoint))
-      .catch((err) => {
-        logger.error(testError(testConfig.name, baseURL + testConfig.request.endpoint, err.message))
-        return 1
-      })
-  })
+      let res: LoaderResponse
+      try {
+        res = await fetchResource(config)
+      } catch (err) {
+        return { success: false, message: `${failedLine} ${endpointSegment}\n${err.message}` }
+      }
 
-  const results = Promise.all(testTasks)
+      if (res.status !== config.response.code) {
+        const message = `Expected status code ${green(config.response.code)} but got ${red(res.status)}`
+        return { success: false, message: `${failedLine} ${endpointSegment}\n${message}` }
+      }
 
-  if ((await results).includes(1)) throw new Error('Not all tests passed')
+      const messages: string[] = []
+
+      if (config.response.body) {
+        if (res.data === undefined) {
+          messages.push('No response body was received')
+        } else if (!isDeeplyEqual(config.response.body, res.data)) {
+          const message = `The response body was not deeply equal to your configured fixture`
+          const formattedResponse = inspect(res.data, false, 4, true)
+          messages.push(`${message}\nReceived:\n${formattedResponse}`)
+        }
+      }
+
+      if (config.response.type) {
+        const validationResult = await getTypeValidator().validate(res.data, config.response.type)
+        if (!validationResult.success) {
+          const message = `The received body does not match the type ${config.response.type}`
+          messages.push(`${message}\n${validationResult.errors.join('\n')}`)
+        }
+      }
+
+      if (messages.length) {
+        return { success: false, message: `${failedLine} ${endpointSegment}\n${messages.join('\n')}` }
+      }
+
+      return { success: true, message: `${green('PASSED')}: ${config.name} ${endpointSegment}` }
+    },
+  )
+
+  for (const testTask of testTasks2) {
+    testTask.then(({ message, success }) => {
+      if (success) logger.info(message)
+      else logger.error(message)
+    })
+  }
+
+  const allResults = await Promise.all(testTasks2)
+  return allResults.find((r) => !r.success) ? 'Failure' : 'Success'
 }
 
-export type TestConfigs = typeof testConfigs
+export type RunTests = typeof runTests

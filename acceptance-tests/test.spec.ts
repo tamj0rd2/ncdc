@@ -4,7 +4,7 @@ import { Server } from 'http'
 import strip from 'strip-ansi'
 
 jest.useRealTimers()
-jest.setTimeout(45000)
+jest.setTimeout(7000)
 
 describe('ncdc test', () => {
   let realServer: Server
@@ -33,15 +33,18 @@ describe('ncdc test', () => {
 
   it('can test endpoints that return json', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 'world' }).start()
-    new TestConfigWrapper().addConfig(
-      new ConfigBuilder()
-        .withName('Hello')
-        .withEndpoints('/api/resource')
-        .withServeBody(undefined)
-        .withBody({ hello: 'world' })
-        .withResponseHeaders({ 'content-type': 'application/json' })
-        .build(),
-    )
+    new TestConfigWrapper()
+      .addConfig(
+        new ConfigBuilder()
+          .withName('Hello')
+          .withEndpoints('/api/resource')
+          .withServeBody(undefined)
+          .withBody({ hello: 'world' })
+          .withResponseType('Hello')
+          .withResponseHeaders({ 'content-type': 'application/json' })
+          .build(),
+      )
+      .addType('Hello', { hello: 'string' })
 
     const output = await runTestCommand()
 

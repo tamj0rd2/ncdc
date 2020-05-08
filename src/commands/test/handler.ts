@@ -1,8 +1,8 @@
 import { HandleError, CreateTypeValidator } from '~commands'
 import { NCDCLogger } from '~logger'
-import { TestConfigs } from './test'
+import { RunTests } from './test'
 import { createHttpClient } from './http-client'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
+import { LoadConfig, LoadConfigStatus, GetTypeValidator } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { red } from 'chalk'
 import { TypeValidator } from '~validation'
@@ -19,7 +19,7 @@ export const createHandler = (
   handleError: HandleError,
   createTypeValidator: CreateTypeValidator,
   logger: NCDCLogger,
-  testConfigs: TestConfigs,
+  runTests: RunTests,
   loadConfig: LoadConfig<ValidatedTestConfig>,
 ) => async (args: TestArgs): Promise<void> => {
   const { configPath, baseURL, tsconfigPath, schemaPath, force } = args
@@ -27,15 +27,12 @@ export const createHandler = (
   if (!baseURL) return handleError({ message: 'baseURL must be specified' })
 
   let typeValidator: TypeValidator | undefined
+  const getTypeValidator: GetTypeValidator = () => {
+    if (!typeValidator) typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
+    return typeValidator
+  }
 
-  const loadResult = await loadConfig(
-    configPath,
-    () => {
-      typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
-      return typeValidator
-    },
-    transformConfigs,
-  )
+  const loadResult = await loadConfig(configPath, getTypeValidator, transformConfigs)
 
   switch (loadResult.type) {
     case LoadConfigStatus.Success:
@@ -50,9 +47,12 @@ export const createHandler = (
       return handleError({ message: 'An unknown error ocurred' })
   }
 
-  try {
-    await testConfigs(baseURL, createHttpClient(baseURL), loadResult.configs, typeValidator)
-  } catch (err) {
-    return handleError(err)
-  }
+  const testResult = await runTests(
+    baseURL,
+    createHttpClient(baseURL),
+    loadResult.configs,
+    getTypeValidator,
+    logger,
+  )
+  if (testResult === 'Failure') return handleError({ message: 'Not all tests passed' })
 }

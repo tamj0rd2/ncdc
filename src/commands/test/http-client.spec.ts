@@ -1,5 +1,5 @@
 import { ConfigBuilder } from '~config/types'
-import { createHttpClient, LoaderResponse } from './http-client'
+import { createHttpClient } from './http-client'
 import { randomString, mocked, mockObj, mockFn } from '~test-helpers'
 import fetch, { Response } from 'node-fetch'
 
@@ -90,14 +90,11 @@ describe('http client', () => {
     })
   })
 
-  it.todo('throws an error if there is a connection error')
-  it('returns status 0 if there is a connection error', async () => {
+  it('throws if there is a connection error', async () => {
     const config = new ConfigBuilder().withRequestBody({ allo: 'mate' }).build()
     mockedFetch.mockRejectedValue(new Error('yipes'))
 
-    const res = await fetchResource(config)
-
-    expect(res).toEqual<LoaderResponse>({ status: 0 })
+    await expect(fetchResource(config)).rejects.toThrowError('yipes')
   })
 
   describe('when a request accept header is specified', () => {

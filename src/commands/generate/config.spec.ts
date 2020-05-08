@@ -1,47 +1,51 @@
-import { mockFn } from '~test-helpers'
+import { mocked, randomString } from '~test-helpers'
 import { readGenerateConfig } from './config'
-import { safeLoad } from 'js-yaml'
-import { readFileAsync } from '~io'
+import { readYamlAsync } from '~io'
+import { validateRawConfig } from '~config/validate'
+import { ConfigBuilder } from '~config/types'
 
-jest.unmock('./config')
+jest.disableAutomock()
+jest.mock('~io')
+jest.mock('~config/validate')
 
 describe('readGenerateConfig', () => {
   afterEach(() => jest.resetAllMocks())
 
-  it('calls readFileSync with the correct params', async () => {
-    mockFn(safeLoad).mockReturnValue([{ name: 'hello', request: {}, response: {} }])
+  const mockReadYaml = mocked(readYamlAsync)
+  const mockValidateConfig = mocked(validateRawConfig)
 
-    await readGenerateConfig('./configPath')
+  it('calls readFileSync with the correct args', async () => {
+    const configPath = randomString('resolved path')
+    mockValidateConfig.mockReturnValue({ success: true, validatedConfigs: [] })
 
-    expect(mockFn(readFileAsync)).toHaveBeenCalledWith('./configPath')
+    await readGenerateConfig(configPath)
+
+    expect(mockReadYaml).toHaveBeenCalledWith(configPath)
   })
 
-  it('calls safe load with the raw configuration', async () => {
-    mockFn(readFileAsync).mockResolvedValue('hello moto')
-    mockFn(safeLoad).mockReturnValue([{ name: 'world', request: {}, response: {} }])
+  it('calls validate raw config with the correct args', async () => {
+    mockReadYaml.mockResolvedValue('hello moto')
+    mockValidateConfig.mockReturnValue({ success: true, validatedConfigs: [] })
 
     await readGenerateConfig('path')
 
-    expect(mockFn(safeLoad)).toHaveBeenCalledWith('hello moto')
+    expect(mockValidateConfig).toHaveBeenCalledWith('hello moto')
   })
 
-  it('returns each mapped config', async () => {
-    const loadedConfigs = [
-      {
-        name: 'Yo',
-        request: { type: 'hey' },
-        response: { type: 'bay' },
-      },
-    ]
-    mockFn(safeLoad).mockReturnValue(loadedConfigs)
+  it('returns each validated config', async () => {
+    const configs = [new ConfigBuilder().build(), new ConfigBuilder().build()]
+    mockValidateConfig.mockReturnValue({ success: true, validatedConfigs: configs })
 
     const result = await readGenerateConfig('path')
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject({
-      name: 'Yo',
-      request: { type: 'hey' },
-      response: { type: 'bay' },
-    })
+    expect(result).toStrictEqual(configs)
+  })
+
+  it('throws an error when the validation fails', async () => {
+    const error1 = randomString('error1')
+    const error2 = randomString('error2')
+    mockValidateConfig.mockReturnValue({ success: false, errors: [error1, error2] })
+
+    await expect(readGenerateConfig('path')).rejects.toThrow(`${error1}\n${error2}`)
   })
 })

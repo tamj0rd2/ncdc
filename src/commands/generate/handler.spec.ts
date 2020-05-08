@@ -1,12 +1,14 @@
 import createHandler, { GenerateArgs, GetSchemaGenerator } from './handler'
-import { mockFn, mockObj, DeepPartial } from '~test-helpers'
+import { mockFn, mockObj, DeepPartial, randomString, mocked } from '~test-helpers'
 import { ReadGenerateConfig, GenerateConfig } from './config'
 import { HandleError } from '~commands'
 import { Generate } from './generate'
 import { Logger } from 'winston'
 import { SchemaGenerator } from '~schema'
+import { resolve } from 'path'
 
 jest.unmock('./handler')
+jest.mock('path')
 
 describe('Generate Command', () => {
   const handleErrorStub = mockFn<HandleError>()
@@ -14,6 +16,7 @@ describe('Generate Command', () => {
   const getSchemaGenMock = mockFn<GetSchemaGenerator>()
   const generateStub = mockFn<Generate>()
   const loggerStub = mockObj<Logger>({ info: jest.fn() })
+  const mockResolve = mocked(resolve)
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const getHandler = (isDev = false) =>
@@ -43,12 +46,14 @@ describe('Generate Command', () => {
       configPath: 'config path',
       force: false,
     }
+    const resolvedConfigPath = randomString('resolved config path')
+    mockResolve.mockReturnValue(resolvedConfigPath)
 
     readConfigMock.mockResolvedValue([])
 
     await handler(args)
 
-    expect(readConfigMock).toHaveBeenCalledWith('config path')
+    expect(readConfigMock).toHaveBeenCalledWith(resolvedConfigPath)
   })
 
   it('calls the error handler if there is a problem reading the config', async () => {
@@ -84,27 +89,9 @@ describe('Generate Command', () => {
 
     await handler(args)
 
-    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('No custom types were specified'))
-  })
-
-  it('logs a message if there are only built-in types in the config', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
-      outputPath: '',
-      tsconfigPath: '',
-      configPath: 'config path',
-      force: false,
-    }
-
-    const configs: DeepPartial<GenerateConfig>[] = [
-      { request: { type: 'string' }, response: {} },
-      { request: {}, response: { type: 'object' } },
-    ]
-    readConfigMock.mockResolvedValue(configs as GenerateConfig[])
-
-    await handler(args)
-
-    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('No custom types were specified'))
+    expect(handleErrorStub).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'No custom types were specified in the given config file' }),
+    )
   })
 
   it.each([[true], [false]])(

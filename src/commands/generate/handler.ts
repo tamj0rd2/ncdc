@@ -3,6 +3,7 @@ import { GenerateConfig, ReadGenerateConfig } from './config'
 import { SchemaGenerator } from '~schema'
 import { Generate } from './generate'
 import { Logger } from 'winston'
+import { resolve } from 'path'
 
 export interface GenerateArgs {
   configPath?: string
@@ -26,22 +27,19 @@ const createHandler = (
 
   let configs: GenerateConfig[]
   try {
-    configs = await readGenerateConfig(configPath)
+    configs = await readGenerateConfig(resolve(configPath))
   } catch (err) {
     return handleError(err)
   }
 
-  const builtInTypes = ['string', 'number', 'boolean', 'object']
   const types = configs
     .map((x) => x.request.type)
     .concat(configs.map((x) => x.response.type))
     .filter((x): x is string => !!x)
-    .filter((x) => !builtInTypes.includes(x))
     .filter((x, i, arr) => i === arr.indexOf(x))
 
   if (!types.length) {
-    logger.info('No custom types were specified in the given config file')
-    return
+    return handleError({ message: 'No custom types were specified in the given config file' })
   }
 
   let schemaGenerator: SchemaGenerator
@@ -49,7 +47,7 @@ const createHandler = (
   try {
     schemaGenerator = getSchemaGenerator(tsconfigPath, force || isDevMode)
   } catch (err) {
-    handleError(err)
+    return handleError(err)
   }
 
   try {

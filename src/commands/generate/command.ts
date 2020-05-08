@@ -33,10 +33,12 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
     })
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
 
-export default function createGenerateCommand(
-  handleError: HandleError,
-  isDevMode: boolean,
-): CommandModule<{}, GenerateArgs> {
+export default function createGenerateCommand(isDevMode: boolean): CommandModule<{}, GenerateArgs> {
+  const handleError: HandleError = ({ message }) => {
+    logger.error(message)
+    process.exit(1)
+  }
+
   return {
     command: 'generate <configPath>',
     describe: 'Generates a json schema for each type specified in the config file',

@@ -30,7 +30,7 @@ export interface ValidatedRawConfig {
 
 export type MutateRequest = (schema: Joi.ObjectSchema) => Joi.ObjectSchema
 
-export const validateRawConfig = <TOut extends ValidatedRawConfig = ValidatedRawConfig>(
+export const validateRawConfig = <TOut = ValidatedRawConfig>(
   config: unknown,
 ): ValidationSuccess<TOut> | ValidationFailure => {
   if (!config) {

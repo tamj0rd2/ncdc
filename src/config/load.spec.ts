@@ -82,7 +82,10 @@ describe('loadConfig', () => {
   })
 
   it('does not create a type validator if no configs have associated types', async () => {
-    mockValidate.mockReturnValue({ success: true, validatedConfigs: [{ request: {}, response: {} }] })
+    mockValidate.mockReturnValue({
+      success: true,
+      validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
+    })
 
     await act()
 
@@ -90,7 +93,7 @@ describe('loadConfig', () => {
   })
 
   it('calls the transform func with the correct args', async () => {
-    const validatedConfigs = [{ request: {}, response: {} }]
+    const validatedConfigs = [{ serveOnly: false, request: {}, response: {} }]
     mockValidate.mockReturnValue({ success: true, validatedConfigs })
     const absoulteConfigPath = randomString()
     mockResolve.mockReturnValue(absoulteConfigPath)
@@ -103,7 +106,7 @@ describe('loadConfig', () => {
   it('creates a type validator with the correct args when types are present in any config', async () => {
     mockValidate.mockReturnValue({
       success: true,
-      validatedConfigs: [{ request: {}, response: {} }],
+      validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
     mockTransformConfigs.mockResolvedValue([
       { request: { type: randomString() }, response: {} } as CommonConfig,
@@ -117,7 +120,7 @@ describe('loadConfig', () => {
   it('returns a failure response is there are body validation issues', async () => {
     mockValidate.mockReturnValue({
       success: true,
-      validatedConfigs: [{ request: {}, response: {} }],
+      validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
     mockTransformConfigs.mockResolvedValue([
       { request: { type: randomString() }, response: {} } as CommonConfig,
@@ -141,6 +144,7 @@ describe('loadConfig', () => {
       const expectedAbsPath = randomString('some abs path')
       const validatedConfigs: ValidatedRawConfig[] = [
         {
+          serveOnly: false,
           request: { bodyPath: fixturePath1 },
           response: { bodyPath: fixturePath2, serveBodyPath: fixturePath3 },
         },

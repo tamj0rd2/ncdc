@@ -24,7 +24,7 @@ export const testConfigs = async (
   baseURL: string,
   fetchResource: FetchResource,
   configs: Config[],
-  typeValidator: TypeValidator,
+  typeValidator: Optional<TypeValidator>,
 ): Promise<void | void[]> => {
   const test = doItAll(typeValidator, fetchResource)
 

@@ -15,6 +15,7 @@ export interface ValidationFailure {
 }
 
 export interface ValidatedRawConfig {
+  serveOnly: boolean
   request: {
     type?: string
     endpoints?: string[]
@@ -26,6 +27,8 @@ export interface ValidatedRawConfig {
     serveBodyPath?: string
   }
 }
+
+export type MutateRequest = (schema: Joi.ObjectSchema) => Joi.ObjectSchema
 
 export const validateRawConfig = <TOut extends ValidatedRawConfig = ValidatedRawConfig>(
   config: unknown,
@@ -39,13 +42,19 @@ export const validateRawConfig = <TOut extends ValidatedRawConfig = ValidatedRaw
     .ruleset.pattern(/^\//)
     .message('must start with /')
 
+  const endpointsSchema = Joi.alternatives().conditional('.', {
+    is: Joi.string().allow(''),
+    then: endpointSchema,
+    otherwise: Joi.array().items(endpointSchema).min(1),
+  })
+
   const bodySchema = [Joi.string(), Joi.object()]
 
   const schema = Joi.array()
     .items(
       Joi.object({
         name: Joi.string().required(),
-        serveOnly: Joi.bool(),
+        serveOnly: Joi.bool().default(false),
         // TODO: the request schema needs to be customisable, or have some way to mutate it
         request: Joi.object({
           method: Joi.string()
@@ -55,10 +64,10 @@ export const validateRawConfig = <TOut extends ValidatedRawConfig = ValidatedRaw
           type: Joi.string(),
           headers: Joi.object(),
           endpoints: Joi.alternatives()
-            .conditional('.', {
-              is: Joi.string().allow(''),
-              then: endpointSchema,
-              otherwise: Joi.array().items(endpointSchema).min(1),
+            .conditional('...serveOnly', {
+              is: Joi.valid(false),
+              then: endpointsSchema.required(),
+              otherwise: endpointsSchema,
             })
             .custom((value) => (typeof value === 'string' ? [value] : value)),
           serveEndpoint: endpointSchema,
@@ -66,8 +75,11 @@ export const validateRawConfig = <TOut extends ValidatedRawConfig = ValidatedRaw
           bodyPath: Joi.string(),
         })
           .required()
-          .or('endpoints', 'serveEndpoint')
-          .oxor('body', 'bodyPath'),
+          .oxor('body', 'bodyPath')
+          .when('serveOnly', {
+            is: Joi.valid(true),
+            then: Joi.object().or('endpoints', 'serveEndpoint'),
+          }),
         response: Joi.object({
           code: Joi.number().required(),
           type: Joi.string(),

@@ -351,6 +351,48 @@ describe('validate', () => {
     })
   })
 
+  describe('serveOnly', () => {
+    it('is false by default if not supplied', () => {
+      const config = {
+        name: 'My Config',
+        request: { method: 'get', endpoints: '/api' },
+        response: { code: randomNumber() },
+      }
+      const validationResult = expectNotToGetErrorsConcerning(config, 'serveOnly')
+
+      if (!validationResult.success) {
+        expect(validationResult.errors).toStrictEqual([])
+        expect(validationResult.success).toBe(true)
+        return
+      }
+
+      expect(validationResult.success).toBe(true)
+      expect(validationResult.validatedConfigs[0].serveOnly).toBe(false)
+    })
+
+    describe('when false', () => {
+      it('returns an error if request.endpoints is not defined', () => {
+        const config = { request: {} }
+        expectValidationErors(config, 'config[0].request.endpoints is required')
+      })
+
+      it('allows request.endpoints and request.serveEndpoints to co-exist', () => {
+        const config = { request: { endpoints: '/yo', serveEndpoint: '/dawg' } }
+        expectNotToGetErrorsConcerning(config, 'request.endpoints', 'request.serveEndpoint')
+      })
+    })
+
+    describe('when true', () => {
+      it('returns an error if request.endpoints and request.serveEndpoint are both undefined', () => {
+        const config = { serveOnly: true, request: { method: 'delete' } }
+        expectValidationErors(
+          config,
+          'config[0].request must contain at least one of [endpoints, serveEndpoint]',
+        )
+      })
+    })
+  })
+
   describe('cases that should pass', () => {
     test('a pretty basic config', () => {
       const config = {

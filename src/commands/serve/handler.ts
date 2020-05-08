@@ -1,6 +1,6 @@
 import { HandleError, CreateTypeValidator } from '~commands'
 import { resolve } from 'path'
-import { transformConfigs, Config, ValidatedServeConfig } from './config'
+import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import logger from '~logger'
 import chokidar from 'chokidar'
@@ -17,7 +17,11 @@ export interface ServeArgs {
   watch: boolean
 }
 
-export type StartServer = (port: number, routes: Config[], typeValidator?: TypeValidator) => StartServerResult
+export type StartServer = (
+  port: number,
+  routes: ServeConfig[],
+  typeValidator?: TypeValidator,
+) => StartServerResult
 
 const createHandler = (
   handleError: HandleError,

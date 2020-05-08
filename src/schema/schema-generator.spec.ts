@@ -1,12 +1,15 @@
 import SchemaGenerator from './schema-generator'
 import * as TJS from 'typescript-json-schema'
 import * as path from 'path'
-import { mockObj } from '~test-helpers'
+import { mockObj, mocked, randomString } from '~test-helpers'
+import { existsSync } from 'fs'
+import { resolve } from 'path'
 
 // TODO: remove TJS workaround
 jest.disableAutomock()
 jest.mock('typescript-json-schema')
 jest.mock('path')
+jest.mock('fs')
 
 describe('SchemaLoader', () => {
   const mockedTJS = mockObj(TJS)
@@ -14,6 +17,15 @@ describe('SchemaLoader', () => {
 
   beforeEach(() => {
     jest.resetAllMocks()
+    mocked(existsSync).mockReturnValue(true)
+  })
+
+  it('returns an error if the tsconfig path does not exist', () => {
+    const fullPath = randomString('fullPath')
+    mocked(resolve).mockReturnValue(fullPath)
+    mocked(existsSync).mockReturnValue(false)
+
+    expect(() => new SchemaGenerator('tsconfig path', true)).toThrowError(`${fullPath} does not exist`)
   })
 
   it('returns the generated schema', async () => {

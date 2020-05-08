@@ -1,7 +1,7 @@
 import createHandler, { StartServer, ServeArgs } from './handler'
 import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpers'
 import { HandleError, CreateTypeValidator } from '~commands/shared'
-import { validate, transformConfigs, Config, ValidatedServeConfig } from './config'
+import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
 import chokidar, { FSWatcher } from 'chokidar'
 import stripAnsi from 'strip-ansi'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
@@ -56,16 +56,14 @@ describe('handler', () => {
   }
 
   describe('runs the server with the correct configs', () => {
-    const mockValidate = mocked(validate)
     const mockTransformConfigs = mocked(transformConfigs)
     const mockTypeValidator = mockObj<TypeValidator>({})
 
     beforeEach(() => {
       jest.resetAllMocks()
       mockCreateTypeValidator.mockReturnValue(mockTypeValidator)
-      mockValidate.mockReturnValue({ success: true, validatedConfigs: [] })
       mockTransformConfigs.mockResolvedValue([
-        { name: randomString('name'), request: {}, response: {} } as Config,
+        { name: randomString('name'), request: {}, response: {} } as ServeConfig,
       ])
     })
 

@@ -1,14 +1,10 @@
-import Joi from '@hapi/joi'
-import dot from 'dot-object'
 import { isAbsolute, resolve } from 'path'
 import { readJsonAsync } from '~io'
-import { blue, bold } from 'chalk'
-
-export const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const
-export type SupportedMethod = typeof supportedMethods[number]
+import { SupportedMethod } from '~config/types'
 
 export interface ValidatedServeConfig {
   name: string
+  serveOnly: boolean
   request: {
     method: SupportedMethod
     type?: string
@@ -29,116 +25,16 @@ export interface ValidatedServeConfig {
   }
 }
 
-export interface ValidationSuccess {
-  success: true
-  validatedConfigs: ValidatedServeConfig[]
-}
-
-export interface ValidationFailure {
-  success: false
-  errors: string[]
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const validate = (config: any): ValidationSuccess | ValidationFailure => {
-  if (!config) {
-    return { success: false, errors: ['Your config file cannot be empty'] }
-  }
-
-  const endpointSchema = Joi.string()
-    .uri({ relativeOnly: true, allowQuerySquareBrackets: true })
-    .ruleset.pattern(/^\//)
-    .message('must start with /')
-
-  const bodySchema = [Joi.string(), Joi.object()]
-
-  const schema = Joi.array()
-    .items(
-      Joi.object({
-        name: Joi.string().required(),
-        serveOnly: Joi.bool(),
-        request: Joi.object({
-          method: Joi.string()
-            .valid(...supportedMethods)
-            .uppercase()
-            .required(),
-          type: Joi.string(),
-          headers: Joi.object(),
-          endpoints: Joi.alternatives()
-            .conditional('.', {
-              is: Joi.string().allow(''),
-              then: endpointSchema,
-              otherwise: Joi.array().items(endpointSchema).min(1),
-            })
-            .custom((value) => (typeof value === 'string' ? [value] : value)),
-          serveEndpoint: endpointSchema,
-          body: bodySchema,
-          bodyPath: Joi.string(),
-        })
-          .required()
-          .or('endpoints', 'serveEndpoint')
-          .oxor('body', 'bodyPath'),
-        response: Joi.object({
-          code: Joi.number().required(),
-          type: Joi.string(),
-          headers: Joi.object(),
-          body: bodySchema,
-          bodyPath: Joi.string(),
-          serveBody: bodySchema,
-          serveBodyPath: Joi.string(),
-        })
-          .required()
-          .oxor('body', 'bodyPath', 'serveBody', 'serveBodyPath'),
-      }),
-    )
-    .required()
-    .ruleset.unique('name')
-    .message('must have a unique name')
-    .ruleset.min(1)
-    .message('Your config file must contain at least 1 config item')
-
-  const validationResult = schema.validate(config, {
-    abortEarly: false,
-  })
-
-  if (!validationResult.error) {
-    return { success: true, validatedConfigs: validationResult.value }
-  }
-
-  const formattedErrors = validationResult.error.details
-    .map((p) => {
-      const configName: string = dot.pick(`${p.path[0]}.name`, config)
-      const fullPath =
-        p.path.length &&
-        p.path.reduce<string>((accum, next, i) => {
-          if (i === 0 && typeof next === 'number') return bold(`config[${configName || next}]`)
-          return typeof next === 'number' ? `${accum}[${next}]` : `${accum}.${next}`
-        }, '')
-      return { ...p, fullPath }
-    })
-    .sort((a, b) => {
-      if (a.fullPath < b.fullPath) return -1
-      if (a.fullPath > b.fullPath) return 1
-      return 0
-    })
-    .map(({ message, fullPath }) => {
-      const pathPrefix = fullPath ? `${fullPath} ` : ''
-      return `${blue(pathPrefix)}${message.replace(/(".*" )/, '')}`
-    })
-
-  return { success: false, errors: formattedErrors }
-}
-
 export const transformConfigs = async (
   configs: ValidatedServeConfig[],
   absoluteConfigPath: string,
-): Promise<Config[]> => {
+): Promise<ServeConfig[]> => {
   const loadBody = async (bodyPath: string): Promise<Data | undefined> => {
     const absolutePathToFile = isAbsolute(bodyPath) ? bodyPath : resolve(absoluteConfigPath, '..', bodyPath)
     return await readJsonAsync(absolutePathToFile)
   }
 
-  const mapConfig = async (c: ValidatedServeConfig, endpoint: string): Promise<Config> => {
+  const mapConfig = async (c: ValidatedServeConfig, endpoint: string): Promise<ServeConfig> => {
     let responseBody: Data | undefined
 
     if (c.response.serveBodyPath) {
@@ -168,12 +64,12 @@ export const transformConfigs = async (
   }
 
   return Promise.all(
-    configs.flatMap<Promise<Config>>((c) => {
-      const configTasks: Promise<Config>[] = []
+    configs.flatMap<Promise<ServeConfig>>((c) => {
+      const configTasks: Promise<ServeConfig>[] = []
 
       if (c.request.endpoints) {
         configTasks.push(
-          ...c.request.endpoints.map<Promise<Config>>((endpoint) => mapConfig(c, endpoint)),
+          ...c.request.endpoints.map<Promise<ServeConfig>>((endpoint) => mapConfig(c, endpoint)),
         )
       }
 
@@ -184,7 +80,7 @@ export const transformConfigs = async (
   )
 }
 
-export interface Config {
+export interface ServeConfig {
   name: string
   request: {
     method: SupportedMethod

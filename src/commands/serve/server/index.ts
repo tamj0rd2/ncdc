@@ -5,8 +5,9 @@ import { TypeValidator } from '~validation'
 import { ProblemType } from '~problem'
 import serverLogger from './server-logger'
 import { inspect } from 'util'
-import { SupportedMethod, Config } from '../config'
+import { ServeConfig } from '../config'
 import validateQuery from './query-validator'
+import { SupportedMethod } from '~config/types'
 
 export interface ReqResLog {
   name?: string
@@ -57,7 +58,7 @@ const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
 
 export const configureServer = (
   baseUrl: string,
-  mockConfigs: Config[],
+  mockConfigs: ServeConfig[],
   typeValidator?: TypeValidator,
 ): Express => {
   const app = express()
@@ -155,7 +156,7 @@ export interface StartServerResult {
 
 export const startServer = (
   port: number,
-  routes: Config[],
+  routes: ServeConfig[],
   typeValidator?: TypeValidator,
 ): StartServerResult => {
   const serverRoot = `http://localhost:${port}`

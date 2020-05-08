@@ -12,5 +12,6 @@ FROM base as preinstall
 COPY package.json package-lock.json ./
 
 RUN npm ci
-
 COPY . .
+
+RUN npm run compile

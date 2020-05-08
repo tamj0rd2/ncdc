@@ -2,6 +2,8 @@ language: node_js
 branches:
   only:
     - master
+    - beta
+    - alpha
 jobs:
   include:
     - stage: release

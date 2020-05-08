@@ -4,7 +4,7 @@ import { Server } from 'http'
 import strip from 'strip-ansi'
 
 jest.useRealTimers()
-jest.setTimeout(7000)
+jest.setTimeout(10000)
 
 describe('ncdc test', () => {
   let realServer: Server

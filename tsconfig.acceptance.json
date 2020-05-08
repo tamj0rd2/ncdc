@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "./acceptance-tests"
-  },
-  "include": ["./acceptance-tests/**/*.ts"],
-  "exclude": ["serve-fixtures"]
-}

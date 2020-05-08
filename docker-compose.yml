@@ -1,10 +1,24 @@
 version: "3.7"
 services:
-  tests:
+  lint:
     build: .
-    command: ./build.sh --hello
+    command: npm run lint
+
+  typecheck:
+    build: .
+    command: npm run typecheck
+
+  # coverage upload only works in CI
+  cover:
+    build: .
+    command: bash -c 'npm run cover && bash <(curl -s https://codecov.io/bash)'
+
+  release:
+    build: .
     environment:
-      - CODECOV_TOKEN
+      - GITHUB_TOKEN
+      - NPM_TOKEN
+    command: npx semantic-release
 
   watch-acceptance:
     build:

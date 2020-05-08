@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "clean": "rm -rf ./lib ./coverage/*",
-    "typecheck": "tsc && tsc -p ./tsconfig.acceptance.json",
+    "typecheck": "tsc && tsc -p ./acceptance-tests/tsconfig.json",
     "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "prepublishOnly": "npm run compile",
     "test": "jest",

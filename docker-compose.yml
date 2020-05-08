@@ -8,9 +8,10 @@ services:
     build: .
     command: npm run typecheck
 
+  # coverage upload only works in CI
   cover:
     build: .
-    command: npm run cover && bash <(curl -s https://codecov.io/bash)
+    command: bash -c 'npm run cover && bash <(curl -s https://codecov.io/bash)'
 
   release:
     build: .

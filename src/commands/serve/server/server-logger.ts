@@ -1,7 +1,5 @@
 import { createLogger, format, transports } from 'winston'
 import { inspect } from 'util'
-import { blue } from 'chalk'
-import Problem from '~problem'
 import escapeStringRegexp from 'escape-string-regexp'
 
 const serverLogger = createLogger({
@@ -27,12 +25,6 @@ const serverLogger = createLogger({
           }
 
           result += message
-
-          const problems = (info.problems as Optional<Problem[]>)
-            ?.map(({ problemType, path, message }) => `${problemType} ${blue(path)} ${message}`)
-            .join('\n')
-
-          result += problems ? `\n${problems}` : ''
           result += info.stack ? `\n${info.stack}` : ''
           return result
         }),

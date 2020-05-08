@@ -2,7 +2,6 @@ import request from 'supertest'
 import { configureServer, verbsMap, PossibleMethod, ReqResLog } from '.'
 import { ConfigBuilder, SupportedMethod } from '~config/types'
 import { TypeValidator } from '~validation'
-import Problem from '~problem'
 import { mockObj, mocked } from '~test-helpers'
 import serverLogger from './server-logger'
 
@@ -10,7 +9,7 @@ jest.mock('./server-logger')
 
 describe('server', () => {
   jest.spyOn(console, 'dir').mockImplementation()
-  const mockTypeValidator = mockObj<TypeValidator>({ getProblems: jest.fn() })
+  const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
 
   afterEach(() => jest.resetAllMocks())
   afterAll(() => jest.clearAllMocks())
@@ -163,7 +162,7 @@ describe('server', () => {
     })
   })
 
-  describe('type validation', () => {
+  describe.only('type validation', () => {
     it('returns the desired response when the request body passes type validation', async () => {
       const configs = [
         new ConfigBuilder()
@@ -174,6 +173,7 @@ describe('server', () => {
           .withResponseBody('Noice')
           .build(),
       ]
+      mockTypeValidator.validate.mockResolvedValue({ success: true })
 
       const app = configureServer('mysite.com', configs, mockTypeValidator)
 
@@ -184,9 +184,7 @@ describe('server', () => {
       const configs = [
         new ConfigBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
       ]
-
-      const problem: Partial<Problem> = { message: 'Welp!' }
-      mockTypeValidator.getProblems.mockResolvedValue([problem as Problem])
+      mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
 
       const app = configureServer('mysite.com', configs, mockTypeValidator)
 

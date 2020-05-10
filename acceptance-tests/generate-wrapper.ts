@@ -8,7 +8,7 @@ export const TSCONFIG_FILE = `${FIXTURE_FOLDER}/tsconfig.json`
 export const OUTPUT_PATH = `${FIXTURE_FOLDER}/json-schemas`
 
 export const runGenerateCommand = (): Promise<string> =>
-  new Promise<string>((resolve, reject) => {
+  new Promise<string>((resolve) => {
     const command = `LOG_LEVEL=debug ./bin/ncdc generate ${CONFIG_FILE} --output ${OUTPUT_PATH} -c ${TSCONFIG_FILE}`
     const ncdc: ChildProcess = exec(command)
     const output: string[] = []
@@ -19,8 +19,7 @@ export const runGenerateCommand = (): Promise<string> =>
     ncdc.on('exit', (code, signal) => {
       if (code !== 0 && signal !== 'SIGTERM') {
         const quickInfo = `Code: ${code} | Signal: ${signal}`
-        const err = new Error(`${quickInfo} | Output:\n\n${stripAnsi(getRawOutput())}`)
-        return reject(err)
+        return resolve(`${quickInfo} | Output:\n\n${stripAnsi(getRawOutput())}`)
       }
 
       resolve(getRawOutput())

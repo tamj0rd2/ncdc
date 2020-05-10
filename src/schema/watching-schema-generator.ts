@@ -1,41 +1,10 @@
+import { SchemaGenerator } from './schema-generator'
 import { resolve } from 'path'
 import { SchemaRetriever } from './types'
+import ts from 'typescript-json-schema/node_modules/typescript'
 import { existsSync } from 'fs'
 import logger from '~logger'
-import ts from 'typescript'
-import { JsonSchemaGenerator, buildGenerator, Definition, programFromConfig } from 'typescript-json-schema'
-
-export default class NewSchemaGenerator implements SchemaRetriever {
-  private readonly generator: JsonSchemaGenerator
-  private readonly cache = new Map<string, Definition>()
-
-  // TODO: constructors probably shouldn't have side effects like these
-  constructor(pathOrProgram: string | ts.Program, force: boolean) {
-    let program: ts.Program
-    if (typeof pathOrProgram === 'string') {
-      const fullTsconfigPath = resolve(pathOrProgram)
-      if (!existsSync(fullTsconfigPath)) throw new Error(`${fullTsconfigPath} does not exist`)
-      program = programFromConfig(fullTsconfigPath)
-    } else {
-      program = pathOrProgram
-    }
-
-    const generator = buildGenerator(program, { required: true, ignoreErrors: force })
-    if (!generator) throw new Error('Could not build a generator from the given typescript configuration')
-    this.generator = generator
-  }
-
-  public load(symbolName: string): Promise<Definition> {
-    let schema = this.cache.get(symbolName)
-
-    if (!schema) {
-      schema = this.generator.getSchemaForSymbol(symbolName)
-      this.cache.set(symbolName, schema)
-    }
-
-    return Promise.resolve(schema)
-  }
-}
+import { Definition } from 'typescript-json-schema'
 
 export class WatchingSchemaGenerator implements SchemaRetriever {
   public onReload?: () => Promise<void> | void
@@ -50,9 +19,9 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
   private formatHost: ts.FormatDiagnosticsHost
   private schemaRetriever?: SchemaRetriever
 
-  private COMPILED_DIAGNOSTIC_CODE = 6194
+  private readonly COMPILED_DIAGNOSTIC_CODE = 6194
 
-  public constructor(tsconfigPath: string, private readonly force: boolean) {
+  public constructor(tsconfigPath: string) {
     this.tsconfigPath = resolve(tsconfigPath)
     this.formatHost = {
       getCanonicalFileName: (path) => path,
@@ -112,7 +81,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
       origAfterProgramCreate?.(watcherProgram)
 
       if (this.programHasErrors) return this.onCompilationFailure?.()
-      this.schemaRetriever = new NewSchemaGenerator(watcherProgram.getProgram(), this.force)
+      this.schemaRetriever = new SchemaGenerator(watcherProgram.getProgram())
       if (!isFirstFullRun) return this.onReload?.()
     }
 

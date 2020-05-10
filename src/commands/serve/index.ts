@@ -22,7 +22,7 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       default: 4000,
     })
     .option('watch', {
-      describe: 'watches the provided config file and fixtures then restarts if there are changes',
+      describe: 'restarts the server when changes to the config file, fixtures or source files are made',
       type: 'boolean',
       default: false,
     })

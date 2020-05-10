@@ -5,6 +5,10 @@ import { createHandler, TestArgs } from './handler'
 import logger from '~logger'
 import { runTests } from './test'
 import loadConfig from '~config/load'
+import { FsSchemaLoader } from '~schema'
+import NewSchemaGenerator from '~schema/schema-generator-new'
+import ajv from 'ajv'
+import { TypeValidator } from '~validation'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
@@ -34,12 +38,17 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
     })
     .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
 
-export default function createTestCommand(
-  createTypeValidator: CreateTypeValidator,
-): CommandModule<{}, TestArgs> {
+export default function createTestCommand(): CommandModule<{}, TestArgs> {
   const handleError: HandleError = ({ message }) => {
     logger.error(message)
     process.exit(1)
+  }
+
+  const createTypeValidator: CreateTypeValidator = (tsconfigPath, force, schemaPath) => {
+    const schemaRetriever = schemaPath
+      ? new FsSchemaLoader(schemaPath)
+      : new NewSchemaGenerator(tsconfigPath, force)
+    return new TypeValidator(new ajv({ verbose: true, allErrors: true }), schemaRetriever)
   }
 
   return {

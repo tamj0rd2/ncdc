@@ -403,10 +403,36 @@ describe('ncdc serve', () => {
         await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
       })
 
-      // TODO: oooooh. NCDC could actually have a caching folder!!! Then generate
-      // would just become the default because why the hell not? :D
-      // typescript-json-schema getSourceFile could really help with this too
-      it.todo('restarts when a source file containing types changes')
+      it('stops the server if a source file changes that puts the type and response out of sync', async () => {
+        configWrapper.editType('Book', (t) => ({ ...t, ISBN: 'number' }))
+
+        await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+        await serve.waitForOutput('<root>.ISBN should be number but got string')
+      })
+
+      it('can recover when a source file changes that fixes a type and response being out of sync', async () => {
+        configWrapper.editType('Book', (t) => ({ ...t, ISBN: 'string' }))
+
+        await serve.waitForOutput(MESSAGE_RESTARTING)
+        await serve.waitUntilAvailable()
+        await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+      })
+
+      it('stops the server if a source file changes that breaks typescript compilation', async () => {
+        configWrapper.editType('Book', (t) => ({ ...t, ISBN: 'what on earth?!' }))
+
+        await serve.waitForOutput(
+          'Your source code has compilation errors. Fix them to resume serving endpoints',
+        )
+      })
+
+      it('can recover from the typescript compilation being broken', async () => {
+        configWrapper.editType('Book', (t) => ({ ...t, ISBN: 'string' }))
+
+        await serve.waitForOutput(MESSAGE_RESTARTING)
+        await serve.waitUntilAvailable()
+        await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+      })
     })
   })
 })

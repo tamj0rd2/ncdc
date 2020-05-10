@@ -19,8 +19,8 @@ describe('Generate Command', () => {
   const mockResolve = mocked(resolve)
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const getHandler = (isDev = false) =>
-    createHandler(handleErrorStub, isDev, readConfigMock, getSchemaGenMock, generateStub, loggerStub)
+  const getHandler = () =>
+    createHandler(handleErrorStub, readConfigMock, getSchemaGenMock, generateStub, loggerStub)
 
   afterEach(() => jest.resetAllMocks())
 
@@ -97,7 +97,7 @@ describe('Generate Command', () => {
   it.each([[true], [false]])(
     'calls the schema generator with the correct args when force is %s',
     async (force) => {
-      const handler = getHandler(force)
+      const handler = getHandler()
       const args: GenerateArgs = {
         outputPath: 'out',
         tsconfigPath: 'tsconfig',

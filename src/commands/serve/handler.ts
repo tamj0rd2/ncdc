@@ -1,4 +1,4 @@
-import { HandleError, CreateTypeValidator } from '~commands'
+import { HandleError } from '~commands'
 import { resolve } from 'path'
 import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
@@ -23,9 +23,21 @@ export type StartServer = (
   typeValidator?: TypeValidator,
 ) => StartServerResult
 
+const ATTEMPT_RESTARTING_MSG = 'Attempting to restart ncdc server'
+const getFailedRestartMsg = (msg: string): string => `Could not restart ncdc server\n${msg}`
+
+export type CreateServeTypeValidator = (
+  tsconfigPath: string,
+  force: boolean,
+  schemaPath: Optional<string>,
+  watch: boolean,
+  onReload: () => Promise<void>,
+  onCompilationFailure: Optional<() => Promise<void> | void>,
+) => TypeValidator
+
 const createHandler = (
   handleError: HandleError,
-  createTypeValidator: CreateTypeValidator,
+  createTypeValidator: CreateServeTypeValidator,
   startServer: StartServer,
   loadConfig: LoadConfig<ValidatedServeConfig>,
 ) => async (args: ServeArgs): Promise<void> => {
@@ -33,6 +45,7 @@ const createHandler = (
 
   if (!configPath) return handleError({ message: 'config path must be supplied' })
   if (isNaN(port)) return handleError({ message: 'port must be a number' })
+  if (watch && force) return handleError({ message: 'watch and force options cannot be used together' })
 
   const absoluteConfigPath = resolve(configPath)
   let typeValidator: TypeValidator | undefined
@@ -42,13 +55,28 @@ const createHandler = (
     pathsToWatch: string[]
   }
 
+  let prepAndServeResult: PrepAndStartResult
+
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
     const loadResult = await loadConfig(
       configPath,
       () => {
-        if (!typeValidator || schemaPath) {
-          typeValidator = createTypeValidator(tsconfigPath, force, schemaPath)
+        if (schemaPath || !typeValidator) {
+          const onTypeReload = async (): Promise<void> => {
+            logger.info(ATTEMPT_RESTARTING_MSG)
+            try {
+              await prepAndServeResult.startServerResult.close()
+              prepAndServeResult = await prepAndStartServer()
+            } catch (err) {
+              logger.error(getFailedRestartMsg(err.message))
+            }
+          }
+
+          typeValidator = createTypeValidator(tsconfigPath, force, schemaPath, watch, onTypeReload, () => {
+            logger.error('Your source code has compilation errors. Fix them to resume serving endpoints')
+          })
         }
+
         return typeValidator
       },
       transformConfigs,
@@ -74,15 +102,14 @@ const createHandler = (
     }
   }
 
-  let result: PrepAndStartResult
   try {
-    result = await prepAndStartServer()
+    prepAndServeResult = await prepAndStartServer()
   } catch (err) {
     return handleError(err)
   }
 
   if (watch) {
-    const fixturesToWatch = [...result.pathsToWatch]
+    const fixturesToWatch = [...prepAndServeResult.pathsToWatch]
     const chokidarWatchPaths = [absoluteConfigPath, ...fixturesToWatch]
     if (schemaPath) chokidarWatchPaths.push(resolve(schemaPath))
 
@@ -92,7 +119,6 @@ const createHandler = (
 
     configWatcher.on('all', async (e, path) => {
       logger.info(`${e} event detected for ${path}`)
-      logger.info('Attempting to restart ncdc server')
 
       if (e === 'unlink') {
         // required on some systems https://github.com/paulmillr/chokidar/issues/591
@@ -100,28 +126,24 @@ const createHandler = (
         configWatcher.add(path)
       }
 
+      logger.info(ATTEMPT_RESTARTING_MSG)
+
       try {
-        await result.startServerResult.close()
+        await prepAndServeResult.startServerResult.close()
+        prepAndServeResult = await prepAndStartServer()
       } catch (err) {
-        logger.error(`Could not restart ncdc server\n${err.message}`)
+        logger.error(getFailedRestartMsg(err.message))
         return
       }
 
-      try {
-        result = await prepAndStartServer()
-      } catch (err) {
-        logger.error(`Could not restart ncdc server\n${err.message}`)
-        return
-      }
-
-      for (const filePath of result.pathsToWatch) {
+      for (const filePath of prepAndServeResult.pathsToWatch) {
         if (!fixturesToWatch.includes(filePath)) {
           configWatcher.add(filePath)
         }
       }
 
       for (const filePath of fixturesToWatch) {
-        if (!result.pathsToWatch.includes(filePath)) {
+        if (!prepAndServeResult.pathsToWatch.includes(filePath)) {
           // according to the chokidar docs, unwatch is async
           await configWatcher.unwatch(filePath)
         }

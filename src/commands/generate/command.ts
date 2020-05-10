@@ -33,7 +33,7 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
     })
     .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
 
-export default function createGenerateCommand(isDevMode: boolean): CommandModule<{}, GenerateArgs> {
+export default function createGenerateCommand(): CommandModule<{}, GenerateArgs> {
   const handleError: HandleError = ({ message }) => {
     logger.error(message)
     process.exit(1)
@@ -45,9 +45,8 @@ export default function createGenerateCommand(isDevMode: boolean): CommandModule
     builder,
     handler: createHandler(
       handleError,
-      isDevMode,
       readGenerateConfig,
-      (tsconfigPath, isDevMode) => new SchemaGenerator(tsconfigPath, isDevMode),
+      (tsconfigPath, force) => new SchemaGenerator(tsconfigPath, force),
       generate,
       logger,
     ),

@@ -9,9 +9,10 @@ import {
 } from './serve-wrapper'
 import { CleanupTask, prepareServe } from './serve-wrapper'
 import { ConfigBuilder, ConfigWrapper } from './config-helpers'
+import { appendFileSync } from 'fs'
 
 jest.useRealTimers()
-jest.setTimeout(25000)
+jest.setTimeout(10000)
 
 class ServeConfigWrapper extends ConfigWrapper {
   constructor() {
@@ -39,7 +40,6 @@ describe('ncdc serve', () => {
     const res = await fetch('/api/books/hooray')
 
     // assert
-    await waitForOutput('/api/books/123 from config: Books')
     await waitForOutput(`Endpoints are being served on ${SERVE_HOST}`)
     expect(res.status).toBe(200)
   })
@@ -79,88 +79,86 @@ describe('ncdc serve', () => {
     await expect(fetch('/')).rejects.toThrowError()
   })
 
+  it('can serve a type checked config', async () => {
+    new ServeConfigWrapper()
+      .addConfig(new ConfigBuilder().withResponseType('Book').build())
+      .addType('Book', { author: 'string' })
+
+    const { waitUntilAvailable } = await prepareServe(cleanupTasks, 10)()
+
+    await waitUntilAvailable()
+    await expect(fetch('/api/books/123')).resolves.toMatchObject({ status: 200 })
+  })
+
   describe('watching config.yml', () => {
+    const watchingConfigCleanupTasks: CleanupTask[] = []
+    let serve: ServeResult
+    let configWrapper: ServeConfigWrapper
+
+    afterAll(() => {
+      watchingConfigCleanupTasks.forEach((task) => task())
+    })
+
     it('restarts when config.yml is changed', async () => {
-      // arrange
-      const configWrapper = new ServeConfigWrapper().addConfig()
-      const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+      configWrapper = new ServeConfigWrapper().addConfig(new ConfigBuilder().withServeOnly(true).build())
+      serve = await prepareServe(watchingConfigCleanupTasks)('--watch')
       const resInitial = await fetch('/api/books/789')
       expect(resInitial.status).toBe(200)
 
-      // act
       configWrapper.editConfig('Books', (c) => ({ ...c, response: { ...c.response, code: 234 } }))
-      await waitForOutput(MESSAGE_RESTARTING)
-      await waitUntilAvailable()
-      const resPostEdit = await fetch('/api/books/789')
+      await serve.waitForOutput(MESSAGE_RESTARTING)
+      await serve.waitUntilAvailable()
 
-      // assert
-      expect(resPostEdit.status).toBe(234)
+      await expect(fetch('/api/books/789')).resolves.toMatchObject({ status: 234 })
+    })
+
+    it('logs a message and kills the server when the config file has problems', async () => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // @ts-ignore
+      configWrapper.editConfig('Books', (c) => ({ ...c, request: {} }))
+
+      await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+      await serve.waitForOutput('Your config file is invalid')
+    })
+
+    it('can recover from the config file having problems', async () => {
+      configWrapper.editConfig('Books', (c) => ({
+        ...c,
+        request: { serveEndpoint: '/api/books/*', method: 'GET' },
+      }))
+
+      await serve.waitForOutput(MESSAGE_RESTARTING)
+      await serve.waitUntilAvailable()
+      await expect(fetch('/api/books/789')).resolves.toMatchObject({ status: 234 })
     })
 
     it('logs a message and kills the server when config.yml has been deleted', async () => {
-      // arrange
-      const configWrapper = new ServeConfigWrapper().addConfig()
-      const { waitForOutput } = await serve('--watch')
-      const resInitial = await fetch('/api/books/yay')
-      expect(resInitial.status).toBe(200)
-
-      // act
       configWrapper.deleteYaml()
 
-      // assert
-      await waitForOutput(MESSAGE_RESTARTING)
-      await waitForOutput('Could not restart ncdc server')
-      await waitForOutput(/no such file or directory.*config\.yml/)
-      await expect(fetch('/api/books/yay')).rejects.toThrowError()
+      await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+      await serve.waitForOutput(/no such file or directory.*config\.yml/)
     })
 
     it('can recover from config.yml being deleted when file is re-added', async () => {
-      // arrange
-      const configWrapper = new ServeConfigWrapper().addConfig()
-      const { waitForOutput } = await serve('--watch')
-      configWrapper.deleteYaml()
-      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
+      configWrapper.addConfig(new ConfigBuilder().withName('Books').withCode(401).build())
 
-      // act
-      const newConfig = new ConfigBuilder().withName('Cooks').withCode(404).build()
-      configWrapper.addConfig(newConfig)
-
-      // assert
-      await waitForOutput(`Registered ${SERVE_HOST}/api/books/* from config: Cooks`)
-      const { status } = await fetch('/api/books/noice')
-      expect(status).toEqual(404)
-    })
-
-    it('restarts each time config.yml is changed', async () => {
-      const initialName = 'Initial'
-      const configWrapper = new ServeConfigWrapper().addConfig(
-        new ConfigBuilder().withName(initialName).build(),
-      )
-      const { waitForOutput, waitUntilAvailable } = await serve('--watch')
-
-      await waitForOutput(`from config: ${initialName}`)
-      await waitUntilAvailable()
-
-      const editNameAndVerify = async (previousName: string, editedName: string): Promise<void> => {
-        configWrapper.editConfig(previousName, (c) => ({ ...c, name: editedName }))
-        await waitForOutput(MESSAGE_RESTARTING)
-        await waitForOutput(`/api/books/123 from config: ${editedName}`)
-        await waitUntilAvailable()
-      }
-
-      await editNameAndVerify(initialName, 'edit_Eat')
-      await editNameAndVerify('edit_Eat', 'edit_My')
-      await editNameAndVerify('edit_My', 'edit_Shorts')
-      await editNameAndVerify('edit_Shorts', 'edit_Please')
+      await serve.waitUntilAvailable()
+      await expect(fetch('/api/books/789')).resolves.toMatchObject({ status: 401 })
     })
   })
 
   describe('watching fixture files', () => {
-    // TODO: fix
+    const fixtureFileCleanupTasks: CleanupTask[] = []
+    let serve: ServeResult
+    let configWrapper: ServeConfigWrapper
+    const fixtureName = 'MyFixture'
+
+    afterAll(() => {
+      fixtureFileCleanupTasks.forEach((task) => task())
+    })
+
     it('restarts the server when a fixture file changes', async () => {
-      // arrange
-      const fixtureName = 'response'
-      const configWrapper = new ServeConfigWrapper()
+      configWrapper = new ServeConfigWrapper()
         .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
@@ -169,98 +167,53 @@ describe('ncdc serve', () => {
           author: 'me',
         })
 
-      // act
-      const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+      serve = await prepareServe(fixtureFileCleanupTasks)('--watch')
       configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'shit meme' }))
 
-      await waitForOutput(/change event detected for .*response.json/)
-      await waitForOutput(MESSAGE_RESTARTING)
-      await waitUntilAvailable()
-      const res = await fetch('/api/books/memes')
-      const json = await res.json()
+      await serve.waitForOutput(/change event detected for .*MyFixture.json/)
+      await serve.waitForOutput(MESSAGE_RESTARTING)
+      await serve.waitUntilAvailable()
 
-      // assert
-      expect(json.title).toBe('shit meme')
+      const res = await fetch('/api/books/memes')
+      await expect(res.json()).resolves.toMatchObject({ title: 'shit meme' })
+    })
+
+    it('logs and error and kills the server when a fixture file has problems', async () => {
+      appendFileSync(`${FIXTURE_FOLDER}/responses/${fixtureName}.json`, 'break it all')
+
+      await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+      await serve.waitForOutput('Unexpected token b')
+    })
+
+    it('can recover from a bad fixture file', async () => {
+      configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'cool bean' }))
+
+      await serve.waitForOutput(MESSAGE_RESTARTING)
+      await serve.waitUntilAvailable()
+
+      const res = await fetch('/api/books/memes')
+      await expect(res.json()).resolves.toMatchObject({ title: 'cool bean' })
     })
 
     it('handles deletion of fixture file', async () => {
       // arrange
-      const fixtureName = 'crazy-fixture'
-      const configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
-        .addFixture(fixtureName, {
-          title: 'nice meme lol',
-          ISBN: 'asdf',
-          ISBN_13: 'asdf',
-          author: 'me',
-        })
-
-      // act
-      const { waitForOutput } = await serve('--watch')
       configWrapper.deleteFixture(fixtureName)
 
       // assert
-      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
-      await waitForOutput(/no such file or directory.*crazy-fixture\.json/)
+      await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+      await serve.waitForOutput(/no such file or directory.*MyFixture\.json/)
     })
 
-    // TODO: fix
     it('can recover from fixture file deletion', async () => {
-      // arrange
-      const fixtureName = 'another-fixture'
-      const configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
-        .addFixture(fixtureName, {
-          title: 'nice meme lol',
-          ISBN: 'asdf',
-          ISBN_13: 'asdf',
-          author: 'me',
-        })
-
-      const { waitForOutput, waitUntilAvailable } = await serve('--watch')
-      configWrapper.deleteFixture(fixtureName)
-      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
-
-      // act
       configWrapper.addFixture(fixtureName, {
         ISBN: '123',
       })
-      await waitForOutput(MESSAGE_RESTARTING)
-      await waitUntilAvailable()
+      await serve.waitForOutput(MESSAGE_RESTARTING)
+      await serve.waitUntilAvailable()
 
       // assert
       const res = await fetch('/api/books/29847234')
-      const body = await res.json()
-      expect(body.ISBN).toBe('123')
-    })
-
-    // TODO: fix
-    it('restarts each time a fixture file is changed or deleted', async () => {
-      const fixtureName = 'MyFixture'
-      const configWrapper = new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
-        .addFixture(fixtureName, { title: 'Freddy' })
-      const { waitForOutput, waitUntilAvailable } = await serve('--watch')
-
-      const verifyFixture = async (title: string, withRestartMessage = true): Promise<void> => {
-        if (withRestartMessage) await waitForOutput(MESSAGE_RESTARTING)
-        await waitUntilAvailable()
-        const res = await fetch('/api/books/abc')
-        expect(res.status).toBe(200)
-        await expect(res.json()).resolves.toMatchObject({ title })
-      }
-
-      await verifyFixture('Freddy', false)
-      configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'Eat' }))
-      await verifyFixture('Eat')
-      configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'My' }))
-      await verifyFixture('My')
-      configWrapper.deleteFixture(fixtureName)
-      await waitForOutput(MESSAGE_RESTARTING_FAILURE)
-      configWrapper.addFixture(fixtureName, { title: 'Shorts' })
-      await verifyFixture('Shorts')
-      configWrapper.editFixture(fixtureName, (f) => ({ ...f, title: 'Please' }))
-      await verifyFixture('Please')
+      await expect(res.json()).resolves.toMatchObject({ ISBN: '123' })
     })
   })
 
@@ -303,17 +256,6 @@ describe('ncdc serve', () => {
   })
 
   describe('type checking', () => {
-    it('can serve a type checked config', async () => {
-      new ServeConfigWrapper()
-        .addConfig(new ConfigBuilder().withResponseType('Book').build())
-        .addType('Book', { author: 'string' })
-
-      const { waitUntilAvailable } = await prepareServe(cleanupTasks, 10)()
-
-      await waitUntilAvailable()
-      await expect(fetch('/api/books/123')).resolves.toMatchObject({ status: 200 })
-    })
-
     describe('with schema loading from json files', () => {
       const typecheckingCleanup: CleanupTask[] = []
       let serve: ServeResult

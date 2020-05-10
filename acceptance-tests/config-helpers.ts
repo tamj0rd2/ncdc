@@ -4,10 +4,11 @@ import jsyaml from 'js-yaml'
 
 export interface Config {
   name: string
+  serveOnly: boolean
   request: {
     method: string
-    endpoints: string[]
-    serveEndpoint: string
+    endpoints?: string[]
+    serveEndpoint?: string
   }
   response: {
     code: number
@@ -22,6 +23,7 @@ export interface Config {
 export class ConfigBuilder {
   private config: Config = {
     name: 'Books',
+    serveOnly: false,
     request: {
       method: 'GET',
       endpoints: ['/api/books/123', '/api/books/456'],
@@ -40,6 +42,11 @@ export class ConfigBuilder {
 
   public withName(name: string): ConfigBuilder {
     this.config.name = name
+    return this
+  }
+
+  public withServeOnly(serveOnly: boolean): ConfigBuilder {
+    this.config.serveOnly = serveOnly
     return this
   }
 

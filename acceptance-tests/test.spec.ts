@@ -50,4 +50,22 @@ describe('ncdc test', () => {
 
     expect(strip(output)).toContain(`info: PASSED: Hello - ${REAL_SERVER_HOST}/api/resource`)
   })
+
+  it('can handle errors gracefully', async () => {
+    realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
+    new TestConfigWrapper()
+      .addConfig(
+        new ConfigBuilder()
+          .withName('Hello')
+          .withEndpoints('/api/resource')
+          .withServeBody(undefined)
+          .withBody({ hello: 'world' })
+          .withResponseType('Hello')
+          .withResponseHeaders({ 'content-type': 'application/json' })
+          .build(),
+      )
+      .addType('Hello', { hello: 'string' })
+
+    await expect(runTestCommand()).rejects.toThrowError('FAILED: Hello')
+  })
 })

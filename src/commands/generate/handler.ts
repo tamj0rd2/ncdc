@@ -1,6 +1,6 @@
 import { HandleError } from '~commands'
 import { GenerateConfig, ReadGenerateConfig } from './config'
-import { SchemaGenerator } from '~schema'
+import { SchemaRetriever } from '~schema'
 import { Generate } from './generate'
 import { Logger } from 'winston'
 import { resolve } from 'path'
@@ -12,7 +12,7 @@ export interface GenerateArgs {
   force: boolean
 }
 
-export type GetSchemaGenerator = (tsconfigPath: string, force: boolean) => SchemaGenerator
+export type GetSchemaGenerator = (tsconfigPath: string, force: boolean) => SchemaRetriever
 
 const createHandler = (
   handleError: HandleError,
@@ -41,16 +41,16 @@ const createHandler = (
     return handleError({ message: 'No custom types were specified in the given config file' })
   }
 
-  let schemaGenerator: SchemaGenerator
+  let schemaRetriever: SchemaRetriever
 
   try {
-    schemaGenerator = getSchemaGenerator(tsconfigPath, force)
+    schemaRetriever = getSchemaGenerator(tsconfigPath, force)
   } catch (err) {
     return handleError(err)
   }
 
   try {
-    await generate(schemaGenerator, types, outputPath)
+    await generate(schemaRetriever, types, outputPath)
   } catch (err) {
     return handleError(err)
   } finally {

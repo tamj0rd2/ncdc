@@ -7,8 +7,8 @@ import logger from '~logger'
 import loadConfig from '~config/load'
 import { TypeValidator } from '~validation'
 import Ajv from 'ajv'
-import { FsSchemaLoader, SchemaRetriever } from '~schema'
-import NewSchemaGenerator, { WatchingSchemaGenerator } from '~schema/schema-generator-new'
+import { FsSchemaLoader, SchemaRetriever, WatchingSchemaGenerator } from '~schema'
+import { SchemaGenerator } from '~schema'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -69,13 +69,13 @@ export default function createServeCommand() {
     let schemaRetriever: SchemaRetriever
 
     if (watch) {
-      const generator = new WatchingSchemaGenerator(tsconfigPath, force)
+      const generator = new WatchingSchemaGenerator(tsconfigPath)
       generator.startWatching()
       generator.onReload = onReload
       generator.onCompilationFailure = onCompilationFailure
       schemaRetriever = generator
     } else {
-      schemaRetriever = new NewSchemaGenerator(tsconfigPath, force)
+      schemaRetriever = new SchemaGenerator(tsconfigPath, force)
     }
 
     return new TypeValidator(ajv, schemaRetriever)

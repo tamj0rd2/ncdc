@@ -3,7 +3,7 @@ import { readJsonAsync } from '~io'
 import { Definition } from 'typescript-json-schema'
 import { SchemaRetriever } from './types'
 
-export default class FsSchemaLoader implements SchemaRetriever {
+export class FsSchemaLoader implements SchemaRetriever {
   private readonly cache: { [symbol: string]: Definition } = {}
 
   constructor(private readonly schemaPath: string) {}

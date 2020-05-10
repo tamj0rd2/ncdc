@@ -1,4 +1,4 @@
-import SchemaGenerator from './schema-generator'
+import { SchemaGenerator } from './schema-generator'
 import * as TJS from 'typescript-json-schema'
 import * as path from 'path'
 import { mockObj, mocked, randomString } from '~test-helpers'

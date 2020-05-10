@@ -303,6 +303,17 @@ describe('ncdc serve', () => {
   })
 
   describe('type checking', () => {
+    it('can serve a type checked config', async () => {
+      new ServeConfigWrapper()
+        .addConfig(new ConfigBuilder().withResponseType('Book').build())
+        .addType('Book', { author: 'string' })
+
+      const { waitUntilAvailable } = await prepareServe(cleanupTasks, 10)()
+
+      await waitUntilAvailable()
+      await expect(fetch('/api/books/123')).resolves.toMatchObject({ status: 200 })
+    })
+
     describe('with schema loading from json files', () => {
       const typecheckingCleanup: CleanupTask[] = []
       let serve: ServeResult

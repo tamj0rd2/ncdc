@@ -1,9 +1,9 @@
-import { SchemaGenerator } from '~schema'
+import { SchemaRetriever } from '~schema'
 import { writeFileSync, existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
 
 export const generate = async (
-  schemaGenerator: SchemaGenerator,
+  schemaRetriever: SchemaRetriever,
   types: string[],
   outputPath: string,
 ): Promise<void> => {
@@ -11,7 +11,7 @@ export const generate = async (
   if (!existsSync(outDir)) mkdirSync(outDir)
 
   for (const type of types) {
-    const schema = await schemaGenerator.load(type)
+    const schema = await schemaRetriever.load(type)
     const formatted = JSON.stringify(schema, null, 2)
     writeFileSync(resolve(outDir, `${type}.json`), formatted, 'utf8')
   }

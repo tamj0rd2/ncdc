@@ -1,22 +1,26 @@
-import { JsonSchemaGenerator, programFromConfig, buildGenerator, Definition } from 'typescript-json-schema'
 import { resolve } from 'path'
 import { SchemaRetriever } from './types'
 import { existsSync } from 'fs'
+import ts from 'typescript'
+import { JsonSchemaGenerator, buildGenerator, Definition, programFromConfig } from 'typescript-json-schema'
 
-export default class SchemaGenerator implements SchemaRetriever {
+export class SchemaGenerator implements SchemaRetriever {
   private readonly generator: JsonSchemaGenerator
   private readonly cache = new Map<string, Definition>()
 
   // TODO: constructors probably shouldn't have side effects like these
-  constructor(tsconfigPath: string, isDevMode: boolean) {
-    const fullTsconfigPath = resolve(tsconfigPath)
-    if (!existsSync(fullTsconfigPath)) throw new Error(`${fullTsconfigPath} does not exist`)
-
-    const program = programFromConfig(resolve(tsconfigPath))
-    const generator = buildGenerator(program, { required: true, ignoreErrors: isDevMode })
-    if (!generator) {
-      throw new Error('Could not build a generator from the given typescript configuration')
+  constructor(pathOrProgram: string | ts.Program, force?: boolean) {
+    let program: ts.Program
+    if (typeof pathOrProgram === 'string') {
+      const fullTsconfigPath = resolve(pathOrProgram)
+      if (!existsSync(fullTsconfigPath)) throw new Error(`${fullTsconfigPath} does not exist`)
+      program = programFromConfig(fullTsconfigPath)
+    } else {
+      program = pathOrProgram
     }
+
+    const generator = buildGenerator(program, { required: true, ignoreErrors: force })
+    if (!generator) throw new Error('Could not build a generator from the given typescript configuration')
     this.generator = generator
   }
 

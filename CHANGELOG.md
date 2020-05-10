@@ -1,3 +1,10 @@
+# [0.3.0](https://github.com/tamj0rd2/ncdc/compare/v0.2.6...v0.3.0) (2020-05-10)
+
+
+### Features
+
+* **serve:** watch source types for changes in serve mode ([236a660](https://github.com/tamj0rd2/ncdc/commit/236a660eb6f709d11d5b78ebe3991230b4a45b49)), closes [#144](https://github.com/tamj0rd2/ncdc/issues/144)
+
 ## [0.2.6](https://github.com/tamj0rd2/ncdc/compare/v0.2.5...v0.2.6) (2020-05-08)
 
 

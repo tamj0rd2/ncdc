@@ -1,6 +1,6 @@
-import createHandler, { StartServer, ServeArgs } from './handler'
+import createHandler, { StartServer, ServeArgs, CreateServeTypeValidator } from './handler'
 import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpers'
-import { HandleError, CreateTypeValidator } from '~commands/shared'
+import { HandleError } from '~commands/shared'
 import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
 import chokidar, { FSWatcher } from 'chokidar'
 import stripAnsi from 'strip-ansi'
@@ -15,7 +15,7 @@ jest.mock('path')
 describe('handler', () => {
   jest.spyOn(console, 'error').mockImplementation()
   const mockHandleError = mockFn<HandleError>()
-  const mockCreateTypeValidator = mockFn<CreateTypeValidator>()
+  const mockCreateTypeValidator = mockFn<CreateServeTypeValidator>()
   const mockStartServer = mockFn<StartServer>()
   const mockChokidar = mockObj(chokidar)
   const mockLoadConfig = mockFn<LoadConfig<ValidatedServeConfig>>()
@@ -47,6 +47,18 @@ describe('handler', () => {
     expect(mockHandleError).toBeCalledWith({ message: 'port must be a number' })
   })
 
+  it('handles when force and watch are used at the same time', async () => {
+    await handler({
+      force: true,
+      port: randomNumber(),
+      tsconfigPath: randomString(),
+      configPath: randomString(),
+      watch: true,
+    })
+
+    expect(mockHandleError).toBeCalledWith({ message: 'watch and force options cannot be used together' })
+  })
+
   const args: ServeArgs = {
     force: false,
     port: 4000,
@@ -57,7 +69,7 @@ describe('handler', () => {
 
   describe('runs the server with the correct configs', () => {
     const mockTransformConfigs = mocked(transformConfigs)
-    const mockTypeValidator = mockObj<TypeValidator>({})
+    const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
 
     beforeEach(() => {
       jest.resetAllMocks()

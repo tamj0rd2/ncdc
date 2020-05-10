@@ -1,5 +1,5 @@
 import { OutgoingHttpHeaders } from 'http'
-import { existsSync, unlinkSync, writeFileSync, rmdirSync, mkdirSync, appendFileSync } from 'fs'
+import { existsSync, unlinkSync, writeFileSync, rmdirSync, mkdirSync } from 'fs'
 import jsyaml from 'js-yaml'
 
 export interface Config {
@@ -215,15 +215,17 @@ export abstract class ConfigWrapper {
     }
 
     this.types[name] = content
-    appendFileSync(
-      this.TYPES_FILE,
-      `
-      interface ${name} {
-        ${Object.entries(content).map(([key, value]) => `${key}: ${value}`)}
-      }
-    `,
-    )
+    this.commitTypes()
+    return this
+  }
 
+  public editType(name: string, mutate: (content: object) => object): ConfigWrapper {
+    if (!this.types[name]) {
+      throw new Error(`The type ${name} is not registered`)
+    }
+
+    this.types[name] = mutate(this.types[name])
+    this.commitTypes()
     return this
   }
 
@@ -257,5 +259,16 @@ export abstract class ConfigWrapper {
     this.fixtures[name] = content
     const filePath = `${this.RESPONSES_FOLDER}/${name}.json`
     writeFileSync(filePath, JSON.stringify(content, null, 2))
+  }
+
+  private commitTypes(): void {
+    const fullContent = Object.entries(this.types).reduce((accum, [name, content]) => {
+      return (
+        accum +
+        `interface ${name} {\n${Object.entries(content).map(([key, value]) => `${key}: ${value}\n`)}}\n`
+      )
+    }, '')
+
+    writeFileSync(this.TYPES_FILE, fullContent)
   }
 }

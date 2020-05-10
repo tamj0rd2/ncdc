@@ -12,11 +12,10 @@ export interface GenerateArgs {
   force: boolean
 }
 
-export type GetSchemaGenerator = (tsconfigPath: string, isDevMode: boolean) => SchemaGenerator
+export type GetSchemaGenerator = (tsconfigPath: string, force: boolean) => SchemaGenerator
 
 const createHandler = (
   handleError: HandleError,
-  isDevMode: boolean,
   readGenerateConfig: ReadGenerateConfig,
   getSchemaGenerator: GetSchemaGenerator,
   generate: Generate,
@@ -45,7 +44,7 @@ const createHandler = (
   let schemaGenerator: SchemaGenerator
 
   try {
-    schemaGenerator = getSchemaGenerator(tsconfigPath, force || isDevMode)
+    schemaGenerator = getSchemaGenerator(tsconfigPath, force)
   } catch (err) {
     return handleError(err)
   }

@@ -1,10 +1,14 @@
 import { Argv } from 'yargs'
-import { HandleError, CreateTypeValidator } from '../shared'
+import { HandleError } from '../shared'
 import * as consts from '~commands/consts'
 import createHandler, { ServeArgs } from './handler'
 import { startServer } from './server'
 import logger from '~logger'
 import loadConfig from '~config/load'
+import { TypeValidator } from '~validation'
+import Ajv from 'ajv'
+import { FsSchemaLoader, SchemaRetriever } from '~schema'
+import NewSchemaGenerator, { WatchingSchemaGenerator } from '~schema/schema-generator-new'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -41,16 +45,46 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export default function createServeCommand(createTypeValidator: CreateTypeValidator) {
+export default function createServeCommand() {
   const handleError: HandleError = ({ message }) => {
     logger.error(message)
     process.exit(1)
+  }
+
+  const getTypeValidator = (
+    tsconfigPath: string,
+    force: boolean,
+    schemaPath: Optional<string>,
+    watch: boolean,
+    onReload: Optional<() => Promise<void> | void>,
+    onCompilationFailure: Optional<() => Promise<void> | void>,
+  ): TypeValidator => {
+    if (schemaPath) {
+      const ajv = new Ajv({ verbose: true, allErrors: true })
+      const schemaRetriever = new FsSchemaLoader(schemaPath)
+      return new TypeValidator(ajv, schemaRetriever)
+    }
+
+    const ajv = new Ajv({ verbose: true, allErrors: true })
+    let schemaRetriever: SchemaRetriever
+
+    if (watch) {
+      const generator = new WatchingSchemaGenerator(tsconfigPath, force)
+      generator.startWatching()
+      generator.onReload = onReload
+      generator.onCompilationFailure = onCompilationFailure
+      schemaRetriever = generator
+    } else {
+      schemaRetriever = new NewSchemaGenerator(tsconfigPath, force)
+    }
+
+    return new TypeValidator(ajv, schemaRetriever)
   }
 
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves configured endpoints',
     builder,
-    handler: createHandler(handleError, createTypeValidator, startServer, loadConfig),
+    handler: createHandler(handleError, getTypeValidator, startServer, loadConfig),
   }
 }

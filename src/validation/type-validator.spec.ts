@@ -43,7 +43,7 @@ describe('validate', () => {
     expect(validateFn).toBeCalledWith(body)
   })
 
-  it('returns a success result if the type is valid', async () => {
+  it('returns a success result if the data does match the type', async () => {
     validator.compile.mockReturnValue(mockFn<ValidateFunction>().mockReturnValue(true))
 
     const result = await typeValidator.validate(body, type)
@@ -51,7 +51,7 @@ describe('validate', () => {
     expect(result.success).toBe(true)
   })
 
-  it('returns validation messages if the type is invalid', async () => {
+  it('returns validation messages if the data does not match the type', async () => {
     const error1: Partial<ErrorObject> = {
       dataPath: randomString('.datapath1'),
       message: randomString('error-message1'),

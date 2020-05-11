@@ -13,8 +13,8 @@
     "clean": "rm -rf ./lib ./coverage/*",
     "typecheck": "tsc && tsc -p ./acceptance-tests/tsconfig.json",
     "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
-    "test": "jest",
-    "cover": "nyc jest --coverage --runInBand --detectOpenHandles",
+    "test": "jest --runInBand --bail",
+    "cover": "nyc npm run test -- --coverage --detectOpenHandles",
     "lint": "eslint '**/*.ts' --color --ignore-path .gitignore --cache",
     "semantic-release": "semantic-release"
   },

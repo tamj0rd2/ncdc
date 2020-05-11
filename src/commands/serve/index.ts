@@ -9,6 +9,7 @@ import { TypeValidator } from '~validation'
 import Ajv from 'ajv'
 import { FsSchemaLoader, SchemaRetriever, WatchingSchemaGenerator } from '~schema'
 import { SchemaGenerator } from '~schema'
+import { logMetric } from '~metrics'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -48,6 +49,7 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
 export default function createServeCommand() {
   const handleError: HandleError = ({ message }) => {
     logger.error(message)
+    logMetric('Errored out')
     process.exit(1)
   }
 
@@ -70,7 +72,6 @@ export default function createServeCommand() {
 
     if (watch) {
       const generator = new WatchingSchemaGenerator(tsconfigPath)
-      generator.startWatching()
       generator.onReload = onReload
       generator.onCompilationFailure = onCompilationFailure
       schemaRetriever = generator
@@ -78,6 +79,7 @@ export default function createServeCommand() {
       schemaRetriever = new SchemaGenerator(tsconfigPath, force)
     }
 
+    schemaRetriever.init?.()
     return new TypeValidator(ajv, schemaRetriever)
   }
 

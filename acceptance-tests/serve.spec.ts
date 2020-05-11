@@ -315,7 +315,7 @@ describe('ncdc serve', () => {
             title: 'string',
           })
 
-        serve = await prepareServe(typecheckingCleanup, 10)('--watch')
+        serve = await prepareServe(typecheckingCleanup, 8)('--watch')
 
         await expect(fetch('/api/books/hello')).resolves.toMatchObject({ status: 200 })
       })
@@ -385,6 +385,13 @@ describe('ncdc serve', () => {
         await serve.waitForOutput(MESSAGE_RESTARTING)
         await serve.waitUntilAvailable()
         await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+      })
+
+      it('gives a useful message when an error is thrown during body/type validation', async () => {
+        configWrapper.deleteType('Book')
+
+        await serve.waitForOutput('An error occurred while validating one of your configured fixtures:')
+        await serve.waitForOutput('type Book not found')
       })
     })
   })

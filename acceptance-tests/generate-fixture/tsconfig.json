@@ -10,9 +10,11 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": true,
-    "noEmit": true,
     "inlineSourceMap": true,
-    "isolatedModules": false
+    "isolatedModules": false,
+    "incremental": true,
+    "declaration": false,
+    "outDir": "./out"
   },
   "include": ["**/*.ts"]
 }

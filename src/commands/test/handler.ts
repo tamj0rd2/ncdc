@@ -6,6 +6,7 @@ import { LoadConfig, LoadConfigStatus, GetTypeValidator } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { red } from 'chalk'
 import { TypeValidator } from '~validation'
+import { inspect } from 'util'
 
 export interface TestArgs {
   schemaPath?: string
@@ -40,10 +41,12 @@ export const createHandler = (
     case LoadConfigStatus.InvalidConfig:
     case LoadConfigStatus.InvalidBodies:
     case LoadConfigStatus.ProblemReadingConfig:
+    case LoadConfigStatus.BodyValidationError:
       return handleError({ message: loadResult.message })
     case LoadConfigStatus.NoConfigs:
       return handleError({ message: red('No configs to test') })
     default:
+      logger.debug(inspect(loadResult))
       return handleError({ message: 'An unknown error ocurred' })
   }
 

@@ -12,7 +12,7 @@ jest.mock('path')
 describe('loadConfig', () => {
   const mockReadYamlAsync = mocked(readYamlAsync)
   const mockResolve = mocked(resolve)
-  const mockValidate = mocked(validateRawConfig)
+  const mockValidateRawConfig = mocked(validateRawConfig)
   const mockValidateBodies = mocked(validateConfigBodies)
   const mockTransformConfigs = mockFn<TransformConfigs<unknown>>()
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
@@ -26,7 +26,7 @@ describe('loadConfig', () => {
 
   beforeEach(() => {
     jest.resetAllMocks()
-    mockValidate.mockReturnValue({ success: true, validatedConfigs: [] })
+    mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs: [] })
     mockTransformConfigs.mockResolvedValue([transformedConfigDummy])
     mockCreateTypeValidator.mockReturnValue(mockTypeValidator)
   })
@@ -58,12 +58,12 @@ describe('loadConfig', () => {
 
     await act()
 
-    expect(mockValidate).toBeCalledWith(rawConfigs)
+    expect(mockValidateRawConfig).toBeCalledWith(rawConfigs)
   })
 
   it('returns a failure response when config validation fails', async () => {
     const errors = [randomString(), randomString()]
-    mockValidate.mockReturnValue({ success: false, errors })
+    mockValidateRawConfig.mockReturnValue({ success: false, errors })
 
     const result = await act()
 
@@ -74,7 +74,7 @@ describe('loadConfig', () => {
   })
 
   it('returns a warning response if there are no validated configs returned', async () => {
-    mockValidate.mockReturnValue({ success: true, validatedConfigs: [] })
+    mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs: [] })
 
     const result = await act()
 
@@ -82,7 +82,7 @@ describe('loadConfig', () => {
   })
 
   it('does not create a type validator if no configs have associated types', async () => {
-    mockValidate.mockReturnValue({
+    mockValidateRawConfig.mockReturnValue({
       success: true,
       validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
@@ -94,7 +94,7 @@ describe('loadConfig', () => {
 
   it('calls the transform func with the correct args', async () => {
     const validatedConfigs = [{ serveOnly: false, request: {}, response: {} }]
-    mockValidate.mockReturnValue({ success: true, validatedConfigs })
+    mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs })
     const absoulteConfigPath = randomString()
     mockResolve.mockReturnValue(absoulteConfigPath)
 
@@ -104,7 +104,7 @@ describe('loadConfig', () => {
   })
 
   it('creates a type validator with the correct args when types are present in any config', async () => {
-    mockValidate.mockReturnValue({
+    mockValidateRawConfig.mockReturnValue({
       success: true,
       validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
@@ -118,7 +118,7 @@ describe('loadConfig', () => {
   })
 
   it('returns a failure response is there are body validation issues', async () => {
-    mockValidate.mockReturnValue({
+    mockValidateRawConfig.mockReturnValue({
       success: true,
       validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
@@ -136,6 +136,25 @@ describe('loadConfig', () => {
     })
   })
 
+  it('throws when there is a problem validating a body against a type', async () => {
+    mockValidateRawConfig.mockReturnValue({
+      success: true,
+      validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
+    })
+    mockTransformConfigs.mockResolvedValue([
+      { request: {}, response: { type: randomString('some type') } } as CommonConfig,
+    ])
+    const errorMessage = randomString('some error message')
+    mockValidateBodies.mockRejectedValue(new Error(errorMessage))
+
+    const result = await act()
+
+    expect(result).toStrictEqual<LoadConfigResponse>({
+      type: LoadConfigStatus.BodyValidationError,
+      message: `An error occurred while validating one of your configured fixtures:\n${errorMessage}`,
+    })
+  })
+
   describe('when everything else goes ok', () => {
     it('returns a response with configs and fixture paths', async () => {
       const fixturePath1 = randomString('fixture1')
@@ -149,7 +168,7 @@ describe('loadConfig', () => {
           response: { bodyPath: fixturePath2, serveBodyPath: fixturePath3 },
         },
       ]
-      mockValidate.mockReturnValue({ success: true, validatedConfigs })
+      mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs })
       mockIsAbsolute.mockReturnValueOnce(true).mockReturnValueOnce(false).mockReturnValue(true)
       mockResolve.mockReturnValue(expectedAbsPath)
 

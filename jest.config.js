@@ -21,9 +21,17 @@ const commonSettings = {
   ],
   testEnvironment: 'node',
   coverageReporters: ["json"],
+  watchPathIgnorePatterns: [
+    '<rootDir>\/acceptance-tests\/serve-fixture\/.*',
+    '<rootDir>\/acceptance-tests\/test-fixture\/.*',
+    '<rootDir>\/acceptance-tests\/generate-fixture\/.*',
+    '<rootDir>\/lib.*',
+    '<rootDir>\/coverage.*',
+  ]
 }
 
 const unitTestSettings = {
+  ...commonSettings,
   displayName: 'Unit',
   testMatch: [
     '<rootDir>/src/**/*.spec.ts',
@@ -45,6 +53,7 @@ const unitTestSettings = {
 
 
 const integrationTestSettings = {
+  ...commonSettings,
   displayName: 'Integration',
   testMatch: [
     '**/*.integration.spec.ts'
@@ -57,11 +66,6 @@ const acceptanceTestSettings = {
   testMatch: [
     '<rootDir>/acceptance-tests/**/*.spec.ts'
   ],
-  watchPathIgnorePatterns: [
-    '<rootDir>/acceptance-tests/serve-fixture.*',
-    '<rootDir>/acceptance-tests/test-fixture.*',
-    '<rootDir>/acceptance-tests/generate-fixture.*'
-  ]
 }
 
 

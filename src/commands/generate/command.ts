@@ -46,7 +46,11 @@ export default function createGenerateCommand(): CommandModule<{}, GenerateArgs>
     handler: createHandler(
       handleError,
       readGenerateConfig,
-      (tsconfigPath, force) => new SchemaGenerator(tsconfigPath, force),
+      (tsconfigPath, force) => {
+        const generator = new SchemaGenerator(tsconfigPath, force)
+        generator.init()
+        return generator
+      },
       generate,
       logger,
     ),

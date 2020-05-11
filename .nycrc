@@ -9,6 +9,7 @@
   ],
   "exclude": [
     "src/test-helpers.ts",
+    "src/metrics.ts",
     "**/*.spec.ts",
     "**/*.d.ts",
     "**/types.ts"

@@ -2,9 +2,9 @@ import { SchemaGenerator } from './schema-generator'
 import { resolve } from 'path'
 import { SchemaRetriever } from './types'
 import ts from 'typescript'
-import { existsSync } from 'fs'
 import logger from '~logger'
 import { Definition } from 'typescript-json-schema'
+import { logMetric } from '~metrics'
 
 export class WatchingSchemaGenerator implements SchemaRetriever {
   public onReload?: () => Promise<void> | void
@@ -30,19 +30,18 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     }
   }
 
-  public startWatching(): void {
+  public init(): void {
+    logMetric('In startWatching')
+
     if (this.initiated) return
     this.initiated = true
 
-    if (!existsSync(this.tsconfigPath)) throw new Error(`${this.tsconfigPath} does not exist`)
+    const reportDiagnostic: ts.DiagnosticReporter = (diagnostic) =>
+      logger.error(this.formatErrorDiagnostic(diagnostic))
 
-    const reportDiagnostic: ts.DiagnosticReporter = (diagnostic) => {
-      logger.debug(
-        `Error ${diagnostic.code}: ${ts.flattenDiagnosticMessageText(
-          diagnostic.messageText,
-          this.formatHost.getNewLine(),
-        )}`,
-      )
+    const configFile = ts.readConfigFile(this.tsconfigPath, ts.sys.readFile)
+    if (configFile.error) {
+      throw new Error(this.formatErrorDiagnostic(configFile.error))
     }
 
     const reportWatchStatus: ts.WatchStatusReporter = (diagnostic, _1, _2, errorCount): void => {
@@ -66,9 +65,11 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
       }
     }
 
+    const incrementalEnabled = configFile.config.compilerOptions?.incremental
+
     const watcherHost = ts.createWatchCompilerHost(
       this.tsconfigPath,
-      { noEmit: true },
+      { noEmit: !incrementalEnabled ?? true },
       ts.sys,
       ts.createEmitAndSemanticDiagnosticsBuilderProgram,
       reportDiagnostic,
@@ -79,9 +80,11 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     watcherHost.afterProgramCreate = (watcherProgram) => {
       const isFirstFullRun = this.isFirstCompilationRun
       origAfterProgramCreate?.(watcherProgram)
+      logMetric('Program creation complete')
 
       if (this.programHasErrors) return this.onCompilationFailure?.()
       this.schemaRetriever = new SchemaGenerator(watcherProgram.getProgram())
+      this.schemaRetriever.init?.()
       if (!isFirstFullRun) return this.onReload?.()
     }
 
@@ -92,5 +95,12 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     if (!this.initiated) throw new Error('Watching has not started yet')
     if (!this.schemaRetriever) throw new Error('No schema generator... somehow')
     return this.schemaRetriever.load(symbolName)
+  }
+
+  private formatErrorDiagnostic(diagnostic: ts.Diagnostic): string {
+    return `Error ${diagnostic.code}: ${ts.flattenDiagnosticMessageText(
+      diagnostic.messageText,
+      this.formatHost.getNewLine(),
+    )}`
   }
 }

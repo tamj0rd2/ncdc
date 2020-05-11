@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["esnext"],
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "strict": true,
@@ -10,9 +9,11 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": true,
-    "noEmit": true,
     "inlineSourceMap": true,
-    "isolatedModules": false
+    "isolatedModules": true,
+    "incremental": true,
+    "declaration": false,
+    "outDir": "./out"
   },
   "include": ["**/*.ts"]
 }

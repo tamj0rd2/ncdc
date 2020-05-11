@@ -140,7 +140,7 @@ export abstract class ConfigWrapper {
     }
     mkdirSync(this.JSON_SCHEMAS_FOLDER)
 
-    writeFileSync(this.TYPES_FILE, '')
+    writeFileSync(this.TYPES_FILE, 'export {}')
   }
 
   public addConfig(config = new ConfigBuilder().build()): ConfigWrapper {
@@ -236,6 +236,16 @@ export abstract class ConfigWrapper {
     return this
   }
 
+  public deleteType(name: string): ConfigWrapper {
+    if (!this.types[name]) {
+      throw new Error(`The type ${name} is not registered`)
+    }
+
+    delete this.types[name]
+    this.commitTypes()
+    return this
+  }
+
   public addSchemaFile(name: string, content: object): ConfigWrapper {
     if (this.schemas[name]) {
       throw new Error(`The schema ${name} is already registered`)
@@ -269,12 +279,15 @@ export abstract class ConfigWrapper {
   }
 
   private commitTypes(): void {
-    const fullContent = Object.entries(this.types).reduce((accum, [name, content]) => {
-      return (
-        accum +
-        `interface ${name} {\n${Object.entries(content).map(([key, value]) => `${key}: ${value}\n`)}}\n`
-      )
-    }, '')
+    const fullContent =
+      Object.entries(this.types).reduce((accum, [name, content]) => {
+        return (
+          accum +
+          `interface ${name} {\n${Object.entries(content)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n')}}\n`
+        )
+      }, '') + '\nexport {}'
 
     writeFileSync(this.TYPES_FILE, fullContent)
   }

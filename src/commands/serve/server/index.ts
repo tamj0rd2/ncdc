@@ -7,6 +7,7 @@ import { inspect } from 'util'
 import { ServeConfig } from '../config'
 import validateQuery from './query-validator'
 import { SupportedMethod } from '~config/types'
+import { logMetric } from '~metrics'
 
 export interface ReqResLog {
   name?: string
@@ -161,6 +162,7 @@ export const startServer = (
 
   const server = app.listen(port, () => {
     serverLogger.info(`Endpoints are being served on ${serverRoot}`)
+    logMetric('Server is listening')
   })
 
   return {

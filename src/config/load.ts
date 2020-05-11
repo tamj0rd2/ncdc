@@ -10,6 +10,7 @@ export enum LoadConfigStatus {
   InvalidConfig = 'Invalid config',
   NoConfigs = 'No configs',
   InvalidBodies = 'Invalid config bodies',
+  BodyValidationError = 'Body validation error',
 }
 
 export type LoadConfigResponse =
@@ -26,6 +27,7 @@ export type LoadConfigResponse =
         | LoadConfigStatus.InvalidBodies
         | LoadConfigStatus.InvalidConfig
         | LoadConfigStatus.ProblemReadingConfig
+        | LoadConfigStatus.BodyValidationError
       message: string
     }
 
@@ -69,7 +71,17 @@ const loadConfig = async <T extends ValidatedRawConfig>(
   const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, absoluteConfigPath)
 
   if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
-    const bodyValidationMessage = await validateConfigBodies(transformedConfigs, getTypeValidator())
+    let bodyValidationMessage: string | undefined
+
+    try {
+      bodyValidationMessage = await validateConfigBodies(transformedConfigs, getTypeValidator())
+    } catch (err) {
+      return {
+        type: LoadConfigStatus.BodyValidationError,
+        message: `An error occurred while validating one of your configured fixtures:\n${err.message}`,
+      }
+    }
+
     if (bodyValidationMessage) {
       return {
         type: LoadConfigStatus.InvalidBodies,

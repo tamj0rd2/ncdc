@@ -7,6 +7,7 @@ import chokidar from 'chokidar'
 import { StartServerResult } from './server'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { red } from 'chalk'
+import { logMetric } from '~metrics'
 
 export interface ServeArgs {
   configPath?: string
@@ -41,6 +42,7 @@ const createHandler = (
   startServer: StartServer,
   loadConfig: LoadConfig<ValidatedServeConfig>,
 ) => async (args: ServeArgs): Promise<void> => {
+  logMetric('Program start')
   const { configPath, port, tsconfigPath, schemaPath, force, watch } = args
 
   if (!configPath) return handleError({ message: 'config path must be supplied' })
@@ -88,6 +90,7 @@ const createHandler = (
       case LoadConfigStatus.InvalidConfig:
       case LoadConfigStatus.InvalidBodies:
       case LoadConfigStatus.ProblemReadingConfig:
+      case LoadConfigStatus.BodyValidationError:
         throw new Error(loadResult.message)
       case LoadConfigStatus.NoConfigs:
         throw new Error(red('No configs to serve'))

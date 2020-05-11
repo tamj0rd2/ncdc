@@ -5,7 +5,7 @@ import { createHandler, TestArgs } from './handler'
 import logger from '~logger'
 import { runTests } from './test'
 import loadConfig from '~config/load'
-import { FsSchemaLoader } from '~schema'
+import { FsSchemaLoader, SchemaRetriever } from '~schema'
 import { SchemaGenerator } from '~schema'
 import ajv from 'ajv'
 import { TypeValidator } from '~validation'
@@ -45,9 +45,14 @@ export default function createTestCommand(): CommandModule<{}, TestArgs> {
   }
 
   const createTypeValidator: CreateTypeValidator = (tsconfigPath, force, schemaPath) => {
-    const schemaRetriever = schemaPath
-      ? new FsSchemaLoader(schemaPath)
-      : new SchemaGenerator(tsconfigPath, force)
+    let schemaRetriever: SchemaRetriever
+
+    if (schemaPath) schemaRetriever = new FsSchemaLoader(schemaPath)
+    else {
+      const schemaGenerator = new SchemaGenerator(tsconfigPath, force)
+      schemaGenerator.init()
+      schemaRetriever = schemaGenerator
+    }
     return new TypeValidator(new ajv({ verbose: true, allErrors: true }), schemaRetriever)
   }
 

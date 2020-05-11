@@ -1,7 +1,6 @@
 import { runTestCommand, REAL_SERVER_HOST, RealServerBuilder, TestConfigWrapper } from './test-wrapper'
 import { ConfigBuilder } from './config-helpers'
 import { Server } from 'http'
-import strip from 'strip-ansi'
 
 jest.useRealTimers()
 jest.setTimeout(10000)
@@ -26,14 +25,15 @@ describe('ncdc test', () => {
         .build(),
     )
 
-    const output = await runTestCommand()
+    const result = await runTestCommand()
 
-    expect(strip(output)).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
+    expect(result.success).toBeTruthy()
+    expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
   })
 
   it('can test endpoints that return json', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 'world' }).start()
-    new TestConfigWrapper()
+    const wrapper = new TestConfigWrapper()
       .addConfig(
         new ConfigBuilder()
           .withName('Hello')
@@ -44,16 +44,17 @@ describe('ncdc test', () => {
           .withResponseHeaders({ 'content-type': 'application/json' })
           .build(),
       )
-      .addType('Hello', { hello: 'string' })
+      .addSchemaFile('Hello', { hello: 'string' })
 
-    const output = await runTestCommand()
+    const result = await runTestCommand(`--schemaPath ${wrapper.JSON_SCHEMAS_FOLDER}`)
 
-    expect(strip(output)).toContain(`info: PASSED: Hello - ${REAL_SERVER_HOST}/api/resource`)
+    expect(result.success).toBeTruthy()
+    expect(result.output).toContain(`info: PASSED: Hello - ${REAL_SERVER_HOST}/api/resource`)
   })
 
-  it('can handle errors gracefully', async () => {
+  it('gives back a useful message when a configured body does not match the real response', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
-    new TestConfigWrapper()
+    const wrapper = new TestConfigWrapper()
       .addConfig(
         new ConfigBuilder()
           .withName('Hello')
@@ -64,8 +65,34 @@ describe('ncdc test', () => {
           .withResponseHeaders({ 'content-type': 'application/json' })
           .build(),
       )
-      .addType('Hello', { hello: 'string' })
+      .addSchemaFile('Hello', { hello: 'string' })
 
-    await expect(runTestCommand()).rejects.toThrowError('FAILED: Hello')
+    const result = await runTestCommand(`--schemaPath ${wrapper.JSON_SCHEMAS_FOLDER}`)
+
+    expect(result.success).toBeFalsy()
+    expect(result.output).toContain('FAILED: Hello - http://localhost:5000/api/resource')
+    expect(result.output).toContain('The response body was not deeply equal to your configured fixture')
+  })
+
+  it('gives back a useful error message', async () => {
+    realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
+    const wrapper = new TestConfigWrapper().addConfig(
+      new ConfigBuilder()
+        .withName('Hello')
+        .withEndpoints('/api/resource')
+        .withServeBody(undefined)
+        .withBody({ hello: 'world' })
+        .withResponseType('Hello')
+        .withResponseHeaders({ 'content-type': 'application/json' })
+        .build(),
+    )
+
+    const result = await runTestCommand(`--schemaPath ${wrapper.JSON_SCHEMAS_FOLDER}`)
+
+    expect(result.success).toBeFalsy()
+    expect(result.output).toContain('Hello')
+    expect(result.output).toContain('An error occurred while validating one of your configured fixtures')
+    expect(result.output).toContain('ENOENT: no such file or directory')
+    expect(result.output).toContain('json-schemas/Hello.json')
   })
 })

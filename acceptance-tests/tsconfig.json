@@ -4,5 +4,11 @@
     "rootDir": "."
   },
   "include": ["**/*.ts"],
-  "exclude": ["serve-fixtures", "test-fixtures", "../node_modules", "../lib"]
+  "exclude": [
+    "serve-fixture",
+    "test-fixture",
+    "generate-fixture",
+    "../node_modules",
+    "../lib"
+  ]
 }

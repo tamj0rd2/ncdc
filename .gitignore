@@ -9,14 +9,9 @@ json-schema
 icon.png
 .eslintcache
 
-acceptance-tests/serve-fixture/config.yml
-acceptance-tests/serve-fixture/responses
-acceptance-tests/serve-fixture/types.ts
-acceptance-tests/serve-fixture/json-schemas
-
-acceptance-tests/test-fixture/config.yml
-acceptance-tests/test-fixture/types.ts
-
-acceptance-tests/generate-fixture/config.yml
-acceptance-tests/generate-fixture/types.ts
-acceptance-tests/generate-fixture/json-schemas
+acceptance-tests/**/*config.yml
+acceptance-tests/**/responses
+acceptance-tests/**/types.ts
+acceptance-tests/**/json-schemas
+acceptance-tests/**/tsconfig.tsbuildinfo
+acceptance-tests/**/out

@@ -2,29 +2,34 @@ import { ChildProcess, exec } from 'child_process'
 import { ConfigWrapper } from './config-helpers'
 import { Server } from 'http'
 import express from 'express'
+import stripAnsi from 'strip-ansi'
 
 export const FIXTURE_FOLDER = './acceptance-tests/test-fixture'
 export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
 export const TSCONFIG_FILE = `${FIXTURE_FOLDER}/tsconfig.json`
 export const REAL_SERVER_HOST = 'http://localhost:5000'
 
-export const runTestCommand = (): Promise<string> =>
-  new Promise<string>((resolve, reject) => {
-    const command = `LOG_LEVEL=debug ./bin/ncdc test ${CONFIG_FILE} ${REAL_SERVER_HOST} -c ${TSCONFIG_FILE}`
+export interface TestResult {
+  success: boolean
+  output: string
+}
+
+export const runTestCommand = (args = ''): Promise<TestResult> =>
+  new Promise<TestResult>((resolve) => {
+    const command = `LOG_LEVEL=debug ./bin/ncdc test ${CONFIG_FILE} ${REAL_SERVER_HOST} -c ${TSCONFIG_FILE} ${args}`
     const ncdc: ChildProcess = exec(command)
     const output: string[] = []
-    const getRawOutput = (): string => output.join('')
+    const getOutput = (): string => stripAnsi(output.join(''))
 
     ncdc.stdout && ncdc.stdout.on('data', (data) => output.push(data))
     ncdc.stderr && ncdc.stderr.on('data', (data) => output.push(data))
     ncdc.on('exit', (code, signal) => {
-      if (code !== 0 && signal !== 'SIGTERM') {
+      if (code !== 0) {
         const quickInfo = `Code: ${code} | Signal: ${signal}`
-        const err = new Error(`${quickInfo} | Output:\n\n${getRawOutput()}`)
-        return reject(err)
+        return resolve({ success: false, output: `${quickInfo} | Output:\n\n${getOutput()}` })
       }
 
-      resolve(getRawOutput())
+      resolve({ success: true, output: getOutput() })
     })
   })
 

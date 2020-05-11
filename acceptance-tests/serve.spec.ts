@@ -12,7 +12,7 @@ import { ConfigBuilder, ConfigWrapper } from './config-helpers'
 import { appendFileSync } from 'fs'
 
 jest.useRealTimers()
-jest.setTimeout(10000)
+jest.setTimeout(13000)
 
 class ServeConfigWrapper extends ConfigWrapper {
   constructor() {

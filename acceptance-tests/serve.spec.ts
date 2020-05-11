@@ -315,7 +315,7 @@ describe('ncdc serve', () => {
             title: 'string',
           })
 
-        serve = await prepareServe(typecheckingCleanup, 8)('--watch')
+        serve = await prepareServe(typecheckingCleanup, 10)('--watch')
 
         await expect(fetch('/api/books/hello')).resolves.toMatchObject({ status: 200 })
       })

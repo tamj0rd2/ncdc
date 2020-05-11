@@ -1,3 +1,10 @@
+## [0.3.2-beta.1](https://github.com/tamj0rd2/ncdc/compare/v0.3.1...v0.3.2-beta.1) (2020-05-11)
+
+
+### Bug Fixes
+
+* fix a bad import ([a5b28d9](https://github.com/tamj0rd2/ncdc/commit/a5b28d9dc08335be7597bf29de7aa4441e5485c8)), closes [#157](https://github.com/tamj0rd2/ncdc/issues/157)
+
 ## [0.3.1](https://github.com/tamj0rd2/ncdc/compare/v0.3.0...v0.3.1) (2020-05-11)
 
 

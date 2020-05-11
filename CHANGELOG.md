@@ -1,3 +1,10 @@
+## [0.3.1](https://github.com/tamj0rd2/ncdc/compare/v0.3.0...v0.3.1) (2020-05-11)
+
+
+### Bug Fixes
+
+* **serve:** make typescript a dependency ([55f3a9e](https://github.com/tamj0rd2/ncdc/commit/55f3a9e80ac1d50dffa73a3b893862ceacb277f0)), closes [#157](https://github.com/tamj0rd2/ncdc/issues/157)
+
 # [0.3.0](https://github.com/tamj0rd2/ncdc/compare/v0.2.6...v0.3.0) (2020-05-10)
 
 

@@ -1,7 +1,7 @@
 import { SchemaGenerator } from './schema-generator'
 import { resolve } from 'path'
 import { SchemaRetriever } from './types'
-import ts from 'typescript-json-schema/node_modules/typescript'
+import ts from 'typescript'
 import { existsSync } from 'fs'
 import logger from '~logger'
 import { Definition } from 'typescript-json-schema'

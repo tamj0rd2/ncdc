@@ -22,20 +22,20 @@ write JSON schemas for your already defined Typescript interfaces, types and
 enums. With this, you're guaranteed that your code, mock API endpoints and
 real endpoints are all consistent with eachother.
 
-<!-- TODO: add an examples folder with working examples -->
-
 ## Contents
 
 - [Getting Started](#getting-started)
   - [Installation](#installation)
-  - [Example config](#example-config)
+  - [Example config](#example-config.yml)
   - [Serving mocks](#serving-mocks-using-the-config-file)
   - [Running tests](#testing-real-endpoints-against-the-config)
   - [Generating JSON schemas](#generating-json-schemas)
 - [CLI Usage](#cli-usage)
-- [Generate command](#generate)
-- [Serve command](#serve)
-- [Test command](#test)
+  - [Serve mode](#serve)
+    - [Local development recipes](#local-development-recipes)
+  - [Test mode](#test)
+  - [Generate](#generate)
+- [Docker use case](#docker-use-case)
 
 ## Getting started
 
@@ -43,12 +43,20 @@ real endpoints are all consistent with eachother.
 
 `npm install ncdc --save-dev` or `yarn add ncdc -D`
 
-### Example config
+### Example config.yml
 
-config.yml:
+The below `config.yml` file contains 2 configurations
 
 ```yaml
-- name: Books
+- name: Book not found
+  serveOnly: true
+  request:
+    method: GET
+    endpoints: /api/books/a-bad-id
+  response:
+    code: 404
+
+- name: Book
   request:
     method: GET
     endpoints:
@@ -59,32 +67,49 @@ config.yml:
     code: 200
     headers:
       content-type: application/json
-    type: object
+    type: Book
     serveBody:
       {
         ISBN: "9780141187761",
         ISBN_13: 978-0141187761,
         author: George Orwell,
         title: 1984 Nineteen Eighty-Four,
+        inventoryId: item-87623
       }
 ```
 
-This configuration file contains a single config with the name Books.
+config.yml references the type `Book` which is exported from `mySourceFile.ts`:
 
-**You can find more information about writing your config file [HERE](./CONFIG.md#config),
-as well as what all of the options do.**
+```typescript
+export interface Book {
+  ISBN: string
+  ISBN_13: string
+  author: string
+  title: string
+  // You can set extra json schema properties via JSDoc comments
+  /** @pattern ^item- */
+  inventoryId: string
+}
+```
+
+====> **You can find more information about writing your config file
+[HERE](./CONFIG.md#config), as well how all of the options behave** <====
 
 ### Serving mocks using the config file
 
 `npx ncdc serve ./config.yml 3000`
 
-This will serve each configured endpoint on port 3000. As `serveEndpoint` is set
-to `/api/books/*`, any requests starting with
-`localhost:3000/api/books/<anything>` will respond with the following:
+This will serve each configuration on `http://localhost:3000`.
+
+When GET requests are sent to `/api/books/a-bad-id`, ncdc will respond with a
+404 status code.
+
+When GET requests are sent to `/api/books/123` or `/api/books/456`, ncdc will
+respond with the following:
 
 - Status code as 200
 - content-type header as application/json
-- body as the value of `serveBody`
+- a JSON body with the value of `serveBody`
 
 You can find more information about serve mode [here](#serve)
 
@@ -92,14 +117,22 @@ You can find more information about serve mode [here](#serve)
 
 `npx ncdc test ./config.yml https://example.com`
 
-This will run tests for each configuration. In this case, it will run a separate
-test for each specified endpoint. It will make sure that GET requests to
-https://example.com/api/books/123 and https://example.com/api/books/456 both
-meet these requirements:
+This will run tests for each configuration except those with `serveOnly` set to
+true. For this reason, the `Book not found` configuration will not be tested
+against the real API.
+
+For the `Book` configuration, ncdc will make GET requests to
+https://example.com/api/books/123 and https://example.com/api/books/456 and
+verify that both responses meet these requirements:
 
 - It responds with a 200 status code
 - It responds with the content-type header set to application/json
-- The response body is an object
+- The response body is JSON containing at least:
+  - property `ISBN` with a string value
+  - property `ISBN_13` with a string value
+  - property `author` with a string value
+  - property `title` with a string value
+  - property `inventoryId` with a string value starting with `item-`
 
 You can find more information about test mode [here](#test)
 
@@ -107,15 +140,12 @@ You can find more information about test mode [here](#test)
 
 `npx ncdc generate ./config.yml --output ./schemas`
 
-This will create JSON schemas for any request and response types specified in
-your cnofig file. `string`, `number`, `boolean` and `object` are internally
-recognised, so schemas will not be generated for them.
+This will write JSON schemas to disk for each of the types you reference in your
+config.yml, such as `Book` in the above example. This can be useful for caching
+purposes.
 
-<!-- TODO: add some info as to why someone might want to do this and how to 
-utilize is in test/serve mode -->
-Generating schemas is optional but can be useful for caching purposes.
-
-You can find more information about generating schemas [here](#generate)
+You can find more information about generating schemas and why you might want to
+do that [here](#generate)
 
 ## CLI usage
 
@@ -143,23 +173,129 @@ Examples:
                                             match the configured parameters.
 ```
 
-## Generate
-
-### CLI Usage
-
-Run `npx ncdc generate --help` to get contextual usage information and examples
-for this command.
-
 ## Serve
 
-### CLI Usage
+Serves mock API endpoints defined in config.yml
 
 Run `npx ncdc serve --help` to get contextual usage information and examples for
 this command.
 
+When ncdc receives a request, it will try to find something to serve in the order
+that the configurations are declared in config.yml.
+
+### Local development recipes
+
+How to run your fake APIs locally:
+
+`package.json`
+
+```json
+  "scripts": {
+    // dev script before adding ncdc
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    // scripts after adding ncdc
+    "devServer": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "bookService": "ncdc serve ./book-service.yml 4000",
+    "filmService": "ncdc serve ./film-service.yml 4001",
+    // concurrently is optional, you could just run each npm script in separate shells
+    "dev": "concurrently --kill-others-on-fail 'npm:bookService' 'npm:filmService' 'npm:devServer'",
+  }
+```
+
 ## Test
 
-### CLI Usage
+Tests that responses from a real API match the configured parameters in config.yml
 
 Run `npx ncdc test --help` to get contextual usage information and examples for
 this command.
+
+## Generate
+
+Generates json schemas for any type specified in config.yml
+
+Run `npx ncdc generate --help` to get contextual usage information and examples
+for this command.
+
+The reasons for using this are described in the [Docker use case](#docker-use-case)
+
+## Docker use case
+
+### A potential timing issue
+
+Behind the scenes, ncdc makes use of the typescript compiler to create json
+schemas for each of the types referenced in your config.yml. Those schemas are
+then used for validation during serve mode and test mode.
+
+Due to the use of the typescript compiler, the `serve` and `test` commands
+can often take a few seconds to start. The exact amount of time it takes depends
+on the size and configuration of your typescript project.
+
+So, when can this become an issue? Here's a real use case. Let's say I have 2
+docker-compose services:
+
+```yaml
+services:
+  # serves some API endpoints using ncdc
+  fake-book-service:
+    build: .
+    command: npx ncdc serve path-to-config.yml 4000
+  
+  # runs some integration tests that need a book service to be available
+  integration-tests:
+    build: .
+    command: npx jest
+    depends_on:
+      - fake-book-service
+    environment:
+      - BOOK_SERVICE_URL=http://fake-book-service:4000
+```
+
+The docker-compose `depends_on` property is only responsible for starting a
+docker service. It doesn't do any health checks that guarantee fake-book-service
+is up and serving requests. That means it's possbile for the integration
+tests to run before the API is ready, which would result in some (if not all)
+of the integration tests failing. That's where caching and the generate command
+become useful. 
+
+### How to fix it
+
+#### Solution 1
+
+Adding the below line to the `Dockerfile` will generate the json scheams during
+the docker build.
+
+```Dockerfile
+RUN npx ncdc generate path-to-config.yml --output ./json-schema
+```
+
+Then the command for the `fake-book-service` can be changed to the following,
+which will skip schema generation and instead use the schemas that were produced
+during the docker build.
+
+```yaml
+fake-book-service:
+  build: .
+  command: npx ncdc serve path-to-config.yml --schemaPath ./json-schema
+```
+
+This should speed up the start of the `fake-book-service` enough that the fake
+endpoints will be ready to use in the integration tests.
+
+#### Solution 2
+
+You can also use a [wait-for](https://github.com/eficode/wait-for) script as an
+extra measure, which can be used in addition to Solution 1. This would be used
+like so:
+
+```yaml
+integration-tests:
+    build: .
+    command: ./wait-for.sh fake-book-service:4000 -- npx jest
+    depends_on:
+      - fake-book-service
+    environment:
+      - BOOK_SERVICE_URL=http://fake-book-service:4000
+    volumes:
+      # the mapping of this volume depends on your own file structure
+      - ./wait-for.sh:/usr/src/wait-for.sh
+```

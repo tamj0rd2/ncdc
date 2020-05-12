@@ -22,9 +22,7 @@ const commonSettings = {
   testEnvironment: 'node',
   coverageReporters: ["json"],
   watchPathIgnorePatterns: [
-    '<rootDir>\/acceptance-tests\/serve-fixture\/.*',
-    '<rootDir>\/acceptance-tests\/test-fixture\/.*',
-    '<rootDir>\/acceptance-tests\/generate-fixture\/.*',
+    '<rootDir>\/acceptance-tests\/test-environment.*',
     '<rootDir>\/lib.*',
     '<rootDir>\/coverage.*',
   ]

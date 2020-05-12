@@ -173,7 +173,7 @@ Examples:
                                             match the configured parameters.
 ```
 
-## Serve
+### Serve
 
 Serves mock API endpoints defined in config.yml
 
@@ -183,13 +183,13 @@ this command.
 When ncdc receives a request, it will try to find something to serve in the order
 that the configurations are declared in config.yml.
 
-### Local development recipes
+#### Local development recipes
 
 How to run your fake APIs locally:
 
 `package.json`
 
-```json
+```jsonc
   "scripts": {
     // dev script before adding ncdc
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
@@ -202,14 +202,14 @@ How to run your fake APIs locally:
   }
 ```
 
-## Test
+### Test
 
 Tests that responses from a real API match the configured parameters in config.yml
 
 Run `npx ncdc test --help` to get contextual usage information and examples for
 this command.
 
-## Generate
+### Generate
 
 Generates json schemas for any type specified in config.yml
 

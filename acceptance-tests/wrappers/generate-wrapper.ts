@@ -1,15 +1,10 @@
 import { ChildProcess, exec } from 'child_process'
-import { ConfigWrapper } from './config-helpers'
 import stripAnsi from 'strip-ansi'
-
-export const FIXTURE_FOLDER = './acceptance-tests/generate-fixture'
-export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
-export const TSCONFIG_FILE = `${FIXTURE_FOLDER}/tsconfig.json`
-export const OUTPUT_PATH = `${FIXTURE_FOLDER}/json-schemas`
+import { NCDC_CONFIG_FILE, JSON_SCHEMAS_FOLDER, TSCONFIG_FILE } from './config-wrapper'
 
 export const runGenerateCommand = (): Promise<string> =>
   new Promise<string>((resolve) => {
-    const command = `LOG_LEVEL=debug ./bin/ncdc generate ${CONFIG_FILE} --output ${OUTPUT_PATH} -c ${TSCONFIG_FILE}`
+    const command = `LOG_LEVEL=debug ./bin/ncdc generate ${NCDC_CONFIG_FILE} --output ${JSON_SCHEMAS_FOLDER} -c ${TSCONFIG_FILE}`
     const ncdc: ChildProcess = exec(command)
     const output: string[] = []
     const getRawOutput = (): string => output.join('')
@@ -25,9 +20,3 @@ export const runGenerateCommand = (): Promise<string> =>
       resolve(getRawOutput())
     })
   })
-
-export class GenerateConfigWrapper extends ConfigWrapper {
-  constructor() {
-    super(CONFIG_FILE, FIXTURE_FOLDER)
-  }
-}

@@ -1,7 +1,7 @@
-import { resolve, dirname } from 'path'
 import { SchemaRetriever } from './types'
 import ts from 'typescript'
 import { JsonSchemaGenerator, buildGenerator, Definition } from 'typescript-json-schema'
+import { readTsConfig } from './ts-helpers'
 
 export class SchemaGenerator implements SchemaRetriever {
   private readonly cache = new Map<string, Definition>()
@@ -13,19 +13,7 @@ export class SchemaGenerator implements SchemaRetriever {
   public init(): void {
     let program: ts.Program
     if (typeof this.pathOrProgram === 'string') {
-      const tsconfigPath = resolve(this.pathOrProgram)
-      const rawConfigFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
-      if (rawConfigFile.error) throw new Error(this.formatErrorDiagnostic(rawConfigFile.error))
-      if (!rawConfigFile.config) throw new Error('Could not parse the given tsconfig file')
-
-      const configFile = ts.parseJsonConfigFileContent(
-        rawConfigFile.config,
-        ts.sys,
-        dirname(tsconfigPath),
-        {},
-        tsconfigPath,
-      )
-      configFile.options.noEmit = !configFile.options.incremental ?? true
+      const configFile = readTsConfig(this.pathOrProgram)
       program = ts.createProgram({ rootNames: configFile.fileNames, options: configFile.options })
     } else {
       program = this.pathOrProgram
@@ -46,12 +34,5 @@ export class SchemaGenerator implements SchemaRetriever {
     }
 
     return Promise.resolve(schema)
-  }
-
-  private formatErrorDiagnostic(diagnostic: ts.Diagnostic): string {
-    return `Error ${diagnostic.code}: ${ts.flattenDiagnosticMessageText(
-      diagnostic.messageText,
-      ts.sys.newLine,
-    )}`
   }
 }

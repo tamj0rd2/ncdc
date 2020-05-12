@@ -1,93 +1,38 @@
 import { SchemaGenerator } from './schema-generator'
 import * as TJS from 'typescript-json-schema'
-import * as path from 'path'
 import ts from 'typescript'
 import { mockObj, randomString } from '~test-helpers'
+import * as tsHelpers from './ts-helpers'
 
 jest.disableAutomock()
 jest.mock('typescript-json-schema')
 jest.mock('typescript')
 jest.mock('path')
 jest.mock('fs')
+jest.mock('./ts-helpers')
 
 describe('SchemaLoader', () => {
   const mockedTJS = mockObj(TJS)
   const mockedTJSGenerator = mockObj<TJS.JsonSchemaGenerator>({})
   const mockedTypescript = mockObj(ts)
-  const mockedPath = mockObj(path)
+  const mockedTsHelpers = mockObj(tsHelpers)
 
   beforeEach(() => {
     jest.resetAllMocks()
-    mockedTypescript.readConfigFile.mockReturnValue({ config: {} })
     mockedTypescript.parseJsonConfigFileContent.mockReturnValue(
       mockObj<ts.ParsedCommandLine>({ options: {} }),
     )
     mockedTypescript.createProgram.mockReturnValue(mockObj<ts.Program>({}))
     mockedTJS.buildGenerator.mockReturnValue(mockedTJSGenerator)
+    mockedTsHelpers.readTsConfig.mockReturnValue({} as ts.ParsedCommandLine)
   })
 
-  describe('reading the typescript configuration', () => {
-    const tsconfigPath = './tsconfig.json'
-    it('it calls read config file with the correct args', () => {
-      const fullTsPath = randomString() + 'tsconfig.json'
-      mockedPath.resolve.mockReturnValue(fullTsPath)
+  it('calls read ts config with the correct args', () => {
+    const tsconfigPath = randomString('tsconfig path')
 
-      new SchemaGenerator(tsconfigPath, false).init()
+    new SchemaGenerator(tsconfigPath).init()
 
-      expect(mockedPath.resolve).toBeCalledWith(tsconfigPath)
-      expect(mockedTypescript.readConfigFile).toBeCalledWith(fullTsPath, mockedTypescript.sys.readFile)
-    })
-
-    it('throws if there is a config file error', () => {
-      mockedTypescript.readConfigFile.mockReturnValue({ error: mockObj<ts.Diagnostic>({ code: 123 }) })
-
-      const generator = new SchemaGenerator('')
-
-      expect(() => generator.init()).toThrowError('Error 123:')
-    })
-
-    it('throws if no config file is returned', () => {
-      mockedTypescript.readConfigFile.mockReturnValue({})
-
-      const generator = new SchemaGenerator('')
-
-      expect(() => generator.init()).toThrowError('Could not parse the given tsconfig file')
-    })
-
-    it('parses the json using the correct args', () => {
-      const returnedConfig = mockObj<ts.ParsedCommandLine>({ options: {} })
-      mockedTypescript.readConfigFile.mockReturnValue({ config: returnedConfig })
-      const tsconfigFolderName = randomString('folder name')
-      mockedPath.dirname.mockReturnValue(tsconfigFolderName)
-      const fullTsconfigPath = randomString('full tsconfig path')
-      mockedPath.resolve.mockReturnValue(fullTsconfigPath)
-
-      new SchemaGenerator('').init()
-
-      expect(mockedTypescript.parseJsonConfigFileContent).toBeCalledWith(
-        returnedConfig,
-        mockedTypescript.sys,
-        tsconfigFolderName,
-        {},
-        fullTsconfigPath,
-      )
-    })
-
-    it.each([
-      [true, false],
-      [false, true],
-    ])('creates a ts program using the correct args when incremental is %s', (incremental, noEmit) => {
-      mockedTypescript.readConfigFile.mockReturnValue({ config: {} })
-      const configFile = mockObj<ts.ParsedCommandLine>({ options: { incremental }, fileNames: ['toad'] })
-      mockedTypescript.parseJsonConfigFileContent.mockReturnValue(configFile)
-
-      new SchemaGenerator('').init()
-
-      expect(mockedTypescript.createProgram).toBeCalledWith({
-        rootNames: configFile.fileNames,
-        options: { ...configFile.options, noEmit },
-      })
-    })
+    expect(mockedTsHelpers.readTsConfig).toBeCalledWith(tsconfigPath)
   })
 
   describe('creating a tsj generator', () => {

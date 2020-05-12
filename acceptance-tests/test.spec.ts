@@ -1,6 +1,7 @@
-import { runTestCommand, REAL_SERVER_HOST, RealServerBuilder, TestConfigWrapper } from './test-wrapper'
-import { ConfigBuilder } from './config-helpers'
+import { runTestCommand, REAL_SERVER_HOST, RealServerBuilder } from './wrappers/test-wrapper'
 import { Server } from 'http'
+import { ConfigWrapper, JSON_SCHEMAS_FOLDER } from './wrappers/config-wrapper'
+import { ConfigBuilder } from './config-builder'
 
 jest.useRealTimers()
 jest.setTimeout(10000)
@@ -17,7 +18,7 @@ describe('ncdc test', () => {
 
   it('can run the test command', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, 'eat my shorts!').start()
-    new TestConfigWrapper().addConfig(
+    new ConfigWrapper().addConfig(
       new ConfigBuilder()
         .withName('Shorts')
         .withEndpoints('/api/resource')
@@ -33,7 +34,7 @@ describe('ncdc test', () => {
 
   it('can test endpoints that return json', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 'world' }).start()
-    const wrapper = new TestConfigWrapper()
+    new ConfigWrapper()
       .addConfig(
         new ConfigBuilder()
           .withName('Hello')
@@ -46,7 +47,7 @@ describe('ncdc test', () => {
       )
       .addSchemaFile('Hello', { hello: 'string' })
 
-    const result = await runTestCommand(`--schemaPath ${wrapper.JSON_SCHEMAS_FOLDER}`)
+    const result = await runTestCommand(`--schemaPath ${JSON_SCHEMAS_FOLDER}`)
 
     expect(result.success).toBeTruthy()
     expect(result.output).toContain(`info: PASSED: Hello - ${REAL_SERVER_HOST}/api/resource`)
@@ -54,7 +55,7 @@ describe('ncdc test', () => {
 
   it('gives back a useful message when a configured body does not match the real response', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
-    const wrapper = new TestConfigWrapper()
+    new ConfigWrapper()
       .addConfig(
         new ConfigBuilder()
           .withName('Hello')
@@ -67,7 +68,7 @@ describe('ncdc test', () => {
       )
       .addSchemaFile('Hello', { hello: 'string' })
 
-    const result = await runTestCommand(`--schemaPath ${wrapper.JSON_SCHEMAS_FOLDER}`)
+    const result = await runTestCommand(`--schemaPath ${JSON_SCHEMAS_FOLDER}`)
 
     expect(result.success).toBeFalsy()
     expect(result.output).toContain('FAILED: Hello - http://localhost:5000/api/resource')
@@ -76,7 +77,7 @@ describe('ncdc test', () => {
 
   it('gives back a useful error message', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
-    const wrapper = new TestConfigWrapper().addConfig(
+    new ConfigWrapper().addConfig(
       new ConfigBuilder()
         .withName('Hello')
         .withEndpoints('/api/resource')
@@ -87,7 +88,7 @@ describe('ncdc test', () => {
         .build(),
     )
 
-    const result = await runTestCommand(`--schemaPath ${wrapper.JSON_SCHEMAS_FOLDER}`)
+    const result = await runTestCommand(`--schemaPath ${JSON_SCHEMAS_FOLDER}`)
 
     expect(result.success).toBeFalsy()
     expect(result.output).toContain('Hello')

@@ -1,13 +1,14 @@
-import { ConfigBuilder } from './config-helpers'
 import strip from 'strip-ansi'
-import { runGenerateCommand, GenerateConfigWrapper } from './generate-wrapper'
+import { runGenerateCommand } from './wrappers/generate-wrapper'
+import { ConfigWrapper } from './wrappers/config-wrapper'
+import { ConfigBuilder } from './config-builder'
 
 jest.useRealTimers()
 jest.setTimeout(10000)
 
 describe('ncdc generate', () => {
   it('can run the generate command', async () => {
-    new GenerateConfigWrapper()
+    new ConfigWrapper()
       .addConfig(
         new ConfigBuilder()
           .withName('Shorts')
@@ -24,7 +25,7 @@ describe('ncdc generate', () => {
   })
 
   it('handles a case where a type does not exist gracefully', async () => {
-    new GenerateConfigWrapper().addConfig(
+    new ConfigWrapper().addConfig(
       new ConfigBuilder()
         .withName('Shorts')
         .withEndpoints('/api/resource')

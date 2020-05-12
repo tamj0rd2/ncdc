@@ -1,6 +1,7 @@
 import { ChildProcess, exec } from 'child_process'
 import strip from 'strip-ansi'
 import nodeFetch, { RequestInit, Response } from 'node-fetch'
+import { NCDC_CONFIG_FILE, TSCONFIG_FILE } from './config-wrapper'
 
 const waitForX = (condition: () => Promise<boolean> | boolean, timeout: number): Promise<void> =>
   new Promise<void>((resolve, reject) => {
@@ -37,12 +38,8 @@ const waitForX = (condition: () => Promise<boolean> | boolean, timeout: number):
     }, retryPeriod * 1000)
   })
 
-export const FIXTURE_FOLDER = './acceptance-tests/serve-fixture'
-export const CONFIG_FILE = `${FIXTURE_FOLDER}/config.yml`
-export const SERVE_HOST = 'http://localhost:4000'
-
 export const MESSAGE_RESTARTING = 'Attempting to restart ncdc server'
-export const MESSAGE_RSTARTING_FAILURE = 'Could not restart ncdc server'
+export const MESSAGE_RESTARTING_FAILURE = 'Could not restart ncdc server'
 
 export type ServeResult = {
   getAllOutput(): string
@@ -52,6 +49,7 @@ export type ServeResult = {
 
 export type CleanupTask = () => void
 
+export const SERVE_HOST = 'http://localhost:4000'
 export const fetch = (endpoint: string, init?: RequestInit): Promise<Response> =>
   nodeFetch(`${SERVE_HOST}${endpoint}`, init)
 
@@ -60,7 +58,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
   checkAvailability = true,
 ): Promise<ServeResult> => {
   let hasExited = false
-  const command = `LOG_LEVEL=debug CHOKIDAR_USEPOLLING=1 ./bin/ncdc serve ${CONFIG_FILE} -c ${FIXTURE_FOLDER}/tsconfig.json ${args}`
+  const command = `LOG_LEVEL=debug CHOKIDAR_USEPOLLING=1 ./bin/ncdc serve ${NCDC_CONFIG_FILE} -c ${TSCONFIG_FILE} ${args}`
   const ncdc: ChildProcess = exec(command)
   const output: string[] = []
   const getRawOutput = (): string => output.join('\n')

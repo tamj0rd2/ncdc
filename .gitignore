@@ -9,9 +9,5 @@ json-schema
 icon.png
 .eslintcache
 
-acceptance-tests/**/*config.yml
-acceptance-tests/**/responses
-acceptance-tests/**/types.ts
-acceptance-tests/**/json-schemas
-acceptance-tests/**/tsconfig.tsbuildinfo
-acceptance-tests/**/out
+acceptance-tests/test-environment/**/*
+!acceptance-tests/test-environment/tsconfig.json

@@ -1,6 +1,6 @@
 import { HandleError, CreateTypeValidator } from '../shared'
 import { Argv, CommandModule } from 'yargs'
-import * as consts from '~commands/consts'
+import * as consts from '~commands/options'
 import { createHandler, TestArgs } from './handler'
 import logger from '~logger'
 import { runTests } from './test'
@@ -12,30 +12,14 @@ import { TypeValidator } from '~validation'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
-    .positional(consts.CONFIG_PATH, {
-      describe: consts.CONFIG_PATH_DESCRIBE,
-      type: consts.CONFIG_PATH_TYPE,
-    })
+    .positional(consts.CONFIG_PATH, consts.CONFIG_PATH_OPTS)
     .positional('baseURL', {
       describe: 'the URL that your endpoints should be accessed through',
       type: 'string',
     })
-    .option(consts.SCHEMA_PATH, {
-      type: consts.SCHEMA_PATH_TYPE,
-      description: consts.SCHEMA_PATH_DESCRIPTION,
-    })
-    .option(consts.TSCONFIG_PATH, {
-      alias: consts.TSCONFIG_ALIAS,
-      type: consts.TSCONFIG_TYPE,
-      description: consts.TSCONFIG_DESCRIPTION,
-      default: consts.TSCONFIG_DEFAULT,
-    })
-    .option(consts.FORCE_GENERATION, {
-      alias: consts.FORCE_GENERATION_ALIAS,
-      type: consts.FORCE_GENERATION_TYPE,
-      default: false,
-      description: consts.FORCE_GENERATION_DESCRIPTION,
-    })
+    .option(consts.SCHEMA_PATH, consts.SCHEMA_PATH_OPTS)
+    .option(consts.TSCONFIG_PATH, consts.TSCONFIG_PATH_OPTS)
+    .option(consts.FORCE_GENERATION, consts.FORCE_GENERATION_OPTS)
     .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
 
 export default function createTestCommand(): CommandModule<{}, TestArgs> {

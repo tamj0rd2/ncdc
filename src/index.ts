@@ -1,6 +1,6 @@
 import mainYargs from 'yargs'
 import { createGenerateCommand, createServeCommand, createTestCommand } from './commands'
-import * as consts from './commands/consts'
+import { opts } from './commands'
 
 export default function run(): void {
   // TODO: figure out how I can remove this
@@ -9,9 +9,9 @@ export default function run(): void {
     .command(createGenerateCommand())
     .command(createServeCommand())
     .command(createTestCommand())
-    .example(consts.EXAMPLE_GENERATE_COMMAND, consts.EXAMPLE_GENERATE_DESCRIPTION)
-    .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
-    .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
+    .example(opts.EXAMPLE_GENERATE_COMMAND, opts.EXAMPLE_GENERATE_DESCRIPTION)
+    .example(opts.EXAMPLE_SERVE_COMMAND, opts.EXAMPLE_SERVE_DESCRIPTION)
+    .example(opts.EXAMPLE_TEST_COMMAND, opts.EXAMPLE_TEST_DESCRIPTION)
     .demandCommand()
     .strict()
     .help().argv

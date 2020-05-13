@@ -7,6 +7,7 @@ import stripAnsi from 'strip-ansi'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { TypeValidator } from '~validation'
 import { ConfigBuilder } from '~config/types'
+import { Logger } from './server/server-logger'
 
 jest.unmock('./handler')
 jest.unmock('@hapi/joi')
@@ -19,18 +20,27 @@ describe('handler', () => {
   const mockStartServer = mockFn<StartServer>()
   const mockChokidar = mockObj(chokidar)
   const mockLoadConfig = mockFn<LoadConfig<ValidatedServeConfig>>()
+  const mockLogger = mockObj<Logger>({})
+  const mockCreateLogger = jest.fn()
 
-  const handler = createHandler(mockHandleError, mockCreateTypeValidator, mockStartServer, mockLoadConfig)
+  const handler = createHandler(
+    mockHandleError,
+    mockCreateTypeValidator,
+    mockStartServer,
+    mockLoadConfig,
+    mockCreateLogger,
+  )
 
   beforeEach(() => {
     jest.resetAllMocks()
     mockChokidar.watch.mockReturnValue(
       mockObj<FSWatcher>({ on: jest.fn() }),
     )
+    mockCreateLogger.mockReturnValue(mockLogger)
   })
 
   it('handles when a config path is not supplied', async () => {
-    await handler({ force: false, port: 8001, tsconfigPath: randomString(), watch: false })
+    await handler({ force: false, port: 8001, tsconfigPath: randomString(), watch: false, verbose: false })
 
     expect(mockHandleError).toBeCalledWith({ message: 'config path must be supplied' })
   })
@@ -42,6 +52,7 @@ describe('handler', () => {
       tsconfigPath: randomString(),
       configPath: randomString(),
       watch: false,
+      verbose: false,
     })
 
     expect(mockHandleError).toBeCalledWith({ message: 'port must be a number' })
@@ -54,6 +65,7 @@ describe('handler', () => {
       tsconfigPath: randomString(),
       configPath: randomString(),
       watch: true,
+      verbose: false,
     })
 
     expect(mockHandleError).toBeCalledWith({ message: 'watch and force options cannot be used together' })
@@ -65,6 +77,7 @@ describe('handler', () => {
     tsconfigPath: randomString(),
     configPath: randomString(),
     watch: false,
+    verbose: false,
   }
 
   describe('runs the server with the correct configs', () => {
@@ -77,6 +90,7 @@ describe('handler', () => {
       mockTransformConfigs.mockResolvedValue([
         { name: randomString('name'), request: {}, response: {} } as ServeConfig,
       ])
+      mockCreateLogger.mockReturnValue(mockLogger)
     })
 
     it('calls loadconfig with the correct args', async () => {
@@ -147,7 +161,7 @@ describe('handler', () => {
 
       expect(mockHandleError).not.toBeCalled()
       expect(mockStartServer).toBeCalledTimes(1)
-      expect(mockStartServer).toBeCalledWith(args.port, configs, mockTypeValidator)
+      expect(mockStartServer).toBeCalledWith(args.port, configs, mockTypeValidator, mockLogger)
     })
   })
 })

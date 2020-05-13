@@ -2,7 +2,7 @@ import express, { Express, Request, Response, ErrorRequestHandler } from 'expres
 import { blue } from 'chalk'
 import { Server } from 'http'
 import { TypeValidator } from '~validation'
-import serverLogger from './server-logger'
+import { Logger } from './server-logger'
 import { inspect } from 'util'
 import { ServeConfig } from '../config'
 import validateQuery from './query-validator'
@@ -45,25 +45,26 @@ const mapLog = (
   },
 })
 
-const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
-  if (res.headersSent) return next()
-
-  const { method, path, query, headers, body } = req
-  serverLogger.error(
-    `Error while serving ${inspect({ method, path, query, headers, body }, false, undefined, true)}`,
-    err,
-  )
-  res.status(500).send(err.stack?.toString() ?? err.toString())
-}
-
 export const configureServer = (
   baseUrl: string,
   mockConfigs: ServeConfig[],
-  typeValidator?: TypeValidator,
+  typeValidator: TypeValidator | undefined,
+  logger: Logger,
 ): Express => {
   const app = express()
   const ROOT = '/'
   const ignoredLogPaths = [ROOT]
+
+  const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
+    if (res.headersSent) return next()
+
+    const { method, path, query, headers, body } = req
+    logger.error(
+      `Error while serving ${inspect({ method, path, query, headers, body }, false, undefined, true)}`,
+      err,
+    )
+    res.status(500).send(err.stack?.toString() ?? err.toString())
+  }
 
   app.use(handleError)
   app.use(express.text())
@@ -72,7 +73,7 @@ export const configureServer = (
   app.get(ROOT, (_, res) => res.json(mockConfigs))
 
   if (mockConfigs.length === 0) {
-    serverLogger.info('No mocks to serve')
+    logger.info('No mocks to serve')
   }
 
   mockConfigs.forEach(({ name, request, response }) => {
@@ -82,7 +83,7 @@ export const configureServer = (
       try {
         const queryIsValid = validateQuery(request.endpoint, req.query)
         if (!queryIsValid) {
-          serverLogger.warn(
+          logger.warn(
             `An endpoint for ${req.path} exists but the query params did not match the configuration`,
           )
           return next()
@@ -91,9 +92,7 @@ export const configureServer = (
         if (typeValidator && request.type) {
           const validationResult = await typeValidator.validate(req.body, request.type)
           if (!validationResult.success) {
-            serverLogger.warn(
-              `An endpoint for ${req.path} exists but the request body did not match the type`,
-            )
+            logger.warn(`An endpoint for ${req.path} exists but the request body did not match the type`)
 
             // TODO: something like this to capture better response codes
             // res.locals.status = 400
@@ -112,7 +111,7 @@ export const configureServer = (
             bodyToLog = `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
           }
 
-          serverLogger.info(mapLog(name, req, res, bodyToLog))
+          logger.info(mapLog(name, req, res, bodyToLog))
         }
 
         res.send(response.body)
@@ -120,7 +119,7 @@ export const configureServer = (
         handleError(err, req, res, next)
       }
     })
-    serverLogger.info(`Registered ${baseUrl}${request.endpoint} from config: ${blue(name)}`)
+    logger.verbose(`Registered ${baseUrl}${request.endpoint} from config: ${blue(name)}`)
   })
 
   const default404Response =
@@ -135,7 +134,7 @@ export const configureServer = (
       const responseBody = status === 404 ? default404Response : `NCDC: ${res.locals.message}`
 
       if (!ignoredLogPaths.includes(req.path)) {
-        serverLogger.error(mapLog(undefined, req, res, responseBody.replace(/\n+/g, ' ')))
+        logger.error(mapLog(undefined, req, res, responseBody.replace(/\n+/g, ' ')))
       }
 
       res.send(responseBody)
@@ -155,13 +154,14 @@ export interface StartServerResult {
 export const startServer = (
   port: number,
   routes: ServeConfig[],
-  typeValidator?: TypeValidator,
+  typeValidator: TypeValidator | undefined,
+  logger: Logger,
 ): StartServerResult => {
   const serverRoot = `http://localhost:${port}`
-  const app = configureServer(serverRoot, routes, typeValidator)
+  const app = configureServer(serverRoot, routes, typeValidator, logger)
 
   const server = app.listen(port, () => {
-    serverLogger.info(`Endpoints are being served on ${serverRoot}`)
+    logger.info(`Endpoints are being served on ${serverRoot}`)
     logMetric('Server is listening')
   })
 

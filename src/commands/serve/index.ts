@@ -10,6 +10,7 @@ import Ajv from 'ajv'
 import { FsSchemaLoader, SchemaRetriever, WatchingSchemaGenerator } from '~schema'
 import { SchemaGenerator } from '~schema'
 import { logMetric } from '~metrics'
+import createServerLogger, { Logger } from './server/server-logger'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -68,10 +69,13 @@ export default function createServeCommand() {
     return new TypeValidator(ajv, schemaRetriever)
   }
 
+  const makeServerLogger = (verbose: boolean): Logger =>
+    createServerLogger(process.env.LOG_LEVEL ?? (verbose ? 'verbose' : 'info'))
+
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves configured endpoints',
     builder,
-    handler: createHandler(handleError, getTypeValidator, startServer, loadConfig),
+    handler: createHandler(handleError, getTypeValidator, startServer, loadConfig, makeServerLogger),
   }
 }

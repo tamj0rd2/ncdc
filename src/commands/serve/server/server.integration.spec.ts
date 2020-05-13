@@ -2,22 +2,30 @@ import request from 'supertest'
 import { configureServer, verbsMap, PossibleMethod, ReqResLog } from '.'
 import { ConfigBuilder, SupportedMethod } from '~config/types'
 import { TypeValidator } from '~validation'
-import { mockObj, mocked } from '~test-helpers'
-import serverLogger from './server-logger'
-
-jest.mock('./server-logger')
+import { mockObj } from '~test-helpers'
+import { Logger } from './server-logger'
+import { ServeConfig } from '../config'
 
 describe('server', () => {
   jest.spyOn(console, 'dir').mockImplementation()
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
+  const mockLogger = mockObj<Logger>({
+    info: jest.fn(),
+    verbose: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+  })
 
   afterEach(() => jest.resetAllMocks())
   afterAll(() => jest.clearAllMocks())
 
+  const getApp = (configs: ServeConfig[]): Express.Application =>
+    configureServer('mysite.com', configs, mockTypeValidator, mockLogger)
+
   it('sends configurations when visiting /', async () => {
     const configs = [new ConfigBuilder().withRequestType('Some Type').build()]
 
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
+    const app = getApp(configs)
 
     await request(app).get('/').expect(200).expect('Content-Type', /json/).expect(configs)
   })
@@ -27,10 +35,9 @@ describe('server', () => {
 
   it.each(methodCases)('handles a basic request with method: %s', async (verb, method) => {
     const endpoint = '/api/resource'
-
     const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod(verb).build()]
 
-    const app = configureServer('example.com', configs, mockTypeValidator)
+    const app = getApp(configs)
 
     await request(app)
       [method](endpoint)
@@ -41,10 +48,9 @@ describe('server', () => {
 
   it('handles a basic request with method: HEAD', async () => {
     const endpoint = '/api/resource'
-
     const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod('HEAD').build()]
 
-    const app = configureServer('example.com', configs, mockTypeValidator)
+    const app = getApp(configs)
 
     await request(app).head(endpoint).expect(200)
   })
@@ -57,7 +63,7 @@ describe('server', () => {
 
   it.each(getCases)('serves routes matching the configured path %s', async (endpoint, pathToVisit) => {
     const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod('GET').build()]
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
+    const app = getApp(configs)
 
     await request(app)
       .get(pathToVisit)
@@ -69,7 +75,7 @@ describe('server', () => {
   it('returns a 404 when the requested endpoint could not be found', async () => {
     const configs = [new ConfigBuilder().withEndpoint('/almost/correct').build()]
 
-    const app = configureServer('mysite.com', configs, mockTypeValidator)
+    const app = getApp(configs)
 
     await request(app)
       .get('/nearly/correct')
@@ -80,12 +86,11 @@ describe('server', () => {
   it('logs successful requests', async () => {
     const configs = [new ConfigBuilder().withEndpoint('/api/resource').withResponseBody(undefined).build()]
 
-    const app = configureServer('example.com', configs)
+    const app = getApp(configs)
     await request(app).get('/api/resource?what=up').expect(200)
 
-    const mockedLogger = mocked(serverLogger.info)
-    expect(mockedLogger).toBeCalled()
-    expect(mockedLogger.mock.calls[1][0]).toMatchObject<ReqResLog>({
+    expect(mockLogger.info).toBeCalled()
+    expect(mockLogger.info.mock.calls[0][0]).toMatchObject<ReqResLog>({
       name: configs[0].name,
       request: {
         method: 'GET',
@@ -111,7 +116,7 @@ describe('server', () => {
           .build(),
       ]
 
-      const app = configureServer('mysite.com', configs, mockTypeValidator)
+      const app = getApp(configs)
 
       await request(app)
         .get(configs[0].request.endpoint)
@@ -126,7 +131,7 @@ describe('server', () => {
         new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
       ]
 
-      const app = configureServer('example.com', configs)
+      const app = getApp(configs)
 
       await request(app).get('/api/resource?greetings=bye&greetings=hello').expect(200)
     })
@@ -146,7 +151,7 @@ describe('server', () => {
           .build(),
       ]
 
-      const app = configureServer('example.com', configs)
+      const app = getApp(configs)
 
       await request(app).get('/api/resource?greetings=hi&greetings=bye').expect(202).expect('YES')
     })
@@ -156,7 +161,7 @@ describe('server', () => {
         new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
       ]
 
-      const app = configureServer('example.com', configs)
+      const app = getApp(configs)
 
       await request(app).get('/api/resource?greetings=yellow&greetings=bye').expect(404)
     })
@@ -175,7 +180,7 @@ describe('server', () => {
       ]
       mockTypeValidator.validate.mockResolvedValue({ success: true })
 
-      const app = configureServer('mysite.com', configs, mockTypeValidator)
+      const app = getApp(configs)
 
       await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(404).expect('Noice')
     })
@@ -186,7 +191,7 @@ describe('server', () => {
       ]
       mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
 
-      const app = configureServer('mysite.com', configs, mockTypeValidator)
+      const app = getApp(configs)
 
       await request(app)
         .post(configs[0].request.endpoint)

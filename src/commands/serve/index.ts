@@ -1,6 +1,6 @@
 import { Argv } from 'yargs'
 import { HandleError } from '../shared'
-import * as consts from '~commands/consts'
+import * as consts from '~commands/options'
 import createHandler, { ServeArgs } from './handler'
 import { startServer } from './server'
 import logger from '~logger'
@@ -13,10 +13,7 @@ import { logMetric } from '~metrics'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
-    .positional(consts.CONFIG_PATH, {
-      describe: consts.CONFIG_PATH_DESCRIBE,
-      type: consts.CONFIG_PATH_TYPE,
-    })
+    .positional(consts.CONFIG_PATH, consts.CONFIG_PATH_OPTS)
     .positional('port', {
       describe: 'port to serve the API on',
       type: 'number',
@@ -27,22 +24,10 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
       type: 'boolean',
       default: false,
     })
-    .option(consts.SCHEMA_PATH, {
-      type: consts.SCHEMA_PATH_TYPE,
-      description: consts.SCHEMA_PATH_DESCRIPTION,
-    })
-    .option(consts.TSCONFIG_PATH, {
-      alias: consts.TSCONFIG_ALIAS,
-      type: consts.TSCONFIG_TYPE,
-      description: consts.TSCONFIG_DESCRIPTION,
-      default: consts.TSCONFIG_DEFAULT,
-    })
-    .option(consts.FORCE_GENERATION, {
-      alias: consts.FORCE_GENERATION_ALIAS,
-      type: consts.FORCE_GENERATION_TYPE,
-      default: false,
-      description: consts.FORCE_GENERATION_DESCRIPTION,
-    })
+    .option(consts.SCHEMA_PATH, consts.SCHEMA_PATH_OPTS)
+    .option(consts.TSCONFIG_PATH, consts.TSCONFIG_PATH_OPTS)
+    .option(consts.FORCE_GENERATION, consts.FORCE_GENERATION_OPTS)
+    .option(consts.VERBOSE, consts.VERBOSE_OPTS)
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

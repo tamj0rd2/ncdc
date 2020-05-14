@@ -1,5 +1,4 @@
-import { isAbsolute, resolve } from 'path'
-import { readJsonAsync } from '~io'
+import { readFixture } from '~io'
 import { SupportedMethod } from '~config/types'
 
 export interface ValidatedServeConfig {
@@ -27,20 +26,15 @@ export interface ValidatedServeConfig {
 
 export const transformConfigs = async (
   configs: ValidatedServeConfig[],
-  absoluteConfigPath: string,
+  configPath: string,
 ): Promise<ServeConfig[]> => {
-  const loadBody = async (bodyPath: string): Promise<Data | undefined> => {
-    const absolutePathToFile = isAbsolute(bodyPath) ? bodyPath : resolve(absoluteConfigPath, '..', bodyPath)
-    return await readJsonAsync(absolutePathToFile)
-  }
-
   const mapConfig = async (c: ValidatedServeConfig, endpoint: string): Promise<ServeConfig> => {
     let responseBody: Data | undefined
 
     if (c.response.serveBodyPath) {
-      responseBody = await loadBody(c.response.serveBodyPath)
+      responseBody = await readFixture(configPath, c.response.serveBodyPath)
     } else if (c.response.bodyPath) {
-      responseBody = await loadBody(c.response.bodyPath)
+      responseBody = await readFixture(configPath, c.response.bodyPath)
     } else {
       responseBody = c.response.serveBody || c.response.body
     }
@@ -50,7 +44,7 @@ export const transformConfigs = async (
       request: {
         endpoint,
         method: c.request.method,
-        body: c.request.bodyPath ? await loadBody(c.request.bodyPath) : c.request.body,
+        body: c.request.bodyPath ? await readFixture(configPath, c.request.bodyPath) : c.request.body,
         headers: c.request.headers,
         type: c.request.type,
       },

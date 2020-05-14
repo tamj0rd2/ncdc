@@ -1,7 +1,6 @@
 import { transformConfigs, ValidatedServeConfig, ServeConfig } from './config'
 import { randomString, mocked } from '~test-helpers'
-import { isAbsolute, resolve } from 'path'
-import { readJsonAsync } from '~io'
+import { readFixture } from '~io'
 import dot from 'dot-object'
 
 jest.unmock('./config')
@@ -10,7 +9,7 @@ jest.unmock('dot-object')
 jest.mock('path')
 
 describe('transform configs', () => {
-  const mockReadJsonAsync = mocked(readJsonAsync)
+  const mockReadFixture = mocked(readFixture)
 
   const createBasicConfig = (): ValidatedServeConfig => {
     return {
@@ -83,39 +82,19 @@ describe('transform configs', () => {
     ['response.bodyPath', 'response.body'],
     ['response.serveBodyPath', 'response.body'],
   ]
-  describe.each(bodyPathCases.map((x) => [x]))('when %s is present', ([bodyPath, destination]) => {
-    const mockIsAbsolute = mocked(isAbsolute)
-    mockReadJsonAsync.mockResolvedValue({ nice: 'one' })
+  describe.each(bodyPathCases.map((x) => [x]))('when %s is present', ([pathToBody, destination]) => {
+    mockReadFixture.mockResolvedValue({ nice: 'one' })
 
-    it(`sets ${bodyPath} when the path is absolute`, async () => {
-      mockIsAbsolute.mockReturnValue(true)
+    it(`sets a body when a ${pathToBody} fixture is provided`, async () => {
       const config = createBasicConfig()
-      const pathToSet = randomString()
-      dot.set(bodyPath, pathToSet, config)
+      const fixturePath = randomString()
+      dot.set(pathToBody, fixturePath, config)
+      const configPath = randomString('configPath')
 
-      const result = await transformConfigs([config], '')
+      const result = await transformConfigs([config], configPath)
 
-      expect(mockIsAbsolute).toBeCalledWith(pathToSet)
-      expect(mockReadJsonAsync).toBeCalledWith(pathToSet)
+      expect(mockReadFixture).toBeCalledWith(configPath, fixturePath)
       expect(result).toHaveLength(1)
-      expect(dot.pick(destination, result[0])).toStrictEqual({ nice: 'one' })
-    })
-
-    it(`sets ${bodyPath} when the path is relative`, async () => {
-      mockIsAbsolute.mockReturnValue(false)
-      const mockResolve = mocked(resolve)
-      mockResolve.mockReturnValue('absolute path')
-
-      const config = createBasicConfig()
-      const pathToSet = randomString()
-      dot.set(bodyPath, pathToSet, config)
-      const absoluteConfigPath = randomString()
-
-      const result = await transformConfigs([config], absoluteConfigPath)
-
-      expect(mockIsAbsolute).toBeCalledWith(pathToSet)
-      expect(mockResolve).toBeCalledWith(absoluteConfigPath, '..', pathToSet)
-      expect(mockReadJsonAsync).toBeCalledWith('absolute path')
       expect(dot.pick(destination, result[0])).toStrictEqual({ nice: 'one' })
     })
   })

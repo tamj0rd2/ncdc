@@ -1,6 +1,5 @@
 import { SupportedMethod, CommonConfig } from '~config/types'
-import { isAbsolute, resolve } from 'path'
-import { readJsonAsync } from '~io'
+import { readFixture } from '~io'
 
 export interface ValidatedTestConfig {
   name: string
@@ -27,13 +26,8 @@ export type TestConfig = CommonConfig
 // TODO: also needs to be responsible for filtering
 export const transformConfigs = async (
   configs: ValidatedTestConfig[],
-  absoluteConfigPath: string,
+  configPath: string,
 ): Promise<TestConfig[]> => {
-  const loadBody = async (bodyPath: string): Promise<Data | undefined> => {
-    const absolutePathToFile = isAbsolute(bodyPath) ? bodyPath : resolve(absoluteConfigPath, '..', bodyPath)
-    return await readJsonAsync(absolutePathToFile)
-  }
-
   return Promise.all(
     configs
       .filter((c) => !c.serveOnly)
@@ -43,13 +37,13 @@ export const transformConfigs = async (
           request: {
             endpoint,
             method: c.request.method,
-            body: c.request.bodyPath ? await loadBody(c.request.bodyPath) : c.request.body,
+            body: c.request.bodyPath ? await readFixture(configPath, c.request.bodyPath) : c.request.body,
             headers: c.request.headers,
             type: c.request.type,
           },
           response: {
             code: c.response.code,
-            body: c.response.bodyPath ? await loadBody(c.response.bodyPath) : c.response.body,
+            body: c.response.bodyPath ? await readFixture(configPath, c.response.bodyPath) : c.response.body,
             headers: c.response.headers,
             type: c.response.type,
           },

@@ -15,7 +15,8 @@
     "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "test": "jest --runInBand --bail",
     "cover": "nyc npm run test -- --coverage --detectOpenHandles",
-    "lint": "eslint '**/*.ts' --color --ignore-path .gitignore --cache",
+    "lint:base": "eslint --color --ignore-path .gitignore --cache",
+    "lint": "npm run lint:base -- '**/*.ts' --fix",
     "semantic-release": "semantic-release"
   },
   "husky": {
@@ -26,7 +27,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "npm run lint -- --fix"
+      "npm run lint:base -- --fix"
     ]
   },
   "config": {

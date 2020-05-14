@@ -2,7 +2,7 @@ import { ChildProcess, exec } from 'child_process'
 import { Server } from 'http'
 import express from 'express'
 import stripAnsi from 'strip-ansi'
-import { NCDC_CONFIG_FILE, TSCONFIG_FILE } from './config-wrapper'
+import { NCDC_CONFIG_FILE, TSCONFIG_FILE, NCDC_EXEC } from './config-wrapper'
 
 export const REAL_SERVER_HOST = 'http://localhost:5000'
 
@@ -13,7 +13,7 @@ export interface TestResult {
 
 export const runTestCommand = (args = ''): Promise<TestResult> =>
   new Promise<TestResult>((resolve) => {
-    const command = `LOG_LEVEL=debug ./bin/ncdc test ${NCDC_CONFIG_FILE} ${REAL_SERVER_HOST} -c ${TSCONFIG_FILE} ${args}`
+    const command = `LOG_LEVEL=debug ${NCDC_EXEC} test ${NCDC_CONFIG_FILE} ${REAL_SERVER_HOST} -c ${TSCONFIG_FILE} ${args}`
     const ncdc: ChildProcess = exec(command)
     const output: string[] = []
     const getOutput = (): string => stripAnsi(output.join(''))

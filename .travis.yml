@@ -1,4 +1,4 @@
-language: minimal
+language: node_js
 branches:
   only:
     - master
@@ -9,6 +9,8 @@ jobs:
   include:
     - stage: tests
       before_script:
+        - npm run clean
+        - npm run compile
         - docker-compose build release
         - ci_env=`bash <(curl -s https://codecov.io/env)`
       script:
@@ -16,7 +18,6 @@ jobs:
         - docker-compose run typecheck
         - docker-compose run $ci_env cover
       deploy:
-        install: skip
         provider: script
         skip_cleanup: true
         script:
@@ -26,3 +27,5 @@ jobs:
             - master
             - beta
             - alpha
+      after_deploy:
+        - if ! docker-compose up --build --exit-code-from post-deploy post-deploy; then travis_terminate 1; fi

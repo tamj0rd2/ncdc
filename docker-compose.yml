@@ -1,38 +1,46 @@
 version: "3.7"
 services:
   lint:
-    build: .
+    build:
+      context: .
+      target: setup
     command: npm run lint
+    volumes:
+      - ./:/usr/src/app
 
   typecheck:
-    build: .
+    build:
+      context: .
+      target: setup
     command: npm run typecheck
+    volumes:
+      - ./:/usr/src/app
 
   # coverage upload only works in CI
   cover:
-    build: .
+    build:
+      context: .
+      target: setup
     command: bash -c 'npm run cover && bash <(curl -s https://codecov.io/bash)'
+    volumes:
+      - ./:/usr/src/app
 
   release:
-    build: .
+    build:
+      context: .
+      target: setup
     environment:
       - GITHUB_TOKEN
       - NPM_TOKEN
     command: npx semantic-release
-
-  watch-acceptance:
-    build:
-      context: .
-      target: base
-    tty: true
-    command: yarn test --watchAll
-    environment:
-      - TEST_MODE=acceptance
     volumes:
       - ./:/usr/src/app
 
-  acceptance:
-    build: .
-    command: bash -c 'yarn compile && yarn test'
+  post-deploy:
+    build:
+      context: .
+      target: post_deploy
+    command: npx jest --runInBand --bail --detectOpenHandles
     environment:
       - TEST_MODE=acceptance
+      - NCDC_EXEC=./node_modules/.bin/ncdc

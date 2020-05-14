@@ -8,6 +8,7 @@ export const TSCONFIG_FILE = `${TEST_ENV}/tsconfig.json`
 export const JSON_SCHEMAS_FOLDER = `${TEST_ENV}/json-schemas`
 export const FIXTURES_FOLDER = `${TEST_ENV}/fixtures` // TODO: change to fixtures
 export const TYPES_FILE = `${TEST_ENV}/types.ts`
+export const NCDC_EXEC = process.env.NCDC_EXEC ?? './bin/ncdc'
 
 export class ConfigWrapper {
   private configs: Config[] = []

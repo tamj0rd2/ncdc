@@ -1,7 +1,7 @@
 import { ChildProcess, exec } from 'child_process'
 import strip from 'strip-ansi'
 import nodeFetch, { RequestInit, Response } from 'node-fetch'
-import { NCDC_CONFIG_FILE, TSCONFIG_FILE } from './config-wrapper'
+import { NCDC_CONFIG_FILE, TSCONFIG_FILE, NCDC_EXEC } from './config-wrapper'
 
 const waitForX = (condition: () => Promise<boolean> | boolean, timeout: number): Promise<void> =>
   new Promise<void>((resolve, reject) => {
@@ -58,7 +58,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
   checkAvailability = true,
 ): Promise<ServeResult> => {
   let hasExited = false
-  const command = `LOG_LEVEL=debug CHOKIDAR_USEPOLLING=1 ./bin/ncdc serve ${NCDC_CONFIG_FILE} -c ${TSCONFIG_FILE} ${args}`
+  const command = `LOG_LEVEL=debug CHOKIDAR_USEPOLLING=1 ${NCDC_EXEC} serve ${NCDC_CONFIG_FILE} -c ${TSCONFIG_FILE} ${args}`
   const ncdc: ChildProcess = exec(command)
   const output: string[] = []
   const getRawOutput = (): string => output.join('\n')

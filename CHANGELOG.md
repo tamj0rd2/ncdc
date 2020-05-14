@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/tamj0rd2/ncdc/compare/v0.3.2...v0.4.0) (2020-05-14)
+
+
+### Features
+
+* support using non-json fixtures ([aebf58f](https://github.com/tamj0rd2/ncdc/commit/aebf58f58967e205f982d813b50f23411fe32a00)), closes [#44](https://github.com/tamj0rd2/ncdc/issues/44)
+
 ## [0.3.2](https://github.com/tamj0rd2/ncdc/compare/v0.3.1...v0.3.2) (2020-05-11)
 
 

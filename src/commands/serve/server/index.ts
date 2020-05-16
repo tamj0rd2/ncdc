@@ -8,6 +8,7 @@ import { ServeConfig } from '../config'
 import validateQuery from './query-validator'
 import { SupportedMethod } from '~config/types'
 import { logMetric } from '~metrics'
+import { areHeadersValid } from './header-validator'
 
 export interface ReqResLog {
   name?: string
@@ -81,6 +82,14 @@ export const configureServer = (
 
     app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
       try {
+        if (request.headers) {
+          const { success } = areHeadersValid(request.headers, req.headers)
+          if (!success) {
+            logger.warn(`An endpoint for ${req.path} exists but the headers did not match the configuration`)
+            return next()
+          }
+        }
+
         const queryIsValid = validateQuery(request.endpoint, req.query)
         if (!queryIsValid) {
           logger.warn(

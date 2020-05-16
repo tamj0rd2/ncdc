@@ -5,13 +5,13 @@ export interface CommonConfig {
     endpoint: string
     body?: Data
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
   }
   response: {
     code: number
     body?: Data
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
   }
 }
 
@@ -50,7 +50,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withRequestHeaders(headers: Optional<StringDict>): ConfigBuilder {
+  public withRequestHeaders(headers: Optional<NcdcHeaders>): ConfigBuilder {
     this.config.request.headers = headers
     return this
   }
@@ -70,7 +70,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withResponseHeaders(headers: Optional<StringDict>): ConfigBuilder {
+  public withResponseHeaders(headers: Optional<NcdcHeaders>): ConfigBuilder {
     this.config.response.headers = headers
     return this
   }

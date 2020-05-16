@@ -106,6 +106,22 @@ describe('server', () => {
   })
 
   describe('request', () => {
+    describe('headers', () => {
+      const config = new ConfigBuilder().withResponseCode(200).withRequestHeaders({ nice: 'meme' }).build()
+
+      it('fails when configured headers are not given', async () => {
+        const app = getApp([config])
+
+        await request(app).get(config.request.endpoint).send().expect(404)
+      })
+
+      it('passes when configured headers are given', async () => {
+        const app = getApp([config])
+
+        await request(app).get(config.request.endpoint).set('nice', 'meme').expect(200)
+      })
+    })
+
     describe('query', () => {
       it('still responds when a query matches in a different order', async () => {
         const configs = [
@@ -155,7 +171,7 @@ describe('server', () => {
             .withMethod('POST')
             .withEndpoint('/config1')
             .withRequestType('number')
-            .withResponseCode(404)
+            .withResponseCode(401)
             .withResponseBody('Noice')
             .build(),
         ]
@@ -163,7 +179,7 @@ describe('server', () => {
 
         const app = getApp(configs)
 
-        await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(404).expect('Noice')
+        await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(401).expect('Noice')
       })
 
       it('gives a 404 when the request body fails type validation', async () => {

@@ -7,7 +7,7 @@ export interface ValidatedServeConfig {
   request: {
     method: SupportedMethod
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
     endpoints?: string[]
     serveEndpoint?: string
     body?: Data
@@ -16,7 +16,7 @@ export interface ValidatedServeConfig {
   response: {
     code: number
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
     body?: Data
     bodyPath?: string
     serveBody?: Data
@@ -81,12 +81,12 @@ export interface ServeConfig {
     endpoint: string
     body?: Data
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
   }
   response: {
     code: number
     body?: Data
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
   }
 }

@@ -7,7 +7,7 @@ export interface ValidatedTestConfig {
   request: {
     method: SupportedMethod
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
     endpoints: string[]
     body?: Data
     bodyPath?: string
@@ -15,7 +15,7 @@ export interface ValidatedTestConfig {
   response: {
     code: number
     type?: string
-    headers?: StringDict
+    headers?: NcdcHeaders
     body?: Data
     bodyPath?: string
   }

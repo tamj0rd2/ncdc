@@ -177,11 +177,17 @@ Examples:
 
 Serves mock API endpoints defined in config.yml
 
+#### CLI Usage
+
 Run `npx ncdc serve --help` to get contextual usage information and examples for
 this command.
 
-When ncdc receives a request, it will try to find something to serve in the order
-that the configurations are declared in config.yml.
+#### How it works
+
+When ncdc receives a request, it will go through each configuration in your
+config.yml (from top to bottom) and serve the first one that meets all of your
+request constraints. If the request does not match any of your configurations,
+ncdc will response with a 404.
 
 #### Local development recipes
 
@@ -206,6 +212,8 @@ How to run your fake APIs locally:
 
 Tests that responses from a real API match the configured parameters in config.yml
 
+#### CLI Usage
+
 Run `npx ncdc test --help` to get contextual usage information and examples for
 this command.
 
@@ -213,10 +221,19 @@ this command.
 
 Generates json schemas for any type specified in config.yml
 
+#### CLI Usage
+
 Run `npx ncdc generate --help` to get contextual usage information and examples
 for this command.
 
-The reasons for using this are described in the [Docker use case](#docker-use-case)
+#### How it works
+
+This will create JSON schemas for your types and save them to disk. They can
+later be used with the serve and test commands, rather than re-generating them
+on the fly.
+
+The reasons why you might want to do this are described in the
+[Docker use case](#docker-use-case)
 
 ## Docker use case
 

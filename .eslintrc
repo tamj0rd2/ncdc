@@ -10,8 +10,7 @@
   "plugins": ["@typescript-eslint", "jest", "prettier"],
   "extends": [
     "plugin:@typescript-eslint/recommended",
-    "prettier/@typescript-eslint",
-    "plugin:prettier/recommended"
+    "prettier/@typescript-eslint"
   ],
   "rules": {
     "no-unused-expressions": "off",

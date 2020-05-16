@@ -13,7 +13,7 @@ describe('areHeadersValid', () => {
     const result = areHeadersValid(expected, {
       'X-Hello': 'world',
       'what-is': 'love',
-      baby: ['dont', 'hurt', 'me'],
+      baby: ['dont', 'me', 'hurt'],
     })
 
     expect(result).toMatchObject<HeaderValidationResult>({ success: true })
@@ -28,8 +28,22 @@ describe('areHeadersValid', () => {
 
     const result = areHeadersValid(expected, {
       Hello: 'world',
-      'what-is': 'Love',
-      baby: ['dont', 'hurt', 'me'],
+      'what-is': 'love',
+      baby: ['dont', 'hurt'],
+    })
+
+    expect(result).toMatchObject<HeaderValidationResult>({
+      success: false,
+    })
+  })
+
+  it('returns false if there are multiple received header values that do not match', () => {
+    const expected = {
+      hello: 'world',
+    }
+
+    const result = areHeadersValid(expected, {
+      hello: ['werld', 'peace'],
     })
 
     expect(result).toMatchObject<HeaderValidationResult>({

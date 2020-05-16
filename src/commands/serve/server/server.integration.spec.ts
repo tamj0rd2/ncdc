@@ -105,99 +105,103 @@ describe('server', () => {
     })
   })
 
-  describe('headers', () => {
-    it('sets the response headers when provided', async () => {
-      const configs = [
-        new ConfigBuilder()
-          .withResponseHeaders({
-            'content-type': 'application/xml',
-            'another-header': 'my value',
-          })
-          .build(),
-      ]
+  describe('request', () => {
+    describe('query', () => {
+      it('still responds when a query matches in a different order', async () => {
+        const configs = [
+          new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
+        ]
 
-      const app = getApp(configs)
+        const app = getApp(configs)
 
-      await request(app)
-        .get(configs[0].request.endpoint)
-        .expect('Content-Type', /application\/xml/)
-        .expect('another-header', 'my value')
+        await request(app).get('/api/resource?greetings=bye&greetings=hello').expect(200)
+      })
+
+      it('responds when a query matches a different config', async () => {
+        const configs = [
+          new ConfigBuilder()
+            .withName('Config1')
+            .withEndpoint('/api/resource?greetings=hello&greetings=bye')
+            .withResponseBody('nope')
+            .build(),
+          new ConfigBuilder()
+            .withName('Config2')
+            .withEndpoint('/api/resource?greetings=hi&greetings=bye')
+            .withResponseCode(202)
+            .withResponseBody('YES')
+            .build(),
+        ]
+
+        const app = getApp(configs)
+
+        await request(app).get('/api/resource?greetings=hi&greetings=bye').expect(202).expect('YES')
+      })
+
+      it('gives a 404 if a query does not match any config', async () => {
+        const configs = [
+          new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
+        ]
+
+        const app = getApp(configs)
+
+        await request(app).get('/api/resource?greetings=yellow&greetings=bye').expect(404)
+      })
+    })
+
+    describe('type', () => {
+      it('returns the desired response when the request body passes type validation', async () => {
+        const configs = [
+          new ConfigBuilder()
+            .withMethod('POST')
+            .withEndpoint('/config1')
+            .withRequestType('number')
+            .withResponseCode(404)
+            .withResponseBody('Noice')
+            .build(),
+        ]
+        mockTypeValidator.validate.mockResolvedValue({ success: true })
+
+        const app = getApp(configs)
+
+        await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(404).expect('Noice')
+      })
+
+      it('gives a 404 when the request body fails type validation', async () => {
+        const configs = [
+          new ConfigBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
+        ]
+        mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
+
+        const app = getApp(configs)
+
+        await request(app)
+          .post(configs[0].request.endpoint)
+          .send('Yo dude!')
+          .expect(404)
+          .expect(/NCDC ERROR: Could not find an endpoint/)
+      })
     })
   })
 
-  describe('request query strings', () => {
-    it('still responds when a query matches in a different order', async () => {
-      const configs = [
-        new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
-      ]
+  describe('response', () => {
+    describe('headers', () => {
+      it('sets the headers when provided', async () => {
+        const configs = [
+          new ConfigBuilder()
+            .withResponseHeaders({
+              'content-type': 'application/xml',
+              'another-header': 'my value',
+            })
+            .build(),
+        ]
 
-      const app = getApp(configs)
+        const app = getApp(configs)
 
-      await request(app).get('/api/resource?greetings=bye&greetings=hello').expect(200)
-    })
-
-    it('responds when a query matches a different config', async () => {
-      const configs = [
-        new ConfigBuilder()
-          .withName('Config1')
-          .withEndpoint('/api/resource?greetings=hello&greetings=bye')
-          .withResponseBody('nope')
-          .build(),
-        new ConfigBuilder()
-          .withName('Config2')
-          .withEndpoint('/api/resource?greetings=hi&greetings=bye')
-          .withResponseCode(202)
-          .withResponseBody('YES')
-          .build(),
-      ]
-
-      const app = getApp(configs)
-
-      await request(app).get('/api/resource?greetings=hi&greetings=bye').expect(202).expect('YES')
-    })
-
-    it('gives a 404 if a query does not match any config', async () => {
-      const configs = [
-        new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
-      ]
-
-      const app = getApp(configs)
-
-      await request(app).get('/api/resource?greetings=yellow&greetings=bye').expect(404)
-    })
-  })
-
-  describe('type validation', () => {
-    it('returns the desired response when the request body passes type validation', async () => {
-      const configs = [
-        new ConfigBuilder()
-          .withMethod('POST')
-          .withEndpoint('/config1')
-          .withRequestType('number')
-          .withResponseCode(404)
-          .withResponseBody('Noice')
-          .build(),
-      ]
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
-
-      const app = getApp(configs)
-
-      await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(404).expect('Noice')
-    })
-
-    it('gives a 404 when the request body fails type validation', async () => {
-      const configs = [
-        new ConfigBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
-      ]
-      mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
-
-      const app = getApp(configs)
-
-      await request(app)
-        .post(configs[0].request.endpoint)
-        .send('Yo dude!')
-        .expect(404)
-        .expect(/NCDC ERROR: Could not find an endpoint/)
+        await request(app)
+          .get(configs[0].request.endpoint)
+          .expect('Content-Type', /application\/xml/)
+          .expect('another-header', 'my value')
+      })
     })
   })
 })

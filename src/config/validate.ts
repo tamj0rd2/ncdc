@@ -49,6 +49,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
   })
 
   const bodySchema = [Joi.string(), Joi.object()]
+  const headersSchema = Joi.object().pattern(Joi.string(), Joi.string())
 
   const schema = Joi.array()
     .items(
@@ -62,7 +63,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
             .uppercase()
             .required(),
           type: Joi.string(),
-          headers: Joi.object(),
+          headers: headersSchema,
           endpoints: Joi.alternatives()
             .conditional('...serveOnly', {
               is: Joi.valid(false),
@@ -83,7 +84,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
         response: Joi.object({
           code: Joi.number().required(),
           type: Joi.string(),
-          headers: Joi.object(),
+          headers: headersSchema,
           body: bodySchema,
           bodyPath: Joi.string(),
           serveBody: bodySchema,

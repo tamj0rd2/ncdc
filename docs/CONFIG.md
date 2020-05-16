@@ -131,7 +131,11 @@ Here's a format that describes each config setting:
 
 - **Description**: The name of a typescript symbol or a JSON schema file
   (excluding the .json). JSON schema files will only be used if the
-  `--schemaPath` flag is given
+  `--schemaPath` flag is given.<br/>
+  NOTE: This does not yet support using the array syntax in your config file.
+  e.g putting `MyType[]` in your config file will not work. Instead, define a
+  type like `type MyTypeArray = MyType[]` somewhere in your typescript project
+  and use `MyTypeArray` as a type in your config file.
 - **Serve mode**: When a request is sent to ncdc, it will not be served unless
   the body matches the specified type. Additional properties will not cause
   validation to fail.
@@ -166,24 +170,18 @@ Here's a format that describes each config setting:
 
 - **Description**: The body you expect to make requests to the endpoint with.
   Whitespace needs to match exactly.<br>
-  This property cannot be specified at the same time as `request.bodyPath`.<br>
-  In Serve mode, if this property is specified without `request.type`, responses
-  will only be served if the request body matches `request.body` exactly
-  
-  NOTE: This does not yet support using the array syntax in your config file.
-  e.g putting `MyType[]` in your config file will not work. Instead, define a
-  type like `type MyTypeArray = MyType[]` somewhere in your typescript project
-  and use `MyTypeArray` as a type in your config file.
-  
-  <!-- TODO: but are they really? -->
-  The types `number`, `string`, `object`, and `boolean` are recognised by default
-- **Type**: string<br>
+  This property cannot be specified at the same time as `request.bodyPath`.
+- **Serve mode**: Requests will only be served if the request body is deeply
+  equal to the body defined. This behaviour is ignored if `request.type` has
+  been specified.
+- **Test mode**: The request body will be sent to your real API endpoint
+- **Type**: string or object
 - **Required?**: No
-- **Example**: `body: { hello: 'world' }`
+- **Example**:
   ```yaml
   body: Hello world :D
   # or...
-  body: { hello: world }
+  body: { hello: "world" }
   # or...
   body:
     hello: world

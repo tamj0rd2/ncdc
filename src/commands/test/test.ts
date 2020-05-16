@@ -3,28 +3,11 @@ import { red, green, blue } from 'chalk'
 import { TestConfig } from './config'
 import { inspect } from 'util'
 import { Logger } from 'winston'
+import { isDeeplyEqual } from '~util'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
 export type GetTypeValidator = () => TypeValidator
-
-const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
-  if (typeof expected === 'object') {
-    if (!expected) return expected === actual
-    if (typeof actual !== 'object') return false
-    if (!actual) return false
-
-    for (const key in expected) {
-      const expectedValue = expected[key as keyof typeof expected]
-      const actualValue = actual[key as keyof typeof actual]
-      if (!isDeeplyEqual(expectedValue, actualValue)) return false
-    }
-
-    return true
-  }
-
-  return expected === actual
-}
 
 export const runTests = async (
   baseUrl: string,

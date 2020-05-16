@@ -7,7 +7,9 @@ is invalid, you will receive an error message and the program will terminate.
 
 Here's a format that describes each config setting:
 
-- **Description** - a description of the setting
+- **Description** - a description of the setting and common behaviours
+- **Serve mode** - describes additional behaviour specific to serve mode
+- **Test mode** - describes additional behaviour specific to test mode
 - **Type** - the type the value of the setting needs to have
 - **Default** value - the default value for the setting. Omitted if there is no default
 - **Required?** - is the setting required?
@@ -125,21 +127,16 @@ Here's a format that describes each config setting:
   method: GET
   ```
 
-<!-- TODO: make sure the type actually works like this and gives back a useful error message -->
 ### request.type
 
 - **Description**: The name of a typescript symbol or a JSON schema file
-  (excluding the .json). JSON schema files will only be used if the `--schemPath`
-  flag is used while calling `ncdc test` or `ncdc serve`.<br>
-  In Serve and Test mode, if `request.body` or `request.bodyPath` are specified
-  along with a type, validation will be done between the type and the request
-  body. If validation fails, you will receive an error and the program will
-  terminate. Validation won't fail if extra properties are provided<br>
-  In Serve mode, if a type is specified alongside `request.body` or
-  `request.bodyPath`, the request body will be matched against the type, not the
-  specified body. If the type does not match the request body the endpoint will
-  respond with a 400 status code. Just send the problems back in the response.
-
+  (excluding the .json). JSON schema files will only be used if the
+  `--schemaPath` flag is given
+- **Serve mode**: When a request is sent to ncdc, it will not be served unless
+  the body matches the specified type. Additional properties will not cause
+  validation to fail.
+- **Test mode**: Prior to running any tests, a pre-validation check will be done
+  between the `request.type` and the `request.body` to ensure they match.
 - **Type**: string
 - **Required?**: No
 - **Example**:

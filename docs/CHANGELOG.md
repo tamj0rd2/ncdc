@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/tamj0rd2/ncdc/compare/v0.4.1...v0.4.2) (2020-05-16)
+
+
+### Bug Fixes
+
+* **serve:** fix a small bug in request header validation ([92dfa3f](https://github.com/tamj0rd2/ncdc/commit/92dfa3f9887185386a0238c32f55651ea90ea21d))
+
 ## [0.4.1](https://github.com/tamj0rd2/ncdc/compare/v0.4.0...v0.4.1) (2020-05-16)
 
 

@@ -9,6 +9,7 @@ import validateQuery from './query-validator'
 import { SupportedMethod } from '~config/types'
 import { logMetric } from '~metrics'
 import { areHeadersValid } from './header-validator'
+import { isDeeplyEqual } from '~util'
 
 export interface ReqResLog {
   name?: string
@@ -105,6 +106,13 @@ export const configureServer = (
 
             // TODO: something like this to capture better response codes
             // res.locals.status = 400
+            return next()
+          }
+        }
+
+        if (request.body && !request.type) {
+          if (!isDeeplyEqual(request.body, req.body)) {
+            logger.warn(`An endpoint for ${req.path} exists but the request body did not match`)
             return next()
           }
         }

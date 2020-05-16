@@ -7,7 +7,6 @@ import { Logger } from './server-logger'
 import { ServeConfig } from '../config'
 
 describe('server', () => {
-  jest.spyOn(console, 'dir').mockImplementation()
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
   const mockLogger = mockObj<Logger>({
     info: jest.fn(),
@@ -195,6 +194,36 @@ describe('server', () => {
           .send('Yo dude!')
           .expect(404)
           .expect(/NCDC ERROR: Could not find an endpoint/)
+      })
+    })
+
+    describe('body', () => {
+      it('returns a 404 when a request body is missing', async () => {
+        const config = new ConfigBuilder().withRequestBody('hello  there  ').build()
+
+        const app = getApp([config])
+
+        await request(app).get(config.request.endpoint).expect(404)
+      })
+
+      it('returns a 404 when the request bodies do not match', async () => {
+        const config = new ConfigBuilder().withRequestBody({ hello: 'world' }).build()
+
+        const app = getApp([config])
+
+        await request(app).get(config.request.endpoint).send({ hello: 'werld' }).expect(404)
+      })
+
+      it('ignores body validation if request.type is specified', async () => {
+        const config = new ConfigBuilder()
+          .withRequestBody({ hello: 'world' })
+          .withRequestType('memes')
+          .build()
+        mockTypeValidator.validate.mockResolvedValue({ success: true })
+
+        const app = getApp([config])
+
+        await request(app).get(config.request.endpoint).send({ ayy: 'lmao' }).expect(200)
       })
     })
   })

@@ -35,6 +35,7 @@ real endpoints are all consistent with eachother.
     - [Local development recipes](#local-development-recipes)
   - [Test mode](#test)
   - [Generate](#generate)
+- [Response content negotiation](#response-content-negotiation)
 - [Docker use case](#docker-use-case)
 
 ## Getting started
@@ -93,7 +94,7 @@ export interface Book {
 ```
 
 ====> **You can find more information about writing your config file
-[HERE](./CONFIG.md#config), as well how all of the options behave** <====
+[HERE](./docs/CONFIG.md#config), as well how all of the options behave** <====
 
 ### Serving mocks using the config file
 
@@ -234,6 +235,10 @@ on the fly.
 
 The reasons why you might want to do this are described in the
 [Docker use case](#docker-use-case)
+
+## Response content negotiation
+
+![alt text](./docs/content-negotiation.png "Title")
 
 ## Docker use case
 

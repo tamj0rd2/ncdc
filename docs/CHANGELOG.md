@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/tamj0rd2/ncdc/compare/v0.4.0...v0.4.1) (2020-05-16)
+
+
+### Bug Fixes
+
+* **serve:** validating incoming headers in serve mode ([bcfc762](https://github.com/tamj0rd2/ncdc/commit/bcfc7628d0020d824dccdb1c11c218b6c233ee4f)), closes [#4](https://github.com/tamj0rd2/ncdc/issues/4)
+
 # [0.4.0](https://github.com/tamj0rd2/ncdc/compare/v0.3.2...v0.4.0) (2020-05-14)
 
 

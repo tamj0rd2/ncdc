@@ -1,3 +1,10 @@
+## [0.4.3](https://github.com/tamj0rd2/ncdc/compare/v0.4.2...v0.4.3) (2020-05-16)
+
+
+### Bug Fixes
+
+* **serve:** validate request bodies in serve mode ([d2ac0b1](https://github.com/tamj0rd2/ncdc/commit/d2ac0b1a93552e5dac9c367340c6bccffd7dabc0)), closes [#5](https://github.com/tamj0rd2/ncdc/issues/5)
+
 ## [0.4.2](https://github.com/tamj0rd2/ncdc/compare/v0.4.1...v0.4.2) (2020-05-16)
 
 

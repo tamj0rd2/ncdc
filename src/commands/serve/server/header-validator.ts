@@ -24,21 +24,21 @@ export const areHeadersValid = (
 
   for (const key in expectedHeaders) {
     const expected = expectedHeaders[key]
-    const actual = receivedHeaders[key]
+    const received = receivedHeaders[key]
     const badResult = { success: false }
 
     if (expected.includes(',')) {
-      if (!Array.isArray(actual)) return badResult
+      if (!Array.isArray(received)) return badResult
       for (const item of expected.split(',')) {
-        if (!actual.includes(item)) return badResult
+        if (!received.includes(item)) return badResult
       }
       break
     }
 
-    if (Array.isArray(receivedHeaders)) {
-      if (!actual?.includes(expected)) return badResult
+    if (Array.isArray(received)) {
+      if (!received?.includes(expected)) return badResult
     } else {
-      if (actual !== expected) return badResult
+      if (received !== expected) return badResult
     }
   }
 

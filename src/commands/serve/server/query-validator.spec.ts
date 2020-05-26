@@ -100,6 +100,13 @@ describe('wildcard queries', () => {
     expect(validateQuery(endpoint, query)).toBe(true)
   })
 
+  it('returns false if an expected value is undefined', () => {
+    const endpoint = '/api/resource?hello=*'
+    const query = {}
+
+    expect(validateQuery(endpoint, query)).toBe(false)
+  })
+
   it('returns true for an array of any values', () => {
     const endpoint = '/api/resource?hello=*'
     const query = { hello: [randomString(), randomString()] }

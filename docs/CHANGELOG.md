@@ -1,3 +1,10 @@
+## [0.4.4](https://github.com/tamj0rd2/ncdc/compare/v0.4.3...v0.4.4) (2020-05-26)
+
+
+### Bug Fixes
+
+* **serve:** fix wildcard queries false positives ([09b8694](https://github.com/tamj0rd2/ncdc/commit/09b86945f13ac9cf4be0d9968aa6c5e6f307e6c7)), closes [#211](https://github.com/tamj0rd2/ncdc/issues/211)
+
 ## [0.4.3](https://github.com/tamj0rd2/ncdc/compare/v0.4.2...v0.4.3) (2020-05-16)
 
 

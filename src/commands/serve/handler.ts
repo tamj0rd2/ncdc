@@ -7,7 +7,6 @@ import chokidar from 'chokidar'
 import { StartServerResult } from './server'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { red } from 'chalk'
-import { logMetric } from '~metrics'
 import { Logger } from './server/server-logger'
 
 export interface ServeArgs {
@@ -46,7 +45,6 @@ const createHandler = (
   loadConfig: LoadConfig<ValidatedServeConfig>,
   getServerLogger: (verbose: boolean) => Logger,
 ) => async (args: ServeArgs): Promise<void> => {
-  logMetric('Program start')
   const { configPath, port, tsconfigPath, schemaPath, force, watch, verbose } = args
 
   if (!configPath) return handleError({ message: 'config path must be supplied' })

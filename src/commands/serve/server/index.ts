@@ -178,8 +178,8 @@ export const startServer = (
   const app = configureServer(serverRoot, routes, typeValidator, logger)
 
   const server = app.listen(port, () => {
+    logMetric('Server listening')
     logger.info(`Endpoints are being served on ${serverRoot}`)
-    logMetric('Server is listening')
   })
 
   return {

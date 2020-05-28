@@ -15,7 +15,7 @@ describe('Generate Command', () => {
   const readConfigMock = mockFn<ReadGenerateConfig>()
   const getSchemaGenMock = mockFn<GetSchemaGenerator>()
   const generateStub = mockFn<Generate>()
-  const loggerStub = mockObj<Logger>({ info: jest.fn() })
+  const loggerStub = mockObj<Logger>({ info: jest.fn(), warn: jest.fn() })
   const mockResolve = mocked(resolve)
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -72,7 +72,7 @@ describe('Generate Command', () => {
     expect(handleErrorStub).toHaveBeenCalledWith(expect.objectContaining({ message: 'welp' }))
   })
 
-  it('logs a message if there are no types in the config', async () => {
+  it('logs a warning and exits if there are no types in the config file', async () => {
     const handler = getHandler()
     const args: GenerateArgs = {
       outputPath: '',
@@ -89,9 +89,8 @@ describe('Generate Command', () => {
 
     await handler(args)
 
-    expect(handleErrorStub).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'No custom types were specified in the given config file' }),
-    )
+    expect(loggerStub.warn).toBeCalledWith('No types were specified in the given config file')
+    expect(getSchemaGenMock).not.toBeCalled()
   })
 
   it.each([[true], [false]])(

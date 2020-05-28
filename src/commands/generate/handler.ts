@@ -39,7 +39,8 @@ const createHandler = (
     .filter((x, i, arr) => i === arr.indexOf(x))
 
   if (!types.length) {
-    return handleError({ message: 'No custom types were specified in the given config file' })
+    logger.warn('No types were specified in the given config file')
+    return
   }
 
   let schemaRetriever: SchemaRetriever

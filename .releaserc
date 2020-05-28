@@ -13,7 +13,10 @@
       "@semantic-release/git",
       {
         "assets": [
-          "docs/CHANGELOG.md"
+          "docs/CHANGELOG.md",
+          "package.json",
+          "package-lock.json",
+          "npm-shrinkwrap.json"
         ]
       }
     ],

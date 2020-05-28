@@ -1,4 +1,4 @@
-import { readFixture } from '~io'
+import { readFixture, readYamlAsync } from '~io'
 import { randomString, mockObj } from '~test-helpers'
 import path from 'path'
 import fs from 'fs'
@@ -7,16 +7,16 @@ jest.disableAutomock()
 jest.mock('path')
 jest.mock('fs')
 
+const mockedFs = mockObj(fs)
+const mockedPath = mockObj(path)
+
+const basePath = randomString('basePath')
+beforeEach(() => {
+  mockedPath.resolve.mockImplementation((...args) => `${basePath}/${args[2]}`)
+})
+afterEach(() => jest.resetAllMocks())
+
 describe('readFixture', () => {
-  const mockedFs = mockObj(fs)
-  const mockedPath = mockObj(path)
-  const basePath = randomString('basePath')
-
-  beforeEach(() => {
-    mockedPath.resolve.mockImplementation((...args) => `${basePath}/${args[2]}`)
-  })
-  afterEach(() => jest.restoreAllMocks())
-
   it.each([['.json'], ['.txt'], ['.yml'], ['.yaml']])(
     'calls readFile with the correct args when the path is absolute and the extension is %s',
     async (extension) => {
@@ -85,5 +85,32 @@ describe('readFixture', () => {
     const result = await readFixture(basePath, fixturePath)
 
     expect(result).toEqual('goodbye: world')
+  })
+})
+
+describe('readYamlAsync', () => {
+  beforeEach(() => {
+    mockedFs.readFile.mockImplementation((_, cb) => {
+      cb(null, Buffer.from(JSON.stringify({ hello: 'world!' })))
+    })
+  })
+
+  it('resolves the path when the resolvePath arg is true', async () => {
+    const filePath = randomString('path')
+    const resolvedPath = 'I resolved lol'
+    mockedPath.resolve.mockReturnValue(resolvedPath)
+
+    await readYamlAsync(filePath, true)
+
+    expect(mockedPath.resolve).toBeCalledWith(filePath)
+    expect(mockedFs.readFile).toBeCalledWith(resolvedPath, expect.any(Function))
+  })
+
+  it('uses the given path when resolvePath is false', async () => {
+    const filePath = randomString('path')
+
+    await readYamlAsync(filePath, false)
+
+    expect(mockedFs.readFile).toBeCalledWith(filePath, expect.any(Function))
   })
 })

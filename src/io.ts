@@ -14,11 +14,12 @@ export const readFileAsync = (path: string): Promise<string> => {
 export const readJsonAsync = async <TOut = object>(path: string): Promise<TOut> =>
   JSON.parse(await readFileAsync(path))
 
-export const readYamlAsync = async <TOut>(path: string): Promise<TOut> => safeLoad(await readFileAsync(path))
+export const readYamlAsync = async <TOut>(path: string, resolvePath = true): Promise<TOut> =>
+  safeLoad(await readFileAsync(resolvePath ? resolve(path) : path))
 
 export const readFixture = (basePath: string, fixturePath: string): Promise<Data> => {
   const absolutePathToFile = isAbsolute(fixturePath) ? fixturePath : resolve(basePath, '..', fixturePath)
   if (fixturePath.endsWith('.json')) return readJsonAsync(absolutePathToFile)
-  if (/\.ya?ml$/.test(fixturePath)) return readYamlAsync(absolutePathToFile)
+  if (/\.ya?ml$/.test(fixturePath)) return readYamlAsync(absolutePathToFile, false)
   return readFileAsync(absolutePathToFile)
 }

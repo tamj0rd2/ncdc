@@ -4,6 +4,12 @@ export const CONFIG_PATH_OPTS = {
   type: 'string',
 } as const
 
+export const CONFIG_PATHS = 'configPaths'
+export const CONFIG_PATHS_OPTS = {
+  ...CONFIG_PATH_OPTS,
+  array: true,
+} as const
+
 export const TSCONFIG_PATH = 'tsconfigPath'
 export const TSCONFIG_PATH_OPTS = {
   alias: ['c', 'p'],

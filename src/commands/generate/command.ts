@@ -2,7 +2,7 @@ import { HandleError } from '../shared'
 import { Argv, CommandModule } from 'yargs'
 import * as opts from '~commands/options'
 import createHandler, { GenerateArgs } from './handler'
-import { readGenerateConfig } from './config'
+import { getConfigTypes } from './config'
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import logger from '~logger'
@@ -10,7 +10,7 @@ import { logMetric } from '~metrics'
 
 const builder = (yargs: Argv): Argv<GenerateArgs> =>
   yargs
-    .positional(opts.CONFIG_PATH, opts.CONFIG_PATH_OPTS)
+    .positional(opts.CONFIG_PATHS, opts.CONFIG_PATHS_OPTS)
     .option(opts.TSCONFIG_PATH, opts.TSCONFIG_PATH_OPTS)
     .option('outputPath', {
       alias: ['o', 'output'],
@@ -29,12 +29,12 @@ export default function createGenerateCommand(): CommandModule<{}, GenerateArgs>
   }
 
   return {
-    command: 'generate <configPath>',
+    command: `generate <${opts.CONFIG_PATHS}..>`,
     describe: 'Generates a json schema for each type specified in the config file',
     builder,
     handler: createHandler(
       handleError,
-      readGenerateConfig,
+      getConfigTypes,
       (tsconfigPath, force) => {
         const generator = new SchemaGenerator(tsconfigPath, force)
         generator.init()

@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/tamj0rd2/ncdc/compare/v0.5.1...v0.6.0) (2020-05-28)
+
+
+### Features
+
+* **generate:** allow generating types for multiple configs at a time ([93ed23b](https://github.com/tamj0rd2/ncdc/commit/93ed23b6d529b0a7bdfa998bb0c86fa6aad0226f)), closes [#231](https://github.com/tamj0rd2/ncdc/issues/231)
+
 ## [0.5.1](https://github.com/tamj0rd2/ncdc/compare/v0.5.0...v0.5.1) (2020-05-28)
 
 

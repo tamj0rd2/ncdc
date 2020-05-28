@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/tamj0rd2/ncdc/compare/v0.5.0...v0.5.1) (2020-05-28)
+
+
+### Bug Fixes
+
+* **generate:** do not fail if there are no types in the config ([43b38e2](https://github.com/tamj0rd2/ncdc/commit/43b38e2f2dd6a20cb977d4ea50ce7f1247e28391)), closes [#227](https://github.com/tamj0rd2/ncdc/issues/227)
+
 # [0.5.0](https://github.com/tamj0rd2/ncdc/compare/v0.4.4...v0.5.0) (2020-05-28)
 
 

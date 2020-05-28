@@ -9,6 +9,7 @@ import { FsSchemaLoader, SchemaRetriever } from '~schema'
 import { SchemaGenerator } from '~schema'
 import ajv from 'ajv'
 import { TypeValidator } from '~validation'
+import { logMetric } from '~metrics'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
@@ -25,6 +26,7 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
 export default function createTestCommand(): CommandModule<{}, TestArgs> {
   const handleError: HandleError = ({ message }) => {
     logger.error(message)
+    logMetric('Sad ending')
     process.exit(1)
   }
 

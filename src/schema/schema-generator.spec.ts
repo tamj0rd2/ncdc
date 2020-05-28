@@ -23,8 +23,26 @@ describe('SchemaLoader', () => {
       mockObj<ts.ParsedCommandLine>({ options: {} }),
     )
     mockedTypescript.createProgram.mockReturnValue(mockObj<ts.Program>({}))
+    mockedTypescript.getPreEmitDiagnostics.mockReturnValue([])
     mockedTJS.buildGenerator.mockReturnValue(mockedTJSGenerator)
     mockedTsHelpers.readTsConfig.mockReturnValue({} as ts.ParsedCommandLine)
+    mockedTsHelpers.formatErrorDiagnostic.mockImplementation(({ messageText }) =>
+      typeof messageText === 'string' ? messageText : 'poop',
+    )
+  })
+
+  describe('when a tsconfig path is given', () => {
+    it('throws when there are errors and skipTypeChecking is false', () => {
+      mockedTypescript.getPreEmitDiagnostics.mockReturnValue([
+        mockObj<ts.Diagnostic>({ messageText: 'woah' }),
+      ])
+
+      const schemaLoader = new SchemaGenerator('', false)
+
+      expect(() => schemaLoader.init()).toThrowError('woah')
+    })
+
+    it.todo('does not throw when there are errors and skipTypeChecking is true')
   })
 
   it('calls read ts config with the correct args', () => {
@@ -36,13 +54,17 @@ describe('SchemaLoader', () => {
   })
 
   describe('creating a tsj generator', () => {
-    it.each([[false], [true]])('creates a generator with the correct args when force is %s', (force) => {
+    it('creates a generator with the correct args', () => {
       const dummyProgram = mockObj<ts.Program>({})
       mockedTypescript.createProgram.mockReturnValue(dummyProgram)
 
-      new SchemaGenerator('', force).init()
+      new SchemaGenerator('').init()
 
-      expect(mockedTJS.buildGenerator).toBeCalledWith(dummyProgram, { required: true, ignoreErrors: force })
+      // we don't need TSJ to check for errors because we do it ourself
+      expect(mockedTJS.buildGenerator).toBeCalledWith(dummyProgram, {
+        required: true,
+        ignoreErrors: true,
+      })
     })
 
     it('throws an error if no generator is returned', () => {

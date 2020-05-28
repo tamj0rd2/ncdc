@@ -6,6 +6,7 @@ import { readGenerateConfig } from './config'
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import logger from '~logger'
+import { logMetric } from '~metrics'
 
 const builder = (yargs: Argv): Argv<GenerateArgs> =>
   yargs
@@ -23,6 +24,7 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
 export default function createGenerateCommand(): CommandModule<{}, GenerateArgs> {
   const handleError: HandleError = ({ message }) => {
     logger.error(message)
+    logMetric('Sad ending')
     process.exit(1)
   }
 

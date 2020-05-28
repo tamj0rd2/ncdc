@@ -35,7 +35,7 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
 export default function createServeCommand() {
   const handleError: HandleError = ({ message }) => {
     logger.error(message)
-    logMetric('Errored out')
+    logMetric('Sad ending')
     process.exit(1)
   }
 

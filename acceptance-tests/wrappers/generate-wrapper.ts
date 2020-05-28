@@ -2,10 +2,16 @@ import { ChildProcess, exec } from 'child_process'
 import stripAnsi from 'strip-ansi'
 import { NCDC_CONFIG_FILE, JSON_SCHEMAS_FOLDER, TSCONFIG_FILE } from './config-wrapper'
 
-export const runGenerateCommand = (): Promise<string> =>
+const createCommand = (extraConfigPath?: string): string => {
+  const configFiles = extraConfigPath ? [NCDC_CONFIG_FILE, extraConfigPath] : [NCDC_CONFIG_FILE]
+  return `LOG_LEVEL=debug ./bin/ncdc generate ${configFiles.join(
+    ' ',
+  )} --output ${JSON_SCHEMAS_FOLDER} -c ${TSCONFIG_FILE}`
+}
+
+export const runGenerateCommand = (extraConfigPath?: string): Promise<string> =>
   new Promise<string>((resolve) => {
-    const command = `LOG_LEVEL=debug ./bin/ncdc generate ${NCDC_CONFIG_FILE} --output ${JSON_SCHEMAS_FOLDER} -c ${TSCONFIG_FILE}`
-    const ncdc: ChildProcess = exec(command)
+    const ncdc: ChildProcess = exec(createCommand(extraConfigPath))
     const output: string[] = []
     const getRawOutput = (): string => output.join('')
 

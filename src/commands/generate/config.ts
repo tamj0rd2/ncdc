@@ -1,5 +1,5 @@
 import { readYamlAsync } from '~io'
-import { validateRawConfig } from '~config/validate'
+import { validateRawConfig, ValidationSuccess } from '~config/validate'
 import { red } from 'chalk'
 
 export type GenerateConfig = {
@@ -8,15 +8,40 @@ export type GenerateConfig = {
   response: { type?: string }
 }
 
-export async function readGenerateConfig(configPath: string): Promise<GenerateConfig[]> {
-  const rawConfig = await readYamlAsync(configPath)
+type SuccessResults = {
+  path: string
+  validationResult: ValidationSuccess<GenerateConfig>
+}[]
 
-  const validationResult = validateRawConfig<GenerateConfig>(rawConfig)
-  if (!validationResult.success) {
-    throw new Error(`${red.bold('Invalid config file')}:\n${validationResult.errors.join('\n')}`)
+export const getConfigTypes = async (configPaths: string[]): Promise<string[]> => {
+  const configFiles = await Promise.all(
+    configPaths.map(async (path) => {
+      const rawConfig = await readYamlAsync(path)
+      const validationResult = validateRawConfig<GenerateConfig>(rawConfig)
+      return { path, validationResult }
+    }),
+  )
+
+  const configsAreValid = (c: typeof configFiles): c is SuccessResults =>
+    !c.find((x) => x.validationResult.success !== true)
+  if (configsAreValid(configFiles)) {
+    return Array.from(
+      configFiles.reduce((accum, configFile) => {
+        configFile.validationResult.validatedConfigs.forEach(({ request, response }) => {
+          if (request.type) accum.add(request.type)
+          if (response.type) accum.add(response.type)
+        })
+        return accum
+      }, new Set<string>()),
+    )
   }
 
-  return validationResult.validatedConfigs
-}
+  const errorMessages = configFiles.reduce<string[]>((messages, configFile) => {
+    if (configFile.validationResult.success) return messages
+    const prefix = red(`Invalid config file - ${configFile.path}`)
+    messages.push(`${prefix}\n${configFile.validationResult.errors.join('\n')}`)
+    return messages
+  }, [])
 
-export type ReadGenerateConfig = typeof readGenerateConfig
+  throw new Error(errorMessages.join('\n\n'))
+}

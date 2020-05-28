@@ -1,13 +1,11 @@
 import { HandleError } from '~commands'
-import { GenerateConfig, ReadGenerateConfig } from './config'
 import { SchemaRetriever } from '~schema'
 import { Generate } from './generate'
 import { Logger } from 'winston'
-import { resolve } from 'path'
 import { logMetric } from '~metrics'
 
 export interface GenerateArgs {
-  configPath?: string
+  configPaths?: string[]
   tsconfigPath: string
   outputPath: string
   force: boolean
@@ -15,28 +13,24 @@ export interface GenerateArgs {
 
 export type GetSchemaGenerator = (tsconfigPath: string, force: boolean) => SchemaRetriever
 
+export type GetConfigTypes = (configPaths: string[]) => Promise<string[]>
+
 const createHandler = (
   handleError: HandleError,
-  readGenerateConfig: ReadGenerateConfig,
+  getConfigTypes: GetConfigTypes,
   getSchemaGenerator: GetSchemaGenerator,
   generate: Generate,
   logger: Logger,
 ) => async (args: GenerateArgs): Promise<void> => {
-  const { tsconfigPath, configPath, outputPath, force } = args
-  if (!configPath) return handleError(new Error('configPath must be specified'))
+  const { tsconfigPath, configPaths, outputPath, force } = args
+  if (!configPaths) return handleError(new Error('at least 1 ncdc config path must be given'))
 
-  let configs: GenerateConfig[]
+  let types: string[]
   try {
-    configs = await readGenerateConfig(resolve(configPath))
+    types = await getConfigTypes(configPaths)
   } catch (err) {
     return handleError(err)
   }
-
-  const types = configs
-    .map((x) => x.request.type)
-    .concat(configs.map((x) => x.response.type))
-    .filter((x): x is string => !!x)
-    .filter((x, i, arr) => i === arr.indexOf(x))
 
   if (!types.length) {
     logger.warn('No types were specified in the given config file')

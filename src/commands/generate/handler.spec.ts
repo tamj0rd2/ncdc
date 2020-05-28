@@ -1,75 +1,75 @@
-import createHandler, { GenerateArgs, GetSchemaGenerator } from './handler'
-import { mockFn, mockObj, DeepPartial, randomString, mocked } from '~test-helpers'
-import { ReadGenerateConfig, GenerateConfig } from './config'
+import createHandler, { GenerateArgs, GetSchemaGenerator, GetConfigTypes } from './handler'
+import { mockFn, mockObj, randomString } from '~test-helpers'
 import { HandleError } from '~commands'
 import { Generate } from './generate'
 import { Logger } from 'winston'
 import { SchemaGenerator } from '~schema'
-import { resolve } from 'path'
 
 jest.unmock('./handler')
-jest.mock('path')
 
 describe('Generate Command', () => {
   const handleErrorStub = mockFn<HandleError>()
-  const readConfigMock = mockFn<ReadGenerateConfig>()
+  const getConfigTypes = mockFn<GetConfigTypes>()
   const getSchemaGenMock = mockFn<GetSchemaGenerator>()
   const generateStub = mockFn<Generate>()
   const loggerStub = mockObj<Logger>({ info: jest.fn(), warn: jest.fn() })
-  const mockResolve = mocked(resolve)
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const getHandler = () =>
-    createHandler(handleErrorStub, readConfigMock, getSchemaGenMock, generateStub, loggerStub)
+    createHandler(handleErrorStub, getConfigTypes, getSchemaGenMock, generateStub, loggerStub)
+
+  beforeEach(() => {
+    getConfigTypes.mockResolvedValue([randomString('some-type')])
+  })
 
   afterEach(() => jest.resetAllMocks())
 
-  it('exits with exit code 1 if a config path was not specified', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
-      outputPath: '',
-      tsconfigPath: '',
-      force: false,
-    }
-    await handler(args)
+  describe('CLI argument validation', () => {
+    it('exits with exit code 1 if no config paths are specified', async () => {
+      const handler = getHandler()
+      const args: GenerateArgs = {
+        outputPath: '',
+        tsconfigPath: '',
+        force: false,
+      }
+      await handler(args)
 
-    expect(handleErrorStub).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'configPath must be specified' }),
-    )
+      expect(handleErrorStub).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'at least 1 ncdc config path must be given' }),
+      )
+    })
   })
 
-  it('reads the generate config with the correct args', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
-      outputPath: '',
-      tsconfigPath: '',
-      configPath: 'config path',
-      force: false,
-    }
-    const resolvedConfigPath = randomString('resolved config path')
-    mockResolve.mockReturnValue(resolvedConfigPath)
+  describe('reading config file', () => {
+    it('reads the config file with the correct args', async () => {
+      const handler = getHandler()
+      const args: GenerateArgs = {
+        outputPath: '',
+        tsconfigPath: '',
+        configPaths: [randomString('path1'), randomString('path2')],
+        force: false,
+      }
 
-    readConfigMock.mockResolvedValue([])
+      await handler(args)
 
-    await handler(args)
+      expect(getConfigTypes).toHaveBeenCalledWith(args.configPaths)
+    })
 
-    expect(readConfigMock).toHaveBeenCalledWith(resolvedConfigPath)
-  })
+    it('calls the error handler if there is a problem reading the config', async () => {
+      const handler = getHandler()
+      const args: GenerateArgs = {
+        outputPath: '',
+        tsconfigPath: '',
+        configPaths: ['config path'],
+        force: false,
+      }
 
-  it('calls the error handler if there is a problem reading the config', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
-      outputPath: '',
-      tsconfigPath: '',
-      configPath: 'config path',
-      force: false,
-    }
+      getConfigTypes.mockRejectedValue(new Error('welp'))
 
-    readConfigMock.mockRejectedValue(new Error('welp'))
+      await handler(args)
 
-    await handler(args)
-
-    expect(handleErrorStub).toHaveBeenCalledWith(expect.objectContaining({ message: 'welp' }))
+      expect(handleErrorStub).toHaveBeenCalledWith(expect.objectContaining({ message: 'welp' }))
+    })
   })
 
   it('logs a warning and exits if there are no types in the config file', async () => {
@@ -77,15 +77,10 @@ describe('Generate Command', () => {
     const args: GenerateArgs = {
       outputPath: '',
       tsconfigPath: '',
-      configPath: 'config path',
+      configPaths: ['config path'],
       force: false,
     }
-
-    const configs: DeepPartial<GenerateConfig>[] = [
-      { request: {}, response: {} },
-      { request: {}, response: {} },
-    ]
-    readConfigMock.mockResolvedValue(configs as GenerateConfig[])
+    getConfigTypes.mockResolvedValue([])
 
     await handler(args)
 
@@ -100,12 +95,9 @@ describe('Generate Command', () => {
       const args: GenerateArgs = {
         outputPath: 'out',
         tsconfigPath: 'tsconfig',
-        configPath: 'config path',
+        configPaths: ['config path'],
         force,
       }
-
-      const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]
-      readConfigMock.mockResolvedValue(configs as GenerateConfig[])
 
       await handler(args)
 
@@ -118,13 +110,9 @@ describe('Generate Command', () => {
     const args: GenerateArgs = {
       outputPath: 'out',
       tsconfigPath: 'tsconfig',
-      configPath: 'config path',
+      configPaths: ['config path'],
       force: false,
     }
-
-    const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]
-    readConfigMock.mockResolvedValue(configs as GenerateConfig[])
-
     getSchemaGenMock.mockImplementation(() => {
       throw new Error('wat')
     })
@@ -139,25 +127,17 @@ describe('Generate Command', () => {
     const args: GenerateArgs = {
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
-      configPath: 'config path',
+      configPaths: ['config path'],
       force: false,
     }
-
-    const configs: DeepPartial<GenerateConfig>[] = [
-      { request: { type: 'WickedType' }, response: {} },
-      { request: { type: 'SickFam' }, response: { type: 'Noice' } },
-    ]
-    readConfigMock.mockResolvedValue(configs as GenerateConfig[])
+    const types = ['WickedType', 'SickFam', 'Noice']
+    getConfigTypes.mockResolvedValue(types)
     const dummySchemaGen = mockObj<SchemaGenerator>({ load: jest.fn() })
     getSchemaGenMock.mockReturnValue(dummySchemaGen)
 
     await handler(args)
 
-    expect(generateStub).toHaveBeenCalledWith(
-      dummySchemaGen,
-      expect.arrayContaining(['WickedType', 'SickFam', 'Noice']),
-      'outYouGo',
-    )
+    expect(generateStub).toHaveBeenCalledWith(dummySchemaGen, types, 'outYouGo')
   })
 
   it('logs a message if the schemas were written successfully', async () => {
@@ -165,12 +145,9 @@ describe('Generate Command', () => {
     const args: GenerateArgs = {
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
-      configPath: 'config path',
+      configPaths: ['config path'],
       force: false,
     }
-
-    const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]
-    readConfigMock.mockResolvedValue(configs as GenerateConfig[])
 
     await handler(args)
 
@@ -182,12 +159,9 @@ describe('Generate Command', () => {
     const args: GenerateArgs = {
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
-      configPath: 'config path',
+      configPaths: ['config path'],
       force: false,
     }
-
-    const configs: DeepPartial<GenerateConfig>[] = [{ request: { type: 'WickedType' }, response: {} }]
-    readConfigMock.mockResolvedValue(configs as GenerateConfig[])
 
     await handler(args)
 

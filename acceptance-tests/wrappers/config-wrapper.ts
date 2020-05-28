@@ -2,7 +2,7 @@ import { Config, ConfigBuilder } from '../config-builder'
 import { existsSync, rmdirSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import jsyaml from 'js-yaml'
 
-const TEST_ENV = './acceptance-tests/test-environment'
+export const TEST_ENV = './acceptance-tests/test-environment'
 export const NCDC_CONFIG_FILE = `${TEST_ENV}/config.yml`
 export const TSCONFIG_FILE = `${TEST_ENV}/tsconfig.json`
 export const JSON_SCHEMAS_FOLDER = `${TEST_ENV}/json-schemas`
@@ -15,8 +15,10 @@ export class ConfigWrapper {
   private types: Record<string, object> = {}
   private schemas: Record<string, object> = {}
 
-  constructor() {
-    if (existsSync(NCDC_CONFIG_FILE)) this.deleteYaml()
+  constructor(private readonly ncdcConfigFile = NCDC_CONFIG_FILE, skipCleanup = false) {
+    if (skipCleanup) return
+
+    if (existsSync(ncdcConfigFile)) this.deleteYaml()
 
     if (existsSync(FIXTURES_FOLDER)) {
       rmdirSync(FIXTURES_FOLDER, { recursive: true })
@@ -99,7 +101,7 @@ export class ConfigWrapper {
   }
 
   public deleteYaml(): ConfigWrapper {
-    unlinkSync(NCDC_CONFIG_FILE)
+    unlinkSync(this.ncdcConfigFile)
     this.configs = []
     return this
   }
@@ -157,7 +159,7 @@ export class ConfigWrapper {
 
   private commitConfigs(): void {
     const yaml = jsyaml.safeDump(this.configs)
-    writeFileSync(NCDC_CONFIG_FILE, yaml)
+    writeFileSync(this.ncdcConfigFile, yaml)
   }
 
   private commitFixture(name: string, content: object): void {

@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/tamj0rd2/ncdc/compare/v0.4.4...v0.5.0) (2020-05-28)
+
+
+### Features
+
+* **generate:** improve metrics around schema generation ([f3f358d](https://github.com/tamj0rd2/ncdc/commit/f3f358d95da0b006e076ea6eba180f4d1d4133c2)), closes [#229](https://github.com/tamj0rd2/ncdc/issues/229)
+
 ## [0.4.4](https://github.com/tamj0rd2/ncdc/compare/v0.4.3...v0.4.4) (2020-05-26)
 
 

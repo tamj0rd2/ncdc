@@ -1,15 +1,17 @@
 import { SchemaRetriever } from './types'
 import ts from 'typescript'
-import { JsonSchemaGenerator, buildGenerator, Definition } from 'typescript-json-schema'
+import { buildGenerator } from 'typescript-json-schema'
 import { readTsConfig, formatErrorDiagnostic } from './ts-helpers'
 import { logMetric, MetricState } from '~metrics'
 
+type JsonSchemaGenerator = (type: string) => object
+
 export class SchemaGenerator implements SchemaRetriever {
-  private readonly cache = new Map<string, Definition>()
-  private generator?: JsonSchemaGenerator
+  private readonly cache = new Map<string, object>()
+  private generateJsonSchema?: JsonSchemaGenerator
 
   private readonly programMetric = 'build a typescript program'
-  private readonly generateMetric = 'build a schema generator'
+  private readonly generateMetric = 'build a schema generateJsonSchema'
 
   constructor(
     private readonly pathOrProgram: string | ts.Program,
@@ -18,29 +20,21 @@ export class SchemaGenerator implements SchemaRetriever {
 
   public init(): void {
     const program = this.getTsProgram()
-
-    logMetric(this.generateMetric, MetricState.Started)
-    const generator = buildGenerator(program, { required: true, ignoreErrors: true })
-    if (!generator) {
-      logMetric(this.generateMetric, MetricState.Failed)
-      throw new Error('Could not build a generator from the given typescript configuration')
-    }
-    logMetric(this.generateMetric, MetricState.Completed)
-    this.generator = generator
+    this.generateJsonSchema = this.createGenerator(program)
   }
 
-  public async load(symbolName: string): Promise<Definition> {
+  public async load(symbolName: string): Promise<object> {
     this.reportLoadMetric(symbolName, MetricState.Started)
     let schema = this.cache.get(symbolName)
 
     if (!schema) {
-      if (!this.generator) {
+      if (!this.generateJsonSchema) {
         this.reportLoadMetric(symbolName, MetricState.Failed)
-        throw new Error('No schema generator has been initialised')
+        throw new Error('This SchemaGenerator instance has not been initialised')
       }
 
       try {
-        schema = this.generator.getSchemaForSymbol(symbolName)
+        schema = this.generateJsonSchema(symbolName)
       } catch (err) {
         this.reportLoadMetric(symbolName, MetricState.Failed)
         throw err
@@ -69,6 +63,21 @@ export class SchemaGenerator implements SchemaRetriever {
 
     logMetric(this.programMetric, MetricState.Completed)
     return program
+  }
+
+  private createGenerator(program: ts.Program): JsonSchemaGenerator {
+    logMetric(this.generateMetric, MetricState.Started)
+
+    const generator = buildGenerator(program, { required: true, ignoreErrors: true })
+    if (generator) {
+      logMetric(this.generateMetric, MetricState.Completed)
+      return generator.getSchemaForSymbol.bind(generator)
+    }
+
+    logMetric(this.generateMetric, MetricState.Failed)
+    throw new Error(
+      'Could not get types from your typescript project. Your typescript project likely has compilation errors.',
+    )
   }
 
   private reportLoadMetric = (name: string, state: MetricState): void => {

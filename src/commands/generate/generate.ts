@@ -1,6 +1,7 @@
 import { SchemaRetriever } from '~schema'
-import { writeFileSync, existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
+import { writeJsonAsync } from '~io'
 
 export const generate = async (
   schemaRetriever: SchemaRetriever,
@@ -10,11 +11,12 @@ export const generate = async (
   const outDir = resolve(outputPath)
   if (!existsSync(outDir)) mkdirSync(outDir)
 
-  for (const type of types) {
-    const schema = await schemaRetriever.load(type)
-    const formatted = JSON.stringify(schema, null, 2)
-    writeFileSync(resolve(outDir, `${type}.json`), formatted, 'utf8')
-  }
+  await Promise.all(
+    types.map(async (type) => {
+      const schema = await schemaRetriever.load(type)
+      return writeJsonAsync(schema, `${outDir}/${type}.json`)
+    }),
+  )
 }
 
 export type Generate = typeof generate

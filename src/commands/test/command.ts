@@ -9,7 +9,6 @@ import { FsSchemaLoader, SchemaRetriever } from '~schema'
 import { SchemaGenerator } from '~schema'
 import ajv from 'ajv'
 import { TypeValidator } from '~validation'
-import { logMetric } from '~metrics'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
@@ -23,13 +22,7 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
     .option(consts.FORCE_GENERATION, consts.FORCE_GENERATION_OPTS)
     .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
 
-export default function createTestCommand(): CommandModule<{}, TestArgs> {
-  const handleError: HandleError = ({ message }) => {
-    logger.error(message)
-    logMetric('Sad ending')
-    process.exit(1)
-  }
-
+export default function createTestCommand(handleError: HandleError): CommandModule<{}, TestArgs> {
   const createTypeValidator: CreateTypeValidator = (tsconfigPath, force, schemaPath) => {
     let schemaRetriever: SchemaRetriever
 

@@ -7,9 +7,9 @@ import { inspect } from 'util'
 import { ServeConfig } from '../config'
 import validateQuery from './query-validator'
 import { SupportedMethod } from '~config/types'
-import { logMetric } from '~metrics'
 import { areHeadersValid } from './header-validator'
 import { isDeeplyEqual } from '~util'
+import { startOperation } from '~metrics'
 
 export interface ReqResLog {
   name?: string
@@ -174,11 +174,12 @@ export const startServer = (
   typeValidator: TypeValidator | undefined,
   logger: Logger,
 ): StartServerResult => {
+  const { success } = startOperation('Starting server')
   const serverRoot = `http://localhost:${port}`
   const app = configureServer(serverRoot, routes, typeValidator, logger)
 
   const server = app.listen(port, () => {
-    logMetric('Server listening')
+    success()
     logger.info(`Endpoints are being served on ${serverRoot}`)
   })
 

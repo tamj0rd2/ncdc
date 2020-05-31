@@ -3,13 +3,11 @@ import { HandleError } from '../shared'
 import * as consts from '~commands/options'
 import createHandler, { ServeArgs } from './handler'
 import { startServer } from './server'
-import logger from '~logger'
 import loadConfig from '~config/load'
 import { TypeValidator } from '~validation'
 import Ajv from 'ajv'
 import { FsSchemaLoader, SchemaRetriever, WatchingSchemaGenerator } from '~schema'
 import { SchemaGenerator } from '~schema'
-import { logMetric } from '~metrics'
 import createServerLogger, { Logger } from './server/server-logger'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
@@ -32,13 +30,7 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export default function createServeCommand() {
-  const handleError: HandleError = ({ message }) => {
-    logger.error(message)
-    logMetric('Sad ending')
-    process.exit(1)
-  }
-
+export default function createServeCommand(handleError: HandleError) {
   const getTypeValidator = (
     tsconfigPath: string,
     force: boolean,

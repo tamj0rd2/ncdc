@@ -4,9 +4,10 @@ import { SchemaRetriever } from './types'
 import ts from 'typescript'
 import logger from '~logger'
 import { Definition } from 'typescript-json-schema'
-import { logMetric } from '~metrics'
 import { formatErrorDiagnostic, readTsConfig } from './ts-helpers'
+import { startOperation } from '~metrics'
 
+// TODO: oh god this hook business is needlessly complicated
 export class WatchingSchemaGenerator implements SchemaRetriever {
   public onReload?: () => Promise<void> | void
   public onCompilationFailure?: () => Promise<void> | void
@@ -26,8 +27,8 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
   }
 
   public init(): void {
-    logMetric('In watching gen init')
     if (this.initiated) return
+    const { success } = startOperation('Initiating typescript watcher')
     this.initiated = true
 
     const configFile = readTsConfig(this.tsconfigPath)
@@ -45,9 +46,10 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     watcherHost.afterProgramCreate = (watcherProgram) => {
       const isFirstFullRun = this.isFirstCompilationRun
       origAfterProgramCreate?.(watcherProgram)
-      logMetric('Program creation complete')
 
       if (this.programHasErrors) return this.onCompilationFailure?.()
+
+      success()
       this.schemaRetriever = new SchemaGenerator(watcherProgram.getProgram())
       this.schemaRetriever.init?.()
       if (!isFirstFullRun) return this.onReload?.()

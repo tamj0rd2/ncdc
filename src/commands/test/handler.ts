@@ -6,7 +6,6 @@ import { LoadConfig, LoadConfigStatus, GetTypeValidator } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { red } from 'chalk'
 import { TypeValidator } from '~validation'
-import { logMetric } from '~metrics'
 
 export interface TestArgs {
   schemaPath?: string
@@ -57,6 +56,4 @@ export const createHandler = (
     logger,
   )
   if (testResult === 'Failure') return handleError({ message: 'Not all tests passed' })
-
-  logMetric('Happy ending')
 }

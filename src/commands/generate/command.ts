@@ -6,7 +6,6 @@ import { getConfigTypes } from './config'
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import logger from '~logger'
-import { logMetric } from '~metrics'
 
 const builder = (yargs: Argv): Argv<GenerateArgs> =>
   yargs
@@ -21,13 +20,7 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
     .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
     .example(opts.EXAMPLE_GENERATE_COMMAND, opts.EXAMPLE_GENERATE_DESCRIPTION)
 
-export default function createGenerateCommand(): CommandModule<{}, GenerateArgs> {
-  const handleError: HandleError = ({ message }) => {
-    logger.error(message)
-    logMetric('Sad ending')
-    process.exit(1)
-  }
-
+export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {
   return {
     command: `generate <${opts.CONFIG_PATHS}..>`,
     describe: 'Generates a json schema for each type specified in the config file',

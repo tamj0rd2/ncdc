@@ -2,7 +2,6 @@ import { HandleError } from '~commands'
 import { SchemaRetriever } from '~schema'
 import { Generate } from './generate'
 import { Logger } from 'winston'
-import { logMetric } from '~metrics'
 
 export interface GenerateArgs {
   configPaths?: string[]
@@ -52,8 +51,6 @@ const createHandler = (
   } finally {
     logger.info('JSON schemas have been written to disk')
   }
-
-  logMetric('Happy ending')
 }
 
 export default createHandler

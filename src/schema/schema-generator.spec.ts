@@ -13,7 +13,7 @@ jest.mock('./ts-helpers')
 
 describe('SchemaLoader', () => {
   const mockedTJS = mockObj(TJS)
-  const mockedTJSGenerator = mockObj<TJS.JsonSchemaGenerator>({})
+  const mockedTJSGenerator = mockObj<TJS.JsonSchemaGenerator>({ getSchemaForSymbol: jest.fn() })
   const mockedTypescript = mockObj(ts)
   const mockedTsHelpers = mockObj(tsHelpers)
 
@@ -72,7 +72,7 @@ describe('SchemaLoader', () => {
 
       const schemaLoader = new SchemaGenerator('tsconfig path', true)
 
-      expect(() => schemaLoader.init()).toThrowError('Could not build a generator')
+      expect(() => schemaLoader.init()).toThrowError('Could not get types from your typescript project')
     })
   })
 
@@ -81,16 +81,13 @@ describe('SchemaLoader', () => {
       const schemaGenerator = new SchemaGenerator('tsconfig path', true)
 
       await expect(() => schemaGenerator.load('bananas')).rejects.toThrowError(
-        'No schema generator has been initialised',
+        'This SchemaGenerator instance has not been initialised',
       )
     })
 
     it('returns the generated schema', async () => {
       const someSchema = { $schema: 'schema stuff' }
-      const mockedGenerator: Partial<TJS.JsonSchemaGenerator> = {
-        getSchemaForSymbol: jest.fn().mockReturnValue(someSchema),
-      }
-      mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
+      mockedTJSGenerator.getSchemaForSymbol.mockReturnValue(someSchema)
 
       const schemaLoader = new SchemaGenerator('tsconfig path', true)
       schemaLoader.init()
@@ -102,10 +99,7 @@ describe('SchemaLoader', () => {
     it('returns cached data for properties that are accessed multiple times', async () => {
       const someSchema = { $schema: 'schema stuff' }
       const someSchema2 = { $schema: 'schema stuff 2' }
-      const mockedGenerator: Partial<TJS.JsonSchemaGenerator> = {
-        getSchemaForSymbol: jest.fn().mockReturnValueOnce(someSchema).mockReturnValueOnce(someSchema2),
-      }
-      mockedTJS.buildGenerator.mockReturnValue(mockedGenerator as TJS.JsonSchemaGenerator)
+      mockedTJSGenerator.getSchemaForSymbol.mockReturnValueOnce(someSchema).mockReturnValueOnce(someSchema2)
 
       const schemaLoader = new SchemaGenerator('tsconfig path', true)
       schemaLoader.init()
@@ -113,7 +107,7 @@ describe('SchemaLoader', () => {
       const schema2 = await schemaLoader.load('DealSchema')
 
       expect(schema1).toEqual(someSchema)
-      expect(mockedGenerator.getSchemaForSymbol).toHaveBeenCalledTimes(1)
+      expect(mockedTJSGenerator.getSchemaForSymbol).toHaveBeenCalledTimes(1)
       expect(schema2).toEqual(someSchema)
     })
   })

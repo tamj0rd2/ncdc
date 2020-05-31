@@ -2,16 +2,19 @@ import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import * as _fs from 'fs'
 import * as _path from 'path'
+import * as io from '~io'
 import { mockObj } from '~test-helpers'
 
 jest.unmock('./generate')
 jest.mock('path')
 jest.mock('fs')
+jest.mock('~io')
 
 describe('Generate', () => {
   const mockSchemaGenerator = mockObj<SchemaGenerator>({ load: jest.fn() })
   const mockFs = mockObj(_fs)
   const mockPath = mockObj(_path)
+  const mockedIo = mockObj(io)
 
   afterEach(() => {
     jest.resetAllMocks()
@@ -43,10 +46,9 @@ describe('Generate', () => {
 
     await generate(mockSchemaGenerator, ['Hello', 'World'], './out')
 
-    expect(mockSchemaGenerator.load).toHaveBeenNthCalledWith(1, 'Hello')
-    expect(mockSchemaGenerator.load).toHaveBeenNthCalledWith(2, 'World')
-    expect(mockPath.resolve).toHaveBeenNthCalledWith(2, './out', 'Hello.json')
-    expect(mockPath.resolve).toHaveBeenNthCalledWith(3, './out', 'World.json')
-    expect(mockFs.writeFileSync).toHaveBeenCalledTimes(2)
+    expect(mockSchemaGenerator.load).toBeCalledWith('Hello')
+    expect(mockSchemaGenerator.load).toBeCalledWith('World')
+    expect(mockedIo.writeJsonAsync).toBeCalledWith(helloSchema, './out/Hello.json')
+    expect(mockedIo.writeJsonAsync).toBeCalledWith(worldSchema, './out/World.json')
   })
 })

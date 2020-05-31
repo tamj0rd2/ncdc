@@ -1,4 +1,4 @@
-import { readFixture, readYamlAsync } from '~io'
+import { readFixture, readYamlAsync, writeJsonAsync } from '~io'
 import { randomString, mockObj } from '~test-helpers'
 import path from 'path'
 import fs from 'fs'
@@ -112,5 +112,15 @@ describe('readYamlAsync', () => {
     await readYamlAsync(filePath, false)
 
     expect(mockedFs.readFile).toBeCalledWith(filePath, expect.any(Function))
+  })
+})
+
+describe('writeJsonAsync', () => {
+  it('rejects if there is a problem writing the file', async () => {
+    const err = mockObj<NodeJS.ErrnoException>({ message: 'whoops' })
+
+    mockedFs.writeFile.mockImplementation((path, data, cb) => cb(err))
+
+    await expect(writeJsonAsync({}, randomString('path'))).rejects.toBe(err)
   })
 })

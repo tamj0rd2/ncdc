@@ -1,14 +1,14 @@
 import { Argv } from 'yargs'
-import { HandleError } from '../shared'
+import { GetRootDeps } from '../shared'
 import * as consts from '~commands/options'
-import createHandler, { ServeArgs } from './handler'
+import createHandler, { ServeArgs, GetServeDeps } from './handler'
 import { startServer } from './server'
 import loadConfig from '~config/load'
 import { TypeValidator } from '~validation'
 import Ajv from 'ajv'
-import { FsSchemaLoader, SchemaRetriever, WatchingSchemaGenerator } from '~schema'
+import { FsSchemaLoader, WatchingSchemaGenerator } from '~schema'
 import { SchemaGenerator } from '~schema'
-import createServerLogger, { Logger } from './server/server-logger'
+import createServerLogger from './server/server-logger'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -30,44 +30,43 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
     .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export default function createServeCommand(handleError: HandleError) {
-  const getTypeValidator = (
-    tsconfigPath: string,
-    force: boolean,
-    schemaPath: Optional<string>,
-    watch: boolean,
-    onReload: Optional<() => Promise<void> | void>,
-    onCompilationFailure: Optional<() => Promise<void> | void>,
-  ): TypeValidator => {
-    if (schemaPath) {
-      const ajv = new Ajv({ verbose: true, allErrors: true })
-      const schemaRetriever = new FsSchemaLoader(schemaPath)
-      return new TypeValidator(ajv, schemaRetriever)
+export default function createServeCommand(getCommonDeps: GetRootDeps) {
+  const getServeDeps: GetServeDeps = (args) => {
+    const { handleError, logger, reportOperation } = getCommonDeps(args.verbose)
+
+    return {
+      handleError,
+      logger,
+      loadConfig,
+      startServer: (routes, typeValidator) => startServer(args.port, routes, typeValidator, logger),
+      serverLogger: createServerLogger(args.verbose),
+      createTypeValidator: (onReload, onCompilationFailure) => {
+        const ajv = new Ajv({ verbose: true, allErrors: true })
+
+        if (args.schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
+        if (!args.watch) {
+          const generator = new SchemaGenerator(args.tsconfigPath, args.force, reportOperation)
+          generator.init()
+          return new TypeValidator(ajv, generator)
+        }
+
+        const watcher = new WatchingSchemaGenerator(
+          args.tsconfigPath,
+          logger,
+          reportOperation,
+          onReload,
+          onCompilationFailure,
+        )
+        watcher.init()
+        return new TypeValidator(ajv, watcher)
+      },
     }
-
-    const ajv = new Ajv({ verbose: true, allErrors: true })
-    let schemaRetriever: SchemaRetriever
-
-    if (watch) {
-      const generator = new WatchingSchemaGenerator(tsconfigPath)
-      generator.onReload = onReload
-      generator.onCompilationFailure = onCompilationFailure
-      schemaRetriever = generator
-    } else {
-      schemaRetriever = new SchemaGenerator(tsconfigPath, force)
-    }
-
-    schemaRetriever.init?.()
-    return new TypeValidator(ajv, schemaRetriever)
   }
-
-  const makeServerLogger = (verbose: boolean): Logger =>
-    createServerLogger(process.env.LOG_LEVEL ?? (verbose ? 'verbose' : 'info'))
 
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves configured endpoints',
     builder,
-    handler: createHandler(handleError, getTypeValidator, startServer, loadConfig, makeServerLogger),
+    handler: createHandler(getServeDeps),
   }
 }

@@ -18,11 +18,12 @@
     "prefer-promise-reject-errors": "error",
     "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/explicit-function-return-type": [
-      "warn",
+      "error",
       {
         "allowExpressions": true,
         "allowTypedFunctionExpressions": true,
-        "allowHigherOrderFunctions": true
+        "allowHigherOrderFunctions": true,
+        "allowConciseArrowFunctionExpressionsStartingWithVoid": true
       }
     ],
     "prettier/prettier": [

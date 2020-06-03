@@ -2,14 +2,13 @@ import express, { Express, Request, Response, ErrorRequestHandler } from 'expres
 import { blue } from 'chalk'
 import { Server } from 'http'
 import { TypeValidator } from '~validation'
-import { Logger } from './server-logger'
 import { inspect } from 'util'
 import { ServeConfig } from '../config'
 import validateQuery from './query-validator'
 import { SupportedMethod } from '~config/types'
 import { areHeadersValid } from './header-validator'
 import { isDeeplyEqual } from '~util'
-import { startOperation } from '~metrics'
+import { NcdcLogger } from '~logger'
 
 export interface ReqResLog {
   name?: string
@@ -51,7 +50,7 @@ export const configureServer = (
   baseUrl: string,
   mockConfigs: ServeConfig[],
   typeValidator: TypeValidator | undefined,
-  logger: Logger,
+  logger: NcdcLogger,
 ): Express => {
   const app = express()
   const ROOT = '/'
@@ -172,14 +171,12 @@ export const startServer = (
   port: number,
   routes: ServeConfig[],
   typeValidator: TypeValidator | undefined,
-  logger: Logger,
+  logger: NcdcLogger,
 ): StartServerResult => {
-  const { success } = startOperation('Starting server')
   const serverRoot = `http://localhost:${port}`
   const app = configureServer(serverRoot, routes, typeValidator, logger)
 
   const server = app.listen(port, () => {
-    success()
     logger.info(`Endpoints are being served on ${serverRoot}`)
   })
 

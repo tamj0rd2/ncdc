@@ -1,8 +1,14 @@
-import { TypeValidator } from '~validation'
+import { NcdcLogger } from '~logger'
+import { OperationResult } from '~metrics'
 
 export type HandleError = (error: { message: string }) => never
-export type CreateTypeValidator = (
-  tsconfigPath: string,
-  force: boolean,
-  schemaPath: Optional<string>,
-) => TypeValidator
+
+export type ReportOperation = (operation: string) => OperationResult
+
+export type GetRootDeps = (
+  verbose: boolean,
+) => {
+  logger: NcdcLogger
+  handleError: HandleError
+  reportOperation: ReportOperation
+}

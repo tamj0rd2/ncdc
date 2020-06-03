@@ -1,13 +1,13 @@
-import { HandleError } from '~commands'
 import { resolve } from 'path'
 import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
-import logger from '~logger'
 import chokidar from 'chokidar'
 import { StartServerResult } from './server'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { red } from 'chalk'
-import { Logger } from './server/server-logger'
+import { NcdcLogger } from '~logger'
+import { HandleError } from '~commands/shared'
+import { CompilerHook } from '~schema/watching-schema-generator'
 
 export interface ServeArgs {
   configPath?: string
@@ -20,38 +20,35 @@ export interface ServeArgs {
 }
 
 export type StartServer = (
-  port: number,
   routes: ServeConfig[],
   typeValidator: TypeValidator | undefined,
-  logger: Logger,
 ) => StartServerResult
 
 const ATTEMPT_RESTARTING_MSG = 'Attempting to restart ncdc server'
 const getFailedRestartMsg = (msg: string): string => `Could not restart ncdc server\n${msg}`
 
-export type CreateServeTypeValidator = (
-  tsconfigPath: string,
-  force: boolean,
-  schemaPath: Optional<string>,
-  watch: boolean,
-  onReload: () => Promise<void>,
-  onCompilationFailure: Optional<() => Promise<void> | void>,
+export type GetServeDeps = (args: ServeArgs) => ServeDeps
+export type CreateTypeValidator = (
+  onReload?: CompilerHook,
+  onCompilationFailure?: CompilerHook,
 ) => TypeValidator
+interface ServeDeps {
+  logger: NcdcLogger
+  handleError: HandleError
+  createTypeValidator: CreateTypeValidator
+  startServer: StartServer
+  loadConfig: LoadConfig<ValidatedServeConfig>
+}
 
-const createHandler = (
-  handleError: HandleError,
-  createTypeValidator: CreateServeTypeValidator,
-  startServer: StartServer,
-  loadConfig: LoadConfig<ValidatedServeConfig>,
-  getServerLogger: (verbose: boolean) => Logger,
-) => async (args: ServeArgs): Promise<void> => {
-  const { configPath, port, tsconfigPath, schemaPath, force, watch, verbose } = args
+const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): Promise<void> => {
+  const { handleError, logger, loadConfig, startServer, createTypeValidator } = getServeDeps(args)
 
-  if (!configPath) return handleError({ message: 'config path must be supplied' })
-  if (isNaN(port)) return handleError({ message: 'port must be a number' })
-  if (watch && force) return handleError({ message: 'watch and force options cannot be used together' })
+  if (!args.configPath) return handleError({ message: 'config path must be supplied' })
+  if (isNaN(args.port)) return handleError({ message: 'port must be a number' })
+  if (args.watch && args.force)
+    return handleError({ message: 'watch and force options cannot be used together' })
 
-  const absoluteConfigPath = resolve(configPath)
+  const absoluteConfigPath = resolve(args.configPath)
   let typeValidator: TypeValidator | undefined
 
   type PrepAndStartResult = {
@@ -63,10 +60,10 @@ const createHandler = (
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
     const loadResult = await loadConfig(
-      configPath,
+      absoluteConfigPath,
       () => {
-        if (schemaPath || !typeValidator) {
-          const onTypeReload = async (): Promise<void> => {
+        if (args.schemaPath || !typeValidator) {
+          const restartServer = async (): Promise<void> => {
             logger.info(ATTEMPT_RESTARTING_MSG)
             try {
               await prepAndServeResult.startServerResult.close()
@@ -76,7 +73,7 @@ const createHandler = (
             }
           }
 
-          typeValidator = createTypeValidator(tsconfigPath, force, schemaPath, watch, onTypeReload, () => {
+          typeValidator = createTypeValidator(restartServer, () => {
             logger.error('Your source code has compilation errors. Fix them to resume serving endpoints')
           })
         }
@@ -101,7 +98,7 @@ const createHandler = (
         throw new Error('An unknown error ocurred')
     }
 
-    const startServerResult = startServer(port, loadResult.configs, typeValidator, getServerLogger(verbose))
+    const startServerResult = startServer(loadResult.configs, typeValidator)
     return {
       startServerResult,
       pathsToWatch: loadResult.absoluteFixturePaths,
@@ -114,10 +111,10 @@ const createHandler = (
     return handleError(err)
   }
 
-  if (watch) {
+  if (args.watch) {
     const fixturesToWatch = [...prepAndServeResult.pathsToWatch]
     const chokidarWatchPaths = [absoluteConfigPath, ...fixturesToWatch]
-    if (schemaPath) chokidarWatchPaths.push(resolve(schemaPath))
+    if (args.schemaPath) chokidarWatchPaths.push(resolve(args.schemaPath))
 
     const configWatcher = chokidar.watch(chokidarWatchPaths, {
       ignoreInitial: true,

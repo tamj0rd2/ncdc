@@ -1,7 +1,9 @@
 import { WatchingSchemaGenerator } from './watching-schema-generator'
-import { randomString, mockObj } from '~test-helpers'
+import { randomString, mockObj, mockFn } from '~test-helpers'
 import ts from 'typescript'
 import * as tsHelpers from './ts-helpers'
+import { NcdcLogger } from '~logger'
+import { ReportOperation } from '~commands/shared'
 
 jest.disableAutomock()
 jest.mock('typescript-json-schema')
@@ -11,6 +13,8 @@ jest.mock('./ts-helpers')
 describe('load', () => {
   const mockTypescript = mockObj(ts)
   const mockTsHelpers = mockObj(tsHelpers)
+  const mockLogger = mockObj<NcdcLogger>({})
+  const mockReportOperation = mockFn<ReportOperation>()
 
   beforeEach(() => {
     jest.resetAllMocks()
@@ -21,10 +25,16 @@ describe('load', () => {
     mockTsHelpers.readTsConfig.mockReturnValue(
       mockObj<ts.ParsedCommandLine>({ options: {} }),
     )
+
+    mockReportOperation.mockReturnValue({ success: jest.fn(), fail: jest.fn() })
   })
 
   it('throws an error if watching has not started yet', () => {
-    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'))
+    const generator = new WatchingSchemaGenerator(
+      randomString('tsconfig path'),
+      mockLogger,
+      mockReportOperation,
+    )
 
     expect(() => generator.load(randomString('my type'))).toThrowError('Watching has not started yet')
   })
@@ -35,13 +45,21 @@ describe('load', () => {
       throw expectedError
     })
 
-    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'))
+    const generator = new WatchingSchemaGenerator(
+      randomString('tsconfig path'),
+      mockLogger,
+      mockReportOperation,
+    )
 
     expect(() => generator.init()).toThrow(expectedError)
   })
 
   it('does not try to read the config file again if it is already initialised', () => {
-    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'))
+    const generator = new WatchingSchemaGenerator(
+      randomString('tsconfig path'),
+      mockLogger,
+      mockReportOperation,
+    )
 
     generator.init()
     generator.init()

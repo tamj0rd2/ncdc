@@ -21,8 +21,8 @@ describe('loadConfig', () => {
 
   const configPath = randomString('configPath')
   const transformedConfigDummy = { name: randomString('name'), request: {}, response: {} } as CommonConfig
-  const act = async (): Promise<LoadConfigResponse> =>
-    loadConfig(configPath, mockCreateTypeValidator, mockTransformConfigs)
+  const act = async (isTestMode = false): Promise<LoadConfigResponse> =>
+    loadConfig(configPath, mockCreateTypeValidator, mockTransformConfigs, isTestMode)
 
   beforeEach(() => {
     jest.resetAllMocks()

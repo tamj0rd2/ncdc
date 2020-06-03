@@ -32,7 +32,7 @@ export const createHandler = (
     return typeValidator
   }
 
-  const loadResult = await loadConfig(configPath, getTypeValidator, transformConfigs)
+  const loadResult = await loadConfig(configPath, getTypeValidator, transformConfigs, true)
 
   switch (loadResult.type) {
     case LoadConfigStatus.Success:

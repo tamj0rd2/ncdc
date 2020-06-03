@@ -96,7 +96,12 @@ describe('handler', () => {
     it('calls loadconfig with the correct args', async () => {
       await handler(args)
 
-      expect(mockLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), mockTransformConfigs)
+      expect(mockLoadConfig).toBeCalledWith(
+        args.configPath,
+        expect.any(Function),
+        mockTransformConfigs,
+        false,
+      )
     })
 
     it('only creates a type validator once if schemaPath is not defined', async () => {

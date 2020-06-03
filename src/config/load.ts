@@ -37,12 +37,14 @@ export type LoadConfig<T extends ValidatedRawConfig> = (
   configPath: string,
   getTypeValidator: GetTypeValidator,
   transformConfigs: TransformConfigs<T>,
+  isTestMode: boolean,
 ) => Promise<LoadConfigResponse>
 
 const loadConfig = async <T extends ValidatedRawConfig>(
   configPath: string,
   getTypeValidator: GetTypeValidator,
   transformConfigs: TransformConfigs<T>,
+  isTestMode: boolean,
 ): Promise<LoadConfigResponse> => {
   const absoluteConfigPath = resolve(configPath)
   let rawConfigFile: unknown
@@ -74,7 +76,7 @@ const loadConfig = async <T extends ValidatedRawConfig>(
     let bodyValidationMessage: string | undefined
 
     try {
-      bodyValidationMessage = await validateConfigBodies(transformedConfigs, getTypeValidator())
+      bodyValidationMessage = await validateConfigBodies(transformedConfigs, getTypeValidator(), isTestMode)
     } catch (err) {
       return {
         type: LoadConfigStatus.BodyValidationError,

@@ -84,6 +84,7 @@ const createHandler = (
         return typeValidator
       },
       transformConfigs,
+      false,
     )
 
     switch (loadResult.type) {

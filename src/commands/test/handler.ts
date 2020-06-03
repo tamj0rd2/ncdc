@@ -13,6 +13,7 @@ export interface TestArgs {
   configPath?: string
   baseURL?: string
   force: boolean
+  verbose: boolean
 }
 
 export type GetTestDeps = (args: TestArgs) => TestDeps

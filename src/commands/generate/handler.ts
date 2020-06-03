@@ -8,6 +8,7 @@ export interface GenerateArgs {
   tsconfigPath: string
   outputPath: string
   force: boolean
+  verbose: boolean
 }
 
 export type GetGenerateDeps = (args: GenerateArgs) => GenerateDeps

@@ -1,6 +1,6 @@
 import { GetRootDeps } from '../shared'
 import { Argv, CommandModule } from 'yargs'
-import * as consts from '~commands/options'
+import * as opts from '~commands/options'
 import { createHandler, TestArgs, GetTestDeps } from './handler'
 import { runTests } from './test'
 import loadConfig from '~config/load'
@@ -11,20 +11,21 @@ import { TypeValidator } from '~validation'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
-    .positional(consts.CONFIG_PATH, consts.CONFIG_PATH_OPTS)
+    .positional(opts.CONFIG_PATH, opts.CONFIG_PATH_OPTS)
     .positional('baseURL', {
       describe: 'the URL that your endpoints should be accessed through',
       type: 'string',
     })
-    .option(consts.SCHEMA_PATH, consts.SCHEMA_PATH_OPTS)
-    .option(consts.TSCONFIG_PATH, consts.TSCONFIG_PATH_OPTS)
-    .option(consts.FORCE_GENERATION, consts.FORCE_GENERATION_OPTS)
-    .example(consts.EXAMPLE_TEST_COMMAND, consts.EXAMPLE_TEST_DESCRIPTION)
+    .option(opts.SCHEMA_PATH, opts.SCHEMA_PATH_OPTS)
+    .option(opts.TSCONFIG_PATH, opts.TSCONFIG_PATH_OPTS)
+    .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
+    .option(opts.VERBOSE, opts.VERBOSE_OPTS)
+    .example(opts.EXAMPLE_TEST_COMMAND, opts.EXAMPLE_TEST_DESCRIPTION)
 
 export default function createTestCommand(getCommonDeps: GetRootDeps): CommandModule<{}, TestArgs> {
   const getTestDeps: GetTestDeps = (args) => {
-    const { force, tsconfigPath, schemaPath } = args
-    const { handleError, logger, reportOperation } = getCommonDeps(false)
+    const { force, tsconfigPath, schemaPath, verbose } = args
+    const { handleError, logger, reportOperation } = getCommonDeps(verbose)
     return {
       handleError,
       logger,

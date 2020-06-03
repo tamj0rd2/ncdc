@@ -43,7 +43,7 @@ const handler = createHandler(getTestDeps)
 
 describe('cli arg validation', () => {
   it('returns an error if a configPath is not given', async () => {
-    const args: TestArgs = { force: false, tsconfigPath: randomString() }
+    const args: TestArgs = { force: false, tsconfigPath: randomString(), verbose: false }
 
     await handler(args)
 
@@ -55,6 +55,7 @@ describe('cli arg validation', () => {
       force: false,
       tsconfigPath: randomString(),
       configPath: randomString(),
+      verbose: false,
     }
 
     await handler(args)
@@ -69,6 +70,7 @@ const args: TestArgs = {
   configPath: randomString('config-path'),
   baseURL: randomString('baseURL'),
   schemaPath: randomString('schema-path'),
+  verbose: false,
 }
 
 it('calls loadConfig with the correct args', async () => {

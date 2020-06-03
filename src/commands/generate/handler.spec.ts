@@ -39,6 +39,7 @@ describe('Generate Command', () => {
         outputPath: '',
         tsconfigPath: '',
         force: false,
+        verbose: false,
       }
       await handler(args)
 
@@ -56,6 +57,7 @@ describe('Generate Command', () => {
         tsconfigPath: '',
         configPaths: [randomString('path1'), randomString('path2')],
         force: false,
+        verbose: false,
       }
 
       await handler(args)
@@ -70,6 +72,7 @@ describe('Generate Command', () => {
         tsconfigPath: '',
         configPaths: ['config path'],
         force: false,
+        verbose: false,
       }
 
       getConfigTypes.mockRejectedValue(new Error('welp'))
@@ -87,6 +90,7 @@ describe('Generate Command', () => {
       tsconfigPath: '',
       configPaths: ['config path'],
       force: false,
+      verbose: false,
     }
     getConfigTypes.mockResolvedValue([])
 
@@ -101,6 +105,7 @@ describe('Generate Command', () => {
     async (force) => {
       const handler = getHandler()
       const args: GenerateArgs = {
+        verbose: false,
         outputPath: 'out',
         tsconfigPath: 'tsconfig',
         configPaths: ['config path'],
@@ -116,6 +121,7 @@ describe('Generate Command', () => {
   it('calls the error handler if there is a problem creating the schema generator', async () => {
     const handler = getHandler()
     const args: GenerateArgs = {
+      verbose: false,
       outputPath: 'out',
       tsconfigPath: 'tsconfig',
       configPaths: ['config path'],
@@ -133,6 +139,7 @@ describe('Generate Command', () => {
   it('calls generate with the correct parameters', async () => {
     const handler = getHandler()
     const args: GenerateArgs = {
+      verbose: false,
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPaths: ['config path'],
@@ -151,6 +158,7 @@ describe('Generate Command', () => {
   it('logs a message if the schemas were written successfully', async () => {
     const handler = getHandler()
     const args: GenerateArgs = {
+      verbose: false,
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPaths: ['config path'],
@@ -165,6 +173,7 @@ describe('Generate Command', () => {
   it('calls the error handler if there is a problem writing schemas to disk', async () => {
     const handler = getHandler()
     const args: GenerateArgs = {
+      verbose: false,
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPaths: ['config path'],

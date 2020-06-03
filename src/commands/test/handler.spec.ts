@@ -73,7 +73,7 @@ it('calls loadConfig with the correct args', async () => {
 
   await handler(args)
 
-  expect(mockedLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs)
+  expect(mockedLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs, true)
 })
 
 it('only creates a type validator once for loading configs', async () => {

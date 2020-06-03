@@ -135,6 +135,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
 export const validateConfigBodies = async (
   configs: CommonConfig[],
   typeValidator: TypeValidator,
+  forceReqValidation: boolean,
 ): Promise<Optional<string>> => {
   const seenConfigNames = new Set<string>()
   const uniqueConfigs = configs.filter((config) => {
@@ -147,7 +148,7 @@ export const validateConfigBodies = async (
   for (const config of uniqueConfigs) {
     const validationErrors: string[] = []
 
-    if (config.request.body && config.request.type) {
+    if (config.request.type && (config.request.body || forceReqValidation)) {
       const result = await typeValidator.validate(config.request.body, config.request.type)
       if (!result.success) {
         const prefix = red(`Config ${bold(config.name)} request body failed type validation:`)
@@ -155,7 +156,7 @@ export const validateConfigBodies = async (
         validationErrors.push(message)
       }
     }
-    if (config.response.body && config.response.type) {
+    if (config.response.type && config.response.body) {
       const result = await typeValidator.validate(config.response.body, config.response.type)
       if (!result.success) {
         const prefix = red(`Config ${bold(config.name)} response body failed type validation:`)

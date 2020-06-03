@@ -1,11 +1,10 @@
-import { HandleError } from '../shared'
+import { GetRootDeps } from '../shared'
 import { Argv, CommandModule } from 'yargs'
 import * as opts from '~commands/options'
 import createHandler, { GenerateArgs } from './handler'
 import { getConfigTypes } from './config'
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
-import logger from '~logger'
 
 const builder = (yargs: Argv): Argv<GenerateArgs> =>
   yargs
@@ -20,21 +19,24 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
     .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
     .example(opts.EXAMPLE_GENERATE_COMMAND, opts.EXAMPLE_GENERATE_DESCRIPTION)
 
-export default function createGenerateCommand(handleError: HandleError): CommandModule<{}, GenerateArgs> {
+export default function createGenerateCommand(getCommonDeps: GetRootDeps): CommandModule<{}, GenerateArgs> {
   return {
     command: `generate <${opts.CONFIG_PATHS}..>`,
     describe: 'Generates a json schema for each type specified in the config file',
     builder,
-    handler: createHandler(
-      handleError,
-      getConfigTypes,
-      (tsconfigPath, force) => {
-        const generator = new SchemaGenerator(tsconfigPath, force)
-        generator.init()
-        return generator
-      },
-      generate,
-      logger,
-    ),
+    handler: createHandler(() => {
+      const { handleError, logger, reportOperation } = getCommonDeps(false)
+      return {
+        handleError,
+        logger,
+        generate,
+        getConfigTypes,
+        getSchemaGenerator: (tsconfigPath, force) => {
+          const generator = new SchemaGenerator(tsconfigPath, force, reportOperation)
+          generator.init()
+          return generator
+        },
+      }
+    }),
   }
 }

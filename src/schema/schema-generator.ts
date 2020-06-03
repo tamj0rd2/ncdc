@@ -2,7 +2,7 @@ import { SchemaRetriever } from './types'
 import ts from 'typescript'
 import { buildGenerator } from 'typescript-json-schema'
 import { readTsConfig, formatErrorDiagnostic } from './ts-helpers'
-import { startOperation } from '~metrics'
+import { ReportOperation } from '~commands/shared'
 
 type JsonSchemaGenerator = (type: string) => object
 
@@ -13,6 +13,7 @@ export class SchemaGenerator implements SchemaRetriever {
   constructor(
     private readonly pathOrProgram: string | ts.Program,
     private readonly skipTypeChecking = false,
+    private readonly reportOperation: ReportOperation,
   ) {}
 
   public init(): void {
@@ -21,7 +22,7 @@ export class SchemaGenerator implements SchemaRetriever {
   }
 
   public async load(symbolName: string): Promise<object> {
-    const { success, fail } = startOperation(`load schema for ${symbolName}`)
+    const { success, fail } = this.reportOperation(`load schema for ${symbolName}`)
     let schema = this.cache.get(symbolName)
 
     if (!schema) {
@@ -46,7 +47,7 @@ export class SchemaGenerator implements SchemaRetriever {
 
   private getTsProgram(): ts.Program {
     if (typeof this.pathOrProgram !== 'string') return this.pathOrProgram
-    const { success, fail } = startOperation('build a typescript program')
+    const { success, fail } = this.reportOperation('build a typescript program')
     const configFile = readTsConfig(this.pathOrProgram)
     const program = ts.createProgram({ rootNames: configFile.fileNames, options: configFile.options })
 
@@ -63,7 +64,7 @@ export class SchemaGenerator implements SchemaRetriever {
   }
 
   private createGenerator(program: ts.Program): JsonSchemaGenerator {
-    const { success, fail } = startOperation('build a schema generator')
+    const { success, fail } = this.reportOperation('build a schema generator')
 
     const generator = buildGenerator(program, { required: true, ignoreErrors: true })
     if (generator) {

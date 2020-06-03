@@ -1,10 +1,10 @@
 import { mockFn, randomString, mocked, mockObj, randomNumber } from '~test-helpers'
-import { HandleError, CreateTypeValidator } from '~commands/shared'
-import { createHandler, TestArgs } from './handler'
+import { HandleError } from '~commands/shared'
+import { createHandler, TestArgs, GetTestDeps, CreateTypeValidator } from './handler'
 import { resolve } from 'path'
 import { existsSync } from 'fs'
 import { TypeValidator } from '~validation'
-import { NCDCLogger } from '~logger'
+import { NcdcLogger } from '~logger'
 import { RunTests } from './test'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
@@ -20,23 +20,26 @@ const mockedCreateTypeValidator = mockFn<CreateTypeValidator>()
 const mockedExistsSync = mocked(existsSync)
 const mockedResolve = mocked(resolve)
 const resolvedTsconfigPath = randomString('resolved-tsconfig')
-const mockedLogger = mockObj<NCDCLogger>({ warn: jest.fn() })
+const mockedLogger = mockObj<NcdcLogger>({ warn: jest.fn() })
 const mockedRunTests = mockFn<RunTests>()
 const mockedLoadConfig = mockFn<LoadConfig<ValidatedTestConfig>>()
-const handler = createHandler(
-  mockedHandleError,
-  mockedCreateTypeValidator,
-  mockedLogger,
-  mockedRunTests,
-  mockedLoadConfig,
-)
+const getTestDeps = mockFn<GetTestDeps>()
 
 beforeEach(() => {
   jest.resetAllMocks()
   mockedExistsSync.mockReturnValue(true)
   mockedResolve.mockReturnValue(resolvedTsconfigPath)
   mockedCreateTypeValidator.mockReturnValue(mockedTypeValidator)
+  getTestDeps.mockReturnValue({
+    createTypeValidator: mockedCreateTypeValidator,
+    handleError: mockedHandleError,
+    loadConfig: mockedLoadConfig,
+    logger: mockedLogger,
+    runTests: mockedRunTests,
+  })
 })
+
+const handler = createHandler(getTestDeps)
 
 describe('cli arg validation', () => {
   it('returns an error if a configPath is not given', async () => {
@@ -48,7 +51,11 @@ describe('cli arg validation', () => {
   })
 
   it('returns an error if a baseURL is not given', async () => {
-    const args: TestArgs = { force: false, tsconfigPath: randomString(), configPath: randomString() }
+    const args: TestArgs = {
+      force: false,
+      tsconfigPath: randomString(),
+      configPath: randomString(),
+    }
 
     await handler(args)
 

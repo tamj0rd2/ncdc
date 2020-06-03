@@ -2,8 +2,8 @@ import { TypeValidator } from '~validation'
 import { red, green, blue } from 'chalk'
 import { TestConfig } from './config'
 import { inspect } from 'util'
-import { Logger } from 'winston'
 import { isDeeplyEqual } from '~util'
+import { NcdcLogger } from '~logger'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
@@ -14,7 +14,7 @@ export const runTests = async (
   fetchResource: FetchResource,
   configs: TestConfig[],
   getTypeValidator: GetTypeValidator,
-  logger: Logger,
+  logger: NcdcLogger,
 ): Promise<'Success' | 'Failure'> => {
   // TODO: now I can use the full endpoint if I want to, since baseurl is still currently an argument
 

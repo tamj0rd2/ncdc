@@ -3,12 +3,12 @@ import { configureServer, verbsMap, PossibleMethod, ReqResLog } from '.'
 import { ConfigBuilder, SupportedMethod } from '~config/types'
 import { TypeValidator } from '~validation'
 import { mockObj } from '~test-helpers'
-import { Logger } from './server-logger'
 import { ServeConfig } from '../config'
+import { NcdcLogger } from '~logger'
 
 describe('server', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
-  const mockLogger = mockObj<Logger>({
+  const mockLogger = mockObj<NcdcLogger>({
     info: jest.fn(),
     verbose: jest.fn(),
     error: jest.fn(),

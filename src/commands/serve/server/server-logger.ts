@@ -1,16 +1,19 @@
-import { createLogger, format, transports, Logger as WinstonLogger } from 'winston'
+import { createLogger, format, transports } from 'winston'
 import { inspect } from 'util'
 import escapeStringRegexp from 'escape-string-regexp'
+import { NcdcLogger } from '~logger'
+import inspector from 'inspector'
 
-export type Logger = WinstonLogger
+const IS_DEBUG_MODE = inspector.url() || process.env.LOG_LEVEL === 'debug'
 
-export const createServerLogger = (logLevel: string): Logger =>
+// TODO: deprecate this
+export const createServerLogger = (verbose: boolean): NcdcLogger =>
   createLogger({
     exitOnError: false,
     transports: [
       new transports.Console({
         handleExceptions: true,
-        level: logLevel,
+        level: IS_DEBUG_MODE ? 'debug' : verbose ? 'verbose' : 'info',
         format: format.combine(
           format.colorize(),
           format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),

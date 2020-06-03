@@ -1,4 +1,4 @@
-import { createLogger, transports, format } from 'winston'
+import { createLogger, transports, format, Logger } from 'winston'
 import { inspect } from 'util'
 import inspector from 'inspector'
 import escapeStringRegex from 'escape-string-regexp'
@@ -27,28 +27,29 @@ const extractStack = format((info) => {
   return info
 })
 
-const logger = createLogger({
-  exitOnError: true,
-  transports: [
-    new transports.Console({
-      handleExceptions: true,
-      level: IS_DEBUG_MODE ? 'debug' : 'info',
-      format: format.combine(
-        format.colorize(),
-        format.metadata(),
-        normalizeMessage(),
-        extractStack(),
-        format.printf((info) => {
-          let result = `${info.level}: `
-          result += info.message
-          result += IS_DEBUG_MODE && info?.stack ? `\n${info?.stack}` : ''
-          return result
-        }),
-      ),
-    }),
-  ],
-})
+export type NcdcLogger = Pick<Logger, 'debug' | 'verbose' | 'info' | 'warn' | 'error'>
 
-export type NCDCLogger = typeof logger
+const createNcdcLogger = (verbose: boolean): NcdcLogger =>
+  createLogger({
+    exitOnError: true,
+    transports: [
+      new transports.Console({
+        handleExceptions: true,
+        level: IS_DEBUG_MODE ? 'debug' : verbose ? 'verbose' : 'info',
+        format: format.combine(
+          format.colorize(),
+          format.metadata(),
+          normalizeMessage(),
+          extractStack(),
+          format.printf((info) => {
+            let result = `${info.level}: `
+            result += info.message
+            result += IS_DEBUG_MODE && info?.stack ? `\n${info?.stack}` : ''
+            return result
+          }),
+        ),
+      }),
+    ],
+  })
 
-export default logger
+export default createNcdcLogger

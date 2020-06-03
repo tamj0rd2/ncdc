@@ -1,4 +1,4 @@
-import createHandler, { GenerateArgs, GetSchemaGenerator, GetConfigTypes } from './handler'
+import createHandler, { GenerateArgs, GetSchemaGenerator, GetConfigTypes, GetGenerateDeps } from './handler'
 import { mockFn, mockObj, randomString } from '~test-helpers'
 import { HandleError } from '~commands'
 import { Generate } from './generate'
@@ -16,7 +16,15 @@ describe('Generate Command', () => {
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const getHandler = () =>
-    createHandler(handleErrorStub, getConfigTypes, getSchemaGenMock, generateStub, loggerStub)
+    createHandler(
+      mockFn<GetGenerateDeps>().mockReturnValue({
+        logger: loggerStub,
+        generate: generateStub,
+        getConfigTypes,
+        getSchemaGenerator: getSchemaGenMock,
+        handleError: handleErrorStub,
+      }),
+    )
 
   beforeEach(() => {
     getConfigTypes.mockResolvedValue([randomString('some-type')])

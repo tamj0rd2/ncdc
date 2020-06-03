@@ -1,16 +1,19 @@
-import { OutgoingHttpHeaders } from 'http'
+import { OutgoingHttpHeaders, IncomingHttpHeaders } from 'http'
 
 export interface Config {
   name: string
   serveOnly: boolean
   request: {
     method: string
+    type?: string
     endpoints?: string[]
     serveEndpoint?: string
+    headers?: OutgoingHttpHeaders
+    body?: unknown
   }
   response: {
     code: number
-    headers?: OutgoingHttpHeaders
+    headers?: IncomingHttpHeaders
     type?: string
     body?: unknown
     serveBody?: unknown
@@ -43,8 +46,28 @@ export class ConfigBuilder {
     return this
   }
 
+  public withMethod(method: string): ConfigBuilder {
+    this.config.request.method = method
+    return this
+  }
+
   public withServeOnly(serveOnly: boolean): ConfigBuilder {
     this.config.serveOnly = serveOnly
+    return this
+  }
+
+  public withRequestHeaders(headers: OutgoingHttpHeaders): ConfigBuilder {
+    this.config.request.headers = headers
+    return this
+  }
+
+  public withRequestType(type: string): ConfigBuilder {
+    this.config.request.type = type
+    return this
+  }
+
+  public withRequestBody(body: unknown): ConfigBuilder {
+    this.config.request.body = body
     return this
   }
 
@@ -53,7 +76,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withBody(body: unknown): ConfigBuilder {
+  public withResponseBody(body: unknown): ConfigBuilder {
     if (!body) {
       delete this.config.response.body
       return this
@@ -97,7 +120,7 @@ export class ConfigBuilder {
     return this
   }
 
-  public withResponseHeaders(headers: OutgoingHttpHeaders): ConfigBuilder {
+  public withResponseHeaders(headers: IncomingHttpHeaders): ConfigBuilder {
     this.config.response.headers = headers
     return this
   }

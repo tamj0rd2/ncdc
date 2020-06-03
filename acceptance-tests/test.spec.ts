@@ -32,6 +32,33 @@ describe('ncdc test', () => {
     expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
   })
 
+  it('passes even if a request or response has additional properties', async () => {
+    realServer = new RealServerBuilder()
+      .withPostEndpoint('/api/resource', 200, { joy: 'to', the: 'world' })
+      .start()
+    new ConfigWrapper()
+      .addConfig(
+        new ConfigBuilder()
+          .withName('lel')
+          .withMethod('POST')
+          .withEndpoints('/api/resource')
+          .withRequestHeaders({ 'content-type': 'application/json', accept: 'application/json' })
+          .withRequestType('MyRequest')
+          .withRequestBody({ hello: 'world', whats: 'up?' })
+          .withResponseType('MyResponse')
+          .build(),
+      )
+      .addType('MyRequest', { hello: 'string' })
+      .addType('MyResponse', { joy: 'string' })
+
+    const result = await runTestCommand()
+
+    expect(result).toEqual({
+      success: true,
+      output: expect.stringContaining(`info: PASSED: lel - ${REAL_SERVER_HOST}/api/resource`),
+    })
+  })
+
   it('can test endpoints that return json', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 'world' }).start()
     new ConfigWrapper()
@@ -40,12 +67,20 @@ describe('ncdc test', () => {
           .withName('Hello')
           .withEndpoints('/api/resource')
           .withServeBody(undefined)
-          .withBody({ hello: 'world' })
+          .withResponseBody({ hello: 'world' })
           .withResponseType('Hello')
           .withResponseHeaders({ 'content-type': 'application/json' })
           .build(),
       )
-      .addSchemaFile('Hello', { hello: 'string' })
+      .addSchemaFile('Hello', {
+        type: 'object',
+        required: ['hello'],
+        properties: {
+          hello: {
+            type: 'string',
+          },
+        },
+      })
 
     const result = await runTestCommand(`--schemaPath ${JSON_SCHEMAS_FOLDER}`)
 
@@ -61,12 +96,12 @@ describe('ncdc test', () => {
           .withName('Hello')
           .withEndpoints('/api/resource')
           .withServeBody(undefined)
-          .withBody({ hello: 'world' })
+          .withResponseBody({ hello: 'world' })
           .withResponseType('Hello')
           .withResponseHeaders({ 'content-type': 'application/json' })
           .build(),
       )
-      .addSchemaFile('Hello', { hello: 'string' })
+      .addSchemaFile('Hello', { type: 'object' })
 
     const result = await runTestCommand(`--schemaPath ${JSON_SCHEMAS_FOLDER}`)
 
@@ -75,14 +110,14 @@ describe('ncdc test', () => {
     expect(result.output).toContain('The response body was not deeply equal to your configured fixture')
   })
 
-  it('gives back a useful error message', async () => {
+  it('gives back a useful error message when a type does not exist on the FS', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
     new ConfigWrapper().addConfig(
       new ConfigBuilder()
         .withName('Hello')
         .withEndpoints('/api/resource')
         .withServeBody(undefined)
-        .withBody({ hello: 'world' })
+        .withResponseBody({ hello: 'world' })
         .withResponseType('Hello')
         .withResponseHeaders({ 'content-type': 'application/json' })
         .build(),

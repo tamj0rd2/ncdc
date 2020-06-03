@@ -260,7 +260,7 @@ describe('ncdc serve', () => {
 
       it('serves when the type matches the body', async () => {
         configWrapper = new ConfigWrapper()
-          .addConfig(new ConfigBuilder().withResponseType(schemaName).withBody('Hello!').build())
+          .addConfig(new ConfigBuilder().withResponseType(schemaName).withResponseBody('Hello!').build())
           .addSchemaFile(schemaName, { type: 'string' })
 
         serve = await prepareServe(typecheckingCleanup)(`--watch --schemaPath ${JSON_SCHEMAS_FOLDER}`)

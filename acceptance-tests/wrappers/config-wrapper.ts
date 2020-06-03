@@ -1,6 +1,7 @@
 import { Config, ConfigBuilder } from '../config-builder'
 import { existsSync, rmdirSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import jsyaml from 'js-yaml'
+import { JSONSchema7 } from 'json-schema'
 
 export const TEST_ENV = './acceptance-tests/test-environment'
 export const NCDC_CONFIG_FILE = `${TEST_ENV}/config.yml`
@@ -136,7 +137,7 @@ export class ConfigWrapper {
     return this
   }
 
-  public addSchemaFile(name: string, content: object): ConfigWrapper {
+  public addSchemaFile(name: string, content: JSONSchema7): ConfigWrapper {
     if (this.schemas[name]) {
       throw new Error(`The schema ${name} is already registered`)
     }

@@ -4,9 +4,7 @@ import { NCDC_CONFIG_FILE, JSON_SCHEMAS_FOLDER, TSCONFIG_FILE } from './config-w
 
 const createCommand = (extraConfigPath?: string): string => {
   const configFiles = extraConfigPath ? [NCDC_CONFIG_FILE, extraConfigPath] : [NCDC_CONFIG_FILE]
-  return `LOG_LEVEL=debug ./bin/ncdc generate ${configFiles.join(
-    ' ',
-  )} --output ${JSON_SCHEMAS_FOLDER} -c ${TSCONFIG_FILE}`
+  return `./bin/ncdc generate ${configFiles.join(' ')} --output ${JSON_SCHEMAS_FOLDER} -c ${TSCONFIG_FILE} -v`
 }
 
 export const runGenerateCommand = (extraConfigPath?: string): Promise<string> =>

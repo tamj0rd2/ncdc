@@ -13,7 +13,7 @@ export interface TestResult {
 
 export const runTestCommand = (args = ''): Promise<TestResult> =>
   new Promise<TestResult>((resolve) => {
-    const command = `LOG_LEVEL=debug ./bin/ncdc test ${NCDC_CONFIG_FILE} ${REAL_SERVER_HOST} -c ${TSCONFIG_FILE} ${args}`
+    const command = `./bin/ncdc test ${NCDC_CONFIG_FILE} ${REAL_SERVER_HOST} -c ${TSCONFIG_FILE} ${args} -v`
     const ncdc: ChildProcess = exec(command)
     const output: string[] = []
     const getOutput = (): string => stripAnsi(output.join(''))
@@ -41,6 +41,13 @@ export class RealServerBuilder {
 
   public withGetEndpoint(endpoint: string, status: number, content: unknown): RealServerBuilder {
     this.app.get(endpoint, (req, res) => {
+      res.status(status).send(content)
+    })
+    return this
+  }
+
+  public withPostEndpoint(endpoint: string, status: number, content: unknown): RealServerBuilder {
+    this.app.post(endpoint, (req, res) => {
       res.status(status).send(content)
     })
     return this

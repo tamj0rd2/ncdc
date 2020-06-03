@@ -17,6 +17,7 @@ const builder = (yargs: Argv): Argv<GenerateArgs> =>
       default: './json-schema',
     })
     .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
+    .option(opts.VERBOSE, opts.VERBOSE_OPTS)
     .example(opts.EXAMPLE_GENERATE_COMMAND, opts.EXAMPLE_GENERATE_DESCRIPTION)
 
 export default function createGenerateCommand(getCommonDeps: GetRootDeps): CommandModule<{}, GenerateArgs> {
@@ -24,8 +25,8 @@ export default function createGenerateCommand(getCommonDeps: GetRootDeps): Comma
     command: `generate <${opts.CONFIG_PATHS}..>`,
     describe: 'Generates a json schema for each type specified in the config file',
     builder,
-    handler: createHandler(() => {
-      const { handleError, logger, reportOperation } = getCommonDeps(false)
+    handler: createHandler(({ verbose }) => {
+      const { handleError, logger, reportOperation } = getCommonDeps(verbose)
       return {
         handleError,
         logger,

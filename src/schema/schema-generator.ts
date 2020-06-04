@@ -76,7 +76,7 @@ export class SchemaGenerator implements SchemaRetriever {
 
   private createGenerator(program: ts.Program): JsonSchemaGenerator {
     const { success } = this.reportOperation('build a schema generator')
-    const config: Config = { skipTypeCheck: true, expose: 'all' }
+    const config: Config = { skipTypeCheck: true, expose: 'all', additionalProperties: true }
     const generator = new TsSchemaGenerator(
       program,
       createParser(program, config),

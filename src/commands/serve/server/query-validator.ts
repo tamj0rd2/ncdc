@@ -31,7 +31,7 @@ const compareQuery = (expected: Query[number], actual: Query[number]): boolean =
   }
 
   if (typeof expected === 'object') {
-    if (Array.isArray(actual) || typeof actual === 'string') return false
+    if (!actual || Array.isArray(actual) || typeof actual === 'string') return false
 
     for (const key in expected) {
       const expectedValue = expected[key]
@@ -50,7 +50,7 @@ const validateQuery = (endpoint: string, actualQuery: Query): boolean => {
   const configuredQueryString = url.parse(endpoint).query
   if (!configuredQueryString) return true
 
-  const expectedQuery = qs.parse(configuredQueryString) as Query
+  const expectedQuery = qs.parse(configuredQueryString)
   if (!expectedQuery) return true
 
   return compareQuery(expectedQuery, actualQuery)

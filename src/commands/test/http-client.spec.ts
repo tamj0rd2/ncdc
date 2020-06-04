@@ -1,6 +1,6 @@
 import { ConfigBuilder } from '~config/types'
 import { createHttpClient } from './http-client'
-import { randomString, mocked, mockObj, mockFn } from '~test-helpers'
+import { randomString, mocked, mockObj, mockFn, randomNumber } from '~test-helpers'
 import fetch, { Response } from 'node-fetch'
 
 jest.unmock('./http-client')
@@ -11,8 +11,9 @@ describe('http client', () => {
   const mockedText = mockFn<Response['text']>()
 
   const baseUrl = randomString('base-url')
+  const timeout = randomNumber()
 
-  const fetchResource = createHttpClient(baseUrl)
+  const fetchResource = createHttpClient(baseUrl, timeout)
 
   beforeEach(() => {
     jest.resetAllMocks()
@@ -29,6 +30,7 @@ describe('http client', () => {
     expect(mockedFetch).toBeCalledWith(baseUrl + config.request.endpoint, {
       body: undefined,
       method: 'GET',
+      timeout,
     })
   })
 
@@ -42,6 +44,7 @@ describe('http client', () => {
       body: undefined,
       method: 'GET',
       headers: headers,
+      timeout,
     })
   })
 

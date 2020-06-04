@@ -1,7 +1,5 @@
-import { RunTests } from './test'
-import { createHttpClient } from './http-client'
 import { LoadConfig, LoadConfigStatus, GetTypeValidator } from '~config/load'
-import { ValidatedTestConfig, transformConfigs } from './config'
+import { ValidatedTestConfig, transformConfigs, TestConfig } from './config'
 import { red } from 'chalk'
 import { TypeValidator } from '~validation'
 import { HandleError } from '~commands/shared'
@@ -14,9 +12,16 @@ export interface TestArgs {
   baseURL?: string
   force: boolean
   verbose: boolean
+  timeout?: number
 }
 
 export type GetTestDeps = (args: TestArgs) => TestDeps
+export type RunTests = (
+  baseUrl: string,
+  configs: TestConfig[],
+  getTypeValidator: () => TypeValidator,
+) => Promise<'Success' | 'Failure'>
+
 export interface TestDeps {
   handleError: HandleError
   logger: NcdcLogger
@@ -28,7 +33,7 @@ export interface TestDeps {
 export type CreateTypeValidator = () => TypeValidator
 
 export const createHandler = (getTestDeps: GetTestDeps) => async (args: TestArgs): Promise<void> => {
-  const { handleError, logger, createTypeValidator, loadConfig, runTests } = getTestDeps(args)
+  const { handleError, createTypeValidator, loadConfig, runTests } = getTestDeps(args)
   if (!args.configPath) return handleError({ message: `configPath must be specified` })
   if (!args.baseURL) return handleError({ message: 'baseURL must be specified' })
 
@@ -54,12 +59,6 @@ export const createHandler = (getTestDeps: GetTestDeps) => async (args: TestArgs
       return handleError({ message: 'An unknown error ocurred' })
   }
 
-  const testResult = await runTests(
-    args.baseURL,
-    createHttpClient(args.baseURL),
-    loadResult.configs,
-    getTypeValidator,
-    logger,
-  )
+  const testResult = await runTests(args.baseURL, loadResult.configs, getTypeValidator)
   if (testResult === 'Failure') return handleError({ message: 'Not all tests passed' })
 }

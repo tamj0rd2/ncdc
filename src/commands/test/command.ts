@@ -8,6 +8,7 @@ import { FsSchemaLoader } from '~schema'
 import { SchemaGenerator } from '~schema'
 import Ajv from 'ajv'
 import { TypeValidator } from '~validation'
+import { createHttpClient } from './http-client'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
@@ -15,6 +16,10 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
     .positional('baseURL', {
       describe: 'the URL that your endpoints should be accessed through',
       type: 'string',
+    })
+    .option('timeout', {
+      description: 'req/res timeout in ms',
+      type: 'number',
     })
     .option(opts.SCHEMA_PATH, opts.SCHEMA_PATH_OPTS)
     .option(opts.TSCONFIG_PATH, opts.TSCONFIG_PATH_OPTS)
@@ -25,17 +30,25 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
 export default function createTestCommand(getCommonDeps: GetRootDeps): CommandModule<{}, TestArgs> {
   const getTestDeps: GetTestDeps = (args) => {
     const { force, tsconfigPath, schemaPath, verbose } = args
-    const { handleError, logger, reportOperation } = getCommonDeps(verbose)
+    const { handleError, logger, reportMetric: reportMetric } = getCommonDeps(verbose)
     return {
       handleError,
       logger,
       loadConfig,
-      runTests,
+      runTests: (baseUrl, configs, getTypeValidator) =>
+        runTests(
+          baseUrl,
+          createHttpClient(baseUrl, args.timeout),
+          configs,
+          getTypeValidator,
+          logger,
+          reportMetric,
+        ),
       createTypeValidator: () => {
         const ajv = new Ajv({ verbose: true, allErrors: true })
         if (schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(schemaPath))
 
-        const schemaGenerator = new SchemaGenerator(tsconfigPath, force, reportOperation)
+        const schemaGenerator = new SchemaGenerator(tsconfigPath, force, reportMetric)
         schemaGenerator.init()
         return new TypeValidator(ajv, schemaGenerator)
       },

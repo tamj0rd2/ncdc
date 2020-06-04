@@ -3,7 +3,7 @@ import { randomString, mockObj, mockFn } from '~test-helpers'
 import ts from 'typescript'
 import * as tsHelpers from './ts-helpers'
 import { NcdcLogger } from '~logger'
-import { ReportOperation } from '~commands/shared'
+import { ReportMetric } from '~commands/shared'
 
 jest.disableAutomock()
 jest.mock('typescript-json-schema')
@@ -14,7 +14,7 @@ describe('load', () => {
   const mockTypescript = mockObj(ts)
   const mockTsHelpers = mockObj(tsHelpers)
   const mockLogger = mockObj<NcdcLogger>({})
-  const mockReportOperation = mockFn<ReportOperation>()
+  const mockreportMetric = mockFn<ReportMetric>()
 
   beforeEach(() => {
     jest.resetAllMocks()
@@ -26,15 +26,11 @@ describe('load', () => {
       mockObj<ts.ParsedCommandLine>({ options: {} }),
     )
 
-    mockReportOperation.mockReturnValue({ success: jest.fn(), fail: jest.fn() })
+    mockreportMetric.mockReturnValue({ success: jest.fn(), fail: jest.fn() })
   })
 
   it('throws an error if watching has not started yet', () => {
-    const generator = new WatchingSchemaGenerator(
-      randomString('tsconfig path'),
-      mockLogger,
-      mockReportOperation,
-    )
+    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric)
 
     expect(() => generator.load(randomString('my type'))).toThrowError('Watching has not started yet')
   })
@@ -45,21 +41,13 @@ describe('load', () => {
       throw expectedError
     })
 
-    const generator = new WatchingSchemaGenerator(
-      randomString('tsconfig path'),
-      mockLogger,
-      mockReportOperation,
-    )
+    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric)
 
     expect(() => generator.init()).toThrow(expectedError)
   })
 
   it('does not try to read the config file again if it is already initialised', () => {
-    const generator = new WatchingSchemaGenerator(
-      randomString('tsconfig path'),
-      mockLogger,
-      mockReportOperation,
-    )
+    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric)
 
     generator.init()
     generator.init()

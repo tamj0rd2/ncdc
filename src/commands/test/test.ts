@@ -4,6 +4,7 @@ import { TestConfig } from './config'
 import { inspect } from 'util'
 import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
+import { ReportMetric } from '~commands/shared'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
@@ -15,6 +16,7 @@ export const runTests = async (
   configs: TestConfig[],
   getTypeValidator: GetTypeValidator,
   logger: NcdcLogger,
+  reportMetric: ReportMetric,
 ): Promise<'Success' | 'Failure'> => {
   // TODO: now I can use the full endpoint if I want to, since baseurl is still currently an argument
 
@@ -23,10 +25,13 @@ export const runTests = async (
       const failedLine = red.bold(`FAILED: ${config.name}`)
       const endpointSegment = `- ${blue(baseUrl + config.request.endpoint)}`
 
+      const fetchMetric = reportMetric(`fetching ${config.request.endpoint} for config ${config.name}`)
       let res: LoaderResponse
       try {
         res = await fetchResource(config)
+        fetchMetric.success()
       } catch (err) {
+        fetchMetric.fail()
         return { success: false, message: `${failedLine} ${endpointSegment}\n${err.message}` }
       }
 
@@ -73,5 +78,3 @@ export const runTests = async (
   const allResults = await Promise.all(testTasks2)
   return allResults.find((r) => !r.success) ? 'Failure' : 'Success'
 }
-
-export type RunTests = typeof runTests

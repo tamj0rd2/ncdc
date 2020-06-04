@@ -6,6 +6,7 @@ import { FetchResource } from './http-client'
 import { TypeValidator } from '~validation'
 import { ConfigBuilder } from '~config/types'
 import { Logger } from 'winston'
+import { ReportMetric } from '~commands/shared'
 
 jest.disableAutomock()
 
@@ -15,15 +16,17 @@ describe('test configs', () => {
   const mockFetchResource = mockFn<FetchResource>()
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
   const mockGetTypeValidator = mockFn<() => TypeValidator>()
+  const mockReportMetric = mockFn<ReportMetric>()
 
   beforeEach(() => {
     jest.resetAllMocks()
     mockGetTypeValidator.mockReturnValue(mockTypeValidator)
+    mockReportMetric.mockReturnValue({ fail: jest.fn(), success: jest.fn() })
   })
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const act = (...configs: TestConfig[]) =>
-    runTests(baseUrl, mockFetchResource, configs, mockGetTypeValidator, mockLogger)
+    runTests(baseUrl, mockFetchResource, configs, mockGetTypeValidator, mockLogger, mockReportMetric)
 
   const getLoggedMessage = (method: 'error' | 'info', callIndex = 0): string =>
     stripAnsi((mockLogger[method].mock.calls[callIndex][0] as unknown) as string)

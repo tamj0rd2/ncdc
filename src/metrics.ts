@@ -14,7 +14,7 @@ export default class Metrics {
     this.startTime = new Date()
   }
 
-  public reportOperation = (action: string): OperationResult => {
+  public reportMetric = (action: string): OperationResult => {
     const operationStartTime = new Date()
     this.logger.debug(`Metric: ${action} - ${blue(MetricState.Started)}`)
 

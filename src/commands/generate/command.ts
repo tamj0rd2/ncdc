@@ -26,14 +26,14 @@ export default function createGenerateCommand(getCommonDeps: GetRootDeps): Comma
     describe: 'Generates a json schema for each type specified in the config file',
     builder,
     handler: createHandler(({ verbose }) => {
-      const { handleError, logger, reportOperation } = getCommonDeps(verbose)
+      const { handleError, logger, reportMetric: reportMetric } = getCommonDeps(verbose)
       return {
         handleError,
         logger,
         generate,
         getConfigTypes,
         getSchemaGenerator: (tsconfigPath, force) => {
-          const generator = new SchemaGenerator(tsconfigPath, force, reportOperation)
+          const generator = new SchemaGenerator(tsconfigPath, force, reportMetric)
           generator.init()
           return generator
         },

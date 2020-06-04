@@ -1,3 +1,20 @@
+# [0.7.0](https://github.com/tamj0rd2/ncdc/compare/v0.6.0...v0.7.0) (2020-06-04)
+
+
+### Bug Fixes
+
+* **test:** validate the request body if a request type is given ([a79fafc](https://github.com/tamj0rd2/ncdc/commit/a79fafca34e353ac1b91b41678ffaa9ca71e6d3b)), closes [#246](https://github.com/tamj0rd2/ncdc/issues/246)
+
+
+### Features
+
+* add a verbose flag to the test and generate commands ([55b2ad4](https://github.com/tamj0rd2/ncdc/commit/55b2ad4a6714d9c7a808979f897c1d98e6c9548e)), closes [#182](https://github.com/tamj0rd2/ncdc/issues/182)
+
+
+### Performance Improvements
+
+* **generate:** load and write schemas to disk asynchronously ([2172ba0](https://github.com/tamj0rd2/ncdc/commit/2172ba0f75d27e8502d15c01622f37fa6a6a7e2c)), closes [#236](https://github.com/tamj0rd2/ncdc/issues/236)
+
 # [0.6.0](https://github.com/tamj0rd2/ncdc/compare/v0.5.1...v0.6.0) (2020-05-28)
 
 

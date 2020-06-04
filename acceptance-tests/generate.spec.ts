@@ -68,6 +68,6 @@ describe('ncdc generate', () => {
 
     const output = await runGenerateCommand()
 
-    expect(strip(output)).toContain('error: type RTypeDelta not found')
+    expect(strip(output)).toContain('error: Could not find type: RTypeDelta')
   })
 })

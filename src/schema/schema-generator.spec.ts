@@ -4,6 +4,7 @@ import { mockObj, randomString, mockFn } from '~test-helpers'
 import * as tsHelpers from './ts-helpers'
 import { ReportOperation } from '~commands/shared'
 import * as tsj from 'ts-json-schema-generator'
+import { NoRootTypeError } from 'ts-json-schema-generator'
 
 jest.disableAutomock()
 jest.mock('ts-json-schema-generator')
@@ -80,6 +81,30 @@ describe('SchemaLoader', () => {
 
       await expect(() => schemaGenerator.load('bananas')).rejects.toThrowError(
         'This SchemaGenerator instance has not been initialised',
+      )
+    })
+
+    it('throws if a type could not be found', async () => {
+      mockedTsjGenerator.createSchema.mockImplementation(() => {
+        throw new NoRootTypeError(randomString('yikes'))
+      })
+
+      const schemaGenerator = new SchemaGenerator('', true, mockedReportOperation)
+      schemaGenerator.init()
+
+      await expect(schemaGenerator.load('lol')).rejects.toThrowError('Could not find type: lol')
+    })
+
+    it('throws if an error occurred while creating a type', async () => {
+      mockedTsjGenerator.createSchema.mockImplementation(() => {
+        throw new Error(randomString('yikes'))
+      })
+
+      const schemaGenerator = new SchemaGenerator('', true, mockedReportOperation)
+      schemaGenerator.init()
+
+      await expect(schemaGenerator.load('lol')).rejects.toThrowError(
+        'Could not create a schema for type: lol\nyikes',
       )
     })
 

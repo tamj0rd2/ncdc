@@ -19,7 +19,7 @@ export class SchemaGenerator implements SchemaRetriever {
 
   constructor(
     private readonly pathOrProgram: string | ts.Program,
-    private readonly skipTypeChecking = false,
+    private readonly skipTypeChecking: boolean,
     private readonly reportOperation: ReportOperation,
   ) {}
 
@@ -28,32 +28,32 @@ export class SchemaGenerator implements SchemaRetriever {
     this.generateJsonSchema = this.createGenerator(program)
   }
 
-  public async load(symbolName: string): Promise<JSONSchema7> {
+  public load = async (symbolName: string): Promise<JSONSchema7> => {
     const { success, fail } = this.reportOperation(`load schema for ${symbolName}`)
-    let schema = this.cache.get(symbolName)
-
-    if (!schema) {
-      if (!this.generateJsonSchema) {
-        fail()
-        throw new Error('This SchemaGenerator instance has not been initialised')
-      }
-
-      try {
-        schema = this.generateJsonSchema(symbolName)
-      } catch (err) {
-        fail()
-        if (err instanceof NoRootTypeError) {
-          throw new Error(`Could not find type: ${symbolName}`)
-        }
-
-        throw err
-      }
-
-      this.cache.set(symbolName, schema)
+    const cachedSchema = this.cache.get(symbolName)
+    if (cachedSchema) {
+      success()
+      return cachedSchema
     }
 
-    success()
-    return Promise.resolve(schema)
+    if (!this.generateJsonSchema) {
+      fail()
+      throw new Error('This SchemaGenerator instance has not been initialised')
+    }
+
+    try {
+      const schema = this.generateJsonSchema(symbolName)
+      this.cache.set(symbolName, schema)
+      success()
+      return Promise.resolve(schema)
+    } catch (err) {
+      fail()
+      if (err instanceof NoRootTypeError) {
+        throw new Error(`Could not find type: ${symbolName}`)
+      }
+
+      throw new Error(`Could not create a schema for type: ${symbolName}\n${err.message}`)
+    }
   }
 
   private getTsProgram(): ts.Program {

@@ -1,10 +1,7 @@
 import { blue, red, green } from 'chalk'
 import { NcdcLogger } from '~logger'
 
-const calcDiff = (startTime: Date, endTime: Date): string =>
-  ((endTime.getTime() - startTime.getTime()) / 1000).toFixed(2) + 's'
-
-export enum MetricState {
+enum MetricState {
   Started = 'started',
   Failed = 'failed',
   Completed = 'completed',
@@ -17,14 +14,14 @@ export default class Metrics {
     this.startTime = new Date()
   }
 
-  public reportOperation(action: string): OperationResult {
+  public reportOperation = (action: string): OperationResult => {
     const operationStartTime = new Date()
     this.logger.debug(`Metric: ${action} - ${blue(MetricState.Started)}`)
 
     const endOperation = (state: MetricState.Completed | MetricState.Failed): void => {
       const endTime = new Date()
-      const timeTaken = blue(calcDiff(operationStartTime, endTime))
-      const elapsedTime = blue(calcDiff(this.startTime, endTime))
+      const timeTaken = blue(this.getTimeDifference(operationStartTime, endTime))
+      const elapsedTime = blue(this.getTimeDifference(this.startTime, endTime))
       const message = state === MetricState.Completed ? green(state) : red(state)
       this.logger.debug(
         `Metric: ${action} - ${message} | time taken: ${timeTaken} | elapsed time: ${elapsedTime}`,
@@ -36,6 +33,9 @@ export default class Metrics {
       fail: () => endOperation(MetricState.Failed),
     }
   }
+
+  private getTimeDifference = (startTime: Date, endTime: Date): string =>
+    ((endTime.getTime() - startTime.getTime()) / 1000).toFixed(2) + 's'
 }
 
 export interface OperationResult {

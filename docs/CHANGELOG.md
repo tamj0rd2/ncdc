@@ -1,3 +1,10 @@
+# [0.8.0](https://github.com/tamj0rd2/ncdc/compare/v0.7.0...v0.8.0) (2020-06-04)
+
+
+### Features
+
+* **test:** add a timeout flag to timeout response to real api ([a2dbfae](https://github.com/tamj0rd2/ncdc/commit/a2dbfae803b5ede94ca994d3db5376da16f325aa)), closes [#218](https://github.com/tamj0rd2/ncdc/issues/218)
+
 # [0.7.0](https://github.com/tamj0rd2/ncdc/compare/v0.6.0...v0.7.0) (2020-06-04)
 
 

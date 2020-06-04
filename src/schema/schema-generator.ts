@@ -1,13 +1,20 @@
 import { SchemaRetriever } from './types'
 import ts from 'typescript'
-import { buildGenerator } from 'typescript-json-schema'
 import { readTsConfig, formatErrorDiagnostic } from './ts-helpers'
 import { ReportOperation } from '~commands/shared'
+import {
+  SchemaGenerator as TsSchemaGenerator,
+  createParser,
+  createFormatter,
+  Config,
+  NoRootTypeError,
+} from 'ts-json-schema-generator'
+import { JSONSchema7 } from 'json-schema'
 
-type JsonSchemaGenerator = (type: string) => object
+type JsonSchemaGenerator = (type: string) => JSONSchema7
 
 export class SchemaGenerator implements SchemaRetriever {
-  private readonly cache = new Map<string, object>()
+  private readonly cache = new Map<string, JSONSchema7>()
   private generateJsonSchema?: JsonSchemaGenerator
 
   constructor(
@@ -21,7 +28,7 @@ export class SchemaGenerator implements SchemaRetriever {
     this.generateJsonSchema = this.createGenerator(program)
   }
 
-  public async load(symbolName: string): Promise<object> {
+  public async load(symbolName: string): Promise<JSONSchema7> {
     const { success, fail } = this.reportOperation(`load schema for ${symbolName}`)
     let schema = this.cache.get(symbolName)
 
@@ -35,6 +42,10 @@ export class SchemaGenerator implements SchemaRetriever {
         schema = this.generateJsonSchema(symbolName)
       } catch (err) {
         fail()
+        if (err instanceof NoRootTypeError) {
+          throw new Error(`Could not find type: ${symbolName}`)
+        }
+
         throw err
       }
 
@@ -64,17 +75,16 @@ export class SchemaGenerator implements SchemaRetriever {
   }
 
   private createGenerator(program: ts.Program): JsonSchemaGenerator {
-    const { success, fail } = this.reportOperation('build a schema generator')
-
-    const generator = buildGenerator(program, { required: true, ignoreErrors: true })
-    if (generator) {
-      success()
-      return generator.getSchemaForSymbol.bind(generator)
-    }
-
-    fail()
-    throw new Error(
-      'Could not get types from your typescript project. Your typescript project likely has compilation errors.',
+    const { success } = this.reportOperation('build a schema generator')
+    const config: Config = { skipTypeCheck: true, expose: 'all' }
+    const generator = new TsSchemaGenerator(
+      program,
+      createParser(program, config),
+      createFormatter(config),
+      config,
     )
+
+    success()
+    return generator.createSchema.bind(generator)
   }
 }

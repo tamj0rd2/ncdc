@@ -381,7 +381,7 @@ describe('ncdc serve', () => {
         configWrapper.deleteType('Book')
 
         await serve.waitForOutput('An error occurred while validating one of your configured fixtures:')
-        await serve.waitForOutput('type Book not found')
+        await serve.waitForOutput('Could not find type: Book')
       })
     })
   })

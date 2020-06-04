@@ -4,7 +4,7 @@ import { TestConfig } from './config'
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
 
-export const createHttpClient = (baseUrl: string): FetchResource => async ({
+export const createHttpClient = (baseUrl: string, timeout?: number): FetchResource => async ({
   request,
   response,
 }): Promise<LoaderResponse> => {
@@ -15,6 +15,7 @@ export const createHttpClient = (baseUrl: string): FetchResource => async ({
     method: request.method,
     body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
     headers: request.headers,
+    timeout,
   })
 
   if (request.headers?.['accept']) {

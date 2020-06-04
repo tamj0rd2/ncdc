@@ -1,11 +1,10 @@
 import { mockFn, randomString, mocked, mockObj, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
-import { createHandler, TestArgs, GetTestDeps, CreateTypeValidator } from './handler'
+import { createHandler, TestArgs, GetTestDeps, CreateTypeValidator, RunTests } from './handler'
 import { resolve } from 'path'
 import { existsSync } from 'fs'
 import { TypeValidator } from '~validation'
 import { NcdcLogger } from '~logger'
-import { RunTests } from './test'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { ConfigBuilder } from '~config/types'
@@ -43,7 +42,12 @@ const handler = createHandler(getTestDeps)
 
 describe('cli arg validation', () => {
   it('returns an error if a configPath is not given', async () => {
-    const args: TestArgs = { force: false, tsconfigPath: randomString(), verbose: false }
+    const args: TestArgs = {
+      force: false,
+      tsconfigPath: randomString(),
+      verbose: false,
+      timeout: randomNumber(),
+    }
 
     await handler(args)
 
@@ -56,6 +60,7 @@ describe('cli arg validation', () => {
       tsconfigPath: randomString(),
       configPath: randomString(),
       verbose: false,
+      timeout: randomNumber(),
     }
 
     await handler(args)
@@ -71,6 +76,7 @@ const args: TestArgs = {
   baseURL: randomString('baseURL'),
   schemaPath: randomString('schema-path'),
   verbose: false,
+  timeout: randomNumber(),
 }
 
 it('calls loadConfig with the correct args', async () => {
@@ -130,13 +136,7 @@ it('calls runTests with the correct arguments', async () => {
   await handler(args)
 
   expect(mockedHandleError).not.toBeCalled()
-  expect(mockedRunTests).toBeCalledWith(
-    args.baseURL,
-    expect.objectContaining({}),
-    configs,
-    expect.any(Function),
-    mockedLogger,
-  )
+  expect(mockedRunTests).toBeCalledWith(args.baseURL, configs, expect.any(Function))
 })
 
 it('only creates a type validator once for running the tests', async () => {
@@ -145,7 +145,7 @@ it('only creates a type validator once for running the tests', async () => {
 
   await handler(args)
 
-  const getTypeValidatorFn = mockedRunTests.mock.calls[0][3]
+  const getTypeValidatorFn = mockedRunTests.mock.calls[0][2]
   const timesToCall = randomNumber(1, 10)
   for (let i = 0; i < timesToCall; i++) {
     getTypeValidatorFn()

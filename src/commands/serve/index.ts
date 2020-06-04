@@ -32,7 +32,7 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export default function createServeCommand(getCommonDeps: GetRootDeps) {
   const getServeDeps: GetServeDeps = (args) => {
-    const { handleError, logger, reportOperation } = getCommonDeps(args.verbose)
+    const { handleError, logger, reportMetric: reportMetric } = getCommonDeps(args.verbose)
 
     return {
       handleError,
@@ -45,7 +45,7 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
 
         if (args.schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
         if (!args.watch) {
-          const generator = new SchemaGenerator(args.tsconfigPath, args.force, reportOperation)
+          const generator = new SchemaGenerator(args.tsconfigPath, args.force, reportMetric)
           generator.init()
           return new TypeValidator(ajv, generator)
         }
@@ -53,7 +53,7 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
         const watcher = new WatchingSchemaGenerator(
           args.tsconfigPath,
           logger,
-          reportOperation,
+          reportMetric,
           onReload,
           onCompilationFailure,
         )

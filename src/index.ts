@@ -9,7 +9,7 @@ export default function run(): void {
   const getCommonDeps: GetRootDeps = (verbose) => {
     const logger = createNcdcLogger(verbose)
     const metrics = new Metrics(logger)
-    const { success, fail } = metrics.reportOperation('Program')
+    const { success, fail } = metrics.reportMetric('Program')
 
     process.on('exit', (code) => {
       code === 0 ? success() : fail()
@@ -17,7 +17,7 @@ export default function run(): void {
 
     return {
       logger,
-      reportOperation: metrics.reportOperation.bind(metrics),
+      reportMetric: metrics.reportMetric.bind(metrics),
       handleError: ({ message }) => {
         logger.error(message)
         process.exit(1)

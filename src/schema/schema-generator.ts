@@ -1,7 +1,7 @@
 import { SchemaRetriever } from './types'
 import ts from 'typescript'
 import { readTsConfig, formatErrorDiagnostic } from './ts-helpers'
-import { ReportOperation } from '~commands/shared'
+import { ReportMetric } from '~commands/shared'
 import {
   SchemaGenerator as TsSchemaGenerator,
   createParser,
@@ -20,7 +20,7 @@ export class SchemaGenerator implements SchemaRetriever {
   constructor(
     private readonly pathOrProgram: string | ts.Program,
     private readonly skipTypeChecking: boolean,
-    private readonly reportOperation: ReportOperation,
+    private readonly reportMetric: ReportMetric,
   ) {}
 
   public init(): void {
@@ -29,7 +29,7 @@ export class SchemaGenerator implements SchemaRetriever {
   }
 
   public load = async (symbolName: string): Promise<JSONSchema7> => {
-    const { success, fail } = this.reportOperation(`load schema for ${symbolName}`)
+    const { success, fail } = this.reportMetric(`load schema for ${symbolName}`)
     const cachedSchema = this.cache.get(symbolName)
     if (cachedSchema) {
       success()
@@ -58,7 +58,7 @@ export class SchemaGenerator implements SchemaRetriever {
 
   private getTsProgram(): ts.Program {
     if (typeof this.pathOrProgram !== 'string') return this.pathOrProgram
-    const { success, fail } = this.reportOperation('build a typescript program')
+    const { success, fail } = this.reportMetric('build a typescript program')
     const configFile = readTsConfig(this.pathOrProgram)
     const program = ts.createProgram({ rootNames: configFile.fileNames, options: configFile.options })
 
@@ -75,7 +75,7 @@ export class SchemaGenerator implements SchemaRetriever {
   }
 
   private createGenerator(program: ts.Program): JsonSchemaGenerator {
-    const { success } = this.reportOperation('build a schema generator')
+    const { success } = this.reportMetric('build a schema generator')
     const config: Config = { skipTypeCheck: true, expose: 'all', additionalProperties: true }
     const generator = new TsSchemaGenerator(
       program,

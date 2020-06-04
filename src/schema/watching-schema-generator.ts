@@ -5,7 +5,7 @@ import ts from 'typescript'
 import { Definition } from 'typescript-json-schema'
 import { formatErrorDiagnostic, readTsConfig } from './ts-helpers'
 import { NcdcLogger } from '~logger'
-import { ReportOperation } from '~commands/shared'
+import { ReportMetric } from '~commands/shared'
 
 export type CompilerHook = () => Promise<void> | void
 
@@ -24,7 +24,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
   public constructor(
     tsconfigPath: string,
     private readonly logger: NcdcLogger,
-    private readonly reportOperation: ReportOperation,
+    private readonly reportMetric: ReportMetric,
     private readonly onReload?: CompilerHook,
     private readonly onCompilationFailure?: CompilerHook,
   ) {
@@ -33,7 +33,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
 
   public init(): void {
     if (this.initiated) return
-    const { success } = this.reportOperation('Initiating typescript watcher')
+    const { success } = this.reportMetric('Initiating typescript watcher')
     this.initiated = true
 
     const configFile = readTsConfig(this.tsconfigPath)
@@ -55,7 +55,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
       if (this.programHasErrors) return this.onCompilationFailure?.()
 
       success()
-      this.schemaRetriever = new SchemaGenerator(watcherProgram.getProgram(), false, this.reportOperation)
+      this.schemaRetriever = new SchemaGenerator(watcherProgram.getProgram(), false, this.reportMetric)
       this.schemaRetriever.init?.()
       if (!isFirstFullRun) return this.onReload?.()
     }

@@ -11,7 +11,7 @@ describe('metrics', () => {
   it('logs the correct message at the start and end of an operation', () => {
     const operation = randomString('operation')
 
-    const { success, fail } = new Metrics(dummyLogger).reportOperation(operation)
+    const { success, fail } = new Metrics(dummyLogger).reportMetric(operation)
     success()
     fail()
 

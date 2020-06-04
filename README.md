@@ -174,6 +174,11 @@ Examples:
                                             match the configured parameters.
 ```
 
+You can use the `-f` or `--force` flag to skip typechecking your source files.
+This speeds up the generate command, however, you should still use another tool
+e.g `tsc` to typecheck your project. If you try to use broken types with ncdc,
+ncdc will probably behave unexpectedly.
+
 ### Serve
 
 Serves mock API endpoints defined in config.yml

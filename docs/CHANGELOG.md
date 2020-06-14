@@ -1,3 +1,10 @@
+# [0.9.0](https://github.com/tamj0rd2/ncdc/compare/v0.8.0...v0.9.0) (2020-06-14)
+
+
+### Features
+
+* show the invalid value when enum validation fails ([008a9eb](https://github.com/tamj0rd2/ncdc/commit/008a9eb0190bdd6bc5be0190191ce4378c03e67b)), closes [#261](https://github.com/tamj0rd2/ncdc/issues/261)
+
 # [0.9.0-dev.1](https://github.com/tamj0rd2/ncdc/compare/v0.8.0...v0.9.0-dev.1) (2020-06-14)
 
 

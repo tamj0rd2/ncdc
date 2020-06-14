@@ -67,7 +67,9 @@ describe('error messages', () => {
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)
-    expect(strip(result.errors[0])).toBe('<root>.hello should be equal to one of the allowed values: 1,5,7')
+    expect(strip(result.errors[0])).toBe(
+      '<root>.hello should be equal to one of the allowed values 1,5,7 but received 123',
+    )
   })
 
   test('object enum', async () => {
@@ -84,6 +86,6 @@ describe('error messages', () => {
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)
-    expect(strip(result.errors[0])).toContain('<root>.hello should be equal to one of the allowed values: ')
+    expect(strip(result.errors[0])).toContain('<root>.hello should be equal to one of the allowed values')
   })
 })

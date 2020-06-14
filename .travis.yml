@@ -2,8 +2,11 @@ language: minimal
 branches:
   only:
     - master
+    - next
+    - next-major
     - beta
     - alpha
+    - dev
 
 jobs:
   include:
@@ -24,5 +27,8 @@ jobs:
         on:
           branch:
             - master
+            - next
+            - next-major
             - beta
             - alpha
+            - dev

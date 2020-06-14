@@ -28,7 +28,9 @@ export default class TypeValidator {
       errors: validator.errors.map((e) => {
         const baseMessage = `${blue.bold('<root>' + e.dataPath)} ${e.message?.replace(/'(.*)'/, blue('$&'))}`
         if (e.keyword === 'enum' && 'allowedValues' in e.params) {
-          return `${baseMessage}: ${inspect(e.params.allowedValues, false, 1, true)}`
+          return `${baseMessage} ${this.formatData(e.params.allowedValues)} but received ${this.formatData(
+            e.data,
+          )}`
         }
 
         if (e.keyword === 'type') {
@@ -38,5 +40,9 @@ export default class TypeValidator {
         return baseMessage
       }),
     }
+  }
+
+  private formatData(data: Data): string {
+    return inspect(data, false, 1, true)
   }
 }

@@ -326,3 +326,7 @@ integration-tests:
       # the mapping of this volume depends on your own file structure
       - ./wait-for.sh:/usr/src/wait-for.sh
 ```
+
+## Development
+
+A note on releasing - [pre-release branches should be merged with no-ff](https://github.com/semantic-release/git#message)

@@ -13,6 +13,7 @@ export interface TestArgs {
   force: boolean
   verbose: boolean
   timeout?: number
+  rateLimit?: number
 }
 
 export type GetTestDeps = (args: TestArgs) => TestDeps

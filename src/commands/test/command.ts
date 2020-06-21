@@ -21,6 +21,10 @@ const builder = (yargs: Argv): Argv<TestArgs> =>
       description: 'req/res timeout in ms',
       type: 'number',
     })
+    .option('rateLimit', {
+      description: 'minimum time in ms to wait between sending each request',
+      type: 'number',
+    })
     .option(opts.SCHEMA_PATH, opts.SCHEMA_PATH_OPTS)
     .option(opts.TSCONFIG_PATH, opts.TSCONFIG_PATH_OPTS)
     .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
@@ -38,7 +42,7 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
       runTests: (baseUrl, configs, getTypeValidator) =>
         runTests(
           baseUrl,
-          createHttpClient(baseUrl, args.timeout),
+          createHttpClient(baseUrl, args.timeout, args.rateLimit),
           configs,
           getTypeValidator,
           logger,

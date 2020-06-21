@@ -1,3 +1,10 @@
+# [0.10.0](https://github.com/tamj0rd2/ncdc/compare/v0.9.0...v0.10.0) (2020-06-21)
+
+
+### Features
+
+* **test mode:** add an optional --rateLimit flag ([3559d44](https://github.com/tamj0rd2/ncdc/commit/3559d449b3c396de31e33e4bc1e6385b3b93baba)), closes [#268](https://github.com/tamj0rd2/ncdc/issues/268)
+
 # [0.9.0](https://github.com/tamj0rd2/ncdc/compare/v0.8.0...v0.9.0) (2020-06-14)
 
 

@@ -32,6 +32,22 @@ describe('ncdc test', () => {
     expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
   })
 
+  it('does not break when using a rate limit', async () => {
+    realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, 'eat my shorts!').start()
+    new ConfigWrapper().addConfig(
+      new ConfigBuilder()
+        .withName('Shorts')
+        .withEndpoints('/api/resource')
+        .withResponseHeaders({ 'content-type': 'text/plain' })
+        .build(),
+    )
+
+    const result = await runTestCommand('--rateLimit 100')
+
+    expect(result.success).toBeTruthy()
+    expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
+  })
+
   it('passes even if a request or response has additional properties', async () => {
     realServer = new RealServerBuilder()
       .withPostEndpoint('/api/resource', 200, { joy: 'to', the: 'world' })

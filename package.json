@@ -94,6 +94,7 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "ajv": "^6.10.2",
+    "bottleneck": "^2.19.5",
     "chalk": "^4.0.0",
     "chokidar": "^3.4.0",
     "dot-object": "^2.1.3",

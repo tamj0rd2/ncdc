@@ -6,7 +6,6 @@ branches:
     - next-major
     - beta
     - alpha
-    - dev
 
 jobs:
   include:
@@ -31,4 +30,3 @@ jobs:
             - next-major
             - beta
             - alpha
-            - dev

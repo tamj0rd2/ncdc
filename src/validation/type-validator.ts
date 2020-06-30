@@ -34,7 +34,7 @@ export default class TypeValidator {
         }
 
         if (e.keyword === 'type') {
-          return `${baseMessage} but got ${typeof e.data}`
+          return `${baseMessage} but got ${e.data === null ? e.data : typeof e.data}`
         }
 
         return baseMessage

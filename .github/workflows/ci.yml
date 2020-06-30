@@ -15,21 +15,25 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build deps
         run: docker-compose build release
-      - name: Get codecov env
-        run: echo "::set-env name=CI_ENV::$(eval bash <(curl -s https://codecov.io/env))"
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Linting
         run: docker-compose run lint
       - name: Typecheck
         run: docker-compose run typecheck
-      - name: Coverage
-        run: docker-compose run $CI_ENV cover
+
+      - name: Tests
+        run: docker-compose run cover
+      - name: Copy coverage reports
+        run: docker cp $(docker-compose ps -qa cover):/usr/src/app/coverage ./coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
 
       - name: Release
         if: ${{ github.event_name != 'pull_request' }}
-        run: docker-compose run $CI_ENV release
+        run: docker-compose run release
         env:
           GITHUB_TOKEN: ${{ secrets.NCDC_GITHUB_RELEASE_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

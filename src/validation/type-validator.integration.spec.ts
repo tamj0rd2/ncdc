@@ -53,6 +53,23 @@ describe('error messages', () => {
     expect(strip(result.errors[0])).toBe(`<root>.hello should be string but got number`)
   })
 
+  test('null instead of the correct type', async () => {
+    mockSchemaRetriever.load.mockResolvedValue({
+      type: 'object',
+      properties: {
+        hello: { type: 'string' },
+      },
+      required: ['hello'],
+    })
+    const data = { hello: null }
+
+    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+
+    expect(result.success).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(strip(result.errors[0])).toBe(`<root>.hello should be string but got null`)
+  })
+
   test('enum', async () => {
     mockSchemaRetriever.load.mockResolvedValue({
       type: 'object',

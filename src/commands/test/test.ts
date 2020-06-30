@@ -18,8 +18,6 @@ export const runTests = async (
   logger: NcdcLogger,
   reportMetric: ReportMetric,
 ): Promise<'Success' | 'Failure'> => {
-  // TODO: now I can use the full endpoint if I want to, since baseurl is still currently an argument
-
   const testTasks2 = configs.map(
     async (config): Promise<{ success: boolean; message: string }> => {
       const failedLine = red.bold(`FAILED: ${config.name}`)

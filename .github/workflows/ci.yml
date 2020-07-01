@@ -24,11 +24,13 @@ jobs:
       - name: Tests
         run: docker-compose run cover
       - name: Copy coverage reports
+        if: success()
         run: docker cp $(docker-compose ps -qa cover):/usr/src/app/coverage ./coverage
-
       - name: Upload coverage
+        if: success()
         uses: codecov/codecov-action@v1
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
 
       - name: Release

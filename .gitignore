@@ -8,6 +8,7 @@ json-schema
 .DS_Store
 icon.png
 .eslintcache
+codecov.sh
 
 acceptance-tests/test-environment/**/*
 !acceptance-tests/test-environment/tsconfig.json

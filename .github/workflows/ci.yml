@@ -26,7 +26,7 @@ jobs:
       - name: Copy coverage reports
         run: docker cp $(docker-compose ps -qa cover):/usr/src/app/coverage ./coverage
       - name: Upload coverage
-        run: bash <(curl -s https://codecov.io/bash) -Z
+        run: ./upload-coverage.sh
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

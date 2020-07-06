@@ -1,3 +1,10 @@
+## [0.10.1](https://github.com/tamj0rd2/ncdc/compare/v0.10.0...v0.10.1) (2020-07-06)
+
+
+### Bug Fixes
+
+* **generator:** fix failure when typescript composite flag is true ([90b6a93](https://github.com/tamj0rd2/ncdc/commit/90b6a939b32e07baf04a3fff85fc8ee6246cd2f3)), closes [#313](https://github.com/tamj0rd2/ncdc/issues/313)
+
 # [0.10.0](https://github.com/tamj0rd2/ncdc/compare/v0.9.0...v0.10.0) (2020-06-21)
 
 

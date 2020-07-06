@@ -2,7 +2,7 @@
 
 # NCDC
 
-![Build Status](https://github.com/tamj0rd2/ncdc/workflows/CI/badge.svg)
+[![Build Status](https://travis-ci.com/tamj0rd2/ncdc.svg?branch=master)](https://travis-ci.com/tamj0rd2/ncdc)
 [![npm version](https://badge.fury.io/js/ncdc.svg)](https://badge.fury.io/js/ncdc)
 [![codecov](https://codecov.io/gh/tamj0rd2/ncdc/branch/master/graph/badge.svg)](https://codecov.io/gh/tamj0rd2/ncdc)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)

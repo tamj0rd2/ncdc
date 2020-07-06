@@ -1,0 +1,28 @@
+language: minimal
+branches:
+  only:
+    - master
+    - beta
+    - alpha
+
+jobs:
+  include:
+    - stage: tests
+      before_script:
+        - docker-compose build release
+        - ci_env=`bash <(curl -s https://codecov.io/env)`
+      script:
+        - docker-compose run lint
+        - docker-compose run typecheck
+        - docker-compose run $ci_env cover
+      deploy:
+        install: skip
+        provider: script
+        skip_cleanup: true
+        script:
+          - docker-compose run $ci_env release
+        on:
+          branch:
+            - master
+            - beta
+            - alpha

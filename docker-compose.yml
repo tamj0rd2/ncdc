@@ -11,27 +11,3 @@ services:
   cover:
     build: .
     command: npm run cover
-
-  release:
-    build: .
-    environment:
-      - GITHUB_TOKEN
-      - NPM_TOKEN
-    command: npx semantic-release
-
-  watch-acceptance:
-    build:
-      context: .
-      target: base
-    tty: true
-    command: yarn test --watchAll
-    environment:
-      - TEST_MODE=acceptance
-    volumes:
-      - ./:/usr/src/app
-
-  acceptance:
-    build: .
-    command: bash -c 'yarn compile && yarn test'
-    environment:
-      - TEST_MODE=acceptance

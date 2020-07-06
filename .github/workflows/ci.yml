@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build deps
-        run: docker-compose build release
+        run: docker-compose build cover
 
       - name: Linting
         run: docker-compose run lint
@@ -24,15 +24,22 @@ jobs:
       - name: Tests
         run: docker-compose run cover
       - name: Copy coverage reports
-        run: docker cp $(docker-compose ps -qa cover):/usr/src/app/coverage ./coverage
+        run: npm run clean && docker cp $(docker-compose ps -qa cover):/usr/src/app/coverage ./coverage
       - name: Upload coverage
         run: ./upload-coverage.sh $GITHUB_EVENT_PATH
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Install node
+        if: ${{ github.event_name != 'pull_request' }}
+        shell: bash -l {0}
+        run: nvm install && npm install
+      - name: Copy lib
+        if: ${{ github.event_name != 'pull_request' }}
+        run: npm run clean && docker cp $(docker-compose ps -qa cover):/usr/src/app/lib ./lib
       - name: Release
         if: ${{ github.event_name != 'pull_request' }}
-        run: docker-compose run release
+        run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.NCDC_GITHUB_RELEASE_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -37,10 +37,10 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     this.initiated = true
 
     const configFile = readTsConfig(this.tsconfigPath)
-    const incrementalEnabled = configFile.options.incremental
+    const noEmitAllowed = configFile.options.incremental || configFile.options.composite
     const watcherHost = ts.createWatchCompilerHost(
       this.tsconfigPath,
-      { noEmit: !incrementalEnabled ?? true },
+      { noEmit: !noEmitAllowed ?? true },
       ts.sys,
       ts.createEmitAndSemanticDiagnosticsBuilderProgram,
       this.reportDiagnostic,

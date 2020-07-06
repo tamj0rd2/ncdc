@@ -56,4 +56,21 @@ describe('load', () => {
 
     expect(mockTsHelpers.readTsConfig).toBeCalledTimes(1)
   })
+
+  it.each([
+    [{ incremental: false, composite: false }, true],
+    [{ incremental: true, composite: true }, false],
+    [{ incremental: false, composite: true }, false],
+    [{ incremental: true, composite: false }, false],
+  ])('creates a watch compiler host with the correct config overrides when %o', (options, expected) => {
+    mockTsHelpers.readTsConfig.mockReturnValue(
+      mockObj<ts.ParsedCommandLine>({ options }),
+    )
+
+    new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric).init()
+
+    expect(mockTypescript.createWatchCompilerHost.mock.calls[0][1]).toMatchObject({
+      noEmit: expected,
+    })
+  })
 })

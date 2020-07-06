@@ -32,7 +32,7 @@ jobs:
 
       - name: Release
         if: ${{ github.event_name != 'pull_request' }}
-        run: docker-compose run release
+        run: docker-compose run "$(bash <(curl -s https://codecov.io/env))" release
         env:
           GITHUB_TOKEN: ${{ secrets.NCDC_GITHUB_RELEASE_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

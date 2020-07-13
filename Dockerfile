@@ -8,8 +8,6 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 ENV HUSKY_SKIP_INSTALL=true
-
-FROM base as preinstall
 COPY package.json package-lock.json ./
 
 RUN npm ci

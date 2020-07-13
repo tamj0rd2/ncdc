@@ -9,6 +9,7 @@ json-schema
 icon.png
 .eslintcache
 codecov.sh
+.nyc_output
 
 acceptance-tests/test-environment/**/*
 !acceptance-tests/test-environment/tsconfig.json

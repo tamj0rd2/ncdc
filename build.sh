@@ -32,13 +32,5 @@ print 'compiling'
 npm run compile
 
 # reminder than --verbose can be super useful for debugging
-print 'testing and coverage'
-npm run cover
-
-if [[ $CODECOV_TOKEN ]];
-then
-  print 'uploading coverage'
-  bash <(curl -s https://codecov.io/bash)
-fi
-
-# TODO: update node version
+print 'tests'
+npm test

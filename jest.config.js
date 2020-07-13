@@ -10,14 +10,11 @@ const commonSettings = {
   },
   collectCoverageFrom: [
     '<rootDir>/src/**/*.ts',
+    '!<rootDir>/src/test-helpers.ts',
+    '!<rootDir>/src/metrics.ts',
     '!**/*.spec.ts',
     '!**/*.d.ts',
-    '!acceptance-tests/**',
-    '!**/node_modules/**',
-    '!**/coverage/**',
-    '!**/lib/**',
-    '!**/bin/**',
-    '!**/types.ts'
+    '!**/types.ts',
   ],
   testEnvironment: 'node',
   watchPathIgnorePatterns: [
@@ -47,7 +44,7 @@ const unitTestSettings = {
   ],
   automock: true,
   coverageDirectory: './coverage/unit-tests',
-  coverageReporters: ["text", "text-summary", "lcov"],
+  coverageReporters: ["lcov", "text", "text-summary"],
 }
 
 
@@ -58,7 +55,7 @@ const integrationTestSettings = {
     '**/*.integration.spec.ts'
   ],
   coverageDirectory: './coverage/integration-tests',
-  coverageReporters: ["text", "text-summary", "lcov"],
+  coverageReporters: ["lcov", "text", "text-summary"],
 }
 
 const acceptanceTestSettings = {

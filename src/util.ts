@@ -1,8 +1,8 @@
+const isObject = (x: unknown): x is object => typeof x === 'object' && !!x
+
 export const isDeeplyEqual = (expected: unknown, actual: unknown): boolean => {
-  if (typeof expected === 'object') {
-    if (!expected) return expected === actual
-    if (typeof actual !== 'object') return false
-    if (!actual) return false
+  if (isObject(expected)) {
+    if (!isObject(actual)) return false
 
     for (const key in expected) {
       const expectedValue = expected[key as keyof typeof expected]

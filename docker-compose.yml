@@ -22,7 +22,7 @@ services:
 
   acceptance-tests:
     build: .
-    command: npx nyc --report-dir ./coverage/acceptance-tests yarn test:acceptance --coverage
+    command: ./node_modules/.bin/nyc --report-dir ./coverage/acceptance-tests yarn test:acceptance --coverage
     volumes:
       - ./coverage/acceptance-tests:/usr/src/app/coverage/acceptance-tests
 

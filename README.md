@@ -37,6 +37,7 @@ real endpoints are all consistent with eachother.
   - [Generate](#generate)
 - [Response content negotiation](#response-content-negotiation)
 - [Docker use case](#docker-use-case)
+- [How to contribute](./docs/CONTRIBUTING.md)
 
 ## Getting started
 
@@ -326,7 +327,3 @@ integration-tests:
       # the mapping of this volume depends on your own file structure
       - ./wait-for.sh:/usr/src/wait-for.sh
 ```
-
-## Development
-
-A note on releasing - [pre-release branches should be merged with no-ff](https://github.com/semantic-release/git#message)

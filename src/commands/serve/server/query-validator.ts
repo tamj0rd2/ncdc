@@ -4,6 +4,12 @@ import { Query } from 'express-serve-static-core'
 
 const isStringArray = (x: unknown): x is string[] => Array.isArray(x) && typeof x[0] === 'string'
 
+const isParsedQs = (x: unknown): x is qs.ParsedQs => {
+  if (typeof x !== 'object') return false
+  if (Array.isArray(x)) return false
+  return !!x
+}
+
 const compareQuery = (expected: Query[number], actual: Query[number]): boolean => {
   if (typeof expected === 'string') {
     if (typeof actual === 'string') {
@@ -26,13 +32,7 @@ const compareQuery = (expected: Query[number], actual: Query[number]): boolean =
     return false
   }
 
-  if (Array.isArray(expected)) {
-    return false
-  }
-
-  if (typeof expected === 'object') {
-    if (!actual || Array.isArray(actual) || typeof actual === 'string') return false
-
+  if (isParsedQs(expected) && isParsedQs(actual)) {
     for (const key in expected) {
       const expectedValue = expected[key]
       const actualValue = actual[key]
@@ -51,8 +51,6 @@ const validateQuery = (endpoint: string, actualQuery: Query): boolean => {
   if (!configuredQueryString) return true
 
   const expectedQuery = qs.parse(configuredQueryString)
-  if (!expectedQuery) return true
-
   return compareQuery(expectedQuery, actualQuery)
 }
 

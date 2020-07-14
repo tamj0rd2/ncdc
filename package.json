@@ -14,9 +14,9 @@
     "typecheck": "tsc && tsc -p ./acceptance-tests/tsconfig.json",
     "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "test": "jest --runInBand --bail",
-    "test:unit": "TEST_MODE=unit npm run test -- ",
-    "test:acceptance": "TEST_MODE=acceptance npm run test -- ",
-    "cover": "nyc npm run test -- --coverage --detectOpenHandles",
+    "test:unit": "TEST_MODE=unit npm run test --",
+    "test:integration": "TEST_MODE=integration npm run test --",
+    "test:acceptance": "TEST_MODE=acceptance npm run test --",
     "lint:base": "eslint --color --ignore-path .gitignore --cache",
     "lint": "npm run lint:base -- '**/*.ts' --fix",
     "semantic-release": "semantic-release"

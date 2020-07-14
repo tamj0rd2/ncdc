@@ -10,17 +10,13 @@ const commonSettings = {
   },
   collectCoverageFrom: [
     '<rootDir>/src/**/*.ts',
+    '!<rootDir>/src/test-helpers.ts',
+    '!<rootDir>/src/metrics.ts',
     '!**/*.spec.ts',
     '!**/*.d.ts',
-    '!acceptance-tests/**',
-    '!**/node_modules/**',
-    '!**/coverage/**',
-    '!**/lib/**',
-    '!**/bin/**',
-    '!**/types.ts'
+    '!**/types.ts',
   ],
   testEnvironment: 'node',
-  coverageReporters: ["json"],
   watchPathIgnorePatterns: [
     '<rootDir>\/acceptance-tests\/test-environment.*',
     '<rootDir>\/lib.*',
@@ -47,6 +43,8 @@ const unitTestSettings = {
     require.resolve('dot-object'),
   ],
   automock: true,
+  coverageDirectory: './coverage/unit-tests',
+  coverageReporters: ["lcov", "text", "text-summary"],
 }
 
 
@@ -55,7 +53,9 @@ const integrationTestSettings = {
   displayName: 'Integration',
   testMatch: [
     '**/*.integration.spec.ts'
-  ]
+  ],
+  coverageDirectory: './coverage/integration-tests',
+  coverageReporters: ["lcov", "text", "text-summary"],
 }
 
 const acceptanceTestSettings = {
@@ -64,8 +64,10 @@ const acceptanceTestSettings = {
   testMatch: [
     '<rootDir>/acceptance-tests/**/*.spec.ts'
   ],
+  coverageDirectory: './coverage/acceptance-tests',
+  // using nyc to report the coverage instead
+  coverageReporters: ["none"],
 }
-
 
 switch (process.env.TEST_MODE) {
   case 'unit':

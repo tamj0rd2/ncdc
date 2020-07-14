@@ -2,15 +2,29 @@ version: "3.7"
 services:
   lint:
     build: .
-    command: npm run lint
+    command: yarn lint
 
   typecheck:
     build: .
-    command: npm run typecheck
+    command: yarn typecheck
 
-  cover:
+  unit-tests:
     build: .
-    command: bash -c 'npm run cover && bash <(curl -s https://codecov.io/bash) -Z'
+    command: yarn test:unit --coverage
+    volumes:
+      - ./coverage/unit-tests:/usr/src/app/coverage/unit-tests
+
+  integration-tests:
+    build: .
+    command: yarn test:integration --coverage
+    volumes:
+      - ./coverage/integration-tests:/usr/src/app/coverage/integration-tests
+
+  acceptance-tests:
+    build: .
+    command: ./node_modules/.bin/nyc --report-dir ./coverage/acceptance-tests yarn test:acceptance --coverage
+    volumes:
+      - ./coverage/acceptance-tests:/usr/src/app/coverage/acceptance-tests
 
   release:
     build: .

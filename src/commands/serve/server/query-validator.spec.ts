@@ -1,11 +1,12 @@
 import validateQuery from './query-validator'
 import { randomString } from '~test-helpers'
+import qs from 'qs'
 
 jest.unmock('./query-validator')
 jest.unmock('qs')
 jest.unmock('url')
 
-it('returns true if the query string contains a key value pair', () => {
+it('returns true if the query string matches', () => {
   const endpoint = '/api/resource?greetings=greeting1&hello=world&greetings=greeting2'
   const requestQuery = { hello: 'world', greetings: ['greeting1', 'greeting2'] }
 
@@ -32,7 +33,7 @@ it('is false if there are missing keys', () => {
   expect(isValid).toBe(false)
 })
 
-it('is false if there are missing array keys', () => {
+it('is false if there are missing array items', () => {
   const endpoint = '/api/resource?greetings=greeting1&greetings=greeting2'
   const requestQuery = { greetings: 'greeting2' }
 
@@ -90,6 +91,38 @@ it('returns false if an object does not match deeply', () => {
   const isValid = validateQuery(endpoint, requestQuery)
 
   expect(isValid).toBe(false)
+})
+
+// I'm not personally using this, so not supporting it yet
+it('returns false for non-string arrays', () => {
+  const queryString = qs.stringify({ items: [{ id: 1 }] }, { encode: false })
+  const endpoint = `/api/resource?${queryString}`
+  const query = { hello: randomString() }
+
+  expect(validateQuery(endpoint, query)).toBe(false)
+})
+
+describe('comparing objects', () => {
+  it('returns true if objects match', () => {
+    const endpoint = `/api/resource?hello[name]=tam`
+    const query = { hello: { name: 'tam' } }
+
+    expect(validateQuery(endpoint, query)).toBe(true)
+  })
+
+  it('returns false if objects do not match', () => {
+    const endpoint = `/api/resource?hello[name]=tam`
+    const query = { hello: { name: 'flam' } }
+
+    expect(validateQuery(endpoint, query)).toBe(false)
+  })
+
+  it('returns false if object is missing keys', () => {
+    const endpoint = `/api/resource?hello[name]=tam`
+    const query = {}
+
+    expect(validateQuery(endpoint, query)).toBe(false)
+  })
 })
 
 describe('wildcard queries', () => {

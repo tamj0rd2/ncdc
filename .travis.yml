@@ -14,7 +14,10 @@ jobs:
       script:
         - docker-compose run lint
         - docker-compose run typecheck
-        - docker-compose run $ci_env cover
+        - docker-compose run unit-tests
+        - docker-compose run integration-tests
+        - docker-compose run acceptance-tests
+        - bash <(curl -s https://codecov.io/bash) -Z
       deploy:
         install: skip
         provider: script

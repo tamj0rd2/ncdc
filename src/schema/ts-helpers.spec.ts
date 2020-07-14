@@ -86,4 +86,17 @@ describe('read ts config', () => {
 
     expect(result).toEqual({ fileNames: ['toad'], options: { ...configFile.options, noEmit } })
   })
+
+  it.each([
+    [true, false],
+    [false, true],
+  ])('returns the correct config options when composite flag is %s', (composite, noEmit) => {
+    mockedTs.readConfigFile.mockReturnValue({ config: {} })
+    const configFile = mockObj<ts.ParsedCommandLine>({ options: { composite }, fileNames: ['toad'] })
+    mockedTs.parseJsonConfigFileContent.mockReturnValue(configFile)
+
+    const result = readTsConfig(tsconfigPath)
+
+    expect(result).toEqual({ fileNames: ['toad'], options: { ...configFile.options, noEmit } })
+  })
 })

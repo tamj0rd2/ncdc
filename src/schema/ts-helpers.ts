@@ -21,6 +21,6 @@ export function readTsConfig(path: string): ts.ParsedCommandLine {
     {},
     tsconfigPath,
   )
-  configFile.options.noEmit = !configFile.options.incremental ?? true
+  configFile.options.noEmit = !(configFile.options.incremental || configFile.options.composite)
   return configFile
 }

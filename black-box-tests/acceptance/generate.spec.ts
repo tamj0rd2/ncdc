@@ -1,7 +1,7 @@
 import strip from 'strip-ansi'
-import { runGenerateCommand } from './wrappers/generate-wrapper'
-import { ConfigWrapper, TEST_ENV, TYPES_FILE } from './wrappers/config-wrapper'
-import { ConfigBuilder } from './config-builder'
+import { runGenerateCommand } from '~shared/generate-wrapper'
+import { ConfigWrapper, TEST_ENV, TYPES_FILE } from '~shared/config-wrapper'
+import { ConfigBuilder } from '~shared/config-builder'
 import { writeFileSync } from 'fs'
 
 jest.useRealTimers()

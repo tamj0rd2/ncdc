@@ -5,9 +5,6 @@ const commonSettings = {
     '<rootDir>/lib/',
     '<rootDir>/node_modules/',
   ],
-  moduleNameMapper: {
-    '~(.*)$': '<rootDir>/src/$1'
-  },
   collectCoverageFrom: [
     '<rootDir>/src/**/*.ts',
     '!<rootDir>/src/test-helpers.ts',
@@ -24,8 +21,15 @@ const commonSettings = {
   ]
 }
 
+const lowLevelTestSettings = {
+  moduleNameMapper: {
+    '~(.*)$': '<rootDir>/src/$1'
+  },
+}
+
 const unitTestSettings = {
   ...commonSettings,
+  ...lowLevelTestSettings,
   displayName: 'Unit',
   testMatch: [
     '<rootDir>/src/**/*.spec.ts',
@@ -50,16 +54,27 @@ const unitTestSettings = {
 
 const integrationTestSettings = {
   ...commonSettings,
+  ...lowLevelTestSettings,
   displayName: 'Integration',
   testMatch: [
     '**/*.integration.spec.ts'
   ],
   coverageDirectory: './coverage/integration-tests',
   coverageReporters: ["lcov", "text", "text-summary"],
+  moduleNameMapper: {
+    '~(.*)$': '<rootDir>/src/$1'
+  },
+}
+
+const blackBoxTestSettings = {
+  moduleNameMapper: {
+    '~shared(.*)$': '<rootDir>/black-box-tests/shared/$1'
+  },
 }
 
 const acceptanceTestSettings = {
   ...commonSettings,
+  ...blackBoxTestSettings,
   displayName: 'Acceptance',
   testMatch: [
     '<rootDir>/black-box-tests/acceptance/**/*.spec.ts'

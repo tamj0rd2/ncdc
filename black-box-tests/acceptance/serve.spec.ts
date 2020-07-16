@@ -1,6 +1,6 @@
 import { appendFileSync } from 'fs'
-import { ConfigWrapper, FIXTURES_FOLDER, JSON_SCHEMAS_FOLDER } from './wrappers/config-wrapper'
-import { ConfigBuilder } from './config-builder'
+import { ConfigWrapper, FIXTURES_FOLDER, JSON_SCHEMAS_FOLDER } from '~shared/config-wrapper'
+import { ConfigBuilder } from '~shared/config-builder'
 import {
   fetch,
   CleanupTask,
@@ -8,7 +8,7 @@ import {
   ServeResult,
   MESSAGE_RESTARTING,
   MESSAGE_RESTARTING_FAILURE,
-} from './wrappers/serve-wrapper'
+} from '~shared/serve-wrapper'
 
 jest.useRealTimers()
 jest.setTimeout(13000)

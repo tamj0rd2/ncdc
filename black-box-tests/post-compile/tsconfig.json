@@ -1,11 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../../",
-    "rootDir": "./",
-    "paths": {
-      "~shared/*": ["./black-box-tests/shared/*"]
-    }
+    "rootDir": "."
   },
   "references": [{ "path": "../shared" }],
   "include": ["**/*.ts"]

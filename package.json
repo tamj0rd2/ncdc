@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "clean": "rm -rf ./lib ./coverage/*",
-    "typecheck": "tsc && tsc -b ./black-box-tests/shared ./black-box-tests/acceptance ./black-box-tests/post-compile",
+    "typecheck": "tsc && tsc -b ./black-box-tests/shared ./black-box-tests/acceptance",
     "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "test": "jest --runInBand --bail",
     "test:watch": "npm run test -- --watch",

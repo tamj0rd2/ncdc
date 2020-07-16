@@ -12,12 +12,7 @@ jobs:
         - docker-compose build release
         - ci_env=`bash <(curl -s https://codecov.io/env)`
       script:
-        - docker-compose run lint
-        - docker-compose run typecheck
-        - docker-compose run unit-tests
-        - docker-compose run integration-tests
-        - docker-compose run acceptance-tests
-        - bash <(curl -s https://codecov.io/bash) -Z
+        - ./tests.sh
       deploy:
         install: skip
         provider: script

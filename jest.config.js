@@ -18,7 +18,7 @@ const commonSettings = {
   ],
   testEnvironment: 'node',
   watchPathIgnorePatterns: [
-    '<rootDir>\/acceptance-tests\/test-environment.*',
+    '<rootDir>\/black-box-tests\/test-environment.*',
     '<rootDir>\/lib.*',
     '<rootDir>\/coverage.*',
   ]
@@ -62,7 +62,7 @@ const acceptanceTestSettings = {
   ...commonSettings,
   displayName: 'Acceptance',
   testMatch: [
-    '<rootDir>/acceptance-tests/**/*.spec.ts'
+    '<rootDir>/black-box-tests/acceptance/**/*.spec.ts'
   ],
   coverageDirectory: './coverage/acceptance-tests',
   // using nyc to report the coverage instead

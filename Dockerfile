@@ -13,4 +13,6 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 
+FROM base as install
+FROM base as compile
 RUN npm run compile

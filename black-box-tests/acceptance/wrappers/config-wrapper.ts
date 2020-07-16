@@ -3,7 +3,7 @@ import { existsSync, rmdirSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import jsyaml from 'js-yaml'
 import { JSONSchema7 } from 'json-schema'
 
-export const TEST_ENV = './acceptance-tests/test-environment'
+export const TEST_ENV = './black-box-tests/test-environment'
 export const NCDC_CONFIG_FILE = `${TEST_ENV}/config.yml`
 export const TSCONFIG_FILE = `${TEST_ENV}/tsconfig.json`
 export const JSON_SCHEMAS_FOLDER = `${TEST_ENV}/json-schemas`

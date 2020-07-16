@@ -11,5 +11,5 @@ icon.png
 codecov.sh
 .nyc_output
 
-acceptance-tests/test-environment/**/*
-!acceptance-tests/test-environment/tsconfig.json
+black-box-tests/test-environment/**/*
+!black-box-tests/test-environment/tsconfig.json

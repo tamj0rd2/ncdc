@@ -1,33 +1,45 @@
 version: "3.7"
 services:
   lint:
-    build: .
+    build:
+      context: .
+      target: install
     command: yarn lint
 
   typecheck:
-    build: .
+    build:
+      context: .
+      target: install
     command: yarn typecheck
 
   unit-tests:
-    build: .
+    build:
+      context: .
+      target: install
     command: yarn test:unit --coverage
     volumes:
       - ./coverage/unit-tests:/usr/src/app/coverage/unit-tests
 
   integration-tests:
-    build: .
+    build:
+      context: .
+      target: install
     command: yarn test:integration --coverage
     volumes:
       - ./coverage/integration-tests:/usr/src/app/coverage/integration-tests
 
   acceptance-tests:
-    build: .
+    build:
+      context: .
+      target: compile
     command: ./node_modules/.bin/nyc --report-dir ./coverage/acceptance-tests yarn test:acceptance --coverage
     volumes:
       - ./coverage/acceptance-tests:/usr/src/app/coverage/acceptance-tests
 
   release:
-    build: .
+    build:
+      context: .
+      target: compile
     environment:
       - GITHUB_TOKEN
       - NPM_TOKEN

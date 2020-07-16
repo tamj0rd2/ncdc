@@ -1,7 +1,7 @@
-import { runTestCommand, REAL_SERVER_HOST, RealServerBuilder } from './wrappers/test-wrapper'
+import { runTestCommand, REAL_SERVER_HOST, RealServerBuilder } from '~shared/test-wrapper'
 import { Server } from 'http'
-import { ConfigWrapper, JSON_SCHEMAS_FOLDER } from './wrappers/config-wrapper'
-import { ConfigBuilder } from './config-builder'
+import { ConfigWrapper, JSON_SCHEMAS_FOLDER } from '~shared/config-wrapper'
+import { ConfigBuilder } from '~shared/config-builder'
 
 jest.useRealTimers()
 jest.setTimeout(10000)

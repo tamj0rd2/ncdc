@@ -1,4 +1,4 @@
-import { Config, ConfigBuilder } from '../config-builder'
+import { Config, ConfigBuilder } from './config-builder'
 import { existsSync, rmdirSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import jsyaml from 'js-yaml'
 import { JSONSchema7 } from 'json-schema'

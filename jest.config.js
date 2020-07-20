@@ -66,15 +66,8 @@ const integrationTestSettings = {
   },
 }
 
-const blackBoxTestSettings = {
-  moduleNameMapper: {
-    '~shared(.*)$': '<rootDir>/black-box-tests/shared/$1'
-  },
-}
-
 const acceptanceTestSettings = {
   ...commonSettings,
-  ...blackBoxTestSettings,
   displayName: 'Acceptance',
   testMatch: [
     '<rootDir>/black-box-tests/acceptance/**/*.spec.ts'
@@ -82,6 +75,9 @@ const acceptanceTestSettings = {
   coverageDirectory: './coverage/acceptance-tests',
   // using nyc to report the coverage instead
   coverageReporters: ["none"],
+  moduleNameMapper: {
+    '~shared(.*)$': '<rootDir>/black-box-tests/shared/$1'
+  },
 }
 
 switch (process.env.TEST_MODE) {

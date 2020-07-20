@@ -1,14 +1,15 @@
 import { Config, ConfigBuilder } from './config-builder'
 import { existsSync, rmdirSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import jsyaml from 'js-yaml'
-import { JSONSchema7 } from 'json-schema'
+import type { JSONSchema7 } from 'json-schema'
 
-export const TEST_ENV = './black-box-tests/test-environment'
+export const TEST_ENV = `${__dirname}/../test-environment`
 export const NCDC_CONFIG_FILE = `${TEST_ENV}/config.yml`
 export const TSCONFIG_FILE = `${TEST_ENV}/tsconfig.json`
 export const JSON_SCHEMAS_FOLDER = `${TEST_ENV}/json-schemas`
 export const FIXTURES_FOLDER = `${TEST_ENV}/fixtures` // TODO: change to fixtures
 export const TYPES_FILE = `${TEST_ENV}/types.ts`
+export const ENTRYPOINT = process.env.NCDC_ENTRYPOINT || './bin/ncdc'
 
 export class ConfigWrapper {
   private configs: Config[] = []

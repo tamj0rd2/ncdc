@@ -1,13 +1,14 @@
 {
   "extends": "../shared/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../../",
-    "rootDir": "./",
     "noEmit": true,
     "composite": false,
+    "rootDir": "./",
+    "baseUrl": "./",
     "paths": {
-      "~shared/*": ["./black-box-tests/shared/*"]
-    }
+      "~shared/*": ["../shared/*"]
+    },
+    "typeRoots": ["./node_modules/@types"]
   },
   "references": [{ "path": "../shared" }],
   "include": ["**/*.ts"]

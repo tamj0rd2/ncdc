@@ -16,3 +16,12 @@ COPY . .
 FROM base as install
 FROM base as compile
 RUN npm run compile
+
+#== pre-release tests setup ==#
+FROM compile as pre-release-tests
+RUN mv $(npm pack | tail -n 1) ./black-box-tests/pre-release/ncdc.tgz
+
+WORKDIR /usr/src/app/black-box-tests/pre-release
+RUN npm ci
+RUN npm install ./ncdc.tgz
+RUN npm run build

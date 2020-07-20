@@ -18,6 +18,7 @@
     "test:unit": "TEST_MODE=unit npm run test --",
     "test:integration": "TEST_MODE=integration npm run test --",
     "test:acceptance": "TEST_MODE=acceptance npm run test --",
+    "test:prerelease": "npm run test --prefix ./black-box-tests/pre-release",
     "lint:base": "eslint --color --ignore-path .gitignore --cache",
     "lint": "npm run lint:base -- '**/*.ts' --fix",
     "semantic-release": "semantic-release"

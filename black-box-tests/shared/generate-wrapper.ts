@@ -1,10 +1,11 @@
 import { ChildProcess, exec } from 'child_process'
 import stripAnsi from 'strip-ansi'
-import { NCDC_CONFIG_FILE, JSON_SCHEMAS_FOLDER, TSCONFIG_FILE } from './config-wrapper'
+import { NCDC_CONFIG_FILE, JSON_SCHEMAS_FOLDER, TSCONFIG_FILE, ENTRYPOINT } from './config-wrapper'
 
 const createCommand = (extraConfigPath?: string): string => {
-  const configFiles = extraConfigPath ? [NCDC_CONFIG_FILE, extraConfigPath] : [NCDC_CONFIG_FILE]
-  return `./bin/ncdc generate ${configFiles.join(' ')} --output ${JSON_SCHEMAS_FOLDER} -c ${TSCONFIG_FILE} -v`
+  const configPaths = extraConfigPath ? [NCDC_CONFIG_FILE, extraConfigPath] : [NCDC_CONFIG_FILE]
+  const configArg = configPaths.join(' ')
+  return `${ENTRYPOINT} generate ${configArg} --output ${JSON_SCHEMAS_FOLDER} -c ${TSCONFIG_FILE} -v`
 }
 
 export const runGenerateCommand = (extraConfigPath?: string): Promise<string> =>

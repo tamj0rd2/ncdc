@@ -36,6 +36,14 @@ services:
     volumes:
       - ./coverage/acceptance-tests:/usr/src/app/coverage/acceptance-tests
 
+  pre-release-tests:
+    build:
+      context: .
+      target: pre-release-tests
+    command: npm run test
+    environment:
+      - NCDC_ENTRYPOINT=./node_modules/.bin/ncdc
+
   release:
     build:
       context: .

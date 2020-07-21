@@ -13,5 +13,4 @@ codecov.sh
 
 black-box-tests/out
 black-box-tests/test-environment/**/*
-!black-box-tests/test-environment/tsconfig.json
 *.tgz

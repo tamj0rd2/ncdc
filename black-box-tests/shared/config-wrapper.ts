@@ -2,8 +2,9 @@ import { Config, ConfigBuilder } from './config-builder'
 import { existsSync, rmdirSync, mkdirSync, writeFileSync, unlinkSync } from 'fs'
 import jsyaml from 'js-yaml'
 import type { JSONSchema7 } from 'json-schema'
+import { resolve } from 'path'
 
-export const TEST_ENV = `${__dirname}/../test-environment`
+export const TEST_ENV = resolve(`${__dirname}/../test-environment`)
 export const NCDC_CONFIG_FILE = `${TEST_ENV}/config.yml`
 export const TSCONFIG_FILE = `${TEST_ENV}/tsconfig.json`
 export const JSON_SCHEMAS_FOLDER = `${TEST_ENV}/json-schemas`
@@ -17,10 +18,30 @@ export class ConfigWrapper {
   private types: Record<string, object> = {}
   private schemas: Record<string, object> = {}
 
+  public static DefaultTsconfig = {
+    compilerOptions: {
+      target: 'es5',
+      moduleResolution: 'node',
+      resolveJsonModule: true,
+      strict: true,
+      noImplicitAny: true,
+      esModuleInterop: true,
+      allowSyntheticDefaultImports: true,
+      forceConsistentCasingInFileNames: true,
+      strictNullChecks: true,
+      inlineSourceMap: true,
+      isolatedModules: true,
+      incremental: true,
+      outDir: './out',
+    },
+    include: ['**/*.ts'],
+  }
+
   constructor(private readonly ncdcConfigFile = NCDC_CONFIG_FILE, skipCleanup = false) {
     if (skipCleanup) return
 
     if (existsSync(ncdcConfigFile)) this.deleteYaml()
+    if (existsSync(TSCONFIG_FILE)) unlinkSync(TSCONFIG_FILE)
 
     if (existsSync(FIXTURES_FOLDER)) {
       rmdirSync(FIXTURES_FOLDER, { recursive: true })
@@ -33,6 +54,13 @@ export class ConfigWrapper {
     mkdirSync(JSON_SCHEMAS_FOLDER)
 
     writeFileSync(TYPES_FILE, 'export {}')
+  }
+
+  public addTsconfig(config?: Record<string, unknown>): ConfigWrapper {
+    const tsconfigContent = JSON.stringify(config || ConfigWrapper.DefaultTsconfig, null, 2)
+
+    writeFileSync(TSCONFIG_FILE, tsconfigContent)
+    return this
   }
 
   public addConfig(config = new ConfigBuilder().build()): ConfigWrapper {

@@ -45,7 +45,7 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
 
         if (args.schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
         if (!args.watch) {
-          const generator = new SchemaGenerator(args.tsconfigPath, args.force, reportMetric)
+          const generator = new SchemaGenerator(args.tsconfigPath, args.force, reportMetric, logger)
           generator.init()
           return new TypeValidator(ajv, generator)
         }

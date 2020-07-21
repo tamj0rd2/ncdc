@@ -54,7 +54,12 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
       if (this.programHasErrors) return this.onCompilationFailure?.()
 
       success()
-      this.schemaRetriever = new SchemaGenerator(watcherProgram.getProgram(), false, this.reportMetric)
+      this.schemaRetriever = new SchemaGenerator(
+        watcherProgram.getProgram(),
+        false,
+        this.reportMetric,
+        this.logger,
+      )
       this.schemaRetriever.init?.()
       if (!isFirstFullRun) return this.onReload?.()
     }
@@ -69,7 +74,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
   }
 
   private reportDiagnostic: ts.DiagnosticReporter = (diagnostic) =>
-    this.logger.error(formatErrorDiagnostic(diagnostic))
+    this.logger.verbose(formatErrorDiagnostic(diagnostic))
 
   private reportWatchStatus: ts.WatchStatusReporter = (diagnostic, _1, _2, errorCount): void => {
     this.programHasErrors = false

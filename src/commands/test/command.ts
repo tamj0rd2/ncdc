@@ -52,7 +52,7 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
         const ajv = new Ajv({ verbose: true, allErrors: true })
         if (schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(schemaPath))
 
-        const schemaGenerator = new SchemaGenerator(tsconfigPath, force, reportMetric)
+        const schemaGenerator = new SchemaGenerator(tsconfigPath, force, reportMetric, logger)
         schemaGenerator.init()
         return new TypeValidator(ajv, schemaGenerator)
       },

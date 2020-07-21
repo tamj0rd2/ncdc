@@ -10,6 +10,7 @@ import {
   NoRootTypeError,
 } from 'ts-json-schema-generator'
 import { JSONSchema7 } from 'json-schema'
+import { NcdcLogger } from '~logger'
 
 type JsonSchemaGenerator = (type: string) => JSONSchema7
 
@@ -21,6 +22,7 @@ export class SchemaGenerator implements SchemaRetriever {
     private readonly pathOrProgram: string | ts.Program,
     private readonly skipTypeChecking: boolean,
     private readonly reportMetric: ReportMetric,
+    private readonly logger: NcdcLogger,
   ) {}
 
   public init(): void {
@@ -60,13 +62,20 @@ export class SchemaGenerator implements SchemaRetriever {
     if (typeof this.pathOrProgram !== 'string') return this.pathOrProgram
     const { success, fail } = this.reportMetric('build a typescript program')
     const configFile = readTsConfig(this.pathOrProgram)
-    const program = ts.createProgram({ rootNames: configFile.fileNames, options: configFile.options })
+
+    const incrementalProgram = ts.createIncrementalProgram({
+      rootNames: configFile.fileNames,
+      options: configFile.options,
+      projectReferences: configFile.projectReferences,
+    })
+    const program = incrementalProgram.getProgram()
 
     if (!this.skipTypeChecking) {
       const diagnostics = ts.getPreEmitDiagnostics(program)
       if (diagnostics.length) {
         fail()
-        throw new Error(diagnostics.map(formatErrorDiagnostic).join('\n'))
+        this.logger.verbose(diagnostics.map(formatErrorDiagnostic).join('\n'))
+        throw new Error('Your typescript project has compilation errors. Run tsc to debug.')
       }
     }
 

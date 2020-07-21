@@ -5,6 +5,7 @@ import * as tsHelpers from './ts-helpers'
 import { ReportMetric } from '~commands/shared'
 import * as tsj from 'ts-json-schema-generator'
 import { NoRootTypeError } from 'ts-json-schema-generator'
+import { Logger } from 'winston'
 
 jest.disableAutomock()
 jest.mock('ts-json-schema-generator')
@@ -19,13 +20,18 @@ describe('SchemaLoader', () => {
   const mockedTypescript = mockObj(ts)
   const mockedTsHelpers = mockObj(tsHelpers)
   const mockedreportMetric = mockFn<ReportMetric>()
+  const spyLogger = mockObj<Logger>({ verbose: jest.fn() })
 
   beforeEach(() => {
     jest.resetAllMocks()
     mockedTypescript.parseJsonConfigFileContent.mockReturnValue(
       mockObj<ts.ParsedCommandLine>({ options: {} }),
     )
-    mockedTypescript.createProgram.mockReturnValue(mockObj<ts.Program>({}))
+    mockedTypescript.createIncrementalProgram.mockReturnValue(
+      mockObj<ts.EmitAndSemanticDiagnosticsBuilderProgram>({
+        getProgram: jest.fn().mockReturnValue(mockObj<ts.Program>({})),
+      }),
+    )
     mockedTypescript.getPreEmitDiagnostics.mockReturnValue([])
     mockedTsj.SchemaGenerator.mockImplementation(() => mockedTsjGenerator)
     mockedTsHelpers.readTsConfig.mockReturnValue({} as ts.ParsedCommandLine)
@@ -36,21 +42,29 @@ describe('SchemaLoader', () => {
     mockedreportMetric.mockReturnValue({ fail: jest.fn(), success: jest.fn() })
   })
 
+  const createSchemaGenerator = (
+    pathOrProgram: string | ts.Program = '',
+    skipTypeChecking = false,
+  ): SchemaGenerator => new SchemaGenerator(pathOrProgram, skipTypeChecking, mockedreportMetric, spyLogger)
+
   describe('when a tsconfig path is given', () => {
+    const tsconfigPath = 'tsconfig path'
+
     it('throws when there are errors and skipTypeChecking is false', () => {
       mockedTypescript.getPreEmitDiagnostics.mockReturnValue([
         mockObj<ts.Diagnostic>({ messageText: 'woah' }),
       ])
 
-      const schemaLoader = new SchemaGenerator('', false, mockedreportMetric)
+      const schemaLoader = createSchemaGenerator(tsconfigPath)
 
-      expect(() => schemaLoader.init()).toThrowError('woah')
+      expect(() => schemaLoader.init()).toThrowError('Your typescript project has compilation errors')
+      expect(spyLogger.verbose).toBeCalledWith('woah')
     })
 
     it('does not throw when there are no errors and skipTypeChecking is false', () => {
       mockedTypescript.getPreEmitDiagnostics.mockReturnValue([])
 
-      const schemaLoader = new SchemaGenerator('', false, mockedreportMetric)
+      const schemaLoader = createSchemaGenerator(tsconfigPath)
 
       expect(() => schemaLoader.init()).not.toThrowError()
     })
@@ -60,24 +74,24 @@ describe('SchemaLoader', () => {
         mockObj<ts.Diagnostic>({ messageText: 'woah' }),
       ])
 
-      const schemaLoader = new SchemaGenerator('', false, mockedreportMetric)
+      const schemaLoader = createSchemaGenerator(tsconfigPath, true)
 
+      expect(() => schemaLoader.init()).not.toThrowError()
       expect(mockedTypescript.getPreEmitDiagnostics).not.toBeCalled()
-      expect(() => schemaLoader.init()).toThrowError('woah')
     })
   })
 
   it('calls read ts config with the correct args', () => {
     const tsconfigPath = randomString('tsconfig path')
 
-    new SchemaGenerator(tsconfigPath, false, mockedreportMetric).init()
+    createSchemaGenerator(tsconfigPath).init()
 
     expect(mockedTsHelpers.readTsConfig).toBeCalledWith(tsconfigPath)
   })
 
   describe('loading schemas', () => {
     it('throws if there is no generator', async () => {
-      const schemaGenerator = new SchemaGenerator('tsconfig path', true, mockedreportMetric)
+      const schemaGenerator = createSchemaGenerator('tsconfig path', true)
 
       await expect(() => schemaGenerator.load('bananas')).rejects.toThrowError(
         'This SchemaGenerator instance has not been initialised',
@@ -89,7 +103,7 @@ describe('SchemaLoader', () => {
         throw new NoRootTypeError(randomString('yikes'))
       })
 
-      const schemaGenerator = new SchemaGenerator('', true, mockedreportMetric)
+      const schemaGenerator = createSchemaGenerator('', true)
       schemaGenerator.init()
 
       await expect(schemaGenerator.load('lol')).rejects.toThrowError('Could not find type: lol')
@@ -100,7 +114,7 @@ describe('SchemaLoader', () => {
         throw new Error(randomString('yikes'))
       })
 
-      const schemaGenerator = new SchemaGenerator('', true, mockedreportMetric)
+      const schemaGenerator = createSchemaGenerator('', true)
       schemaGenerator.init()
 
       await expect(schemaGenerator.load('lol')).rejects.toThrowError(
@@ -112,7 +126,7 @@ describe('SchemaLoader', () => {
       const someSchema = { $schema: 'schema stuff' }
       mockedTsjGenerator.createSchema.mockReturnValue(someSchema)
 
-      const schemaLoader = new SchemaGenerator('tsconfig path', true, mockedreportMetric)
+      const schemaLoader = createSchemaGenerator('tsconfig path', true)
       schemaLoader.init()
       const schema = await schemaLoader.load('DealSchema')
 
@@ -124,7 +138,7 @@ describe('SchemaLoader', () => {
       const someSchema2 = { $schema: 'schema stuff 2' }
       mockedTsjGenerator.createSchema.mockReturnValueOnce(someSchema).mockReturnValueOnce(someSchema2)
 
-      const schemaLoader = new SchemaGenerator('tsconfig path', true, mockedreportMetric)
+      const schemaLoader = createSchemaGenerator('tsconfig path', true)
       schemaLoader.init()
       const schema1 = await schemaLoader.load('DealSchema')
       const schema2 = await schemaLoader.load('DealSchema')

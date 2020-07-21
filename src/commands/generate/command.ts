@@ -33,7 +33,7 @@ export default function createGenerateCommand(getCommonDeps: GetRootDeps): Comma
         generate,
         getConfigTypes,
         getSchemaGenerator: (tsconfigPath, force) => {
-          const generator = new SchemaGenerator(tsconfigPath, force, reportMetric)
+          const generator = new SchemaGenerator(tsconfigPath, force, reportMetric, logger)
           generator.init()
           return generator
         },

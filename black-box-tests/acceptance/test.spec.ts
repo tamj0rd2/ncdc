@@ -18,13 +18,15 @@ describe('ncdc test', () => {
 
   it('can run the test command', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, 'eat my shorts!').start()
-    new ConfigWrapper().addConfig(
-      new ConfigBuilder()
-        .withName('Shorts')
-        .withEndpoints('/api/resource')
-        .withResponseHeaders({ 'content-type': 'text/plain' })
-        .build(),
-    )
+    new ConfigWrapper()
+      .addTsconfig()
+      .addConfig(
+        new ConfigBuilder()
+          .withName('Shorts')
+          .withEndpoints('/api/resource')
+          .withResponseHeaders({ 'content-type': 'text/plain' })
+          .build(),
+      )
 
     const result = await runTestCommand()
 
@@ -34,13 +36,15 @@ describe('ncdc test', () => {
 
   it('does not break when using a rate limit', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, 'eat my shorts!').start()
-    new ConfigWrapper().addConfig(
-      new ConfigBuilder()
-        .withName('Shorts')
-        .withEndpoints('/api/resource')
-        .withResponseHeaders({ 'content-type': 'text/plain' })
-        .build(),
-    )
+    new ConfigWrapper()
+      .addTsconfig()
+      .addConfig(
+        new ConfigBuilder()
+          .withName('Shorts')
+          .withEndpoints('/api/resource')
+          .withResponseHeaders({ 'content-type': 'text/plain' })
+          .build(),
+      )
 
     const result = await runTestCommand('--rateLimit 100')
 
@@ -53,6 +57,7 @@ describe('ncdc test', () => {
       .withPostEndpoint('/api/resource', 200, { joy: 'to', the: 'world' })
       .start()
     new ConfigWrapper()
+      .addTsconfig()
       .addConfig(
         new ConfigBuilder()
           .withName('lel')
@@ -78,6 +83,7 @@ describe('ncdc test', () => {
   it('can test endpoints that return json', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 'world' }).start()
     new ConfigWrapper()
+      .addTsconfig()
       .addConfig(
         new ConfigBuilder()
           .withName('Hello')
@@ -107,6 +113,7 @@ describe('ncdc test', () => {
   it('gives back a useful message when a configured body does not match the real response', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
     new ConfigWrapper()
+      .addTsconfig()
       .addConfig(
         new ConfigBuilder()
           .withName('Hello')
@@ -128,16 +135,18 @@ describe('ncdc test', () => {
 
   it('gives back a useful error message when a type does not exist on the FS', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { hello: 123 }).start()
-    new ConfigWrapper().addConfig(
-      new ConfigBuilder()
-        .withName('Hello')
-        .withEndpoints('/api/resource')
-        .withServeBody(undefined)
-        .withResponseBody({ hello: 'world' })
-        .withResponseType('Hello')
-        .withResponseHeaders({ 'content-type': 'application/json' })
-        .build(),
-    )
+    new ConfigWrapper()
+      .addTsconfig()
+      .addConfig(
+        new ConfigBuilder()
+          .withName('Hello')
+          .withEndpoints('/api/resource')
+          .withServeBody(undefined)
+          .withResponseBody({ hello: 'world' })
+          .withResponseType('Hello')
+          .withResponseHeaders({ 'content-type': 'application/json' })
+          .build(),
+      )
 
     const result = await runTestCommand(`--schemaPath ${JSON_SCHEMAS_FOLDER}`)
 

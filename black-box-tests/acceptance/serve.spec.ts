@@ -26,7 +26,7 @@ describe('ncdc serve', () => {
 
   it('starts serving on port 4000', async () => {
     // arrange
-    new ConfigWrapper().addConfig()
+    new ConfigWrapper().addTsconfig().addConfig()
 
     // act
     const { waitForOutput } = await serve()
@@ -39,6 +39,7 @@ describe('ncdc serve', () => {
   it('serves an endpoint from a fixture file', async () => {
     // arrange
     new ConfigWrapper()
+      .addTsconfig()
       .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('response').build())
       .addFixture('response', {
         title: 'nice meme lol',
@@ -59,9 +60,9 @@ describe('ncdc serve', () => {
 
   it('logs an error and exists if a fixture file does not exist', async () => {
     // arrange
-    new ConfigWrapper().addConfig(
-      new ConfigBuilder().withServeBody(undefined).withServeBodyPath('my-fixture').build(),
-    )
+    new ConfigWrapper()
+      .addTsconfig()
+      .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('my-fixture').build())
 
     // act
     const { waitForOutput } = await serve('', false)
@@ -73,6 +74,7 @@ describe('ncdc serve', () => {
 
   it('can serve a type checked config', async () => {
     new ConfigWrapper()
+      .addTsconfig()
       .addConfig(new ConfigBuilder().withResponseType('Book').build())
       .addType('Book', { author: 'string' })
 
@@ -92,7 +94,9 @@ describe('ncdc serve', () => {
     })
 
     it('restarts when config.yml is changed', async () => {
-      configWrapper = new ConfigWrapper().addConfig(new ConfigBuilder().withServeOnly(true).build())
+      configWrapper = new ConfigWrapper()
+        .addTsconfig()
+        .addConfig(new ConfigBuilder().withServeOnly(true).build())
       serve = await prepareServe(watchingConfigCleanupTasks)('--watch')
       const resInitial = await fetch('/api/books/789')
       expect(resInitial.status).toBe(200)
@@ -151,6 +155,7 @@ describe('ncdc serve', () => {
 
     it('restarts the server when a fixture file changes', async () => {
       configWrapper = new ConfigWrapper()
+        .addTsconfig()
         .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath(fixtureName).build())
         .addFixture(fixtureName, {
           title: 'nice meme lol',
@@ -211,6 +216,7 @@ describe('ncdc serve', () => {
 
   it('handles switching from a fixture file to an inline body', async () => {
     const configWrapper = new ConfigWrapper()
+      .addTsconfig()
       .addConfig(
         new ConfigBuilder().withName('config').withServeBody(undefined).withServeBodyPath('fixture').build(),
       )
@@ -230,7 +236,9 @@ describe('ncdc serve', () => {
   })
 
   it('handles switching from an inline body to a fixture file', async () => {
-    const configWrapper = new ConfigWrapper().addConfig(new ConfigBuilder().withName('config').build())
+    const configWrapper = new ConfigWrapper()
+      .addTsconfig()
+      .addConfig(new ConfigBuilder().withName('config').build())
     const { waitForOutput, waitUntilAvailable } = await serve('--watch')
 
     configWrapper
@@ -247,7 +255,7 @@ describe('ncdc serve', () => {
     await expect(res.json()).resolves.toMatchObject({ hello: 'world' })
   })
 
-  describe('type checking', () => {
+  describe('type checking in watch mode', () => {
     describe('with schema loading from json files', () => {
       const typecheckingCleanup: CleanupTask[] = []
       let serve: ServeResult
@@ -260,6 +268,7 @@ describe('ncdc serve', () => {
 
       it('serves when the type matches the body', async () => {
         configWrapper = new ConfigWrapper()
+          .addTsconfig()
           .addConfig(new ConfigBuilder().withResponseType(schemaName).withResponseBody('Hello!').build())
           .addSchemaFile(schemaName, { type: 'string' })
 
@@ -297,6 +306,7 @@ describe('ncdc serve', () => {
 
       it('it serves when the type matches the body', async () => {
         configWrapper = new ConfigWrapper()
+          .addTsconfig()
           .addConfig(new ConfigBuilder().withResponseType('Book').build())
           .addType('Book', {
             ISBN: 'string',
@@ -382,6 +392,38 @@ describe('ncdc serve', () => {
 
         await serve.waitForOutput('An error occurred while validating one of your configured fixtures:')
         await serve.waitForOutput('Could not find type: Book')
+      })
+    })
+
+    describe('when composite is true and noEmit is false during schema generation', () => {
+      const cleanupTasks: CleanupTask[] = []
+
+      afterEach(() => {
+        cleanupTasks.forEach((task) => task())
+      })
+
+      it('does not show errors', async () => {
+        new ConfigWrapper()
+          .addTsconfig({
+            ...ConfigWrapper.DefaultTsconfig,
+            compilerOptions: {
+              ...ConfigWrapper.DefaultTsconfig.compilerOptions,
+              noEmit: false,
+              composite: true,
+              incremental: undefined,
+            },
+          })
+          .addConfig(new ConfigBuilder().withResponseType('Book').build())
+          .addType('Book', {
+            ISBN: 'string',
+            ISBN_13: 'string',
+            author: 'string',
+            title: 'string',
+          })
+
+        const serve = await prepareServe(cleanupTasks, 10)('--watch')
+
+        await serve.waitForOutput('Endpoints are being served')
       })
     })
   })

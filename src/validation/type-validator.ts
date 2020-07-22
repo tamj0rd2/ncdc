@@ -34,12 +34,18 @@ export default class TypeValidator {
         }
 
         if (e.keyword === 'type') {
-          return `${baseMessage} but got ${e.data === null ? e.data : typeof e.data}`
+          return `${baseMessage} but got ${this.getTypeToShow(e.data)}`
         }
 
         return baseMessage
       }),
     }
+  }
+
+  private getTypeToShow(data: unknown): string | null {
+    if (data === null) return data
+    if (Array.isArray(data)) return 'array'
+    return typeof data
   }
 
   private formatData(data: Data): string {

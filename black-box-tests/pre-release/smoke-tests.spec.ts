@@ -11,6 +11,7 @@ jest.setTimeout(10000)
 describe('Generate command', () => {
   it('works', async () => {
     new ConfigWrapper()
+      .addTsconfig()
       .addConfig(
         new ConfigBuilder()
           .withName('Shorts')
@@ -40,13 +41,15 @@ describe('Test command', () => {
   it('works', async () => {
     realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, 'eat my shorts!').start()
 
-    new ConfigWrapper().addConfig(
-      new ConfigBuilder()
-        .withName('Shorts')
-        .withEndpoints('/api/resource')
-        .withResponseHeaders({ 'content-type': 'text/plain' })
-        .build(),
-    )
+    new ConfigWrapper()
+      .addTsconfig()
+      .addConfig(
+        new ConfigBuilder()
+          .withName('Shorts')
+          .withEndpoints('/api/resource')
+          .withResponseHeaders({ 'content-type': 'text/plain' })
+          .build(),
+      )
 
     const result = await runTestCommand()
 
@@ -66,7 +69,7 @@ describe('Serve command', () => {
   })
 
   it('works', async () => {
-    new ConfigWrapper().addConfig()
+    new ConfigWrapper().addTsconfig().addConfig()
 
     const { waitForOutput } = await prepareServe(cleanupTasks)()
     await waitForOutput(`Endpoints are being served`)
@@ -75,12 +78,15 @@ describe('Serve command', () => {
   })
 
   it('also works in watch mode', async () => {
-    new ConfigWrapper().addConfig(new ConfigBuilder().withResponseType('Book').build()).addType('Book', {
-      ISBN: 'string',
-      ISBN_13: 'string',
-      author: 'string',
-      title: 'string',
-    })
+    new ConfigWrapper()
+      .addTsconfig()
+      .addConfig(new ConfigBuilder().withResponseType('Book').build())
+      .addType('Book', {
+        ISBN: 'string',
+        ISBN_13: 'string',
+        author: 'string',
+        title: 'string',
+      })
 
     await prepareServe(cleanupTasks, 10)('--watch')
 

@@ -46,7 +46,7 @@ export class ConfigWrapper {
     if (existsSync(FIXTURES_FOLDER)) {
       rmdirSync(FIXTURES_FOLDER, { recursive: true })
     }
-    mkdirSync(FIXTURES_FOLDER)
+    mkdirSync(FIXTURES_FOLDER, { recursive: true })
 
     if (existsSync(JSON_SCHEMAS_FOLDER)) {
       rmdirSync(JSON_SCHEMAS_FOLDER, { recursive: true })

@@ -3,3 +3,4 @@ lib
 .npmrc
 .nyc_output
 out
+test-environment

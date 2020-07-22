@@ -105,4 +105,29 @@ describe('error messages', () => {
     expect(result.errors).toHaveLength(1)
     expect(strip(result.errors[0])).toContain('<root>.hello should be equal to one of the allowed values')
   })
+
+  test('array expected but got an object', async () => {
+    mockSchemaRetriever.load.mockResolvedValue({
+      type: 'object',
+      properties: {
+        criteria: {
+          type: 'object',
+          properties: {
+            hello: {
+              type: 'string',
+            },
+          },
+          required: ['hello'],
+        },
+      },
+      required: ['criteria'],
+    })
+    const data = { criteria: [{ hello: 'world!' }] }
+
+    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+
+    expect(result.success).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(strip(result.errors[0])).toContain('<root>.criteria should be object but got array')
+  })
 })

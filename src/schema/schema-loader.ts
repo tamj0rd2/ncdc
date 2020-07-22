@@ -1,7 +1,7 @@
 import { resolve } from 'path'
 import { readJsonAsync } from '~io'
-import { Definition } from 'typescript-json-schema'
-import { SchemaRetriever } from './types'
+import type { Definition } from 'ts-json-schema-generator'
+import type { SchemaRetriever } from './types'
 
 export class FsSchemaLoader implements SchemaRetriever {
   private readonly cache: { [symbol: string]: Definition } = {}

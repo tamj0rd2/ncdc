@@ -1,3 +1,15 @@
+# [0.11.0](https://github.com/tamj0rd2/ncdc/compare/v0.10.1...v0.11.0) (2020-07-22)
+
+
+### Bug Fixes
+
+* show better message when object expected but got array ([f72814e](https://github.com/tamj0rd2/ncdc/commit/f72814e2a6465f3a6af36ce483c5166672987a37)), closes [#340](https://github.com/tamj0rd2/ncdc/issues/340)
+
+
+### Features
+
+* show typescript diagnostics as verbose logs ([cc0ea22](https://github.com/tamj0rd2/ncdc/commit/cc0ea22781c1bf114618bbdbd0a4ae053049f2f6)), closes [#264](https://github.com/tamj0rd2/ncdc/issues/264)
+
 ## [0.10.1](https://github.com/tamj0rd2/ncdc/compare/v0.10.0...v0.10.1) (2020-07-06)
 
 

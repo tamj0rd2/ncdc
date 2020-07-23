@@ -6,6 +6,7 @@ import { ReportMetric } from '~commands/shared'
 import * as tsj from 'ts-json-schema-generator'
 import { NoRootTypeError } from 'ts-json-schema-generator'
 import { Logger } from 'winston'
+import { OperationResult } from '~metrics'
 
 jest.disableAutomock()
 jest.mock('ts-json-schema-generator')
@@ -39,7 +40,9 @@ describe('SchemaLoader', () => {
       typeof messageText === 'string' ? messageText : 'poop',
     )
 
-    mockedreportMetric.mockReturnValue({ fail: jest.fn(), success: jest.fn() })
+    mockedreportMetric.mockReturnValue(
+      mockObj<OperationResult>({ fail: jest.fn(), success: jest.fn() }),
+    )
   })
 
   const createSchemaGenerator = (

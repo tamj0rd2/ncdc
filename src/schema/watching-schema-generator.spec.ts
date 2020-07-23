@@ -26,7 +26,7 @@ describe('load', () => {
       mockObj<ts.ParsedCommandLine>({ options: {} }),
     )
 
-    mockreportMetric.mockReturnValue({ success: jest.fn(), fail: jest.fn() })
+    mockreportMetric.mockReturnValue({ success: jest.fn(), fail: jest.fn(), subMetric: jest.fn() })
   })
 
   it('throws an error if watching has not started yet', () => {

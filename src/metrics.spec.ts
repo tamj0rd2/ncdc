@@ -1,4 +1,4 @@
-import Metrics from '~metrics'
+import MetricsReporter from '~metrics'
 import { mockObj, randomString } from '~test-helpers'
 import { NcdcLogger } from '~logger'
 import { blue, green, red } from 'chalk'
@@ -11,7 +11,7 @@ describe('metrics', () => {
   it('logs the correct message at the start and end of an operation', () => {
     const operation = randomString('operation')
 
-    const { success, fail } = new Metrics(dummyLogger).reportMetric(operation)
+    const { success, fail } = new MetricsReporter(dummyLogger).report(operation)
     success()
     fail()
 

@@ -7,6 +7,7 @@ import { TypeValidator } from '~validation'
 import { ConfigBuilder } from '~config/types'
 import { Logger } from 'winston'
 import { ReportMetric } from '~commands/shared'
+import { OperationResult } from '~metrics'
 
 jest.disableAutomock()
 
@@ -21,7 +22,9 @@ describe('test configs', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     mockGetTypeValidator.mockReturnValue(mockTypeValidator)
-    mockReportMetric.mockReturnValue({ fail: jest.fn(), success: jest.fn() })
+    mockReportMetric.mockReturnValue(
+      mockObj<OperationResult>({ fail: jest.fn(), success: jest.fn() }),
+    )
   })
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

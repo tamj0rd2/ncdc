@@ -1,15 +1,15 @@
 import mainYargs from 'yargs'
 import { createGenerateCommand, createServeCommand, createTestCommand } from './commands'
 import { opts } from './commands'
-import Metrics from '~metrics'
+import MetricsReporter from '~metrics'
 import createNcdcLogger from '~logger'
 import { GetRootDeps } from '~commands/shared'
 
 export default function run(): void {
   const getCommonDeps: GetRootDeps = (verbose) => {
     const logger = createNcdcLogger(verbose)
-    const metrics = new Metrics(logger)
-    const { success, fail } = metrics.reportMetric('Program')
+    const metrics = new MetricsReporter(logger)
+    const { success, fail } = metrics.report('Program')
 
     process.on('exit', (code) => {
       code === 0 ? success() : fail()
@@ -17,7 +17,7 @@ export default function run(): void {
 
     return {
       logger,
-      reportMetric: metrics.reportMetric.bind(metrics),
+      reportMetric: metrics.report.bind(metrics),
       handleError: ({ message }) => {
         logger.error(message)
         process.exit(1)

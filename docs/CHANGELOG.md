@@ -1,3 +1,10 @@
+# [0.12.0](https://github.com/tamj0rd2/ncdc/compare/v0.11.0...v0.12.0) (2020-07-30)
+
+
+### Features
+
+* **ts compilation:** improve support for incremental and composite projects ([aac45a3](https://github.com/tamj0rd2/ncdc/commit/aac45a3d3ce75779bf4951aa7ed566bb27f0ab33)), closes [#337](https://github.com/tamj0rd2/ncdc/issues/337)
+
 # [0.11.0](https://github.com/tamj0rd2/ncdc/compare/v0.10.1...v0.11.0) (2020-07-22)
 
 

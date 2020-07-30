@@ -5,6 +5,7 @@ import createHandler, { GenerateArgs } from './handler'
 import { getConfigTypes } from './config'
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
+import TsHelpers from '~schema/ts-helpers'
 
 const builder = (yargs: Argv): Argv<GenerateArgs> =>
   yargs
@@ -33,7 +34,13 @@ export default function createGenerateCommand(getCommonDeps: GetRootDeps): Comma
         generate,
         getConfigTypes,
         getSchemaGenerator: (tsconfigPath, force) => {
-          const generator = new SchemaGenerator(tsconfigPath, force, reportMetric, logger)
+          const tsHelpers = new TsHelpers(reportMetric, logger)
+          const generator = new SchemaGenerator(
+            tsHelpers.createProgram(tsconfigPath, !force),
+            force,
+            reportMetric,
+            logger,
+          )
           generator.init()
           return generator
         },

@@ -1,6 +1,5 @@
 import { SchemaRetriever } from './types'
-import ts from 'typescript'
-import { readTsConfig, formatErrorDiagnostic } from './ts-helpers'
+import type { Program } from 'typescript'
 import { ReportMetric } from '~commands/shared'
 import {
   SchemaGenerator as TsSchemaGenerator,
@@ -19,15 +18,14 @@ export class SchemaGenerator implements SchemaRetriever {
   private generateJsonSchema?: JsonSchemaGenerator
 
   constructor(
-    private readonly pathOrProgram: string | ts.Program,
+    private readonly program: Program,
     private readonly skipTypeChecking: boolean,
     private readonly reportMetric: ReportMetric,
     private readonly logger: NcdcLogger,
   ) {}
 
   public init(): void {
-    const program = this.getTsProgram()
-    this.generateJsonSchema = this.createGenerator(program)
+    this.generateJsonSchema = this.createGenerator(this.program)
   }
 
   public load = async (symbolName: string): Promise<JSONSchema7> => {
@@ -58,32 +56,7 @@ export class SchemaGenerator implements SchemaRetriever {
     }
   }
 
-  private getTsProgram(): ts.Program {
-    if (typeof this.pathOrProgram !== 'string') return this.pathOrProgram
-    const { success, fail } = this.reportMetric('build a typescript program')
-    const configFile = readTsConfig(this.pathOrProgram)
-
-    const incrementalProgram = ts.createIncrementalProgram({
-      rootNames: configFile.fileNames,
-      options: configFile.options,
-      projectReferences: configFile.projectReferences,
-    })
-    const program = incrementalProgram.getProgram()
-
-    if (!this.skipTypeChecking) {
-      const diagnostics = ts.getPreEmitDiagnostics(program)
-      if (diagnostics.length) {
-        fail()
-        this.logger.verbose(diagnostics.map(formatErrorDiagnostic).join('\n'))
-        throw new Error('Your typescript project has compilation errors. Run tsc to debug.')
-      }
-    }
-
-    success()
-    return program
-  }
-
-  private createGenerator(program: ts.Program): JsonSchemaGenerator {
+  private createGenerator(program: Program): JsonSchemaGenerator {
     const { success } = this.reportMetric('build a schema generator')
     const config: Config = { skipTypeCheck: true, expose: 'all', additionalProperties: true }
     const generator = new TsSchemaGenerator(

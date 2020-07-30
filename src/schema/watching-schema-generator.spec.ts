@@ -1,18 +1,17 @@
 import { WatchingSchemaGenerator } from './watching-schema-generator'
 import { randomString, mockObj, mockFn } from '~test-helpers'
 import ts from 'typescript'
-import * as tsHelpers from './ts-helpers'
 import { NcdcLogger } from '~logger'
 import { ReportMetric } from '~commands/shared'
+import TsHelpers from './ts-helpers'
 
 jest.disableAutomock()
 jest.mock('typescript-json-schema')
 jest.mock('typescript')
-jest.mock('./ts-helpers')
 
 describe('load', () => {
   const mockTypescript = mockObj(ts)
-  const mockTsHelpers = mockObj(tsHelpers)
+  const mockTsHelpers = mockObj<TsHelpers>({ formatErrorDiagnostic: jest.fn(), readTsConfig: jest.fn() })
   const mockLogger = mockObj<NcdcLogger>({})
   const mockreportMetric = mockFn<ReportMetric>()
 
@@ -29,8 +28,12 @@ describe('load', () => {
     mockreportMetric.mockReturnValue({ success: jest.fn(), fail: jest.fn(), subMetric: jest.fn() })
   })
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  const createGenerator = () =>
+    new WatchingSchemaGenerator(randomString('tsconfig.json'), mockTsHelpers, mockLogger, mockreportMetric)
+
   it('throws an error if watching has not started yet', () => {
-    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric)
+    const generator = createGenerator()
 
     expect(() => generator.load(randomString('my type'))).toThrowError('Watching has not started yet')
   })
@@ -41,13 +44,13 @@ describe('load', () => {
       throw expectedError
     })
 
-    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric)
+    const generator = createGenerator()
 
     expect(() => generator.init()).toThrow(expectedError)
   })
 
   it('does not try to read the config file again if it is already initialised', () => {
-    const generator = new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric)
+    const generator = createGenerator()
 
     generator.init()
     generator.init()
@@ -64,7 +67,7 @@ describe('load', () => {
         mockObj<ts.ParsedCommandLine>({ options: { noEmit } }),
       )
 
-      new WatchingSchemaGenerator(randomString('tsconfig path'), mockLogger, mockreportMetric).init()
+      createGenerator().init()
 
       expect(mockTypescript.createWatchCompilerHost.mock.calls[0][1]).toMatchObject({
         noEmit,

@@ -9,6 +9,7 @@ import Ajv from 'ajv'
 import { FsSchemaLoader, WatchingSchemaGenerator } from '~schema'
 import { SchemaGenerator } from '~schema'
 import createServerLogger from './server/server-logger'
+import TsHelpers from '~schema/ts-helpers'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -45,13 +46,20 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
 
         if (args.schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
         if (!args.watch) {
-          const generator = new SchemaGenerator(args.tsconfigPath, args.force, reportMetric, logger)
+          const tsHelpers = new TsHelpers(reportMetric, logger)
+          const generator = new SchemaGenerator(
+            tsHelpers.createProgram(args.tsconfigPath, !args.force),
+            args.force,
+            reportMetric,
+            logger,
+          )
           generator.init()
           return new TypeValidator(ajv, generator)
         }
 
         const watcher = new WatchingSchemaGenerator(
           args.tsconfigPath,
+          new TsHelpers(reportMetric, logger),
           logger,
           reportMetric,
           onReload,

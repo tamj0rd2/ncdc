@@ -9,6 +9,7 @@ import { SchemaGenerator } from '~schema'
 import Ajv from 'ajv'
 import { TypeValidator } from '~validation'
 import { createHttpClient } from './http-client'
+import TsHelpers from '~schema/ts-helpers'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
@@ -51,8 +52,14 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
       createTypeValidator: () => {
         const ajv = new Ajv({ verbose: true, allErrors: true })
         if (schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(schemaPath))
+        const tsHelpers = new TsHelpers(reportMetric, logger)
 
-        const schemaGenerator = new SchemaGenerator(tsconfigPath, force, reportMetric, logger)
+        const schemaGenerator = new SchemaGenerator(
+          tsHelpers.createProgram(tsconfigPath, !force),
+          force,
+          reportMetric,
+          logger,
+        )
         schemaGenerator.init()
         return new TypeValidator(ajv, schemaGenerator)
       },

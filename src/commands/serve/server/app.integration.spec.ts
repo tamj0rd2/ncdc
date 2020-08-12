@@ -1,5 +1,5 @@
 import request from 'supertest'
-import { configureServer, verbsMap, PossibleMethod, ReqResLog } from '.'
+import { configureServer, verbsMap, PossibleMethod, ReqResLog } from './app'
 import { ConfigBuilder, SupportedMethod } from '~config/types'
 import { TypeValidator } from '~validation'
 import { mockObj } from '~test-helpers'

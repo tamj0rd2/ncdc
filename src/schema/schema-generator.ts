@@ -29,25 +29,20 @@ export class SchemaGenerator implements SchemaRetriever {
   }
 
   public load = async (symbolName: string): Promise<JSONSchema7> => {
-    const { success, fail } = this.reportMetric(`load schema for ${symbolName}`)
     const cachedSchema = this.cache.get(symbolName)
     if (cachedSchema) {
-      success()
       return cachedSchema
     }
 
     if (!this.generateJsonSchema) {
-      fail()
       throw new Error('This SchemaGenerator instance has not been initialised')
     }
 
     try {
       const schema = this.generateJsonSchema(symbolName)
       this.cache.set(symbolName, schema)
-      success()
       return Promise.resolve(schema)
     } catch (err) {
-      fail()
       if (err instanceof NoRootTypeError) {
         throw new Error(`Could not find type: ${symbolName}`)
       }

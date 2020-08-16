@@ -8,18 +8,29 @@ import { ReportMetric } from '~commands/shared'
 import TsHelpers from './ts-helpers'
 
 export type CompilerHook = () => Promise<void> | void
+enum ActionType {
+  Initiated = 'initiate',
+  CompileSucceeded = 'compile succeeded',
+  CompileFailed = 'compile failed',
+  AfterProgramCreateFinished = 'afterProgramCreate finished',
+}
 
-// TODO: oh god this hook business is needlessly complicated
+type Action = { type: ActionType }
+
 export class WatchingSchemaGenerator implements SchemaRetriever {
-  private initiated = false
-  private isFirstCompilationRun = true
-  private isFirstStatusReport = true
-  private programHasErrors = false
+  private readonly state = {
+    initiated: false,
+    wasCompilationSuccessful: false,
+    hasCompiledSuccessfullyAtLeastOnceBefore: false,
+  }
 
   private tsconfigPath: string
-  private schemaRetriever?: SchemaGenerator
+  private schemaGenerator?: SchemaGenerator
 
-  private readonly COMPILED_DIAGNOSTIC_CODE = 6194
+  private readonly STARTING_WATCH_CODE = 6031
+  private readonly CHANGE_DETECTED_CODE = 6032
+  private readonly COMPILE_SUCCESS_CODE = 6194
+  private readonly COMPILE_FAILED_CODE = 6193
 
   public constructor(
     tsconfigPath: string,
@@ -33,9 +44,10 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
   }
 
   public init(): void {
-    if (this.initiated) return
-    const { success } = this.reportMetric('Initiating typescript watcher')
-    this.initiated = true
+    if (this.state.initiated) return
+    this.dispatchAction({ type: ActionType.Initiated })
+
+    const initiateTypecheckerMetric = this.reportMetric('Initiating typescript watcher')
 
     const configFile = this.tsHelpers.readTsConfig(this.tsconfigPath)
     const watcherHost = ts.createWatchCompilerHost(
@@ -49,52 +61,89 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
 
     const origAfterProgramCreate = watcherHost.afterProgramCreate
     watcherHost.afterProgramCreate = (watcherProgram) => {
-      const isFirstFullRun = this.isFirstCompilationRun
       origAfterProgramCreate?.(watcherProgram)
 
-      if (this.programHasErrors) return this.onCompilationFailure?.()
+      if (!this.state.wasCompilationSuccessful) {
+        if (this.state.hasCompiledSuccessfullyAtLeastOnceBefore) {
+          this.dispatchAction({ type: ActionType.AfterProgramCreateFinished })
+          return this.onCompilationFailure?.()
+        }
 
-      success()
-      this.schemaRetriever = new SchemaGenerator(
+        initiateTypecheckerMetric.fail()
+        throw new Error('Could not compile your typescript source files')
+      }
+
+      if (!this.state.hasCompiledSuccessfullyAtLeastOnceBefore) {
+        initiateTypecheckerMetric.success()
+      }
+
+      this.schemaGenerator = new SchemaGenerator(
         watcherProgram.getProgram(),
         false,
         this.reportMetric,
         this.logger,
       )
-      this.schemaRetriever.init?.()
-      if (!isFirstFullRun) return this.onReload?.()
+      this.schemaGenerator.init?.()
+
+      const shouldRestart = this.state.hasCompiledSuccessfullyAtLeastOnceBefore
+      this.dispatchAction({ type: ActionType.AfterProgramCreateFinished })
+      if (shouldRestart) return this.onReload?.()
     }
 
     ts.createWatchProgram(watcherHost)
   }
 
   public load(symbolName: string): Promise<Definition> {
-    if (!this.initiated) throw new Error('Watching has not started yet')
-    if (!this.schemaRetriever) throw new Error('No schema generator... somehow')
-    return this.schemaRetriever.load(symbolName)
+    if (!this.state.initiated) throw new Error('Watching has not started yet')
+    if (!this.schemaGenerator) throw new Error('No schema generator... somehow')
+    return this.schemaGenerator.load(symbolName)
   }
 
-  private reportDiagnostic: ts.DiagnosticReporter = (diagnostic) =>
+  private reportDiagnostic: ts.DiagnosticReporter = (diagnostic) => {
     this.logger.verbose(this.tsHelpers.formatErrorDiagnostic(diagnostic))
+  }
 
   private reportWatchStatus: ts.WatchStatusReporter = (diagnostic, _1, _2, errorCount): void => {
-    this.programHasErrors = false
-
-    if (!this.isFirstCompilationRun && diagnostic.code !== this.COMPILED_DIAGNOSTIC_CODE) {
-      this.logger.info('Detected a change to your source files')
+    if (errorCount) {
+      this.dispatchAction({ type: ActionType.CompileFailed })
+      return
     }
 
-    if (errorCount) this.programHasErrors = true
-
-    if (this.isFirstCompilationRun) {
-      if (this.isFirstStatusReport) {
+    switch (diagnostic.code) {
+      case this.STARTING_WATCH_CODE:
         this.logger.info('Watching your source types for changes...')
-        this.isFirstStatusReport = false
-      }
-      if (diagnostic.code === this.COMPILED_DIAGNOSTIC_CODE) {
-        this.isFirstCompilationRun = false
-      }
+        return
+      case this.CHANGE_DETECTED_CODE:
+        this.logger.info('Detected a change to your source types...')
+        return
+      case this.COMPILE_SUCCESS_CODE:
+        this.dispatchAction({ type: ActionType.CompileSucceeded })
+        return
+      case this.COMPILE_FAILED_CODE:
+        this.dispatchAction({ type: ActionType.CompileFailed })
+        return
+    }
+  }
+
+  private dispatchAction(action: Action): void {
+    if (action.type === ActionType.Initiated) {
+      this.state.initiated = true
       return
+    }
+
+    if (action.type === ActionType.CompileSucceeded) {
+      this.state.wasCompilationSuccessful = true
+      return
+    }
+
+    if (action.type === ActionType.CompileFailed) {
+      this.state.wasCompilationSuccessful = false
+      return
+    }
+
+    if (action.type === ActionType.AfterProgramCreateFinished) {
+      this.state.wasCompilationSuccessful = false
+      this.state.hasCompiledSuccessfullyAtLeastOnceBefore = true
     }
   }
 }

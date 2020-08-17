@@ -1,77 +1,112 @@
 import { WatchingSchemaGenerator } from './watching-schema-generator'
-import { randomString, mockObj, mockFn } from '~test-helpers'
+import { randomString, mockObj, mockFn, mocked } from '~test-helpers'
 import ts from 'typescript'
 import { NcdcLogger } from '~logger'
 import { ReportMetric } from '~commands/shared'
 import TsHelpers from './ts-helpers'
+import { resolve } from 'path'
 
 jest.disableAutomock()
-jest.mock('typescript-json-schema')
 jest.mock('typescript')
+jest.mock('./schema-generator')
+jest.mock('path')
 
-describe('load', () => {
-  const mockTypescript = mockObj(ts)
-  const mockTsHelpers = mockObj<TsHelpers>({ formatErrorDiagnostic: jest.fn(), readTsConfig: jest.fn() })
-  const mockLogger = mockObj<NcdcLogger>({})
-  const mockreportMetric = mockFn<ReportMetric>()
+describe('watching schema generator', () => {
+  const mockedTs = mockObj(ts)
+  const stubSolutionBuilderHost = mockObj<ts.SolutionBuilderWithWatchHost<ts.BuilderProgram>>({})
+  const stubSolution = mockObj<ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>>({
+    getNextInvalidatedProject: jest.fn(),
+    build: jest.fn(),
+  })
+  const resolvedTsconfigPath = randomString('resolved tsconfig path')
+  const stubTsHelpers = mockObj<TsHelpers>({ createProgram: jest.fn() })
+  const spyLogger = mockObj<NcdcLogger>({ verbose: jest.fn() })
+  const spyReportMetric = mockFn<ReportMetric>()
+  const stubResolve = mocked(resolve)
 
   beforeEach(() => {
-    jest.resetAllMocks()
-    mockTypescript.readConfigFile.mockReturnValue({ config: {} })
-    mockTypescript.createWatchCompilerHost.mockReturnValue(
-      {} as ts.WatchCompilerHostOfFilesAndCompilerOptions<ts.BuilderProgram>,
-    )
-    mockTsHelpers.readTsConfig.mockReturnValue(
-      mockObj<ts.ParsedCommandLine>({ options: {} }),
-    )
-
-    mockreportMetric.mockReturnValue({ success: jest.fn(), fail: jest.fn(), subMetric: jest.fn() })
+    stubResolve.mockReturnValue(resolvedTsconfigPath)
+    mockedTs.createSolutionBuilderWithWatchHost.mockReturnValue(stubSolutionBuilderHost)
+    mockedTs.createSolutionBuilderWithWatch.mockReturnValue(stubSolution)
+    stubSolution.build.mockReturnValue(ts.ExitStatus.Success)
+    spyReportMetric.mockReturnValue({ fail: jest.fn(), subMetric: jest.fn(), success: jest.fn() })
   })
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const createGenerator = () =>
-    new WatchingSchemaGenerator(randomString('tsconfig.json'), mockTsHelpers, mockLogger, mockreportMetric)
+  afterEach(() => jest.resetAllMocks())
 
-  it('throws an error if watching has not started yet', () => {
-    const generator = createGenerator()
+  describe('init', () => {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const initialiseGenerator = async () => {
+      const gen = new WatchingSchemaGenerator(
+        randomString('tsconfig path'),
+        stubTsHelpers,
+        spyLogger,
+        spyReportMetric,
+      )
+      await gen.init()
+      return gen
+    }
 
-    expect(() => generator.load(randomString('my type'))).toThrowError('Watching has not started yet')
-  })
+    it('can only be initiated once', async () => {
+      await initialiseGenerator().then((gen) => gen.init())
 
-  it('throws an error if reading the config file gives an error', () => {
-    const expectedError = new Error(randomString('sad times'))
-    mockTsHelpers.readTsConfig.mockImplementation(() => {
-      throw expectedError
+      expect(stubSolution.build).toBeCalledTimes(1)
     })
 
-    const generator = createGenerator()
+    describe('given some typescript outputs are not cached', () => {
+      it('does not create a temporary program', async () => {
+        stubSolution.getNextInvalidatedProject.mockReturnValue(expect.anything())
 
-    expect(() => generator.init()).toThrow(expectedError)
+        await initialiseGenerator()
+
+        expect(stubTsHelpers.createProgram).not.toBeCalled()
+      })
+
+      it('starts watching the solution for changes', async () => {
+        stubSolution.getNextInvalidatedProject.mockReturnValue(expect.anything())
+
+        await initialiseGenerator()
+
+        expect(stubSolution.build).toBeCalledWith(resolvedTsconfigPath)
+      })
+    })
+
+    describe('given all typescript outputs are already cached', () => {
+      it('creates a temporary program', async () => {
+        await initialiseGenerator()
+
+        expect(stubTsHelpers.createProgram).toBeCalledWith(resolvedTsconfigPath, true)
+      })
+
+      it('throws when a temporary program could not be created', async () => {
+        const expectedError = new Error('welp')
+        stubTsHelpers.createProgram.mockImplementation(() => {
+          throw expectedError
+        })
+
+        await expect(initialiseGenerator()).rejects.toThrowError(expectedError)
+      })
+
+      it('starts watching the solution for changes', async () => {
+        await initialiseGenerator()
+
+        expect(stubSolution.build).toBeCalledWith(resolvedTsconfigPath)
+      })
+    })
   })
 
-  it('does not try to read the config file again if it is already initialised', () => {
-    const generator = createGenerator()
-
-    generator.init()
-    generator.init()
-    generator.init()
-    generator.init()
-
-    expect(mockTsHelpers.readTsConfig).toBeCalledTimes(1)
-  })
-
-  it.each([[true], [false]])(
-    'creates a watch compiler host with the correct config overrides when %s',
-    (noEmit) => {
-      mockTsHelpers.readTsConfig.mockReturnValue(
-        mockObj<ts.ParsedCommandLine>({ options: { noEmit } }),
+  describe('load', () => {
+    it('throws an error if the generator has not been initiated', async () => {
+      const gen = new WatchingSchemaGenerator(
+        randomString('tsconfig path'),
+        stubTsHelpers,
+        spyLogger,
+        spyReportMetric,
       )
 
-      createGenerator().init()
-
-      expect(mockTypescript.createWatchCompilerHost.mock.calls[0][1]).toMatchObject({
-        noEmit,
-      })
-    },
-  )
+      await expect(gen.load(randomString('my type'))).rejects.toThrowError(
+        'Watcher has not been initiated yet',
+      )
+    })
+  })
 })

@@ -52,7 +52,6 @@ export class SchemaGenerator implements SchemaRetriever {
   }
 
   private createGenerator(program: Program): JsonSchemaGenerator {
-    const { success } = this.reportMetric('build a schema generator')
     const config: Config = { skipTypeCheck: true, expose: 'all', additionalProperties: true }
     const generator = new TsSchemaGenerator(
       program,
@@ -61,7 +60,6 @@ export class SchemaGenerator implements SchemaRetriever {
       config,
     )
 
-    success()
     return generator.createSchema.bind(generator)
   }
 }

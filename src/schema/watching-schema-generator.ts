@@ -8,20 +8,11 @@ import { ReportMetric } from '~commands/shared'
 import TsHelpers from './ts-helpers'
 
 export type CompilerHook = () => Promise<void> | void
-enum ActionType {
-  Initiated = 'initiate',
-  CompileSucceeded = 'compile succeeded',
-  CompileFailed = 'compile failed',
-  AfterProgramCreateFinished = 'afterProgramCreate finished',
-}
-
-type Action = { type: ActionType }
 
 export class WatchingSchemaGenerator implements SchemaRetriever {
   private readonly state = {
-    initiated: false,
-    wasCompilationSuccessful: false,
-    hasCompiledSuccessfullyAtLeastOnceBefore: false,
+    isInitiated: false,
+    hasCompiledSuccessfullyAtLeastOnce: false,
   }
 
   private tsconfigPath: string
@@ -29,8 +20,6 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
 
   private readonly STARTING_WATCH_CODE = 6031
   private readonly CHANGE_DETECTED_CODE = 6032
-  private readonly COMPILE_SUCCESS_CODE = 6194
-  private readonly COMPILE_FAILED_CODE = 6193
 
   public constructor(
     tsconfigPath: string,
@@ -43,58 +32,86 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     this.tsconfigPath = resolve(tsconfigPath)
   }
 
-  public init(): void {
-    if (this.state.initiated) return
-    this.dispatchAction({ type: ActionType.Initiated })
+  public init = (): Promise<void> => {
+    if (this.state.isInitiated) return Promise.resolve()
 
-    const initiateTypecheckerMetric = this.reportMetric('Initiating typescript watcher')
+    this.state.isInitiated = true
+    const initMetric = this.reportMetric('Initiating watching schema generator')
 
-    const configFile = this.tsHelpers.readTsConfig(this.tsconfigPath)
-    const watcherHost = ts.createWatchCompilerHost(
-      this.tsconfigPath,
-      { noEmit: configFile.options.noEmit },
+    const solutionWatcherHost = ts.createSolutionBuilderWithWatchHost(
       ts.sys,
-      ts.createEmitAndSemanticDiagnosticsBuilderProgram,
+      undefined,
       this.reportDiagnostic,
+      undefined,
       this.reportWatchStatus,
     )
 
-    const origAfterProgramCreate = watcherHost.afterProgramCreate
-    watcherHost.afterProgramCreate = (watcherProgram) => {
-      origAfterProgramCreate?.(watcherProgram)
+    const solution = ts.createSolutionBuilderWithWatch(solutionWatcherHost, [this.tsconfigPath], {
+      incremental: true,
+    })
 
-      if (!this.state.wasCompilationSuccessful) {
-        if (this.state.hasCompiledSuccessfullyAtLeastOnceBefore) {
-          this.dispatchAction({ type: ActionType.AfterProgramCreateFinished })
-          return this.onCompilationFailure?.()
+    return new Promise((resolve, reject) => {
+      const origAfterProgramEmitAndDiagnostics = solutionWatcherHost.afterProgramEmitAndDiagnostics
+      solutionWatcherHost.afterProgramEmitAndDiagnostics = (watcherProgram) => {
+        origAfterProgramEmitAndDiagnostics?.(watcherProgram)
+
+        const getDianosticsMetric = this.reportMetric('getting diagnostics')
+        const diagnostics = [
+          ...watcherProgram.getConfigFileParsingDiagnostics(),
+          ...watcherProgram.getSyntacticDiagnostics(),
+          ...watcherProgram.getOptionsDiagnostics(),
+          ...watcherProgram.getGlobalDiagnostics(),
+          ...watcherProgram.getSemanticDiagnostics(),
+        ]
+        getDianosticsMetric.success()
+
+        const wasCompilationSuccessful =
+          diagnostics.filter((d) => d.category === ts.DiagnosticCategory.Error).length === 0
+
+        if (!this.state.hasCompiledSuccessfullyAtLeastOnce) {
+          if (solution.getNextInvalidatedProject()) return
+          this.state.hasCompiledSuccessfullyAtLeastOnce = true
+          this.setInternalSchemaGenerator(watcherProgram.getProgram())
+          initMetric.success()
+          return
         }
 
-        initiateTypecheckerMetric.fail()
-        throw new Error('Could not compile your typescript source files')
+        if (wasCompilationSuccessful) {
+          this.setInternalSchemaGenerator(watcherProgram.getProgram())
+          return this.onReload?.()
+        } else {
+          return this.onCompilationFailure?.()
+        }
       }
 
-      if (!this.state.hasCompiledSuccessfullyAtLeastOnceBefore) {
-        initiateTypecheckerMetric.success()
+      // the above function does not get executed unless there are invalidated projects,
+      // so instead we build a temporary program using a different strategy
+      const shouldBuildTemporaryProgram = !solution.getNextInvalidatedProject()
+      if (shouldBuildTemporaryProgram) {
+        this.logger.verbose('no invalidated projects - going to build a temporary program')
+        try {
+          const tempProgram = this.tsHelpers.createProgram(this.tsconfigPath, true)
+          this.setInternalSchemaGenerator(tempProgram)
+          this.state.hasCompiledSuccessfullyAtLeastOnce = true
+        } catch (err) {
+          initMetric.fail()
+          return reject(err)
+        }
       }
 
-      this.schemaGenerator = new SchemaGenerator(
-        watcherProgram.getProgram(),
-        false,
-        this.reportMetric,
-        this.logger,
-      )
-      this.schemaGenerator.init?.()
+      // this is what watches the solution and kicks of the initial build (if there are invalidated projects)
+      const solutionBuildResult = solution.build(this.tsconfigPath)
+      if (solutionBuildResult !== ts.ExitStatus.Success) {
+        initMetric.fail()
+        return reject(new Error('Could not compile your typescript source files'))
+      }
 
-      const shouldRestart = this.state.hasCompiledSuccessfullyAtLeastOnceBefore
-      this.dispatchAction({ type: ActionType.AfterProgramCreateFinished })
-      if (shouldRestart) return this.onReload?.()
-    }
-
-    ts.createWatchProgram(watcherHost)
+      resolve()
+    })
   }
 
-  public load(symbolName: string): Promise<Definition> {
-    if (!this.state.initiated) throw new Error('Watching has not started yet')
+  public load = async (symbolName: string): Promise<Definition> => {
+    if (!this.state.isInitiated) throw new Error('Watcher has not been initiated yet')
     if (!this.schemaGenerator) throw new Error('No schema generator... somehow')
     return this.schemaGenerator.load(symbolName)
   }
@@ -103,47 +120,19 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     this.logger.verbose(this.tsHelpers.formatErrorDiagnostic(diagnostic))
   }
 
-  private reportWatchStatus: ts.WatchStatusReporter = (diagnostic, _1, _2, errorCount): void => {
-    if (errorCount) {
-      this.dispatchAction({ type: ActionType.CompileFailed })
-      return
-    }
-
+  private reportWatchStatus: ts.WatchStatusReporter = (diagnostic): void => {
     switch (diagnostic.code) {
       case this.STARTING_WATCH_CODE:
-        this.logger.info('Watching your source types for changes...')
+        this.logger.info('Watching your source files for changes')
         return
       case this.CHANGE_DETECTED_CODE:
-        this.logger.info('Detected a change to your source types...')
-        return
-      case this.COMPILE_SUCCESS_CODE:
-        this.dispatchAction({ type: ActionType.CompileSucceeded })
-        return
-      case this.COMPILE_FAILED_CODE:
-        this.dispatchAction({ type: ActionType.CompileFailed })
+        this.logger.info('Detected a change to your source files')
         return
     }
   }
 
-  private dispatchAction(action: Action): void {
-    if (action.type === ActionType.Initiated) {
-      this.state.initiated = true
-      return
-    }
-
-    if (action.type === ActionType.CompileSucceeded) {
-      this.state.wasCompilationSuccessful = true
-      return
-    }
-
-    if (action.type === ActionType.CompileFailed) {
-      this.state.wasCompilationSuccessful = false
-      return
-    }
-
-    if (action.type === ActionType.AfterProgramCreateFinished) {
-      this.state.wasCompilationSuccessful = false
-      this.state.hasCompiledSuccessfullyAtLeastOnceBefore = true
-    }
+  private setInternalSchemaGenerator(program: ts.Program): void {
+    this.schemaGenerator = new SchemaGenerator(program, false, this.reportMetric, this.logger)
+    this.schemaGenerator.init?.()
   }
 }

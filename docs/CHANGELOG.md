@@ -1,3 +1,10 @@
+# [0.13.0](https://github.com/tamj0rd2/ncdc/compare/v0.12.0...v0.13.0) (2020-08-18)
+
+
+### Features
+
+* **serve mode:** watch changes to project references and do initial solution build ([2eca932](https://github.com/tamj0rd2/ncdc/commit/2eca932984cc110a6cf259e71b4f876f2c4041a5)), closes [#241](https://github.com/tamj0rd2/ncdc/issues/241)
+
 # [0.12.0](https://github.com/tamj0rd2/ncdc/compare/v0.11.0...v0.12.0) (2020-07-30)
 
 

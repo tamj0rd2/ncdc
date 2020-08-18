@@ -1,4 +1,4 @@
-import { runTests } from './test'
+import { runTests, GetTypeValidator } from './test'
 import { randomString, mockFn, mockObj, randomNumber } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TestConfig } from './config'
@@ -16,12 +16,12 @@ describe('test configs', () => {
   const mockLogger = mockObj<Logger>({ error: jest.fn(), info: jest.fn() })
   const mockFetchResource = mockFn<FetchResource>()
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
-  const mockGetTypeValidator = mockFn<() => TypeValidator>()
+  const mockGetTypeValidator = mockFn<GetTypeValidator>()
   const mockReportMetric = mockFn<ReportMetric>()
 
   beforeEach(() => {
     jest.resetAllMocks()
-    mockGetTypeValidator.mockReturnValue(mockTypeValidator)
+    mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
     mockReportMetric.mockReturnValue(
       mockObj<OperationResult>({ fail: jest.fn(), success: jest.fn() }),
     )

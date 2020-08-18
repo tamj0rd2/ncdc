@@ -29,9 +29,9 @@ const getFailedRestartMsg = (msg: string): string => `Could not restart ncdc ser
 
 export type GetServeDeps = (args: ServeArgs) => ServeDeps
 export type CreateTypeValidator = (
-  onReload?: CompilerHook,
-  onCompilationFailure?: CompilerHook,
-) => TypeValidator
+  onReload: CompilerHook,
+  onCompilationFailure: CompilerHook,
+) => Promise<TypeValidator>
 interface ServeDeps {
   logger: NcdcLogger
   handleError: HandleError
@@ -61,7 +61,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
     const loadResult = await loadConfig(
       absoluteConfigPath,
-      () => {
+      async () => {
         if (args.schemaPath || !typeValidator) {
           const restartServer = async (): Promise<void> => {
             logger.info(ATTEMPT_RESTARTING_MSG)
@@ -73,7 +73,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
             }
           }
 
-          typeValidator = createTypeValidator(restartServer, () => {
+          typeValidator = await createTypeValidator(restartServer, () => {
             logger.error('Your source code has compilation errors. Fix them to resume serving endpoints')
           })
         }

@@ -41,7 +41,7 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
       loadConfig,
       startServer: (routes, typeValidator) => startServer(args.port, routes, typeValidator, logger),
       serverLogger: createServerLogger(args.verbose),
-      createTypeValidator: (onReload, onCompilationFailure) => {
+      createTypeValidator: async (onCompileSuccess, onCompileFail) => {
         const ajv = new Ajv({ verbose: true, allErrors: true })
 
         if (args.schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
@@ -62,10 +62,9 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
           new TsHelpers(reportMetric, logger),
           logger,
           reportMetric,
-          onReload,
-          onCompilationFailure,
         )
-        watcher.init()
+        watcher.subscribeToWatchStatus(onCompileSuccess, onCompileFail)
+        await watcher.init()
         return new TypeValidator(ajv, watcher)
       },
     }

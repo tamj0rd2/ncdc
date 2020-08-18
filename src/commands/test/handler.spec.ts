@@ -28,7 +28,7 @@ beforeEach(() => {
   jest.resetAllMocks()
   mockedExistsSync.mockReturnValue(true)
   mockedResolve.mockReturnValue(resolvedTsconfigPath)
-  mockedCreateTypeValidator.mockReturnValue(mockedTypeValidator)
+  mockedCreateTypeValidator.mockResolvedValue(mockedTypeValidator)
   getTestDeps.mockReturnValue({
     createTypeValidator: mockedCreateTypeValidator,
     handleError: mockedHandleError,
@@ -91,15 +91,17 @@ it('calls loadConfig with the correct args', async () => {
   expect(mockedLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs, true)
 })
 
+// TODO: this stuff should all be moved up into some "container" instantiation layer.
 it('only creates a type validator once for loading configs', async () => {
   mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
   await handler(args)
 
   const getTypeValidatorFn = mockedLoadConfig.mock.calls[0][1]
   const timesToCall = randomNumber(1, 10)
-  for (let i = 0; i < timesToCall; i++) {
-    getTypeValidatorFn()
-  }
+  await Array(timesToCall)
+    .fill(0)
+    .reduce((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
+
   expect(mockedCreateTypeValidator).toBeCalledTimes(1)
 })
 
@@ -147,9 +149,10 @@ it('only creates a type validator once for running the tests', async () => {
 
   const getTypeValidatorFn = mockedRunTests.mock.calls[0][2]
   const timesToCall = randomNumber(1, 10)
-  for (let i = 0; i < timesToCall; i++) {
-    getTypeValidatorFn()
-  }
+  await Array(timesToCall)
+    .fill(0)
+    .reduce<Promise<unknown>>((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
+
   expect(mockedCreateTypeValidator).toBeCalledTimes(1)
 })
 

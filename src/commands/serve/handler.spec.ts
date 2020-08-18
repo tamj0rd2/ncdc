@@ -36,7 +36,7 @@ beforeEach(() => {
     logger: mockLogger,
     startServer: mockStartServer,
   })
-  mockCreateTypeValidator.mockReturnValue(mockTypeValidator)
+  mockCreateTypeValidator.mockResolvedValue(mockTypeValidator)
   mockTransformConfigs.mockResolvedValue([
     {
       name: randomString('name'),
@@ -109,9 +109,13 @@ describe('runs the server with the correct configs', () => {
 
     const getTypeValidatorFn = mockLoadConfig.mock.calls[0][1]
     const timesToCall = randomNumber(1, 10)
-    for (let i = 0; i < timesToCall; i++) {
-      getTypeValidatorFn()
-    }
+    await Array(timesToCall)
+      .fill(undefined)
+      .reduce(async (prev) => {
+        await prev
+        return getTypeValidatorFn()
+      }, Promise.resolve())
+
     expect(mockCreateTypeValidator).toBeCalledTimes(1)
   })
 
@@ -123,9 +127,10 @@ describe('runs the server with the correct configs', () => {
 
     const getTypeValidatorFn = mockLoadConfig.mock.calls[0][1]
     const timesToCall = randomNumber(1, 10)
-    for (let i = 0; i < timesToCall; i++) {
-      getTypeValidatorFn()
-    }
+    await Array(timesToCall)
+      .fill(0)
+      .reduce<Promise<unknown>>((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
+
     expect(mockCreateTypeValidator).toBeCalledTimes(timesToCall)
   })
 
@@ -157,9 +162,9 @@ describe('runs the server with the correct configs', () => {
 
   it('runs the server with the correct args', async () => {
     const configs = [new ConfigBuilder().build()]
-    mockLoadConfig.mockImplementation((_, getTypeValidator) => {
-      getTypeValidator()
-      return Promise.resolve({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
+    mockLoadConfig.mockImplementation(async (_, getTypeValidator) => {
+      await getTypeValidator()
+      return { type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] }
     })
 
     await handler(args)

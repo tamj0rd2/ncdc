@@ -32,7 +32,7 @@ export type LoadConfigResponse =
     }
 
 export type TransformConfigs<T> = (configs: T[], absoluteConfigPath: string) => Promise<CommonConfig[]>
-export type GetTypeValidator = () => TypeValidator
+export type GetTypeValidator = () => Promise<TypeValidator>
 export type LoadConfig<T extends ValidatedRawConfig> = (
   configPath: string,
   getTypeValidator: GetTypeValidator,
@@ -76,7 +76,11 @@ const loadConfig = async <T extends ValidatedRawConfig>(
     let bodyValidationMessage: string | undefined
 
     try {
-      bodyValidationMessage = await validateConfigBodies(transformedConfigs, getTypeValidator(), isTestMode)
+      bodyValidationMessage = await validateConfigBodies(
+        transformedConfigs,
+        await getTypeValidator(),
+        isTestMode,
+      )
     } catch (err) {
       return {
         type: LoadConfigStatus.BodyValidationError,

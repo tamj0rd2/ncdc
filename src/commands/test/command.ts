@@ -51,9 +51,9 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
         ),
       createTypeValidator: () => {
         const ajv = new Ajv({ verbose: true, allErrors: true })
-        if (schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(schemaPath))
-        const tsHelpers = new TsHelpers(reportMetric, logger)
+        if (schemaPath) return Promise.resolve(new TypeValidator(ajv, new FsSchemaLoader(schemaPath)))
 
+        const tsHelpers = new TsHelpers(reportMetric, logger)
         const schemaGenerator = new SchemaGenerator(
           tsHelpers.createProgram(tsconfigPath, !force),
           force,
@@ -61,7 +61,7 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
           logger,
         )
         schemaGenerator.init()
-        return new TypeValidator(ajv, schemaGenerator)
+        return Promise.resolve(new TypeValidator(ajv, schemaGenerator))
       },
     }
   }

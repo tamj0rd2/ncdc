@@ -20,18 +20,18 @@ export type GetTestDeps = (args: TestArgs) => TestDeps
 export type RunTests = (
   baseUrl: string,
   configs: TestConfig[],
-  getTypeValidator: () => TypeValidator,
+  getTypeValidator: CreateTypeValidator,
 ) => Promise<'Success' | 'Failure'>
 
 export interface TestDeps {
   handleError: HandleError
   logger: NcdcLogger
-  createTypeValidator: () => TypeValidator
+  createTypeValidator: CreateTypeValidator
   runTests: RunTests
   loadConfig: LoadConfig<ValidatedTestConfig>
 }
 
-export type CreateTypeValidator = () => TypeValidator
+export type CreateTypeValidator = () => Promise<TypeValidator>
 
 export const createHandler = (getTestDeps: GetTestDeps) => async (args: TestArgs): Promise<void> => {
   const { handleError, createTypeValidator, loadConfig, runTests } = getTestDeps(args)
@@ -39,8 +39,8 @@ export const createHandler = (getTestDeps: GetTestDeps) => async (args: TestArgs
   if (!args.baseURL) return handleError({ message: 'baseURL must be specified' })
 
   let typeValidator: TypeValidator | undefined
-  const getTypeValidator: GetTypeValidator = () => {
-    if (!typeValidator) typeValidator = createTypeValidator()
+  const getTypeValidator: GetTypeValidator = async () => {
+    if (!typeValidator) typeValidator = await createTypeValidator()
     return typeValidator
   }
 

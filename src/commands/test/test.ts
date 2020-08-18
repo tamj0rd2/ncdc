@@ -8,7 +8,7 @@ import { ReportMetric } from '~commands/shared'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
-export type GetTypeValidator = () => TypeValidator
+export type GetTypeValidator = () => Promise<TypeValidator>
 
 export const runTests = async (
   baseUrl: string,
@@ -51,7 +51,8 @@ export const runTests = async (
       }
 
       if (config.response.type) {
-        const validationResult = await getTypeValidator().validate(res.data, config.response.type)
+        const typeValidator = await getTypeValidator()
+        const validationResult = await typeValidator.validate(res.data, config.response.type)
         if (!validationResult.success) {
           const message = `The received body does not match the type ${config.response.type}`
           messages.push(`${message}\n${validationResult.errors.join('\n')}`)
@@ -67,6 +68,7 @@ export const runTests = async (
   )
 
   for (const testTask of testTasks2) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     testTask.then(({ message, success }) => {
       if (success) logger.info(message)
       else logger.error(message)

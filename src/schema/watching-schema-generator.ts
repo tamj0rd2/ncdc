@@ -14,11 +14,14 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     isInitiated: false,
     hasCompiledSuccessfullyAtLeastOnce: false,
   }
+  private schemaGenerator?: SchemaGenerator
+  private readonly watchSubscriptions: { onSuccess: CompilerHook[]; onFailure: CompilerHook[] } = {
+    onSuccess: [],
+    onFailure: [],
+  }
 
   private tsconfigPath: string
-  private schemaGenerator?: SchemaGenerator
 
-  private readonly STARTING_WATCH_CODE = 6031
   private readonly CHANGE_DETECTED_CODE = 6032
 
   public constructor(
@@ -26,8 +29,6 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     private readonly tsHelpers: TsHelpers,
     private readonly logger: NcdcLogger,
     private readonly reportMetric: ReportMetric,
-    private readonly onReload?: CompilerHook,
-    private readonly onCompilationFailure?: CompilerHook,
   ) {
     this.tsconfigPath = resolve(tsconfigPath)
   }
@@ -55,7 +56,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
       solutionWatcherHost.afterProgramEmitAndDiagnostics = (watcherProgram) => {
         origAfterProgramEmitAndDiagnostics?.(watcherProgram)
 
-        const getDianosticsMetric = this.reportMetric('getting diagnostics')
+        const getDianosticsMetric = this.reportMetric('getting compilation diagnostics')
         const diagnostics = [
           ...watcherProgram.getConfigFileParsingDiagnostics(),
           ...watcherProgram.getSyntacticDiagnostics(),
@@ -69,7 +70,12 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
           diagnostics.filter((d) => d.category === ts.DiagnosticCategory.Error).length === 0
 
         if (!this.state.hasCompiledSuccessfullyAtLeastOnce) {
-          if (solution.getNextInvalidatedProject()) return
+          const failureShouldBeHandledByBuildExitCode = !wasCompilationSuccessful
+          if (failureShouldBeHandledByBuildExitCode) return
+
+          const thereAreMoreProjectsToCompile = !!solution.getNextInvalidatedProject()
+          if (thereAreMoreProjectsToCompile) return
+
           this.state.hasCompiledSuccessfullyAtLeastOnce = true
           this.setInternalSchemaGenerator(watcherProgram.getProgram())
           initMetric.success()
@@ -78,9 +84,9 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
 
         if (wasCompilationSuccessful) {
           this.setInternalSchemaGenerator(watcherProgram.getProgram())
-          return this.onReload?.()
+          this.watchSubscriptions.onSuccess.forEach((hook) => hook())
         } else {
-          return this.onCompilationFailure?.()
+          this.watchSubscriptions.onFailure.forEach((hook) => hook())
         }
       }
 
@@ -116,15 +122,17 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     return this.schemaGenerator.load(symbolName)
   }
 
+  public subscribeToWatchStatus = (onSuccess: CompilerHook, onFailure: CompilerHook): void => {
+    this.watchSubscriptions.onSuccess.push(onSuccess)
+    this.watchSubscriptions.onFailure.push(onFailure)
+  }
+
   private reportDiagnostic: ts.DiagnosticReporter = (diagnostic) => {
     this.logger.verbose(this.tsHelpers.formatErrorDiagnostic(diagnostic))
   }
 
   private reportWatchStatus: ts.WatchStatusReporter = (diagnostic): void => {
     switch (diagnostic.code) {
-      case this.STARTING_WATCH_CODE:
-        this.logger.info('Watching your source files for changes')
-        return
       case this.CHANGE_DETECTED_CODE:
         this.logger.info('Detected a change to your source files')
         return

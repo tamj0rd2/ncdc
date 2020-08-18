@@ -395,6 +395,24 @@ describe('ncdc serve', () => {
       })
     })
 
+    describe('when there are already typescript compilation errors', () => {
+      it('gives a useful error and exits', async () => {
+        new ConfigWrapper()
+          .addTsconfig()
+          .addConfig(new ConfigBuilder().withResponseType('Book').build())
+          .addType('Book', {
+            ISBN: 'what on earth!?',
+            ISBN_13: 'string',
+            author: 'number',
+            title: 'string',
+          })
+
+        const { waitForOutput } = await serve('--watch', false)
+
+        await waitForOutput('Could not compile your typescript source files')
+      })
+    })
+
     describe('when composite is true and noEmit is false during schema generation', () => {
       const cleanupTasks: CleanupTask[] = []
 

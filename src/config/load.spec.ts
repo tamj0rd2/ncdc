@@ -28,7 +28,7 @@ describe('loadConfig', () => {
     jest.resetAllMocks()
     mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs: [] })
     mockTransformConfigs.mockResolvedValue([transformedConfigDummy])
-    mockCreateTypeValidator.mockReturnValue(mockTypeValidator)
+    mockCreateTypeValidator.mockResolvedValue(mockTypeValidator)
   })
 
   it('calls readYamlAsync with the correct config path', async () => {

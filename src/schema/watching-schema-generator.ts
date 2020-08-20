@@ -83,7 +83,11 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
         }
 
         if (wasCompilationSuccessful) {
-          this.setInternalSchemaGenerator(watcherProgram.getProgram())
+          const mainProjectProgram = this.tsHelpers.createProgram(this.tsconfigPath, {
+            shouldTypecheck: false,
+            skipBuildingSolution: true,
+          })
+          this.setInternalSchemaGenerator(mainProjectProgram)
           this.watchSubscriptions.onSuccess.forEach((hook) => hook())
         } else {
           this.watchSubscriptions.onFailure.forEach((hook) => hook())
@@ -96,7 +100,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
       if (shouldBuildTemporaryProgram) {
         this.logger.verbose('no invalidated projects - going to build a temporary program')
         try {
-          const tempProgram = this.tsHelpers.createProgram(this.tsconfigPath, true)
+          const tempProgram = this.tsHelpers.createProgram(this.tsconfigPath, { shouldTypecheck: true })
           this.setInternalSchemaGenerator(tempProgram)
           this.state.hasCompiledSuccessfullyAtLeastOnce = true
         } catch (err) {

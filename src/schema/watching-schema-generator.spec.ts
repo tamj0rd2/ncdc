@@ -75,7 +75,7 @@ describe('watching schema generator', () => {
       it('creates a temporary program', async () => {
         await initialiseGenerator()
 
-        expect(stubTsHelpers.createProgram).toBeCalledWith(resolvedTsconfigPath, true)
+        expect(stubTsHelpers.createProgram).toBeCalledWith(resolvedTsconfigPath, { shouldTypecheck: true })
       })
 
       it('throws when a temporary program could not be created', async () => {

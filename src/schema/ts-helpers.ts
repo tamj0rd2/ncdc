@@ -9,13 +9,16 @@ export default class TsHelpers {
 
   constructor(private readonly reportMetric: ReportMetric, private readonly logger: NcdcLogger) {}
 
-  public createProgram(tsconfigPath: string, shouldTypecheck: boolean): ts.Program {
+  public createProgram(
+    tsconfigPath: string,
+    opts: { shouldTypecheck: boolean; skipBuildingSolution?: boolean },
+  ): ts.Program {
     const config = this.readTsConfig(tsconfigPath)
-    if (config.options.composite) this.buildSolution(tsconfigPath)
+    if (config.options.composite && !opts.skipBuildingSolution) this.buildSolution(tsconfigPath)
     const program = this.buildProgram(config)
 
     // composite programs already get type checked during the solution build
-    if (shouldTypecheck && !config.options.composite) this.typecheck(program)
+    if (opts.shouldTypecheck && !config.options.composite) this.typecheck(program)
     return program
   }
 

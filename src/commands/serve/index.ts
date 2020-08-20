@@ -48,7 +48,7 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
         if (!args.watch) {
           const tsHelpers = new TsHelpers(reportMetric, logger)
           const generator = new SchemaGenerator(
-            tsHelpers.createProgram(args.tsconfigPath, !args.force),
+            tsHelpers.createProgram(args.tsconfigPath, { shouldTypecheck: !args.force }),
             args.force,
             reportMetric,
             logger,

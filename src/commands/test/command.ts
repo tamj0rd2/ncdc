@@ -55,7 +55,7 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
 
         const tsHelpers = new TsHelpers(reportMetric, logger)
         const schemaGenerator = new SchemaGenerator(
-          tsHelpers.createProgram(tsconfigPath, !force),
+          tsHelpers.createProgram(tsconfigPath, { shouldTypecheck: !force }),
           force,
           reportMetric,
           logger,

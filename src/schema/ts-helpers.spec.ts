@@ -31,7 +31,7 @@ describe('create program', () => {
     const expectedProgram = mockObj<ts.Program>({ emit: jest.fn() })
     mockTs.createProgram.mockReturnValueOnce(expectedProgram)
 
-    const result = helpers.createProgram(tsconfigPath, false)
+    const result = helpers.createProgram(tsconfigPath, { shouldTypecheck: false })
 
     expect(result).toStrictEqual(expectedProgram)
   })
@@ -47,13 +47,13 @@ describe('create program', () => {
       mockObj<ts.BuilderProgram>({ getProgram: jest.fn().mockReturnValue(expectedProgram) }),
     )
 
-    const result = helpers.createProgram(tsconfigPath, false)
+    const result = helpers.createProgram(tsconfigPath, { shouldTypecheck: false })
 
     expect(result).toStrictEqual(expectedProgram)
   })
 
   it('ignores pre emit diagnostics when shouldTypecheck is false', () => {
-    helpers.createProgram(tsconfigPath, false)
+    helpers.createProgram(tsconfigPath, { shouldTypecheck: false })
 
     expect(mockTs.getPreEmitDiagnostics).not.toBeCalled()
   })
@@ -61,20 +61,22 @@ describe('create program', () => {
   it('fails on pre emit diagnostics when shouldTypecheck is true and there were errors', () => {
     mockTs.getPreEmitDiagnostics.mockReturnValueOnce([mockObj<ts.Diagnostic>({ code: 567 })])
 
-    expect(() => helpers.createProgram(tsconfigPath, true)).toThrowError('project has compilation errors')
+    expect(() => helpers.createProgram(tsconfigPath, { shouldTypecheck: true })).toThrowError(
+      'project has compilation errors',
+    )
     expect(spyLogger.verbose).toBeCalledWith(expect.stringContaining('Error 567'))
   })
 
   it('throws an error when there is an error reading a raw config file', () => {
     mockTs.readConfigFile.mockReturnValueOnce({ error: mockObj<ts.Diagnostic>({ code: 123 }) })
 
-    expect(() => helpers.createProgram(tsconfigPath, false)).toThrowError('Error 123:')
+    expect(() => helpers.createProgram(tsconfigPath, { shouldTypecheck: false })).toThrowError('Error 123:')
   })
 
   it('throws an error when there is apparently no config', () => {
     mockTs.readConfigFile.mockReturnValueOnce({})
 
-    expect(() => helpers.createProgram(tsconfigPath, false)).toThrowError(
+    expect(() => helpers.createProgram(tsconfigPath, { shouldTypecheck: false })).toThrowError(
       'Could not parse your tsconfig file',
     )
   })
@@ -86,7 +88,7 @@ describe('create program', () => {
       fileNames: [],
     })
 
-    expect(() => helpers.createProgram(tsconfigPath, false)).toThrowError('Error 321:')
+    expect(() => helpers.createProgram(tsconfigPath, { shouldTypecheck: false })).toThrowError('Error 321:')
   })
 
   it('throws an error when building a program fails', () => {
@@ -94,7 +96,9 @@ describe('create program', () => {
       throw new Error('Oh no')
     })
 
-    expect(() => helpers.createProgram(tsconfigPath, false)).toThrowError('project has compilation errors')
+    expect(() => helpers.createProgram(tsconfigPath, { shouldTypecheck: false })).toThrowError(
+      'project has compilation errors',
+    )
   })
 
   describe('when composite is true', () => {
@@ -118,25 +122,33 @@ describe('create program', () => {
     })
 
     it('builds a solution', () => {
-      helpers.createProgram(tsconfigPath, false)
+      helpers.createProgram(tsconfigPath, { shouldTypecheck: false })
 
       expect(builder.build).toBeCalled()
+    })
+
+    it('does not build a solution if the skip flag is true', () => {
+      helpers.createProgram(tsconfigPath, { shouldTypecheck: false, skipBuildingSolution: true })
+
+      expect(builder.build).not.toBeCalled()
     })
 
     it('throws an error if the solution could not be built', () => {
       builder.build.mockReturnValue(ts.ExitStatus.DiagnosticsPresent_OutputsSkipped)
 
-      expect(() => helpers.createProgram(tsconfigPath, false)).toThrowError('project has compilation errors')
+      expect(() => helpers.createProgram(tsconfigPath, { shouldTypecheck: false })).toThrowError(
+        'project has compilation errors',
+      )
     })
 
     it('returns an incremental program', () => {
-      const result = helpers.createProgram(tsconfigPath, false)
+      const result = helpers.createProgram(tsconfigPath, { shouldTypecheck: false })
 
       expect(result).toStrictEqual(expectedProgram)
     })
 
     it('does not do a manual typecheck even when typechecking is enabled', () => {
-      helpers.createProgram(tsconfigPath, true)
+      helpers.createProgram(tsconfigPath, { shouldTypecheck: true })
 
       expect(ts.getPreEmitDiagnostics).not.toBeCalled()
     })

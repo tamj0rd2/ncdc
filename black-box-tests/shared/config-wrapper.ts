@@ -10,7 +10,7 @@ export const TSCONFIG_FILE = `${TEST_ENV}/tsconfig.json`
 export const JSON_SCHEMAS_FOLDER = `${TEST_ENV}/json-schemas`
 export const FIXTURES_FOLDER = `${TEST_ENV}/fixtures` // TODO: change to fixtures
 export const TYPES_FILE = `${TEST_ENV}/types.ts`
-export const ENTRYPOINT = process.env.NCDC_ENTRYPOINT || './bin/ncdc'
+export const ENTRYPOINT = process.env.NCDC_ENTRYPOINT || 'node -r source-map-support/register ./bin/ncdc'
 
 export class ConfigWrapper {
   private configs: Config[] = []

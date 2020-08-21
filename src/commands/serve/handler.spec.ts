@@ -1,4 +1,4 @@
-import createHandler, { StartServer, ServeArgs, CreateTypeValidator, GetServeDeps } from './handler'
+import createHandler, { CreateServer, ServeArgs, GetTypeValidator, GetServeDeps } from './handler'
 import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
 import { transformConfigs, ValidatedServeConfig } from './config'
@@ -9,19 +9,20 @@ import { TypeValidator } from '~validation'
 import { ConfigBuilder } from '~config/types'
 import { NcdcLogger } from '~logger'
 import { resolve } from 'path'
+import NcdcServer from './server/ncdc-server'
 
 jest.unmock('./handler')
 jest.unmock('@hapi/joi')
 jest.mock('path')
 
 const mockHandleError = mockFn<HandleError>()
-const mockCreateTypeValidator = mockFn<CreateTypeValidator>()
+const mockGetTypeValidator = mockFn<GetTypeValidator>()
 const mockLoadConfig = mockFn<LoadConfig<ValidatedServeConfig>>()
 const mockLogger = mockObj<NcdcLogger>({})
 const getServeDeps = mockFn<GetServeDeps>()
 const mockTransformConfigs = mocked(transformConfigs)
 const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
-const mockStartServer = mockFn<StartServer>()
+const mockCreateServer = mockFn<CreateServer>()
 const mockResolve = mockFn(resolve)
 
 beforeEach(() => {
@@ -30,13 +31,13 @@ beforeEach(() => {
     mockObj<FSWatcher>({ on: jest.fn() }),
   )
   getServeDeps.mockReturnValue({
-    createTypeValidator: mockCreateTypeValidator,
+    getTypeValidator: mockGetTypeValidator,
     handleError: mockHandleError,
     loadConfig: mockLoadConfig,
     logger: mockLogger,
-    startServer: mockStartServer,
+    createServer: mockCreateServer,
   })
-  mockCreateTypeValidator.mockResolvedValue(mockTypeValidator)
+  mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
   mockTransformConfigs.mockResolvedValue([
     {
       name: randomString('name'),
@@ -44,6 +45,9 @@ beforeEach(() => {
       response: { code: randomNumber() },
     },
   ])
+  mockCreateServer.mockReturnValue(
+    mockObj<NcdcServer>({ start: jest.fn(), stop: jest.fn() }),
+  )
 })
 
 const handler = createHandler(getServeDeps)
@@ -98,25 +102,10 @@ describe('runs the server with the correct configs', () => {
 
     expect(mockLoadConfig).toBeCalledWith(
       expectedConfigPath,
-      expect.any(Function),
+      mockGetTypeValidator,
       mockTransformConfigs,
       false,
     )
-  })
-
-  it('only creates a type validator once if schemaPath is not defined', async () => {
-    await handler(args)
-
-    const getTypeValidatorFn = mockLoadConfig.mock.calls[0][1]
-    const timesToCall = randomNumber(1, 10)
-    await Array(timesToCall)
-      .fill(undefined)
-      .reduce(async (prev) => {
-        await prev
-        return getTypeValidatorFn()
-      }, Promise.resolve())
-
-    expect(mockCreateTypeValidator).toBeCalledTimes(1)
   })
 
   // this is because if we're loading from disk, we want to create a new
@@ -131,7 +120,7 @@ describe('runs the server with the correct configs', () => {
       .fill(0)
       .reduce<Promise<unknown>>((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
 
-    expect(mockCreateTypeValidator).toBeCalledTimes(timesToCall)
+    expect(mockGetTypeValidator).toBeCalledTimes(timesToCall)
   })
 
   const failureStatuses = [
@@ -160,7 +149,7 @@ describe('runs the server with the correct configs', () => {
     expect(stripAnsi(mockHandleError.mock.calls[0][0].message)).toEqual('No configs to serve')
   })
 
-  it('runs the server with the correct args', async () => {
+  it('creates the server with the correct args', async () => {
     const configs = [new ConfigBuilder().build()]
     mockLoadConfig.mockImplementation(async (_, getTypeValidator) => {
       await getTypeValidator()
@@ -170,7 +159,9 @@ describe('runs the server with the correct configs', () => {
     await handler(args)
 
     expect(mockHandleError).not.toBeCalled()
-    expect(mockStartServer).toBeCalledTimes(1)
-    expect(mockStartServer).toBeCalledWith(configs, mockTypeValidator)
+    expect(mockCreateServer).toBeCalledTimes(1)
+    expect(mockCreateServer).toBeCalledWith(args.port)
   })
+
+  it.todo('starts the server with the correct args')
 })

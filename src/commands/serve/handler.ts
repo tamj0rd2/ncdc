@@ -2,12 +2,12 @@ import { resolve } from 'path'
 import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import chokidar from 'chokidar'
-import { StartServerResult } from './server/app'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { red } from 'chalk'
 import { NcdcLogger } from '~logger'
 import { HandleError } from '~commands/shared'
 import { CompilerHook } from '~schema/watching-schema-generator'
+import { EventEmitter } from 'events'
 
 export interface ServeArgs {
   configPath?: string
@@ -19,29 +19,49 @@ export interface ServeArgs {
   verbose: boolean
 }
 
-export type StartServer = (
-  routes: ServeConfig[],
-  typeValidator: TypeValidator | undefined,
-) => StartServerResult
+interface NcdcServer {
+  start(routes: ServeConfig[]): Promise<void>
+  stop(): Promise<void>
+}
+
+export type CreateServer = (port: number) => NcdcServer
 
 const ATTEMPT_RESTARTING_MSG = 'Attempting to restart ncdc server'
 const getFailedRestartMsg = (msg: string): string => `Could not restart ncdc server\n${msg}`
 
-export type GetServeDeps = (args: ServeArgs) => ServeDeps
-export type CreateTypeValidator = (
-  onReload: CompilerHook,
-  onCompilationFailure: CompilerHook,
-) => Promise<TypeValidator>
+type TypescriptCompilerHooks = {
+  onSuccess: CompilerHook
+  onFail: CompilerHook
+}
+
+export type GetServeDeps = (args: ServeArgs, typescriptCompilerHooks: TypescriptCompilerHooks) => ServeDeps
+
+export type GetTypeValidator = () => Promise<TypeValidator>
+
 interface ServeDeps {
   logger: NcdcLogger
   handleError: HandleError
-  createTypeValidator: CreateTypeValidator
-  startServer: StartServer
+  getTypeValidator: GetTypeValidator
+  createServer: CreateServer
   loadConfig: LoadConfig<ValidatedServeConfig>
 }
 
+enum Events {
+  TypescriptCompileSucceeded = 'typescriptCompileSucceeded',
+  TypescriptCompileFailed = 'typescriptCompileFailed',
+}
+
 const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): Promise<void> => {
-  const { handleError, logger, loadConfig, startServer, createTypeValidator } = getServeDeps(args)
+  const eventEmitter = new EventEmitter({ captureRejections: true })
+
+  const typescriptCompilerHooks: TypescriptCompilerHooks = {
+    onSuccess: () => void eventEmitter.emit(Events.TypescriptCompileSucceeded),
+    onFail: () => void eventEmitter.emit(Events.TypescriptCompileFailed),
+  }
+  const { handleError, logger, loadConfig, createServer, getTypeValidator } = getServeDeps(
+    args,
+    typescriptCompilerHooks,
+  )
 
   if (!args.configPath) return handleError({ message: 'config path must be supplied' })
   if (isNaN(args.port)) return handleError({ message: 'port must be a number' })
@@ -49,40 +69,22 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     return handleError({ message: 'watch and force options cannot be used together' })
 
   const absoluteConfigPath = resolve(args.configPath)
-  let typeValidator: TypeValidator | undefined
 
   type PrepAndStartResult = {
-    startServerResult: StartServerResult
     pathsToWatch: string[]
   }
 
   let prepAndServeResult: PrepAndStartResult
 
+  const servers: Record<string, NcdcServer> = {
+    [args.configPath]: createServer(args.port),
+  }
+
+  const stopAllServers = (): Promise<void[]> =>
+    Promise.all(Object.values(servers).map((server) => server.stop()))
+
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
-    const loadResult = await loadConfig(
-      absoluteConfigPath,
-      async () => {
-        if (args.schemaPath || !typeValidator) {
-          const restartServer = async (): Promise<void> => {
-            logger.info(ATTEMPT_RESTARTING_MSG)
-            try {
-              await prepAndServeResult.startServerResult.close()
-              prepAndServeResult = await prepAndStartServer()
-            } catch (err) {
-              logger.error(getFailedRestartMsg(err.message))
-            }
-          }
-
-          typeValidator = await createTypeValidator(restartServer, () => {
-            logger.error('Your source code has compilation errors. Fix them to resume serving endpoints')
-          })
-        }
-
-        return typeValidator
-      },
-      transformConfigs,
-      false,
-    )
+    const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformConfigs, false)
 
     switch (loadResult.type) {
       case LoadConfigStatus.Success:
@@ -98,12 +100,25 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
         throw new Error('An unknown error ocurred')
     }
 
-    const startServerResult = startServer(loadResult.configs, typeValidator)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const server = servers[args.configPath!]
+    await server.start(loadResult.configs)
     return {
-      startServerResult,
       pathsToWatch: loadResult.absoluteFixturePaths,
     }
   }
+
+  eventEmitter.on(Events.TypescriptCompileSucceeded, async () => {
+    logger.info(ATTEMPT_RESTARTING_MSG)
+    return stopAllServers()
+      .then(prepAndStartServer)
+      .catch((err) => logger.error(getFailedRestartMsg(err.message)))
+  })
+
+  eventEmitter.on(Events.TypescriptCompileFailed, () => {
+    logger.error('Your source code has compilation errors. Fix them to resume serving endpoints')
+    return stopAllServers()
+  })
 
   try {
     prepAndServeResult = await prepAndStartServer()
@@ -132,7 +147,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
       logger.info(ATTEMPT_RESTARTING_MSG)
 
       try {
-        await prepAndServeResult.startServerResult.close()
+        await stopAllServers()
         prepAndServeResult = await prepAndStartServer()
       } catch (err) {
         logger.error(getFailedRestartMsg(err.message))

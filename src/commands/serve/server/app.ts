@@ -1,6 +1,5 @@
 import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
 import { blue } from 'chalk'
-import { Server } from 'http'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
 import { ServeConfig } from '../config'
@@ -31,7 +30,6 @@ export const verbsMap: Record<SupportedMethod, PossibleMethod> = {
   HEAD: 'head',
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mapLog = (
   name: Optional<string>,
   { method, path, query, body }: Request,
@@ -46,10 +44,10 @@ const mapLog = (
   },
 })
 
-export const configureServer = (
+export const configureApp = (
   baseUrl: string,
   mockConfigs: ServeConfig[],
-  typeValidator: TypeValidator | undefined,
+  getTypeValidator: () => Promise<TypeValidator>,
   logger: NcdcLogger,
 ): Express => {
   const app = express()
@@ -98,7 +96,8 @@ export const configureServer = (
           return next()
         }
 
-        if (typeValidator && request.type) {
+        if (request.type) {
+          const typeValidator = await getTypeValidator()
           const validationResult = await typeValidator.validate(req.body, request.type)
           if (!validationResult.success) {
             logger.warn(`An endpoint for ${req.path} exists but the request body did not match the type`)
@@ -160,37 +159,4 @@ export const configureServer = (
   })
 
   return app
-}
-
-export interface StartServerResult {
-  server: Server
-  close(): Promise<void>
-}
-
-export const startServer = (
-  port: number,
-  routes: ServeConfig[],
-  typeValidator: TypeValidator | undefined,
-  logger: NcdcLogger,
-): StartServerResult => {
-  const serverRoot = `http://localhost:${port}`
-  const app = configureServer(serverRoot, routes, typeValidator, logger)
-
-  const server = app.listen(port, () => {
-    logger.info(`Endpoints are being served on ${serverRoot}`)
-  })
-
-  return {
-    server,
-    close: (): Promise<void> =>
-      new Promise((resolve, reject) => {
-        server.close((err) => {
-          if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
-            return reject(err)
-          }
-
-          return resolve()
-        })
-      }),
-  }
 }

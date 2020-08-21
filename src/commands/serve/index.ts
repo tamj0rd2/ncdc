@@ -2,14 +2,13 @@ import { Argv } from 'yargs'
 import { GetRootDeps } from '../shared'
 import * as consts from '~commands/options'
 import createHandler, { ServeArgs, GetServeDeps } from './handler'
-import { startServer } from './server/app'
 import loadConfig from '~config/load'
 import { TypeValidator } from '~validation'
 import Ajv from 'ajv'
 import { FsSchemaLoader, WatchingSchemaGenerator } from '~schema'
 import { SchemaGenerator } from '~schema'
-import createServerLogger from './server/server-logger'
 import TsHelpers from '~schema/ts-helpers'
+import NcdcServer from './server/ncdc-server'
 
 const builder = (yargs: Argv): Argv<ServeArgs> =>
   yargs
@@ -32,41 +31,50 @@ const builder = (yargs: Argv): Argv<ServeArgs> =>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export default function createServeCommand(getCommonDeps: GetRootDeps) {
-  const getServeDeps: GetServeDeps = (args) => {
-    const { handleError, logger, reportMetric: reportMetric } = getCommonDeps(args.verbose)
+  const getServeDeps: GetServeDeps = (args, typescriptCompilerHooks) => {
+    const { handleError, logger, reportMetric } = getCommonDeps(args.verbose)
+    const ajv = new Ajv({ verbose: true, allErrors: true })
+    let typeValidator: TypeValidator
+
+    const getTypeValidator = async (): Promise<TypeValidator> => {
+      if (args.schemaPath) {
+        typeValidator = new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
+        return typeValidator
+      }
+
+      if (typeValidator) return typeValidator
+
+      if (!args.watch) {
+        const tsHelpers = new TsHelpers(reportMetric, logger)
+        const generator = new SchemaGenerator(
+          tsHelpers.createProgram(args.tsconfigPath, { shouldTypecheck: !args.force }),
+          args.force,
+          reportMetric,
+          logger,
+        )
+        generator.init()
+        typeValidator = new TypeValidator(ajv, generator)
+        return typeValidator
+      }
+
+      const watcher = new WatchingSchemaGenerator(
+        args.tsconfigPath,
+        new TsHelpers(reportMetric, logger),
+        logger,
+        reportMetric,
+      )
+      watcher.subscribeToWatchStatus(typescriptCompilerHooks.onSuccess, typescriptCompilerHooks.onFail)
+      await watcher.init()
+      typeValidator = new TypeValidator(ajv, watcher)
+      return typeValidator
+    }
 
     return {
       handleError,
       logger,
       loadConfig,
-      startServer: (routes, typeValidator) => startServer(args.port, routes, typeValidator, logger),
-      serverLogger: createServerLogger(args.verbose),
-      createTypeValidator: async (onCompileSuccess, onCompileFail) => {
-        const ajv = new Ajv({ verbose: true, allErrors: true })
-
-        if (args.schemaPath) return new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
-        if (!args.watch) {
-          const tsHelpers = new TsHelpers(reportMetric, logger)
-          const generator = new SchemaGenerator(
-            tsHelpers.createProgram(args.tsconfigPath, { shouldTypecheck: !args.force }),
-            args.force,
-            reportMetric,
-            logger,
-          )
-          generator.init()
-          return new TypeValidator(ajv, generator)
-        }
-
-        const watcher = new WatchingSchemaGenerator(
-          args.tsconfigPath,
-          new TsHelpers(reportMetric, logger),
-          logger,
-          reportMetric,
-        )
-        watcher.subscribeToWatchStatus(onCompileSuccess, onCompileFail)
-        await watcher.init()
-        return new TypeValidator(ajv, watcher)
-      },
+      createServer: (port) => new NcdcServer(port, getTypeValidator, logger),
+      getTypeValidator,
     }
   }
 

@@ -1,8 +1,8 @@
 import request from 'supertest'
-import { configureServer, verbsMap, PossibleMethod, ReqResLog } from './app'
+import { configureApp, verbsMap, PossibleMethod, ReqResLog } from './app'
 import { ConfigBuilder, SupportedMethod } from '~config/types'
 import { TypeValidator } from '~validation'
-import { mockObj } from '~test-helpers'
+import { mockObj, mockFn } from '~test-helpers'
 import { ServeConfig } from '../config'
 import { NcdcLogger } from '~logger'
 
@@ -19,7 +19,7 @@ describe('server', () => {
   afterAll(() => jest.clearAllMocks())
 
   const getApp = (configs: ServeConfig[]): Express.Application =>
-    configureServer('mysite.com', configs, mockTypeValidator, mockLogger)
+    configureApp('mysite.com', configs, mockFn().mockResolvedValue(mockTypeValidator), mockLogger)
 
   it('sends configurations when visiting /', async () => {
     const configs = [new ConfigBuilder().withRequestType('Some Type').build()]

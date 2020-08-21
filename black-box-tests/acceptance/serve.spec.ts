@@ -279,7 +279,7 @@ describe('ncdc serve', () => {
         await expect(res.text()).resolves.toBe('Hello!')
       })
 
-      it('restarts when the json schema changes', async () => {
+      it('restarts and fails when the json schema no longer matches', async () => {
         configWrapper.editSchemaFile(schemaName, { type: 'number' })
         await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
       })

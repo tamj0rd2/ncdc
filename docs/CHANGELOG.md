@@ -1,3 +1,10 @@
+## [0.13.1](https://github.com/tamj0rd2/ncdc/compare/v0.13.0...v0.13.1) (2020-08-21)
+
+
+### Bug Fixes
+
+* **serve:** allow saving a project reference to restart server ([93f4dd5](https://github.com/tamj0rd2/ncdc/commit/93f4dd5759af9fe146dd3f3421ec72b5c916396f)), closes [#382](https://github.com/tamj0rd2/ncdc/issues/382)
+
 # [0.13.0](https://github.com/tamj0rd2/ncdc/compare/v0.12.0...v0.13.0) (2020-08-18)
 
 

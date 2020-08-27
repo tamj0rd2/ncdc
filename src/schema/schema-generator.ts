@@ -1,6 +1,5 @@
 import { SchemaRetriever } from './types'
 import type { Program } from 'typescript'
-import { ReportMetric } from '~commands/shared'
 import {
   SchemaGenerator as TsSchemaGenerator,
   createParser,
@@ -9,7 +8,6 @@ import {
   NoRootTypeError,
 } from 'ts-json-schema-generator'
 import { JSONSchema7 } from 'json-schema'
-import { NcdcLogger } from '~logger'
 
 type JsonSchemaGenerator = (type: string) => JSONSchema7
 
@@ -17,12 +15,7 @@ export class SchemaGenerator implements SchemaRetriever {
   private readonly cache = new Map<string, JSONSchema7>()
   private generateJsonSchema?: JsonSchemaGenerator
 
-  constructor(
-    private readonly program: Program,
-    private readonly skipTypeChecking: boolean,
-    private readonly reportMetric: ReportMetric,
-    private readonly logger: NcdcLogger,
-  ) {}
+  constructor(private readonly program: Program) {}
 
   public init(): void {
     this.generateJsonSchema = this.createGenerator(this.program)

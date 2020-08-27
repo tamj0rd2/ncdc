@@ -144,7 +144,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
   }
 
   private setInternalSchemaGenerator(program: ts.Program): void {
-    this.schemaGenerator = new SchemaGenerator(program, false, this.reportMetric, this.logger)
+    this.schemaGenerator = new SchemaGenerator(program)
     this.schemaGenerator.init?.()
   }
 }

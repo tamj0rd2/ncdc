@@ -56,9 +56,6 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
         const tsHelpers = new TsHelpers(reportMetric, logger)
         const schemaGenerator = new SchemaGenerator(
           tsHelpers.createProgram(tsconfigPath, { shouldTypecheck: !force }),
-          force,
-          reportMetric,
-          logger,
         )
         schemaGenerator.init()
         return Promise.resolve(new TypeValidator(ajv, schemaGenerator))

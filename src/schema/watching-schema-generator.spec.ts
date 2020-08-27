@@ -52,47 +52,6 @@ describe('watching schema generator', () => {
 
       expect(stubSolution.build).toBeCalledTimes(1)
     })
-
-    describe('given some typescript outputs are not cached', () => {
-      it('does not create a temporary program', async () => {
-        stubSolution.getNextInvalidatedProject.mockReturnValue(expect.anything())
-
-        await initialiseGenerator()
-
-        expect(stubTsHelpers.createProgram).not.toBeCalled()
-      })
-
-      it('starts watching the solution for changes', async () => {
-        stubSolution.getNextInvalidatedProject.mockReturnValue(expect.anything())
-
-        await initialiseGenerator()
-
-        expect(stubSolution.build).toBeCalledWith(resolvedTsconfigPath)
-      })
-    })
-
-    describe('given all typescript outputs are already cached', () => {
-      it('creates a temporary program', async () => {
-        await initialiseGenerator()
-
-        expect(stubTsHelpers.createProgram).toBeCalledWith(resolvedTsconfigPath, { shouldTypecheck: true })
-      })
-
-      it('throws when a temporary program could not be created', async () => {
-        const expectedError = new Error('welp')
-        stubTsHelpers.createProgram.mockImplementation(() => {
-          throw expectedError
-        })
-
-        await expect(initialiseGenerator()).rejects.toThrowError(expectedError)
-      })
-
-      it('starts watching the solution for changes', async () => {
-        await initialiseGenerator()
-
-        expect(stubSolution.build).toBeCalledWith(resolvedTsconfigPath)
-      })
-    })
   })
 
   describe('load', () => {

@@ -31,7 +31,7 @@ services:
   acceptance-tests:
     build:
       context: .
-      target: compile
+      target: acceptance-tests
     command: ./node_modules/.bin/nyc --report-dir ./coverage/acceptance-tests yarn test:acceptance --coverage
     volumes:
       - ./coverage/acceptance-tests:/usr/src/app/coverage/acceptance-tests

@@ -7,11 +7,12 @@
     "ncdc": "./bin/ncdc"
   },
   "files": [
+    "bin",
     "lib"
   ],
   "scripts": {
     "clean": "rm -rf ./lib ./coverage/*",
-    "typecheck": "tsc && tsc -b ./black-box-tests/shared ./black-box-tests/acceptance",
+    "typecheck": "tsc && tsc -b ./black-box-tests/acceptance",
     "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "test": "jest --runInBand --bail",
     "test:watch": "npm run test -- --watch",
@@ -91,7 +92,12 @@
     "semantic-release": "^17.0.7",
     "source-map-support": "^0.5.16",
     "strip-ansi": "^6.0.0",
-    "supertest": "^4.0.2"
+    "supertest": "^4.0.2",
+    "ts-jest": "^26.3.0",
+    "typescript": "^3.8.3"
+  },
+  "peerDependencies": {
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
@@ -106,8 +112,6 @@
     "node-fetch": "^2.6.0",
     "qs": "^6.9.3",
     "ts-json-schema-generator": "^0.70.0",
-    "typescript": "^3.8.3",
-    "typescript-json-schema": "^0.43.0",
     "winston": "^3.2.1",
     "yargs": "^15.3.1"
   }

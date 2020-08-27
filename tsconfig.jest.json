@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      // dirty hack just to make ts-jest work
+      // related issue: https://github.com/kulshekhar/ts-jest/issues/1648
+      "~shared/*": ["./black-box-tests/shared/*"],
+      "~*": ["src/*"]
+    }
+  }
+}

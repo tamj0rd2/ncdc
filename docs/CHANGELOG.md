@@ -1,3 +1,16 @@
+# [1.0.0-alpha.1](https://github.com/tamj0rd2/ncdc/compare/v0.13.1...v1.0.0-alpha.1) (2020-08-27)
+
+
+### chore
+
+* **deps:** make typescript a peer dependency ([24cc110](https://github.com/tamj0rd2/ncdc/commit/24cc11083a394b849fb4dc451069de4d328992fd))
+
+
+### BREAKING CHANGES
+
+* **deps:** Typescript is no longer a dependency of this project.
+It is a peer dependency and you will need to install it yourself
+
 ## [0.13.1](https://github.com/tamj0rd2/ncdc/compare/v0.13.0...v0.13.1) (2020-08-21)
 
 

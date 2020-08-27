@@ -18,7 +18,13 @@ const commonSettings = {
     '<rootDir>\/black-box-tests\/test-environment.*',
     '<rootDir>\/lib.*',
     '<rootDir>\/coverage.*',
-  ]
+  ],
+  preset: 'ts-jest',
+  globals: {
+    'ts-jest': {
+      tsConfig: './tsconfig.jest.json'
+    }
+  },
 }
 
 const lowLevelTestSettings = {
@@ -61,9 +67,6 @@ const integrationTestSettings = {
   ],
   coverageDirectory: './coverage/integration-tests',
   coverageReporters: ["lcov", "text", "text-summary"],
-  moduleNameMapper: {
-    '~(.*)$': '<rootDir>/src/$1'
-  },
 }
 
 const acceptanceTestSettings = {
@@ -76,7 +79,8 @@ const acceptanceTestSettings = {
   // using nyc to report the coverage instead
   coverageReporters: ["none"],
   moduleNameMapper: {
-    '~shared(.*)$': '<rootDir>/black-box-tests/shared/$1'
+    '~shared(.*)$': '<rootDir>/black-box-tests/shared/$1',
+    ...lowLevelTestSettings.moduleNameMapper,
   },
 }
 

@@ -48,9 +48,6 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
         const tsHelpers = new TsHelpers(reportMetric, logger)
         const generator = new SchemaGenerator(
           tsHelpers.createProgram(args.tsconfigPath, { shouldTypecheck: !args.force }),
-          args.force,
-          reportMetric,
-          logger,
         )
         generator.init()
         typeValidator = new TypeValidator(ajv, generator)

@@ -69,13 +69,16 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
         const wasCompilationSuccessful =
           diagnostics.filter((d) => d.category === ts.DiagnosticCategory.Error).length === 0
 
+        const thereAreMoreProjectsToBuild =
+          watcherProgram.getCompilerOptions().configFilePath !== this.tsconfigPath ||
+          !!solution.getNextInvalidatedProject()
+
         if (!this.state.hasCompiledSuccessfullyAtLeastOnce) {
           const failureShouldBeHandledByBuildExitCode = !wasCompilationSuccessful
           if (failureShouldBeHandledByBuildExitCode) return
+          if (thereAreMoreProjectsToBuild) return
 
-          const thereAreMoreProjectsToCompile = !!solution.getNextInvalidatedProject()
-          if (thereAreMoreProjectsToCompile) return
-
+          this.logger.verbose('able to get a program via the solution watcher')
           this.state.hasCompiledSuccessfullyAtLeastOnce = true
           this.setInternalSchemaGenerator(watcherProgram.getProgram())
           initMetric.success()
@@ -83,40 +86,32 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
         }
 
         if (wasCompilationSuccessful) {
-          const mainProjectProgram = this.tsHelpers.createProgram(this.tsconfigPath, {
-            shouldTypecheck: false,
-            skipBuildingSolution: true,
-          })
-          this.setInternalSchemaGenerator(mainProjectProgram)
+          if (thereAreMoreProjectsToBuild) return
+          this.setInternalSchemaGenerator(watcherProgram.getProgram())
           this.watchSubscriptions.onSuccess.forEach((hook) => hook())
         } else {
           this.watchSubscriptions.onFailure.forEach((hook) => hook())
         }
       }
 
-      // the above function does not get executed unless there are invalidated projects,
-      // so instead we build a temporary program using a different strategy
-      const shouldBuildTemporaryProgram = !solution.getNextInvalidatedProject()
-      if (shouldBuildTemporaryProgram) {
-        this.logger.verbose('no invalidated projects - going to build a temporary program')
-        try {
-          const tempProgram = this.tsHelpers.createProgram(this.tsconfigPath, { shouldTypecheck: true })
-          this.setInternalSchemaGenerator(tempProgram)
-          this.state.hasCompiledSuccessfullyAtLeastOnce = true
-        } catch (err) {
-          initMetric.fail()
-          return reject(err)
-        }
-      }
-
       // this is what watches the solution and kicks of the initial build (if there are invalidated projects)
-      const solutionBuildResult = solution.build(this.tsconfigPath)
+      const solutionBuildResult = solution.build()
       if (solutionBuildResult !== ts.ExitStatus.Success) {
         initMetric.fail()
         return reject(new Error('Could not compile your typescript source files'))
       }
+      if (this.schemaGenerator) return resolve()
 
-      resolve()
+      this.logger.verbose('main project has not been invalidated - going to build a temporary program')
+      try {
+        const tempProgram = this.tsHelpers.createProgram(this.tsconfigPath, { shouldTypecheck: true })
+        this.setInternalSchemaGenerator(tempProgram)
+        this.state.hasCompiledSuccessfullyAtLeastOnce = true
+        return resolve()
+      } catch (err) {
+        initMetric.fail()
+        return reject(err)
+      }
     })
   }
 
@@ -144,7 +139,7 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
   }
 
   private setInternalSchemaGenerator(program: ts.Program): void {
-    this.schemaGenerator = new SchemaGenerator(program, false, this.reportMetric, this.logger)
+    this.schemaGenerator = new SchemaGenerator(program)
     this.schemaGenerator.init?.()
   }
 }

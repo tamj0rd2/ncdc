@@ -1,3 +1,10 @@
+# [1.0.0-alpha.2](https://github.com/tamj0rd2/ncdc/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2020-08-28)
+
+
+### Bug Fixes
+
+* **serve:** fix project reference related crash ([71f949e](https://github.com/tamj0rd2/ncdc/commit/71f949e95210b9a8da4de0b54f6af52ecb6daab3)), closes [#401](https://github.com/tamj0rd2/ncdc/issues/401)
+
 # [1.0.0-alpha.1](https://github.com/tamj0rd2/ncdc/compare/v0.13.1...v1.0.0-alpha.1) (2020-08-27)
 
 

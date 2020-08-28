@@ -4,7 +4,6 @@ import { mockObj, randomString, mockFn } from '~test-helpers'
 import { ReportMetric } from '~commands/shared'
 import * as tsj from 'ts-json-schema-generator'
 import { NoRootTypeError } from 'ts-json-schema-generator'
-import { Logger } from 'winston'
 import { OperationResult } from '~metrics'
 
 jest.disableAutomock()
@@ -18,7 +17,6 @@ describe('SchemaLoader', () => {
   const mockedTsjGenerator = mockObj<tsj.SchemaGenerator>({ createSchema: jest.fn() })
   const mockedTypescript = mockObj(ts)
   const mockedreportMetric = mockFn<ReportMetric>()
-  const spyLogger = mockObj<Logger>({ verbose: jest.fn() })
 
   beforeEach(() => {
     jest.resetAllMocks()
@@ -37,14 +35,11 @@ describe('SchemaLoader', () => {
     )
   })
 
-  const createSchemaGenerator = (skipTypeChecking = false): SchemaGenerator => {
-    const mockProgram = mockObj<ts.Program>({})
-    return new SchemaGenerator(mockProgram, skipTypeChecking, mockedreportMetric, spyLogger)
-  }
+  const createSchemaGenerator = (): SchemaGenerator => new SchemaGenerator(mockObj<ts.Program>({}))
 
   describe('loading schemas', () => {
     it('throws if there is no generator', async () => {
-      const schemaGenerator = createSchemaGenerator(true)
+      const schemaGenerator = createSchemaGenerator()
 
       await expect(() => schemaGenerator.load('bananas')).rejects.toThrowError(
         'This SchemaGenerator instance has not been initialised',
@@ -56,7 +51,7 @@ describe('SchemaLoader', () => {
         throw new NoRootTypeError(randomString('yikes'))
       })
 
-      const schemaGenerator = createSchemaGenerator(true)
+      const schemaGenerator = createSchemaGenerator()
       schemaGenerator.init()
 
       await expect(schemaGenerator.load('lol')).rejects.toThrowError('Could not find type: lol')
@@ -67,7 +62,7 @@ describe('SchemaLoader', () => {
         throw new Error(randomString('yikes'))
       })
 
-      const schemaGenerator = createSchemaGenerator(true)
+      const schemaGenerator = createSchemaGenerator()
       schemaGenerator.init()
 
       await expect(schemaGenerator.load('lol')).rejects.toThrowError(
@@ -79,7 +74,7 @@ describe('SchemaLoader', () => {
       const someSchema = { $schema: 'schema stuff' }
       mockedTsjGenerator.createSchema.mockReturnValue(someSchema)
 
-      const schemaLoader = createSchemaGenerator(true)
+      const schemaLoader = createSchemaGenerator()
       schemaLoader.init()
       const schema = await schemaLoader.load('DealSchema')
 
@@ -91,7 +86,7 @@ describe('SchemaLoader', () => {
       const someSchema2 = { $schema: 'schema stuff 2' }
       mockedTsjGenerator.createSchema.mockReturnValueOnce(someSchema).mockReturnValueOnce(someSchema2)
 
-      const schemaLoader = createSchemaGenerator(true)
+      const schemaLoader = createSchemaGenerator()
       schemaLoader.init()
       const schema1 = await schemaLoader.load('DealSchema')
       const schema2 = await schemaLoader.load('DealSchema')

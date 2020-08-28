@@ -11,6 +11,13 @@
 * **deps:** Typescript is no longer a dependency of this project.
 It is a peer dependency and you will need to install it yourself
 
+## [0.13.2](https://github.com/tamj0rd2/ncdc/compare/v0.13.1...v0.13.2) (2020-08-27)
+
+
+### Bug Fixes
+
+* **serve:** fix project reference related crash ([71f949e](https://github.com/tamj0rd2/ncdc/commit/71f949e95210b9a8da4de0b54f6af52ecb6daab3)), closes [#401](https://github.com/tamj0rd2/ncdc/issues/401)
+
 ## [0.13.1](https://github.com/tamj0rd2/ncdc/compare/v0.13.0...v0.13.1) (2020-08-21)
 
 

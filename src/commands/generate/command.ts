@@ -37,9 +37,6 @@ export default function createGenerateCommand(getCommonDeps: GetRootDeps): Comma
           const tsHelpers = new TsHelpers(reportMetric, logger)
           const generator = new SchemaGenerator(
             tsHelpers.createProgram(tsconfigPath, { shouldTypecheck: !force }),
-            force,
-            reportMetric,
-            logger,
           )
           generator.init()
           return generator

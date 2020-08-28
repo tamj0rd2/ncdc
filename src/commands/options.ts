@@ -3,6 +3,11 @@ export const CONFIG_PATH_OPTS = {
   describe: 'path to the ncdc config file',
   type: 'string',
 } as const
+export const NEW_CONFIG_PATH_OPTS = {
+  describe: 'path to the ncdc config file',
+  type: 'string',
+  default: './ncdc.js',
+} as const
 
 export const CONFIG_PATHS = 'configPaths'
 export const CONFIG_PATHS_OPTS = {

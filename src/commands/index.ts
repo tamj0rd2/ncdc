@@ -1,5 +1,6 @@
 export { default as createGenerateCommand } from './generate'
 export { default as createServeCommand } from './serve'
+export { default as createNewServeCommand } from './serve-new'
 export { default as createTestCommand } from './test'
 export { HandleError } from './shared'
 import * as opts from './options'

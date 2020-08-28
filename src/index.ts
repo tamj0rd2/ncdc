@@ -1,5 +1,10 @@
 import mainYargs from 'yargs'
-import { createGenerateCommand, createServeCommand, createTestCommand } from './commands'
+import {
+  createGenerateCommand,
+  createServeCommand,
+  createTestCommand,
+  createNewServeCommand,
+} from './commands'
 import { opts } from './commands'
 import MetricsReporter from '~metrics'
 import createNcdcLogger from '~logger'
@@ -30,6 +35,7 @@ export default function run(): void {
   mainYargs
     .command(createGenerateCommand(getCommonDeps))
     .command(createServeCommand(getCommonDeps))
+    .command(createNewServeCommand(getCommonDeps))
     .command(createTestCommand(getCommonDeps))
     .example(opts.EXAMPLE_GENERATE_COMMAND, opts.EXAMPLE_GENERATE_DESCRIPTION)
     .example(opts.EXAMPLE_SERVE_COMMAND, opts.EXAMPLE_SERVE_DESCRIPTION)

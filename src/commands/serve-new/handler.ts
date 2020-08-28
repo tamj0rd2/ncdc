@@ -1,49 +1,38 @@
 import { resolve } from 'path'
-import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
-import { TypeValidator } from '~validation'
-import chokidar from 'chokidar'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
-import { red } from 'chalk'
-import { NcdcLogger } from '~logger'
-import { HandleError } from '~commands/shared'
-import { CompilerHook } from '~schema/watching-schema-generator'
 import { EventEmitter } from 'events'
+import type { CompilerHooks, TypeValidator } from '~validation'
+import type { HandleError } from '~commands/shared'
+import NcdcServer from '~commands/serve/server/ncdc-server'
+import { LoadConfigStatus, LoadConfig } from '~config/load'
+import { red } from 'chalk'
+import chokidar from 'chokidar'
+import { ValidatedServeConfig, transformConfigs } from '~commands/serve/config'
+import { NcdcLogger } from '~logger'
 
 export interface ServeArgs {
-  configPath?: string
-  port: number
+  verbose: boolean
+  watch: boolean
+  force: boolean
+  configPath: string
   tsconfigPath: string
   schemaPath?: string
-  force: boolean
-  watch: boolean
-  verbose: boolean
-}
-
-interface NcdcServer {
-  start(routes: ServeConfig[]): Promise<void>
-  stop(): Promise<void>
 }
 
 export type CreateServer = (port: number) => NcdcServer
 
-const ATTEMPT_RESTARTING_MSG = 'Attempting to restart ncdc server'
-const getFailedRestartMsg = (msg: string): string => `Could not restart ncdc server\n${msg}`
-
-type CompilerHooks = {
-  onSuccess: CompilerHook
-  onFail: CompilerHook
+interface ServeDeps {
+  getTypeValidator(): Promise<TypeValidator>
+  handleError: HandleError
+  loadConfig: LoadConfig<ValidatedServeConfig>
+  createServer: CreateServer
+  logger: NcdcLogger
 }
 
-export type GetServeDeps = (args: ServeArgs, typescriptCompilerHooks: CompilerHooks) => ServeDeps
+export type GetServeDeps = (args: ServeArgs, compilerHooks: CompilerHooks) => ServeDeps
 
-export type GetTypeValidator = () => Promise<TypeValidator>
-
-interface ServeDeps {
-  logger: NcdcLogger
-  handleError: HandleError
-  getTypeValidator: GetTypeValidator
-  createServer: CreateServer
-  loadConfig: LoadConfig<ValidatedServeConfig>
+interface Service {
+  configPath: string
+  port: number
 }
 
 enum Events {
@@ -51,24 +40,23 @@ enum Events {
   TypescriptCompileFailed = 'typescriptCompileFailed',
 }
 
-const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): Promise<void> => {
-  const eventEmitter = new EventEmitter({ captureRejections: true })
+const ATTEMPT_RESTARTING_MSG = 'Attempting to restart ncdc server'
+const getFailedRestartMsg = (msg: string): string => `Could not restart ncdc server\n${msg}`
 
-  const typescriptCompilerHooks: CompilerHooks = {
+export const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): Promise<void> => {
+  const eventEmitter = new EventEmitter({ captureRejections: true })
+  const { handleError, createServer, logger, loadConfig, getTypeValidator } = getServeDeps(args, {
     onSuccess: () => void eventEmitter.emit(Events.TypescriptCompileSucceeded),
     onFail: () => void eventEmitter.emit(Events.TypescriptCompileFailed),
-  }
-  const { handleError, logger, loadConfig, createServer, getTypeValidator } = getServeDeps(
-    args,
-    typescriptCompilerHooks,
-  )
+  })
 
-  if (!args.configPath) return handleError({ message: 'config path must be supplied' })
-  if (isNaN(args.port)) return handleError({ message: 'port must be a number' })
-  if (args.watch && args.force)
-    return handleError({ message: 'watch and force options cannot be used together' })
+  const ncdcConfigPath = resolve(process.cwd(), args.configPath)
+  const defaultExport = (await import(ncdcConfigPath)).default
+  const config: Record<string, Service> = defaultExport
 
-  const absoluteConfigPath = resolve(args.configPath)
+  const service = Object.values(config)[0]
+  if (!service.configPath) return handleError({ message: 'config path must be supplied' })
+  if (isNaN(service.port)) return handleError({ message: 'port must be supplied' })
 
   type PrepAndStartResult = {
     pathsToWatch: string[]
@@ -76,15 +64,17 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
 
   let prepAndServeResult: PrepAndStartResult
 
+  const serviceConfigPath = resolve(service.configPath)
+
   const servers: Record<string, NcdcServer> = {
-    [args.configPath]: createServer(args.port),
+    [args.configPath]: createServer(service.port),
   }
 
   const stopAllServers = (): Promise<void[]> =>
     Promise.all(Object.values(servers).map((server) => server.stop()))
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
-    const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformConfigs, false)
+    const loadResult = await loadConfig(serviceConfigPath, getTypeValidator, transformConfigs, false)
 
     switch (loadResult.type) {
       case LoadConfigStatus.Success:
@@ -128,7 +118,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
 
   if (args.watch) {
     const fixturesToWatch = [...prepAndServeResult.pathsToWatch]
-    const chokidarWatchPaths = [absoluteConfigPath, ...fixturesToWatch]
+    const chokidarWatchPaths = [serviceConfigPath, ...fixturesToWatch]
     if (args.schemaPath) chokidarWatchPaths.push(resolve(args.schemaPath))
 
     const configWatcher = chokidar.watch(chokidarWatchPaths, {

@@ -3,7 +3,8 @@ import { createHttpClient } from './http-client'
 import { randomString, mocked, mockObj, mockFn, randomNumber } from '~test-helpers'
 import fetch, { Response } from 'node-fetch'
 
-jest.unmock('./http-client')
+jest.disableAutomock()
+jest.mock('node-fetch')
 
 describe('http client', () => {
   const mockedFetch = mocked(fetch)

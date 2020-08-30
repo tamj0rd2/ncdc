@@ -4,9 +4,9 @@ import { supportedMethods, Resource } from './types'
 import { randomString, randomNumber, mockObj } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TypeValidator } from '~validation'
+import { Endpoint } from './resource'
 
-jest.unmock('./validate')
-jest.unmock('./types')
+jest.disableAutomock()
 
 describe('validate', () => {
   const expectValidationErors = (config?: object | object[], ...expectedErrors: string[]): string[] => {
@@ -431,7 +431,7 @@ describe('validate config bodies', () => {
     name: randomString('name'),
     request: {
       method: 'GET',
-      endpoint: randomString(),
+      endpoint: new Endpoint(randomString('endpoint')),
       type: withTypes ? randomString('request-type') : undefined,
       body: withBodies ? randomString('request-body') : undefined,
     },

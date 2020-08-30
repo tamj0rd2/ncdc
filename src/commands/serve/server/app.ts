@@ -2,7 +2,6 @@ import express, { Express, Request, Response, ErrorRequestHandler } from 'expres
 import { blue } from 'chalk'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
-import validateQuery from './query-validator'
 import { SupportedMethod, Resource } from '~config/types'
 import { areHeadersValid } from './header-validator'
 import { isDeeplyEqual } from '~util'
@@ -75,9 +74,7 @@ export const configureApp = (
   }
 
   resources.forEach(({ name, request, response }) => {
-    const endpointWithoutQuery = request.endpoint.split('?')[0]
-
-    app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
+    app[verbsMap[request.method]](request.endpoint.pathName, async (req, res, next) => {
       try {
         if (request.headers) {
           const { success } = areHeadersValid(request.headers, req.headers)
@@ -87,8 +84,7 @@ export const configureApp = (
           }
         }
 
-        const queryIsValid = validateQuery(request.endpoint, req.query)
-        if (!queryIsValid) {
+        if (!request.endpoint.query.matches(req.query)) {
           logger.warn(
             `An endpoint for ${req.path} exists but the query params did not match the configuration`,
           )

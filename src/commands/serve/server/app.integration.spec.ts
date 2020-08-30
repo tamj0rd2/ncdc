@@ -22,11 +22,15 @@ describe('server', () => {
     configureApp('mysite.com', resources, mockFn().mockResolvedValue(mockTypeValidator), mockLogger)
 
   it('sends configurations when visiting /', async () => {
-    const configs = [new ResourceBuilder().withRequestType('Some Type').build()]
+    const config = new ResourceBuilder().withRequestType('Some Type').build()
 
-    const app = getApp(configs)
+    const app = getApp([config])
 
-    await request(app).get('/').expect(200).expect('Content-Type', /json/).expect(configs)
+    await request(app)
+      .get('/')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .expect([JSON.parse(JSON.stringify(config))])
   })
 
   const { HEAD, ...verbsMinusHead } = verbsMap
@@ -111,13 +115,13 @@ describe('server', () => {
       it('fails when configured headers are not given', async () => {
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).send().expect(404)
+        await request(app).get(config.request.endpoint.toString()).send().expect(404)
       })
 
       it('passes when configured headers are given', async () => {
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).set('nice', 'meme').expect(200)
+        await request(app).get(config.request.endpoint.toString()).set('nice', 'meme').expect(200)
       })
     })
 
@@ -178,7 +182,11 @@ describe('server', () => {
 
         const app = getApp(configs)
 
-        await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(401).expect('Noice')
+        await request(app)
+          .post(configs[0].request.endpoint.toString())
+          .send('Yo dude!')
+          .expect(401)
+          .expect('Noice')
       })
 
       it('gives a 404 when the request body fails type validation', async () => {
@@ -190,7 +198,7 @@ describe('server', () => {
         const app = getApp(configs)
 
         await request(app)
-          .post(configs[0].request.endpoint)
+          .post(configs[0].request.endpoint.toString())
           .send('Yo dude!')
           .expect(404)
           .expect(/NCDC ERROR: Could not find an endpoint/)
@@ -203,7 +211,7 @@ describe('server', () => {
 
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).expect(404)
+        await request(app).get(config.request.endpoint.toString()).expect(404)
       })
 
       it('returns a 404 when the request bodies do not match', async () => {
@@ -211,7 +219,7 @@ describe('server', () => {
 
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).send({ hello: 'werld' }).expect(404)
+        await request(app).get(config.request.endpoint.toString()).send({ hello: 'werld' }).expect(404)
       })
 
       it('ignores body validation if request.type is specified', async () => {
@@ -223,7 +231,7 @@ describe('server', () => {
 
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).send({ ayy: 'lmao' }).expect(200)
+        await request(app).get(config.request.endpoint.toString()).send({ ayy: 'lmao' }).expect(200)
       })
     })
   })
@@ -243,7 +251,7 @@ describe('server', () => {
         const app = getApp(configs)
 
         await request(app)
-          .get(configs[0].request.endpoint)
+          .get(configs[0].request.endpoint.toString())
           .expect('Content-Type', /application\/xml/)
           .expect('another-header', 'my value')
       })

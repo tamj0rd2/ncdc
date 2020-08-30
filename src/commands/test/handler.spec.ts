@@ -9,7 +9,7 @@ import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { ResourceBuilder } from '~config/types'
 
-jest.unmock('./handler')
+jest.disableAutomock()
 jest.mock('fs')
 jest.mock('path')
 

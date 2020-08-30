@@ -1,8 +1,10 @@
+import { Endpoint } from './resource'
+
 export interface Resource {
   name: string
   request: {
     method: SupportedMethod
-    endpoint: string
+    endpoint: Endpoint
     body?: Data
     type?: string
     headers?: NcdcHeaders
@@ -21,7 +23,7 @@ export type SupportedMethod = typeof supportedMethods[number]
 export class ResourceBuilder {
   private resource: Resource = {
     name: 'Test',
-    request: { endpoint: '/api/resource', method: 'GET' },
+    request: { endpoint: new Endpoint('/api/resource'), method: 'GET' },
     response: { code: 200, body: 'Hello, world!' },
   }
 
@@ -31,7 +33,7 @@ export class ResourceBuilder {
   }
 
   public withEndpoint(endpoint: string): ResourceBuilder {
-    this.resource.request.endpoint = endpoint
+    this.resource.request.endpoint = new Endpoint(endpoint)
     return this
   }
 

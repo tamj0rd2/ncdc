@@ -3,9 +3,11 @@ import { readFixture } from '~io'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import dot from 'dot-object'
 import { Resource } from '~config/types'
+import { Endpoint } from '~config/resource'
 
+jest.disableAutomock()
 jest.mock('path')
-jest.unmock('./config')
+jest.mock('~io')
 
 describe('transform configs', () => {
   const mockReadFixture = mocked(readFixture)
@@ -38,7 +40,7 @@ describe('transform configs', () => {
     expect(result[0]).toMatchObject<Resource>({
       name: config.name,
       request: {
-        endpoint: config.request.endpoints![0],
+        endpoint: new Endpoint(config.request.endpoints![0]),
         method: config.request.method,
         headers: config.request.headers,
         type: config.request.type,
@@ -58,8 +60,8 @@ describe('transform configs', () => {
     const result = await transformConfigs([config], '')
 
     expect(result).toHaveLength(2)
-    expect(result[0].request.endpoint).toBe(config.request.endpoints![0])
-    expect(result[1].request.endpoint).toBe(config.request.endpoints![1])
+    expect(result[0].request.endpoint.toString()).toBe(config.request.endpoints![0])
+    expect(result[1].request.endpoint.toString()).toBe(config.request.endpoints![1])
   })
 
   const bodyCases = ['request.body', 'response.body']

@@ -10,10 +10,12 @@ import { ResourceBuilder } from '~config/types'
 import { NcdcLogger } from '~logger'
 import { resolve } from 'path'
 import NcdcServer from './server/ncdc-server'
+import { Endpoint } from '~config/resource'
 
-jest.unmock('./handler')
-jest.unmock('@hapi/joi')
+jest.disableAutomock()
 jest.mock('path')
+jest.mock('chokidar')
+jest.mock('./config')
 
 const mockHandleError = mockFn<HandleError>()
 const mockGetTypeValidator = mockFn<GetTypeValidator>()
@@ -41,7 +43,7 @@ beforeEach(() => {
   mockTransformConfigs.mockResolvedValue([
     {
       name: randomString('name'),
-      request: { endpoint: randomString('endpoint'), method: 'GET' },
+      request: { endpoint: new Endpoint(randomString('endpoint')), method: 'GET' },
       response: { code: randomNumber() },
     },
   ])

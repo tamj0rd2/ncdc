@@ -1,5 +1,6 @@
 import { SupportedMethod, Resource } from '~config/types'
 import { readFixture } from '~io'
+import { Endpoint } from '~config/resource'
 
 export interface ValidatedTestConfig {
   name: string
@@ -33,7 +34,7 @@ export const transformConfigs = async (
         return c.request.endpoints.map<Promise<Resource>>(async (endpoint) => ({
           name: c.name,
           request: {
-            endpoint,
+            endpoint: new Endpoint(endpoint),
             method: c.request.method,
             body: c.request.bodyPath ? await readFixture(configPath, c.request.bodyPath) : c.request.body,
             headers: c.request.headers,

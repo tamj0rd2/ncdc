@@ -10,7 +10,7 @@ const isParsedQs = (x: unknown): x is qs.ParsedQs => {
   return !!x
 }
 
-const compareQuery = (expected: Query[number], actual: Query[number]): boolean => {
+export const compareQuery = (expected: Query[number], actual: Query[number]): boolean => {
   if (typeof expected === 'string') {
     if (typeof actual === 'string') {
       if (expected === '*' && actual !== undefined) return true

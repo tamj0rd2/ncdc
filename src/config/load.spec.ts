@@ -11,8 +11,10 @@ import loadConfig, {
 import { TypeValidator } from '~validation'
 import { validateRawConfig, ValidatedRawConfig, validateConfigBodies } from './validate'
 
-jest.unmock('./load')
+jest.disableAutomock()
 jest.mock('path')
+jest.mock('./validate')
+jest.mock('~io')
 
 describe('loadConfig', () => {
   const mockReadYamlAsync = mocked(readYamlAsync)

@@ -1,19 +1,19 @@
 import { TypeValidator } from '~validation'
 import { red, green, blue } from 'chalk'
-import { TestConfig } from './config'
+import { Resource } from '~config/types'
 import { inspect } from 'util'
 import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
 import { ReportMetric } from '~commands/shared'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
+export type FetchResource = (config: Resource) => Promise<LoaderResponse>
 export type GetTypeValidator = () => Promise<TypeValidator>
 
 export const runTests = async (
   baseUrl: string,
   fetchResource: FetchResource,
-  configs: TestConfig[],
+  configs: Resource[],
   getTypeValidator: GetTypeValidator,
   logger: NcdcLogger,
   reportMetric: ReportMetric,

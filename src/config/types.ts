@@ -1,4 +1,4 @@
-export interface CommonConfig {
+export interface Resource {
   name: string
   request: {
     method: SupportedMethod
@@ -18,64 +18,64 @@ export interface CommonConfig {
 export const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const
 export type SupportedMethod = typeof supportedMethods[number]
 
-export class ConfigBuilder {
-  private config: CommonConfig = {
+export class ResourceBuilder {
+  private resource: Resource = {
     name: 'Test',
     request: { endpoint: '/api/resource', method: 'GET' },
     response: { code: 200, body: 'Hello, world!' },
   }
 
-  public withName(name: string): ConfigBuilder {
-    this.config.name = name
+  public withName(name: string): ResourceBuilder {
+    this.resource.name = name
     return this
   }
 
-  public withEndpoint(endpoint: string): ConfigBuilder {
-    this.config.request.endpoint = endpoint
+  public withEndpoint(endpoint: string): ResourceBuilder {
+    this.resource.request.endpoint = endpoint
     return this
   }
 
-  public withMethod(method: SupportedMethod): ConfigBuilder {
-    this.config.request.method = method
+  public withMethod(method: SupportedMethod): ResourceBuilder {
+    this.resource.request.method = method
     return this
   }
 
-  public withRequestType(type: string): ConfigBuilder {
-    this.config.request.type = type
+  public withRequestType(type: string): ResourceBuilder {
+    this.resource.request.type = type
     return this
   }
 
-  public withRequestBody(body: Data): ConfigBuilder {
-    this.config.request.body = body
+  public withRequestBody(body: Data): ResourceBuilder {
+    this.resource.request.body = body
     return this
   }
 
-  public withRequestHeaders(headers: Optional<NcdcHeaders>): ConfigBuilder {
-    this.config.request.headers = headers
+  public withRequestHeaders(headers: Optional<NcdcHeaders>): ResourceBuilder {
+    this.resource.request.headers = headers
     return this
   }
 
-  public withResponseCode(code: number): ConfigBuilder {
-    this.config.response.code = code
+  public withResponseCode(code: number): ResourceBuilder {
+    this.resource.response.code = code
     return this
   }
 
-  public withResponseBody(body: Optional<Data>): ConfigBuilder {
-    this.config.response.body = body
+  public withResponseBody(body: Optional<Data>): ResourceBuilder {
+    this.resource.response.body = body
     return this
   }
 
-  public withResponseType(type: Optional<string>): ConfigBuilder {
-    this.config.response.type = type
+  public withResponseType(type: Optional<string>): ResourceBuilder {
+    this.resource.response.type = type
     return this
   }
 
-  public withResponseHeaders(headers: Optional<NcdcHeaders>): ConfigBuilder {
-    this.config.response.headers = headers
+  public withResponseHeaders(headers: Optional<NcdcHeaders>): ResourceBuilder {
+    this.resource.response.headers = headers
     return this
   }
 
-  public build(): CommonConfig {
-    return this.config
+  public build(): Resource {
+    return this.resource
   }
 }

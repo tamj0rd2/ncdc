@@ -2,9 +2,8 @@ import express, { Express, Request, Response, ErrorRequestHandler } from 'expres
 import { blue } from 'chalk'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
-import { ServeConfig } from '../config'
 import validateQuery from './query-validator'
-import { SupportedMethod } from '~config/types'
+import { SupportedMethod, Resource } from '~config/types'
 import { areHeadersValid } from './header-validator'
 import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
@@ -46,7 +45,7 @@ const mapLog = (
 
 export const configureApp = (
   baseUrl: string,
-  mockConfigs: ServeConfig[],
+  resources: Resource[],
   getTypeValidator: () => Promise<TypeValidator>,
   logger: NcdcLogger,
 ): Express => {
@@ -69,13 +68,13 @@ export const configureApp = (
   app.use(express.text())
   app.use(express.json())
   app.use(express.raw())
-  app.get(ROOT, (_, res) => res.json(mockConfigs))
+  app.get(ROOT, (_, res) => res.json(resources))
 
-  if (mockConfigs.length === 0) {
+  if (resources.length === 0) {
     logger.info('No mocks to serve')
   }
 
-  mockConfigs.forEach(({ name, request, response }) => {
+  resources.forEach(({ name, request, response }) => {
     const endpointWithoutQuery = request.endpoint.split('?')[0]
 
     app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {

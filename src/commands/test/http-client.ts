@@ -1,9 +1,9 @@
 import fetch from 'node-fetch'
-import { TestConfig } from './config'
 import Bottleneck from 'bottleneck'
+import { Resource } from '~config/types'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
+export type FetchResource = (config: Resource) => Promise<LoaderResponse>
 
 export const createHttpClient = (baseUrl: string, timeout?: number, rateLimitMs?: number): FetchResource => {
   const innerHttpClient = rateLimitMs

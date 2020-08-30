@@ -1,8 +1,13 @@
 import { mocked, randomString, mockObj, mockFn } from '~test-helpers'
 import { readYamlAsync } from '~io'
 import { resolve, isAbsolute } from 'path'
-import { CommonConfig } from './types'
-import loadConfig, { LoadConfigResponse, TransformConfigs, GetTypeValidator, LoadConfigStatus } from './load'
+import { Resource } from './types'
+import loadConfig, {
+  LoadConfigResponse,
+  TransformResources,
+  GetTypeValidator,
+  LoadConfigStatus,
+} from './load'
 import { TypeValidator } from '~validation'
 import { validateRawConfig, ValidatedRawConfig, validateConfigBodies } from './validate'
 
@@ -14,20 +19,20 @@ describe('loadConfig', () => {
   const mockResolve = mocked(resolve)
   const mockValidateRawConfig = mocked(validateRawConfig)
   const mockValidateBodies = mocked(validateConfigBodies)
-  const mockTransformConfigs = mockFn<TransformConfigs<unknown>>()
+  const mockTransformConfigs = mockFn<TransformResources<unknown>>()
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
   const mockCreateTypeValidator = mockFn<GetTypeValidator>()
   const mockIsAbsolute = mocked(isAbsolute)
 
   const configPath = randomString('configPath')
-  const transformedConfigDummy = { name: randomString('name'), request: {}, response: {} } as CommonConfig
+  const transformedResourceDummy = { name: randomString('name'), request: {}, response: {} } as Resource
   const act = async (isTestMode = false): Promise<LoadConfigResponse> =>
     loadConfig(configPath, mockCreateTypeValidator, mockTransformConfigs, isTestMode)
 
   beforeEach(() => {
     jest.resetAllMocks()
     mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs: [] })
-    mockTransformConfigs.mockResolvedValue([transformedConfigDummy])
+    mockTransformConfigs.mockResolvedValue([transformedResourceDummy])
     mockCreateTypeValidator.mockResolvedValue(mockTypeValidator)
   })
 
@@ -108,9 +113,7 @@ describe('loadConfig', () => {
       success: true,
       validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
-    mockTransformConfigs.mockResolvedValue([
-      { request: { type: randomString() }, response: {} } as CommonConfig,
-    ])
+    mockTransformConfigs.mockResolvedValue([{ request: { type: randomString() }, response: {} } as Resource])
 
     await act()
 
@@ -122,9 +125,7 @@ describe('loadConfig', () => {
       success: true,
       validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
-    mockTransformConfigs.mockResolvedValue([
-      { request: { type: randomString() }, response: {} } as CommonConfig,
-    ])
+    mockTransformConfigs.mockResolvedValue([{ request: { type: randomString() }, response: {} } as Resource])
     const validationError = randomString('oops')
     mockValidateBodies.mockResolvedValue(validationError)
 
@@ -142,7 +143,7 @@ describe('loadConfig', () => {
       validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
     })
     mockTransformConfigs.mockResolvedValue([
-      { request: {}, response: { type: randomString('some type') } } as CommonConfig,
+      { request: {}, response: { type: randomString('some type') } } as Resource,
     ])
     const errorMessage = randomString('some error message')
     mockValidateBodies.mockRejectedValue(new Error(errorMessage))
@@ -177,7 +178,7 @@ describe('loadConfig', () => {
       expect(result).toStrictEqual<LoadConfigResponse>({
         type: LoadConfigStatus.Success,
         absoluteFixturePaths: [fixturePath1, expectedAbsPath, fixturePath3],
-        configs: [transformedConfigDummy],
+        configs: [transformedResourceDummy],
       })
     })
   })

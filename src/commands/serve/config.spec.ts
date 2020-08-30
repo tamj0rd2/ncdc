@@ -1,7 +1,8 @@
-import { transformConfigs, ValidatedServeConfig, ServeConfig } from './config'
+import { transformResources, ValidatedServeConfig } from './config'
 import { randomString, mocked } from '~test-helpers'
 import { readFixture } from '~io'
 import dot from 'dot-object'
+import { Resource } from '~config/types'
 
 jest.unmock('./config')
 jest.unmock('@hapi/joi')
@@ -33,10 +34,10 @@ describe('transform configs', () => {
     const config = createBasicConfig()
     config.request.endpoints = ['/api/1']
 
-    const result = await transformConfigs([config], '')
+    const result = await transformResources([config], '')
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject<ServeConfig>({
+    expect(result[0]).toMatchObject<Resource>({
       name: config.name,
       request: {
         endpoint: config.request.endpoints![0],
@@ -56,7 +57,7 @@ describe('transform configs', () => {
     const config = createBasicConfig()
     config.request.endpoints = ['/api/1', '/api/2']
 
-    const result = await transformConfigs([config], '')
+    const result = await transformResources([config], '')
 
     expect(result).toHaveLength(2)
     expect(result[0].request.endpoint).toBe(config.request.endpoints![0])
@@ -68,7 +69,7 @@ describe('transform configs', () => {
     const config = createBasicConfig()
     dot.set(key, randomString(), config)
 
-    const result = await transformConfigs([config], '')
+    const result = await transformResources([config], '')
 
     expect(result).toHaveLength(1)
     const body = dot.pick(key, result[0])
@@ -91,7 +92,7 @@ describe('transform configs', () => {
       dot.set(pathToBody, fixturePath, config)
       const configPath = randomString('configPath')
 
-      const result = await transformConfigs([config], configPath)
+      const result = await transformResources([config], configPath)
 
       expect(mockReadFixture).toBeCalledWith(configPath, fixturePath)
       expect(result).toHaveLength(1)

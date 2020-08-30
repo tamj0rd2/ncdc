@@ -7,7 +7,7 @@ import { TypeValidator } from '~validation'
 import { NcdcLogger } from '~logger'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
-import { ConfigBuilder } from '~config/types'
+import { ResourceBuilder } from '~config/types'
 
 jest.unmock('./handler')
 jest.mock('fs')
@@ -118,7 +118,7 @@ it('handles there being no configs to run as an error', async () => {
 })
 
 it('calls runTests with the correct arguments', async () => {
-  const configs = [new ConfigBuilder().build()]
+  const configs = [new ResourceBuilder().build()]
   mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
 
   await handler(args)
@@ -131,7 +131,7 @@ it('handles errors thrown by testConfigs', async () => {
   mockedLoadConfig.mockResolvedValue({
     type: LoadConfigStatus.Success,
     absoluteFixturePaths: [],
-    configs: [new ConfigBuilder().build()],
+    configs: [new ResourceBuilder().build()],
   })
   mockedRunTests.mockResolvedValue('Failure')
 

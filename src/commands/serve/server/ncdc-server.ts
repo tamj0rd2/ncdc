@@ -1,8 +1,8 @@
 import type { TypeValidator } from '~validation'
 import { NcdcLogger } from '~logger'
-import { ServeConfig } from '../config'
 import { configureApp } from './app'
 import { Server } from 'http'
+import { Resource } from '~config/types'
 
 type GetTypeValidator = () => Promise<TypeValidator>
 
@@ -15,9 +15,9 @@ export default class NcdcServer {
     private readonly logger: NcdcLogger,
   ) {}
 
-  public async start(serveConfigurations: ServeConfig[]): Promise<void> {
+  public async start(resources: Resource[]): Promise<void> {
     const baseUrl = `http://localhost:${this.port}`
-    const app = configureApp(baseUrl, serveConfigurations, this.getTypeValidator, this.logger)
+    const app = configureApp(baseUrl, resources, this.getTypeValidator, this.logger)
 
     return new Promise((resolve) => {
       this.server = app.listen(this.port, () => {

@@ -1,4 +1,4 @@
-import { SupportedMethod, CommonConfig } from '~config/types'
+import { SupportedMethod, Resource } from '~config/types'
 import { readFixture } from '~io'
 
 export interface ValidatedTestConfig {
@@ -21,18 +21,16 @@ export interface ValidatedTestConfig {
   }
 }
 
-export type TestConfig = CommonConfig
-
 // TODO: also needs to be responsible for filtering
 export const transformConfigs = async (
   configs: ValidatedTestConfig[],
   configPath: string,
-): Promise<TestConfig[]> => {
+): Promise<Resource[]> => {
   return Promise.all(
     configs
       .filter((c) => !c.serveOnly)
-      .flatMap<Promise<TestConfig>>((c) => {
-        return c.request.endpoints.map<Promise<TestConfig>>(async (endpoint) => ({
+      .flatMap<Promise<Resource>>((c) => {
+        return c.request.endpoints.map<Promise<Resource>>(async (endpoint) => ({
           name: c.name,
           request: {
             endpoint,

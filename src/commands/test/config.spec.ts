@@ -1,7 +1,8 @@
 import { mocked, randomString } from '~test-helpers'
 import { readFixture } from '~io'
-import { ValidatedTestConfig, transformConfigs, TestConfig } from './config'
+import { ValidatedTestConfig, transformConfigs } from './config'
 import dot from 'dot-object'
+import { Resource } from '~config/types'
 
 jest.mock('path')
 jest.unmock('./config')
@@ -34,7 +35,7 @@ describe('transform configs', () => {
     const result = await transformConfigs([config], '')
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject<TestConfig>({
+    expect(result[0]).toMatchObject<Resource>({
       name: config.name,
       request: {
         endpoint: config.request.endpoints![0],

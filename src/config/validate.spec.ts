@@ -4,7 +4,7 @@ import { supportedMethods, Resource } from './types'
 import { randomString, randomNumber, mockObj } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TypeValidator } from '~validation'
-import { Endpoint } from './resource'
+import { Request } from './resource'
 
 jest.disableAutomock()
 
@@ -429,12 +429,12 @@ describe('validate config bodies', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
   const createResource = (withTypes = false, withBodies = false): Resource => ({
     name: randomString('name'),
-    request: {
+    request: new Request({
       method: 'GET',
-      endpoint: new Endpoint(randomString('endpoint')),
+      endpoint: randomString('endpoint'),
       type: withTypes ? randomString('request-type') : undefined,
       body: withBodies ? randomString('request-body') : undefined,
-    },
+    }),
     response: {
       code: randomNumber(),
       type: withTypes ? randomString('response-type') : undefined,
@@ -498,8 +498,7 @@ describe('validate config bodies', () => {
 
   describe('when there is a request type but no request body', () => {
     const config = createResource()
-    config.request.body = undefined
-    config.request.type = randomString('yo')
+    config.request = new Request({ ...config.request, body: undefined, type: randomString('yo') })
 
     it('does not validate when forceRequestValidation is false', async () => {
       await act([config])

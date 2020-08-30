@@ -74,7 +74,7 @@ export const configureApp = (
   }
 
   resources.forEach(({ name, request, response }) => {
-    app[verbsMap[request.method]](request.endpoint.pathName, async (req, res, next) => {
+    app[verbsMap[request.method]](request.pathName, async (req, res, next) => {
       try {
         if (request.headers) {
           const { success } = areHeadersValid(request.headers, req.headers)
@@ -84,7 +84,7 @@ export const configureApp = (
           }
         }
 
-        if (!request.endpoint.query.matches(req.query)) {
+        if (!request.query.matches(req.query)) {
           logger.warn(
             `An endpoint for ${req.path} exists but the query params did not match the configuration`,
           )
@@ -129,7 +129,7 @@ export const configureApp = (
         handleError(err, req, res, next)
       }
     })
-    logger.verbose(`Registered ${baseUrl}${request.endpoint} from config: ${blue(name)}`)
+    logger.verbose(`Registered ${request.formatUrl(baseUrl)} from config: ${blue(name)}`)
   })
 
   const default404Response =

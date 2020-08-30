@@ -1,6 +1,6 @@
 import { readFixture } from '~io'
 import { SupportedMethod, Resource } from '~config/types'
-import { Endpoint } from '~config/resource'
+import { Request } from '~config/resource'
 
 export interface ValidatedServeConfig {
   name: string
@@ -42,13 +42,13 @@ export const transformResources = async (
 
     return {
       name: c.name,
-      request: {
-        endpoint: new Endpoint(endpoint),
+      request: new Request({
+        endpoint: endpoint,
         method: c.request.method,
         body: c.request.bodyPath ? await readFixture(configPath, c.request.bodyPath) : c.request.body,
         headers: c.request.headers,
         type: c.request.type,
-      },
+      }),
       response: {
         code: c.response.code,
         body: responseBody,

@@ -1,9 +1,10 @@
 import { LoadConfig, LoadConfigStatus } from '~config/load'
-import { ValidatedTestConfig, transformConfigs, TestConfig } from './config'
+import { ValidatedTestConfig, transformConfigs } from './config'
 import { red } from 'chalk'
 import { TypeValidator } from '~validation'
 import { HandleError } from '~commands/shared'
 import { NcdcLogger } from '~logger'
+import { Resource } from '~config/types'
 
 export interface TestArgs {
   schemaPath?: string
@@ -19,7 +20,7 @@ export interface TestArgs {
 export type GetTestDeps = (args: TestArgs) => TestDeps
 export type RunTests = (
   baseUrl: string,
-  configs: TestConfig[],
+  configs: Resource[],
   getTypeValidator: GetTypeValidator,
 ) => Promise<'Success' | 'Failure'>
 

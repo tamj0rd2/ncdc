@@ -1,5 +1,5 @@
 import { readFixture } from '~io'
-import { SupportedMethod } from '~config/types'
+import { SupportedMethod, Resource } from '~config/types'
 
 export interface ValidatedServeConfig {
   name: string
@@ -24,11 +24,11 @@ export interface ValidatedServeConfig {
   }
 }
 
-export const transformConfigs = async (
+export const transformResources = async (
   configs: ValidatedServeConfig[],
   configPath: string,
-): Promise<ServeConfig[]> => {
-  const mapConfig = async (c: ValidatedServeConfig, endpoint: string): Promise<ServeConfig> => {
+): Promise<Resource[]> => {
+  const mapConfig = async (c: ValidatedServeConfig, endpoint: string): Promise<Resource> => {
     let responseBody: Data | undefined
 
     if (c.response.serveBodyPath) {
@@ -58,12 +58,12 @@ export const transformConfigs = async (
   }
 
   return Promise.all(
-    configs.flatMap<Promise<ServeConfig>>((c) => {
-      const configTasks: Promise<ServeConfig>[] = []
+    configs.flatMap<Promise<Resource>>((c) => {
+      const configTasks: Promise<Resource>[] = []
 
       if (c.request.endpoints) {
         configTasks.push(
-          ...c.request.endpoints.map<Promise<ServeConfig>>((endpoint) => mapConfig(c, endpoint)),
+          ...c.request.endpoints.map<Promise<Resource>>((endpoint) => mapConfig(c, endpoint)),
         )
       }
 
@@ -72,21 +72,4 @@ export const transformConfigs = async (
       return configTasks
     }),
   )
-}
-
-export interface ServeConfig {
-  name: string
-  request: {
-    method: SupportedMethod
-    endpoint: string
-    body?: Data
-    type?: string
-    headers?: NcdcHeaders
-  }
-  response: {
-    code: number
-    body?: Data
-    type?: string
-    headers?: NcdcHeaders
-  }
 }

@@ -1,6 +1,6 @@
 import { validateRawConfig, ValidationFailure, ValidationSuccess, validateConfigBodies } from './validate'
 import strip from 'strip-ansi'
-import { supportedMethods, CommonConfig } from './types'
+import { supportedMethods, Resource } from './types'
 import { randomString, randomNumber, mockObj } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TypeValidator } from '~validation'
@@ -427,7 +427,7 @@ describe('validate', () => {
 
 describe('validate config bodies', () => {
   const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
-  const createConfig = (withTypes = false, withBodies = false): CommonConfig => ({
+  const createResource = (withTypes = false, withBodies = false): Resource => ({
     name: randomString('name'),
     request: {
       method: 'GET',
@@ -445,24 +445,24 @@ describe('validate config bodies', () => {
   beforeEach(() => jest.resetAllMocks())
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const act = (config: CommonConfig[], forceRequestValidation = false) =>
-    validateConfigBodies(config, mockTypeValidator, forceRequestValidation)
+  const act = (resources: Resource[], forceRequestValidation = false) =>
+    validateConfigBodies(resources, mockTypeValidator, forceRequestValidation)
 
   describe('when a config has a type and body', () => {
     it('calls the body validator with the correct arguments', async () => {
-      const config = createConfig(true, true)
+      const resource = createResource(true, true)
       mockTypeValidator.validate.mockResolvedValue({ success: true })
 
-      await act([config])
+      await act([resource])
 
-      expect(mockTypeValidator.validate).toBeCalledWith(config.request?.body, config.request?.type)
-      expect(mockTypeValidator.validate).toBeCalledWith(config.response?.body, config.response?.type)
+      expect(mockTypeValidator.validate).toBeCalledWith(resource.request?.body, resource.request?.type)
+      expect(mockTypeValidator.validate).toBeCalledWith(resource.response?.body, resource.response?.type)
     })
 
     // This can happen if the original raw config had more than 1 endpoint, or an additional serve endpoint
     it('only runs the validation once in the case two transformed configs have the same name', async () => {
-      const config1 = createConfig(true, true)
-      const config2 = { ...createConfig(true, true), name: config1.name }
+      const config1 = createResource(true, true)
+      const config2 = { ...createResource(true, true), name: config1.name }
 
       mockTypeValidator.validate.mockResolvedValue({ success: true })
       await act([config1, config2])
@@ -471,7 +471,7 @@ describe('validate config bodies', () => {
     })
 
     it('returns undefined when there are no validation issues', async () => {
-      const config = createConfig()
+      const config = createResource()
       mockTypeValidator.validate.mockResolvedValue({ success: true })
 
       const result = await act([config])
@@ -480,7 +480,7 @@ describe('validate config bodies', () => {
     })
 
     it('returns errors if a config body fails type validation', async () => {
-      const config = createConfig(true, true)
+      const config = createResource(true, true)
       const error1 = randomString('error-message-1')
       const error2 = randomString('error-message-2')
       const error3 = randomString('error-message-3')
@@ -497,7 +497,7 @@ describe('validate config bodies', () => {
   })
 
   describe('when there is a request type but no request body', () => {
-    const config = createConfig()
+    const config = createResource()
     config.request.body = undefined
     config.request.type = randomString('yo')
 
@@ -518,7 +518,7 @@ describe('validate config bodies', () => {
   })
 
   it('skips request and response type validation when there are no types', async () => {
-    const config = createConfig(false, true)
+    const config = createResource(false, true)
 
     await act([config])
 

@@ -1,10 +1,10 @@
 import { runTests, GetTypeValidator } from './test'
 import { randomString, mockFn, mockObj, randomNumber } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
-import { TestConfig } from './config'
+import { Resource } from '~config/types'
 import { FetchResource } from './http-client'
 import { TypeValidator } from '~validation'
-import { ConfigBuilder } from '~config/types'
+import { ResourceBuilder } from '~config/types'
 import { Logger } from 'winston'
 import { ReportMetric } from '~commands/shared'
 import { OperationResult } from '~metrics'
@@ -28,14 +28,14 @@ describe('test configs', () => {
   })
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const act = (...configs: TestConfig[]) =>
+  const act = (...configs: Resource[]) =>
     runTests(baseUrl, mockFetchResource, configs, mockGetTypeValidator, mockLogger, mockReportMetric)
 
   const getLoggedMessage = (method: 'error' | 'info', callIndex = 0): string =>
     stripAnsi((mockLogger[method].mock.calls[callIndex][0] as unknown) as string)
 
   it('calls fetchResource with the correct args', async () => {
-    const config = new ConfigBuilder().build()
+    const config = new ResourceBuilder().build()
     mockFetchResource.mockResolvedValue({ status: randomNumber() })
 
     await act(config)
@@ -44,7 +44,7 @@ describe('test configs', () => {
   })
 
   it('logs a failure when fetching a resource throws', async () => {
-    const config = new ConfigBuilder().withName('Bob').withEndpoint('/jim').build()
+    const config = new ResourceBuilder().withName('Bob').withEndpoint('/jim').build()
     const errorMessage = randomString('error message')
     mockFetchResource.mockRejectedValue(new Error(errorMessage))
 
@@ -56,7 +56,7 @@ describe('test configs', () => {
 
   it('returns a failed message when the status code does not match', async () => {
     const expectedStatus = randomNumber()
-    const config = new ConfigBuilder()
+    const config = new ResourceBuilder()
       .withName('Bob')
       .withEndpoint('/jim')
       .withResponseCode(expectedStatus)
@@ -73,7 +73,7 @@ describe('test configs', () => {
 
   describe('validation when a response body is configured', () => {
     it('does not return a failure message when the body matches the specified object', async () => {
-      const config = new ConfigBuilder()
+      const config = new ResourceBuilder()
         .withName('Bob')
         .withEndpoint('/jim')
         .withResponseBody({ hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 })
@@ -90,7 +90,7 @@ describe('test configs', () => {
     })
 
     it('returns a failure message when the response body is undefined', async () => {
-      const config = new ConfigBuilder()
+      const config = new ResourceBuilder()
         .withName('Bob')
         .withEndpoint('/jim')
         .withResponseBody(randomString('body'))
@@ -104,7 +104,7 @@ describe('test configs', () => {
     })
 
     it('returns a failure message when the body does not match the specified object', async () => {
-      const config = new ConfigBuilder()
+      const config = new ResourceBuilder()
         .withName('Bob')
         .withEndpoint('/jim')
         .withResponseBody({ hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 })
@@ -123,7 +123,7 @@ describe('test configs', () => {
 
   describe('when the config has a response type specified', () => {
     it('calls the type validator with the correct params', async () => {
-      const config = new ConfigBuilder()
+      const config = new ResourceBuilder()
         .withName('Bob')
         .withEndpoint('/jim')
         .withResponseType(randomString('res type'))
@@ -139,7 +139,7 @@ describe('test configs', () => {
     })
 
     it('does not return a failure message when the types match', async () => {
-      const config = new ConfigBuilder()
+      const config = new ResourceBuilder()
         .withName('Bob')
         .withEndpoint('/jim')
         .withResponseType(randomString('res type'))
@@ -155,7 +155,7 @@ describe('test configs', () => {
     })
 
     it('returns a failure message when the types do not match', async () => {
-      const config = new ConfigBuilder()
+      const config = new ResourceBuilder()
         .withName('Bob')
         .withEndpoint('/jim')
         .withResponseType(randomString('res type'))

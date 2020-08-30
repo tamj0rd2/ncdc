@@ -1,4 +1,4 @@
-import { CommonConfig, supportedMethods } from './types'
+import { Resource, supportedMethods } from './types'
 import { TypeValidator } from '~validation'
 import Joi from '@hapi/joi'
 import { blue, bold, red } from 'chalk'
@@ -133,7 +133,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
 }
 
 export const validateConfigBodies = async (
-  configs: CommonConfig[],
+  configs: Resource[],
   typeValidator: TypeValidator,
   forceReqValidation: boolean,
 ): Promise<Optional<string>> => {

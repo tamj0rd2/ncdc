@@ -32,6 +32,7 @@ describe('http client', () => {
       body: undefined,
       method: 'GET',
       timeout,
+      headers: {},
     })
   })
 

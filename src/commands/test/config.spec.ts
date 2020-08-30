@@ -1,9 +1,9 @@
-import { mocked, randomString } from '~test-helpers'
+import { mocked, randomString, serialiseAsJson } from '~test-helpers'
 import { readFixture } from '~io'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import dot from 'dot-object'
 import { Resource } from '~config/types'
-import { Request } from '~config/resource'
+import { Request, Response } from '~config/resource'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -37,20 +37,24 @@ describe('transform configs', () => {
     const result = await transformConfigs([config], '')
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject<Resource>({
-      name: config.name,
-      request: new Request({
-        endpoint: config.request.endpoints![0],
-        method: config.request.method,
-        headers: config.request.headers,
-        type: config.request.type,
+    expect(result[0]).toMatchObject<Resource>(
+      serialiseAsJson({
+        name: config.name,
+        request: new Request({
+          endpoint: config.request.endpoints![0],
+          method: config.request.method,
+          headers: config.request.headers,
+          type: config.request.type,
+          body: config.request.body,
+        }),
+        response: new Response({
+          code: config.response.code,
+          headers: config.response.headers,
+          type: config.response.type,
+          body: config.response.body,
+        }),
       }),
-      response: {
-        code: config.response.code,
-        headers: config.response.headers,
-        type: config.response.type,
-      },
-    })
+    )
   })
 
   it('returns multiple configs if there are multiple request endpoints', async () => {

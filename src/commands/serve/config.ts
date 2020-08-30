@@ -1,6 +1,6 @@
 import { readFixture } from '~io'
 import { SupportedMethod, Resource } from '~config/types'
-import { Request } from '~config/resource'
+import { Request, Response } from '~config/resource'
 
 export interface ValidatedServeConfig {
   name: string
@@ -8,7 +8,7 @@ export interface ValidatedServeConfig {
   request: {
     method: SupportedMethod
     type?: string
-    headers?: NcdcHeaders
+    headers?: Record<string, string>
     endpoints?: string[]
     serveEndpoint?: string
     body?: Data
@@ -17,7 +17,7 @@ export interface ValidatedServeConfig {
   response: {
     code: number
     type?: string
-    headers?: NcdcHeaders
+    headers?: Record<string, string>
     body?: Data
     bodyPath?: string
     serveBody?: Data
@@ -49,12 +49,12 @@ export const transformResources = async (
         headers: c.request.headers,
         type: c.request.type,
       }),
-      response: {
+      response: new Response({
         code: c.response.code,
         body: responseBody,
         headers: c.response.headers,
         type: c.response.type,
-      },
+      }),
     }
   }
 

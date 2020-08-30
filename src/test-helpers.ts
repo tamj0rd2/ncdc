@@ -27,3 +27,5 @@ export function randomString(prefix = ''): string {
 export function randomNumber(min = 0, max = 1000): number {
   return Math.floor(Math.random() * (max - min) + min)
 }
+
+export const serialiseAsJson = <T extends object>(data: T): T => JSON.parse(JSON.stringify(data))

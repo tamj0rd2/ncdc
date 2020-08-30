@@ -3,7 +3,6 @@ import { blue } from 'chalk'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
 import { SupportedMethod, Resource } from '~config/types'
-import { areHeadersValid } from './header-validator'
 import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
 
@@ -76,12 +75,9 @@ export const configureApp = (
   resources.forEach(({ name, request, response }) => {
     app[verbsMap[request.method]](request.pathName, async (req, res, next) => {
       try {
-        if (request.headers) {
-          const { success } = areHeadersValid(request.headers, req.headers)
-          if (!success) {
-            logger.warn(`An endpoint for ${req.path} exists but the headers did not match the configuration`)
-            return next()
-          }
+        if (!request.headers.matches(req.headers)) {
+          logger.warn(`An endpoint for ${req.path} exists but the headers did not match the configuration`)
+          return next()
         }
 
         if (!request.query.matches(req.query)) {
@@ -110,8 +106,8 @@ export const configureApp = (
           }
         }
 
-        if (response.code) res.status(response.code)
-        if (response.headers) res.set(response.headers)
+        res.status(response.code)
+        res.set(response.headers.getAll())
 
         if (!ignoredLogPaths.includes(req.path)) {
           let bodyToLog: Data | undefined = response.body

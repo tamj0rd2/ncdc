@@ -10,7 +10,7 @@ import { ResourceBuilder } from '~config/types'
 import { NcdcLogger } from '~logger'
 import { resolve } from 'path'
 import NcdcServer from './server/ncdc-server'
-import { Request } from '~config/resource'
+import { Request, Response } from '~config/resource'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -43,8 +43,14 @@ beforeEach(() => {
   mockTransformConfigs.mockResolvedValue([
     {
       name: randomString('name'),
-      request: new Request({ endpoint: randomString('endpoint'), method: 'GET' }),
-      response: { code: randomNumber() },
+      request: new Request({
+        endpoint: randomString('endpoint'),
+        method: 'GET',
+        body: undefined,
+        headers: undefined,
+        type: undefined,
+      }),
+      response: new Response({ code: randomNumber(), body: undefined, headers: undefined, type: undefined }),
     },
   ])
   mockCreateServer.mockReturnValue(

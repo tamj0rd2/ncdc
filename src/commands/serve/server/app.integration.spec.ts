@@ -2,7 +2,7 @@ import request from 'supertest'
 import { configureApp, verbsMap, PossibleMethod, ReqResLog } from './app'
 import { ResourceBuilder, SupportedMethod } from '~config/types'
 import { TypeValidator } from '~validation'
-import { mockObj, mockFn } from '~test-helpers'
+import { mockObj, mockFn, serialiseAsJson } from '~test-helpers'
 import { Resource } from '~config/types'
 import { NcdcLogger } from '~logger'
 
@@ -30,7 +30,7 @@ describe('server', () => {
       .get('/')
       .expect(200)
       .expect('Content-Type', /json/)
-      .expect([JSON.parse(JSON.stringify(config))])
+      .expect([serialiseAsJson(config)])
   })
 
   const { HEAD, ...verbsMinusHead } = verbsMap

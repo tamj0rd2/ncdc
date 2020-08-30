@@ -1,14 +1,8 @@
-import { Endpoint } from './resource'
+import { Request } from './resource'
 
 export interface Resource {
   name: string
-  request: {
-    method: SupportedMethod
-    endpoint: Endpoint
-    body?: Data
-    type?: string
-    headers?: NcdcHeaders
-  }
+  request: Request
   response: {
     code: number
     body?: Data
@@ -23,7 +17,7 @@ export type SupportedMethod = typeof supportedMethods[number]
 export class ResourceBuilder {
   private resource: Resource = {
     name: 'Test',
-    request: { endpoint: new Endpoint('/api/resource'), method: 'GET' },
+    request: new Request({ endpoint: '/api/resource', method: 'GET' }),
     response: { code: 200, body: 'Hello, world!' },
   }
 
@@ -32,28 +26,33 @@ export class ResourceBuilder {
     return this
   }
 
+  public withRequest(request: Request): ResourceBuilder {
+    this.resource.request = request
+    return this
+  }
+
   public withEndpoint(endpoint: string): ResourceBuilder {
-    this.resource.request.endpoint = new Endpoint(endpoint)
+    this.resource.request = new Request({ ...this.resource.request, endpoint })
     return this
   }
 
   public withMethod(method: SupportedMethod): ResourceBuilder {
-    this.resource.request.method = method
+    this.resource.request = new Request({ ...this.resource.request, method })
     return this
   }
 
   public withRequestType(type: string): ResourceBuilder {
-    this.resource.request.type = type
+    this.resource.request = new Request({ ...this.resource.request, type })
     return this
   }
 
   public withRequestBody(body: Data): ResourceBuilder {
-    this.resource.request.body = body
+    this.resource.request = new Request({ ...this.resource.request, body })
     return this
   }
 
   public withRequestHeaders(headers: Optional<NcdcHeaders>): ResourceBuilder {
-    this.resource.request.headers = headers
+    this.resource.request = new Request({ ...this.resource.request, headers })
     return this
   }
 

@@ -21,7 +21,7 @@ export const runTests = async (
   const testTasks2 = configs.map(
     async (config): Promise<{ success: boolean; message: string }> => {
       const failedLine = red.bold(`FAILED: ${config.name}`)
-      const endpointSegment = `- ${blue(baseUrl + config.request.endpoint)}`
+      const endpointSegment = `- ${blue(config.request.formatUrl(baseUrl))}`
 
       const fetchMetric = reportMetric(`fetching ${config.request.endpoint} for config ${config.name}`)
       let res: LoaderResponse

@@ -3,7 +3,7 @@ import { randomString, mocked } from '~test-helpers'
 import { readFixture } from '~io'
 import dot from 'dot-object'
 import { Resource } from '~config/types'
-import { Endpoint } from '~config/resource'
+import { Request } from '~config/resource'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -39,12 +39,12 @@ describe('transform configs', () => {
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject<Resource>({
       name: config.name,
-      request: {
-        endpoint: new Endpoint(config.request.endpoints![0]),
+      request: new Request({
+        endpoint: config.request.endpoints![0],
         method: config.request.method,
         headers: config.request.headers,
         type: config.request.type,
-      },
+      }),
       response: {
         code: config.response.code,
         headers: config.response.headers,

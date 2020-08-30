@@ -12,9 +12,8 @@ export const createHttpClient = (baseUrl: string, timeout?: number, rateLimitMs?
 
   return async ({ request, response }): Promise<LoaderResponse> => {
     const { body } = request
-    const fullUrl = `${baseUrl}${request.endpoint}`
 
-    const res = await innerHttpClient(fullUrl, {
+    const res = await innerHttpClient(request.formatUrl(baseUrl), {
       method: request.method,
       body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
       headers: request.headers,

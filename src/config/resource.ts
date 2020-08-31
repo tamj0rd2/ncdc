@@ -3,6 +3,7 @@ import qs from 'qs'
 import QueryString from 'qs'
 import { compareQuery } from '~commands/serve/server/query-validator'
 import { IncomingHttpHeaders } from 'http'
+import { isDeeplyEqual } from '~util'
 
 class Query {
   private readonly query: qs.ParsedQs | undefined
@@ -77,19 +78,42 @@ interface RequestInput {
   headers: Record<string, string> | undefined
 }
 
+export class Body {
+  private readonly isObject = typeof this.data === 'object'
+
+  constructor(private readonly data: Data) {}
+
+  public serialize(): string {
+    return this.isObject ? JSON.stringify(this.data) : this.data?.toString()
+  }
+
+  public matches(bodyToCompare: unknown): boolean {
+    return isDeeplyEqual(this.data, bodyToCompare)
+  }
+
+  public get(): Data {
+    return this.data
+  }
+
+  public toString(): string {
+    const shortenedBody = this.data?.toString().substr(0, 30)
+    return `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
+  }
+}
+
 export class Request {
   public readonly method: SupportedMethod
   public readonly endpoint: string
   public readonly pathName: string
   public readonly query: Query
   public readonly headers: NcdcHeaders
-  public readonly type?: string
-  public readonly body?: Data
+  public readonly type: string | undefined
+  public readonly body: Body | undefined
 
   public constructor(input: RequestInput) {
     this.method = input.method
     this.endpoint = input.endpoint
-    this.body = input.body
+    this.body = input.body ? new Body(input.body) : undefined
     this.type = input.type
     this.headers = new NcdcHeaders(input.headers)
 
@@ -108,7 +132,7 @@ export class Request {
     return new Request({
       endpoint: request.endpoint,
       method: request.method,
-      body: request.body,
+      body: request.body?.get(),
       headers: request.headers.getAll(),
       type: request.type,
     })
@@ -124,13 +148,13 @@ interface ResponseInput {
 
 export class Response {
   public readonly code: number
-  public readonly body?: Data
-  public readonly type?: string
+  public readonly body: Body | undefined
+  public readonly type: string | undefined
   public readonly headers: NcdcHeaders
 
   constructor(input: ResponseInput) {
     this.code = input.code
-    this.body = input.body
+    this.body = input.body ? new Body(input.body) : undefined
     this.type = input.type
     this.headers = new NcdcHeaders(input.headers)
   }
@@ -138,7 +162,7 @@ export class Response {
   public static CreateFromResponse = (response: Response): Response => {
     return new Response({
       code: response.code,
-      body: response.body,
+      body: response.body?.get(),
       headers: response.headers.getAll(),
       type: response.type,
     })
@@ -195,7 +219,7 @@ export class ResourceBuilder {
   }
 
   public withRequestBody(body: Data): ResourceBuilder {
-    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, body })
+    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, body: new Body(body) })
     return this
   }
 
@@ -213,7 +237,10 @@ export class ResourceBuilder {
   }
 
   public withResponseBody(body: Optional<Data>): ResourceBuilder {
-    this.resource.response = Response.CreateFromResponse({ ...this.resource.response, body })
+    this.resource.response = Response.CreateFromResponse({
+      ...this.resource.response,
+      body: body ? new Body(body) : undefined,
+    })
     return this
   }
 

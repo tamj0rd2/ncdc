@@ -1,1 +1,1 @@
-export { Resource, Request, Response, NcdcHeaders, SupportedMethod, ResourceBuilder } from './resource'
+export { Resource, Request, Response, NcdcHeaders, SupportedMethod, ResourceBuilder, Body } from './resource'

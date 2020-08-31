@@ -15,7 +15,7 @@ export const createHttpClient = (baseUrl: string, timeout?: number, rateLimitMs?
 
     const res = await innerHttpClient(request.formatUrl(baseUrl), {
       method: request.method,
-      body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
+      body: body && body.serialize(),
       headers: request.headers.getAll(),
       timeout,
     })

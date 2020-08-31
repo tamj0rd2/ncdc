@@ -2,7 +2,7 @@ import express, { Express, Request, Response, ErrorRequestHandler } from 'expres
 import { blue } from 'chalk'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
-import { SupportedMethod, Resource } from '~config/types'
+import { SupportedMethod, Resource } from '~config'
 import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
 

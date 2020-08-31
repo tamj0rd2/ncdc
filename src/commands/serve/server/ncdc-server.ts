@@ -2,7 +2,7 @@ import type { TypeValidator } from '~validation'
 import { NcdcLogger } from '~logger'
 import { configureApp } from './app'
 import { Server } from 'http'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 
 type GetTypeValidator = () => Promise<TypeValidator>
 

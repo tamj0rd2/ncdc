@@ -1,5 +1,5 @@
 import { readFixture } from '~io'
-import { SupportedMethod, Resource } from '~config/types'
+import { SupportedMethod, Resource } from '~config'
 import { Request, Response } from '~config/resource'
 
 export interface ValidatedServeConfig {

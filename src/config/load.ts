@@ -2,7 +2,7 @@ import { readYamlAsync } from '~io'
 import { resolve, isAbsolute } from 'path'
 import { TypeValidator } from '~validation'
 import { validateConfigBodies, validateRawConfig, ValidatedRawConfig } from './validate'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 
 export enum LoadConfigStatus {
   Success = 'Success',

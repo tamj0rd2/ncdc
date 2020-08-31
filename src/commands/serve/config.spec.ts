@@ -2,7 +2,7 @@ import { transformResources, ValidatedServeConfig } from './config'
 import { randomString, mocked, serialiseAsJson } from '~test-helpers'
 import { readFixture } from '~io'
 import dot from 'dot-object'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 import { Request, Response } from '~config/resource'
 
 jest.disableAutomock()

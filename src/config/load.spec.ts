@@ -1,7 +1,7 @@
 import { mocked, randomString, mockObj, mockFn } from '~test-helpers'
 import { readYamlAsync } from '~io'
 import { resolve, isAbsolute } from 'path'
-import { Resource } from './types'
+import { Resource } from './resource'
 import loadConfig, {
   LoadConfigResponse,
   TransformResources,

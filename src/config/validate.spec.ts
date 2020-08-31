@@ -1,6 +1,6 @@
 import { validateRawConfig, ValidationFailure, ValidationSuccess, validateConfigBodies } from './validate'
 import strip from 'strip-ansi'
-import { supportedMethods, Resource } from './types'
+import { supportedMethods, Resource } from './resource'
 import { randomString, randomNumber, mockObj } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TypeValidator } from '~validation'

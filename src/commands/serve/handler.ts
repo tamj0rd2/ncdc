@@ -8,7 +8,7 @@ import { NcdcLogger } from '~logger'
 import { HandleError } from '~commands/shared'
 import { CompilerHook } from '~schema/watching-schema-generator'
 import { EventEmitter } from 'events'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 
 export interface ServeArgs {
   configPath?: string

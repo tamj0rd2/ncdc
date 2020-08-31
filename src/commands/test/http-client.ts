@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import Bottleneck from 'bottleneck'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 
 export type LoaderResponse = { status: number; data?: Data }
 export type FetchResource = (config: Resource) => Promise<LoaderResponse>

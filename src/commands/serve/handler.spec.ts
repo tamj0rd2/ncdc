@@ -1,26 +1,28 @@
 import createHandler, { CreateServer, ServeArgs, GetTypeValidator, GetServeDeps } from './handler'
 import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
-import { transformConfigs, ValidatedServeConfig } from './config'
+import { transformResources, ValidatedServeConfig } from './config'
 import chokidar, { FSWatcher } from 'chokidar'
 import stripAnsi from 'strip-ansi'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { TypeValidator } from '~validation'
-import { ConfigBuilder } from '~config/types'
+import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
 import { resolve } from 'path'
 import NcdcServer from './server/ncdc-server'
+import { Request, Response, SupportedMethod } from '~config'
 
-jest.unmock('./handler')
-jest.unmock('@hapi/joi')
+jest.disableAutomock()
 jest.mock('path')
+jest.mock('chokidar')
+jest.mock('./config')
 
 const mockHandleError = mockFn<HandleError>()
 const mockGetTypeValidator = mockFn<GetTypeValidator>()
 const mockLoadConfig = mockFn<LoadConfig<ValidatedServeConfig>>()
 const mockLogger = mockObj<NcdcLogger>({})
 const getServeDeps = mockFn<GetServeDeps>()
-const mockTransformConfigs = mocked(transformConfigs)
+const mockTransformConfigs = mocked(transformResources)
 const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
 const mockCreateServer = mockFn<CreateServer>()
 const mockResolve = mockFn(resolve)
@@ -41,8 +43,14 @@ beforeEach(() => {
   mockTransformConfigs.mockResolvedValue([
     {
       name: randomString('name'),
-      request: { endpoint: randomString('endpoint'), method: 'GET' },
-      response: { code: randomNumber() },
+      request: new Request({
+        endpoint: randomString('endpoint'),
+        method: SupportedMethod.GET,
+        body: undefined,
+        headers: undefined,
+        type: undefined,
+      }),
+      response: new Response({ code: randomNumber(), body: undefined, headers: undefined, type: undefined }),
     },
   ])
   mockCreateServer.mockReturnValue(
@@ -150,7 +158,7 @@ describe('runs the server with the correct configs', () => {
   })
 
   it('creates the server with the correct args', async () => {
-    const configs = [new ConfigBuilder().build()]
+    const configs = [new ResourceBuilder().build()]
     mockLoadConfig.mockImplementation(async (_, getTypeValidator) => {
       await getTypeValidator()
       return { type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] }

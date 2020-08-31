@@ -1,4 +1,4 @@
-import { CommonConfig, supportedMethods } from './types'
+import { Resource, SupportedMethod } from './resource'
 import { TypeValidator } from '~validation'
 import Joi from '@hapi/joi'
 import { blue, bold, red } from 'chalk'
@@ -59,7 +59,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
         // TODO: the request schema needs to be customisable, or have some way to mutate it
         request: Joi.object({
           method: Joi.string()
-            .valid(...supportedMethods)
+            .valid(...Object.values(SupportedMethod))
             .uppercase()
             .required(),
           type: Joi.string(),
@@ -109,15 +109,15 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
   }
 
   const formattedErrors = validationResult.error.details
-    .map((p) => {
-      const configName: string = dot.pick(`${p.path[0]}.name`, config)
+    .map((error) => {
+      const configName: string = dot.pick(`${error.path[0]}.name`, config)
       const fullPath =
-        p.path.length &&
-        p.path.reduce<string>((accum, next, i) => {
+        error.path.length &&
+        error.path.reduce<string>((accum, next, i) => {
           if (i === 0 && typeof next === 'number') return bold(`config[${configName || next}]`)
           return typeof next === 'number' ? `${accum}[${next}]` : `${accum}.${next}`
         }, '')
-      return { ...p, fullPath }
+      return { ...error, fullPath }
     })
     .sort((a, b) => {
       if (a.fullPath < b.fullPath) return -1
@@ -133,7 +133,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
 }
 
 export const validateConfigBodies = async (
-  configs: CommonConfig[],
+  configs: Resource[],
   typeValidator: TypeValidator,
   forceReqValidation: boolean,
 ): Promise<Optional<string>> => {
@@ -149,7 +149,7 @@ export const validateConfigBodies = async (
     const validationErrors: string[] = []
 
     if (config.request.type && (config.request.body || forceReqValidation)) {
-      const result = await typeValidator.validate(config.request.body, config.request.type)
+      const result = await typeValidator.validate(config.request.body?.get(), config.request.type)
       if (!result.success) {
         const prefix = red(`Config ${bold(config.name)} request body failed type validation:`)
         const message = `${prefix}\n${result.errors.join('\n')}`
@@ -157,7 +157,7 @@ export const validateConfigBodies = async (
       }
     }
     if (config.response.type && config.response.body) {
-      const result = await typeValidator.validate(config.response.body, config.response.type)
+      const result = await typeValidator.validate(config.response.body?.get(), config.response.type)
       if (!result.success) {
         const prefix = red(`Config ${bold(config.name)} response body failed type validation:`)
         const message = `${prefix}\n${result.errors.join('\n')}`

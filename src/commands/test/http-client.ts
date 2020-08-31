@@ -1,9 +1,9 @@
 import fetch from 'node-fetch'
-import { TestConfig } from './config'
 import Bottleneck from 'bottleneck'
+import { Resource } from '~config'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
+export type FetchResource = (config: Resource) => Promise<LoaderResponse>
 
 export const createHttpClient = (baseUrl: string, timeout?: number, rateLimitMs?: number): FetchResource => {
   const innerHttpClient = rateLimitMs
@@ -12,22 +12,23 @@ export const createHttpClient = (baseUrl: string, timeout?: number, rateLimitMs?
 
   return async ({ request, response }): Promise<LoaderResponse> => {
     const { body } = request
-    const fullUrl = `${baseUrl}${request.endpoint}`
 
-    const res = await innerHttpClient(fullUrl, {
+    const res = await innerHttpClient(request.formatUrl(baseUrl), {
       method: request.method,
-      body: body && typeof body === 'object' ? JSON.stringify(body) : body?.toString(),
-      headers: request.headers,
+      body: body && body.serialize(),
+      headers: request.headers.getAll(),
       timeout,
     })
 
-    if (request.headers?.['accept']) {
-      const useJson = request.headers['accept'].includes('application/json')
+    const acceptHeader = request.headers.get('accept')
+    if (acceptHeader) {
+      const useJson = acceptHeader.includes('application/json')
       return { status: res.status, data: useJson ? await res.json() : await res.text() }
     }
 
-    if (response.headers?.['content-type']) {
-      const useJson = response.headers['content-type'].includes('application/json')
+    const contentTypeHeader = response.headers.get('content-type')
+    if (contentTypeHeader) {
+      const useJson = contentTypeHeader.includes('application/json')
       return { status: res.status, data: useJson ? await res.json() : await res.text() }
     }
 

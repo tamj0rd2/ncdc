@@ -1,70 +1,23 @@
-import { Argv } from 'yargs'
-import { GetRootDeps } from '../shared'
+import { GetRootDeps, CommandModule } from '../shared'
 import * as consts from '~commands/options'
 import createHandler, { ServeArgs, GetServeDeps } from './handler'
 import loadConfig from '~config/load'
-import { TypeValidator } from '~validation'
-import Ajv from 'ajv'
-import { FsSchemaLoader, WatchingSchemaGenerator } from '~schema'
-import { SchemaGenerator } from '~schema'
-import TsHelpers from '~schema/ts-helpers'
+import TypeValidatorFactory, { TypeValidator } from '~validation'
 import NcdcServer from './server/ncdc-server'
 
-const builder = (yargs: Argv): Argv<ServeArgs> =>
-  yargs
-    .positional(consts.CONFIG_PATH, consts.CONFIG_PATH_OPTS)
-    .positional('port', {
-      describe: 'port to serve the API on',
-      type: 'number',
-      default: 4000,
-    })
-    .option('watch', {
-      describe: 'restarts the server when changes to the config file, fixtures or source files are made',
-      type: 'boolean',
-      default: false,
-    })
-    .option(consts.SCHEMA_PATH, consts.SCHEMA_PATH_OPTS)
-    .option(consts.TSCONFIG_PATH, consts.TSCONFIG_PATH_OPTS)
-    .option(consts.FORCE_GENERATION, consts.FORCE_GENERATION_OPTS)
-    .option(consts.VERBOSE, consts.VERBOSE_OPTS)
-    .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION)
-
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export default function createServeCommand(getCommonDeps: GetRootDeps) {
-  const getServeDeps: GetServeDeps = (args, typescriptCompilerHooks) => {
+export default function createServeCommand(getCommonDeps: GetRootDeps): CommandModule<ServeArgs> {
+  const getServeDeps: GetServeDeps = (args, compilerHooks) => {
     const { handleError, logger, reportMetric } = getCommonDeps(args.verbose)
-    const ajv = new Ajv({ verbose: true, allErrors: true })
-    let typeValidator: TypeValidator
-
-    const getTypeValidator = async (): Promise<TypeValidator> => {
-      if (args.schemaPath) {
-        typeValidator = new TypeValidator(ajv, new FsSchemaLoader(args.schemaPath))
-        return typeValidator
-      }
-
-      if (typeValidator) return typeValidator
-
-      if (!args.watch) {
-        const tsHelpers = new TsHelpers(reportMetric, logger)
-        const generator = new SchemaGenerator(
-          tsHelpers.createProgram(args.tsconfigPath, { shouldTypecheck: !args.force }),
-        )
-        generator.init()
-        typeValidator = new TypeValidator(ajv, generator)
-        return typeValidator
-      }
-
-      const watcher = new WatchingSchemaGenerator(
-        args.tsconfigPath,
-        new TsHelpers(reportMetric, logger),
-        logger,
-        reportMetric,
-      )
-      watcher.subscribeToWatchStatus(typescriptCompilerHooks.onSuccess, typescriptCompilerHooks.onFail)
-      await watcher.init()
-      typeValidator = new TypeValidator(ajv, watcher)
-      return typeValidator
-    }
+    const typeValidatorFactory = new TypeValidatorFactory(logger, reportMetric, {
+      compilerHooks,
+      watch: args.watch,
+      force: args.force,
+    })
+    const getTypeValidator = (): Promise<TypeValidator> =>
+      typeValidatorFactory.getValidator({
+        tsconfigPath: args.tsconfigPath,
+        schemaPath: args.schemaPath,
+      })
 
     return {
       handleError,
@@ -78,7 +31,20 @@ export default function createServeCommand(getCommonDeps: GetRootDeps) {
   return {
     command: 'serve <configPath> [port]',
     describe: 'Serves configured endpoints',
-    builder,
+    builder: (yargs) =>
+      yargs
+        .positional(consts.CONFIG_PATH, consts.CONFIG_PATH_OPTS)
+        .positional('port', {
+          describe: 'port to serve the API on',
+          type: 'number',
+          default: 4000,
+        })
+        .option('watch', {
+          describe: 'restarts the server when changes to the config file, fixtures or source files are made',
+          type: 'boolean',
+          default: false,
+        })
+        .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION),
     handler: createHandler(getServeDeps),
   }
 }

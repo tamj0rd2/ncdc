@@ -1,19 +1,18 @@
 import { TypeValidator } from '~validation'
 import { red, green, blue } from 'chalk'
-import { TestConfig } from './config'
+import { Resource } from '~config'
 import { inspect } from 'util'
-import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
 import { ReportMetric } from '~commands/shared'
 
 export type LoaderResponse = { status: number; data?: Data }
-export type FetchResource = (config: TestConfig) => Promise<LoaderResponse>
+export type FetchResource = (config: Resource) => Promise<LoaderResponse>
 export type GetTypeValidator = () => Promise<TypeValidator>
 
 export const runTests = async (
   baseUrl: string,
   fetchResource: FetchResource,
-  configs: TestConfig[],
+  configs: Resource[],
   getTypeValidator: GetTypeValidator,
   logger: NcdcLogger,
   reportMetric: ReportMetric,
@@ -21,7 +20,7 @@ export const runTests = async (
   const testTasks2 = configs.map(
     async (config): Promise<{ success: boolean; message: string }> => {
       const failedLine = red.bold(`FAILED: ${config.name}`)
-      const endpointSegment = `- ${blue(baseUrl + config.request.endpoint)}`
+      const endpointSegment = `- ${blue(config.request.formatUrl(baseUrl))}`
 
       const fetchMetric = reportMetric(`fetching ${config.request.endpoint} for config ${config.name}`)
       let res: LoaderResponse
@@ -43,7 +42,7 @@ export const runTests = async (
       if (config.response.body) {
         if (res.data === undefined) {
           messages.push('No response body was received')
-        } else if (!isDeeplyEqual(config.response.body, res.data)) {
+        } else if (!config.response.body.matches(res.data)) {
           const message = `The response body was not deeply equal to your configured fixture`
           const formattedResponse = inspect(res.data, false, 4, true)
           messages.push(`${message}\nReceived:\n${formattedResponse}`)

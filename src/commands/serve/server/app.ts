@@ -1,12 +1,8 @@
-import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
+import express, { Express, Request, Response, NextFunction } from 'express'
 import { blue } from 'chalk'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
-import { ServeConfig } from '../config'
-import validateQuery from './query-validator'
-import { SupportedMethod } from '~config/types'
-import { areHeadersValid } from './header-validator'
-import { isDeeplyEqual } from '~util'
+import { SupportedMethod, Resource } from '~config'
 import { NcdcLogger } from '~logger'
 
 export interface ReqResLog {
@@ -21,13 +17,13 @@ export interface ReqResLog {
 export type PossibleMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head'
 
 export const verbsMap: Record<SupportedMethod, PossibleMethod> = {
-  GET: 'get',
-  POST: 'post',
-  PUT: 'put',
-  DELETE: 'delete',
-  PATCH: 'patch',
-  OPTIONS: 'options',
-  HEAD: 'head',
+  [SupportedMethod.GET]: 'get',
+  [SupportedMethod.POST]: 'post',
+  [SupportedMethod.PUT]: 'put',
+  [SupportedMethod.DELETE]: 'delete',
+  [SupportedMethod.PATCH]: 'patch',
+  [SupportedMethod.OPTIONS]: 'options',
+  [SupportedMethod.HEAD]: 'head',
 }
 
 const mapLog = (
@@ -46,7 +42,7 @@ const mapLog = (
 
 export const configureApp = (
   baseUrl: string,
-  mockConfigs: ServeConfig[],
+  resources: Resource[],
   getTypeValidator: () => Promise<TypeValidator>,
   logger: NcdcLogger,
 ): Express => {
@@ -54,42 +50,34 @@ export const configureApp = (
   const ROOT = '/'
   const ignoredLogPaths = [ROOT]
 
-  const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
-    if (res.headersSent) return next()
-
+  app.use(express.text())
+  app.use(express.json())
+  app.use(express.raw())
+  // the below line is necessary because if next is omitted, I thinks we're using a normal request handler.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     const { method, path, query, headers, body } = req
     logger.error(
       `Error while serving ${inspect({ method, path, query, headers, body }, false, undefined, true)}`,
       err,
     )
     res.status(500).send(err.stack?.toString() ?? err.toString())
-  }
+  })
+  app.get(ROOT, (_, res) => res.json(resources))
 
-  app.use(handleError)
-  app.use(express.text())
-  app.use(express.json())
-  app.use(express.raw())
-  app.get(ROOT, (_, res) => res.json(mockConfigs))
-
-  if (mockConfigs.length === 0) {
+  if (resources.length === 0) {
     logger.info('No mocks to serve')
   }
 
-  mockConfigs.forEach(({ name, request, response }) => {
-    const endpointWithoutQuery = request.endpoint.split('?')[0]
-
-    app[verbsMap[request.method]](endpointWithoutQuery, async (req, res, next) => {
+  resources.forEach(({ name, request, response }) => {
+    app[verbsMap[request.method]](request.pathName, async (req, res, next) => {
       try {
-        if (request.headers) {
-          const { success } = areHeadersValid(request.headers, req.headers)
-          if (!success) {
-            logger.warn(`An endpoint for ${req.path} exists but the headers did not match the configuration`)
-            return next()
-          }
+        if (!request.headers.matches(req.headers)) {
+          logger.warn(`An endpoint for ${req.path} exists but the headers did not match the configuration`)
+          return next()
         }
 
-        const queryIsValid = validateQuery(request.endpoint, req.query)
-        if (!queryIsValid) {
+        if (!request.query.matches(req.query)) {
           logger.warn(
             `An endpoint for ${req.path} exists but the query params did not match the configuration`,
           )
@@ -109,32 +97,25 @@ export const configureApp = (
         }
 
         if (request.body && !request.type) {
-          if (!isDeeplyEqual(request.body, req.body)) {
+          if (!request.body.matches(req.body)) {
             logger.warn(`An endpoint for ${req.path} exists but the request body did not match`)
             return next()
           }
         }
 
-        if (response.code) res.status(response.code)
-        if (response.headers) res.set(response.headers)
+        res.status(response.code)
+        res.set(response.headers.getAll())
 
         if (!ignoredLogPaths.includes(req.path)) {
-          let bodyToLog: Data | undefined = response.body
-
-          if (!!response.body) {
-            const shortenedBody = response.body?.toString().substr(0, 30)
-            bodyToLog = `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
-          }
-
-          logger.info(mapLog(name, req, res, bodyToLog))
+          logger.info(mapLog(name, req, res, response.body?.toString()))
         }
 
-        res.send(response.body)
+        res.send(response.body?.get())
       } catch (err) {
-        handleError(err, req, res, next)
+        return next(err)
       }
     })
-    logger.verbose(`Registered ${baseUrl}${request.endpoint} from config: ${blue(name)}`)
+    logger.verbose(`Registered ${request.formatUrl(baseUrl)} from config: ${blue(name)}`)
   })
 
   const default404Response =
@@ -154,7 +135,7 @@ export const configureApp = (
 
       res.send(responseBody)
     } catch (err) {
-      handleError(err, req, res, next)
+      return next(err)
     }
   })
 

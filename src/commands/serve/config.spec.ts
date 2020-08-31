@@ -1,12 +1,12 @@
-import { transformConfigs, ValidatedServeConfig, ServeConfig } from './config'
-import { randomString, mocked } from '~test-helpers'
+import { transformResources, ValidatedServeConfig } from './config'
+import { randomString, mocked, serialiseAsJson } from '~test-helpers'
 import { readFixture } from '~io'
-import dot from 'dot-object'
+import { Resource } from '~config'
+import { Request, Response, SupportedMethod } from '~config'
 
-jest.unmock('./config')
-jest.unmock('@hapi/joi')
-jest.unmock('dot-object')
+jest.disableAutomock()
 jest.mock('path')
+jest.mock('~io')
 
 describe('transform configs', () => {
   const mockReadFixture = mocked(readFixture)
@@ -16,7 +16,7 @@ describe('transform configs', () => {
       name: randomString(),
       serveOnly: false,
       request: {
-        method: 'GET',
+        method: SupportedMethod.GET,
         endpoints: ['hola!'],
         headers: {},
         type: 'SomeType',
@@ -33,69 +33,76 @@ describe('transform configs', () => {
     const config = createBasicConfig()
     config.request.endpoints = ['/api/1']
 
-    const result = await transformConfigs([config], '')
+    const result = await transformResources([config], '')
 
     expect(result).toHaveLength(1)
-    expect(result[0]).toMatchObject<ServeConfig>({
-      name: config.name,
-      request: {
-        endpoint: config.request.endpoints![0],
-        method: config.request.method,
-        headers: config.request.headers,
-        type: config.request.type,
-      },
-      response: {
-        code: config.response.code,
-        headers: config.response.headers,
-        type: config.response.type,
-      },
-    })
+    expect(result[0]).toMatchObject<Resource>(
+      serialiseAsJson({
+        name: config.name,
+        request: new Request({
+          endpoint: config.request.endpoints![0],
+          method: config.request.method,
+          headers: config.request.headers,
+          type: config.request.type,
+          body: config.request.body,
+        }),
+        response: new Response({
+          code: config.response.code,
+          headers: config.response.headers,
+          type: config.response.type,
+          body: config.response.body,
+        }),
+      }),
+    )
   })
 
   it('returns multiple configs if there are multiple request endpoints', async () => {
     const config = createBasicConfig()
     config.request.endpoints = ['/api/1', '/api/2']
 
-    const result = await transformConfigs([config], '')
+    const result = await transformResources([config], '')
 
     expect(result).toHaveLength(2)
-    expect(result[0].request.endpoint).toBe(config.request.endpoints![0])
-    expect(result[1].request.endpoint).toBe(config.request.endpoints![1])
+    expect(result[0].request.endpoint.toString()).toBe(config.request.endpoints![0])
+    expect(result[1].request.endpoint.toString()).toBe(config.request.endpoints![1])
   })
 
-  const bodyCases = ['request.body', 'response.body']
-  it.each(bodyCases.map((x) => [x]))('sets the %s', async (key) => {
+  const bodyCases = ['request', 'response'] as const
+  it.each(bodyCases.map((x) => [x]))('sets the %s body when there is a body provided', async (property) => {
     const config = createBasicConfig()
-    dot.set(key, randomString(), config)
+    const expectedBody = randomString('body')
+    config[property].body = expectedBody
 
-    const result = await transformConfigs([config], '')
+    const [resource] = await transformResources([config], '')
 
-    expect(result).toHaveLength(1)
-    const body = dot.pick(key, result[0])
-    expect(body).toBeDefined()
-    expect(body).toBe(dot.pick(key, config))
+    expect(resource[property].body?.get()).toBe(expectedBody)
   })
 
-  // const bodyPathCases = ['request.bodyPath', 'response.bodyPath', 'response.serveBodyPath']
-  const bodyPathCases = [
-    ['request.bodyPath', 'request.body'],
-    ['response.bodyPath', 'response.body'],
-    ['response.serveBodyPath', 'response.body'],
-  ]
-  describe.each(bodyPathCases.map((x) => [x]))('when %s is present', ([pathToBody, destination]) => {
-    mockReadFixture.mockResolvedValue({ nice: 'one' })
+  it.each(bodyCases)('sets the %s body when there is a request bodyPath', async (property) => {
+    const config = createBasicConfig()
+    const bodyPath = randomString('bodyPath')
+    config[property].bodyPath = bodyPath
+    const expectedBody = randomString('expected body')
+    mockReadFixture.mockResolvedValue(expectedBody)
 
-    it(`sets a body when a ${pathToBody} fixture is provided`, async () => {
-      const config = createBasicConfig()
-      const fixturePath = randomString()
-      dot.set(pathToBody, fixturePath, config)
-      const configPath = randomString('configPath')
+    const configPath = randomString('config path')
+    const [resource] = await transformResources([config], configPath)
 
-      const result = await transformConfigs([config], configPath)
+    expect(mockReadFixture).toBeCalledWith(configPath, bodyPath)
+    expect(resource[property].body?.get()).toBe(expectedBody)
+  })
 
-      expect(mockReadFixture).toBeCalledWith(configPath, fixturePath)
-      expect(result).toHaveLength(1)
-      expect(dot.pick(destination, result[0])).toStrictEqual({ nice: 'one' })
-    })
+  it('sets the response body when a serveBodyPath is provided', async () => {
+    const config = createBasicConfig()
+    const bodyPath = randomString('bodyPath')
+    config.response.serveBodyPath = bodyPath
+    const expectedBody = randomString('expected body')
+    mockReadFixture.mockResolvedValue(expectedBody)
+
+    const configPath = randomString('config path')
+    const [resource] = await transformResources([config], configPath)
+
+    expect(mockReadFixture).toBeCalledWith(configPath, bodyPath)
+    expect(resource.response.body?.get()).toBe(expectedBody)
   })
 })

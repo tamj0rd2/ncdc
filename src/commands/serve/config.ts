@@ -1,5 +1,6 @@
 import { readFixture } from '~io'
-import { SupportedMethod } from '~config/types'
+import { SupportedMethod, Resource } from '~config'
+import { Request, Response } from '~config'
 
 export interface ValidatedServeConfig {
   name: string
@@ -7,7 +8,7 @@ export interface ValidatedServeConfig {
   request: {
     method: SupportedMethod
     type?: string
-    headers?: NcdcHeaders
+    headers?: Record<string, string>
     endpoints?: string[]
     serveEndpoint?: string
     body?: Data
@@ -16,7 +17,7 @@ export interface ValidatedServeConfig {
   response: {
     code: number
     type?: string
-    headers?: NcdcHeaders
+    headers?: Record<string, string>
     body?: Data
     bodyPath?: string
     serveBody?: Data
@@ -24,11 +25,11 @@ export interface ValidatedServeConfig {
   }
 }
 
-export const transformConfigs = async (
+export const transformResources = async (
   configs: ValidatedServeConfig[],
   configPath: string,
-): Promise<ServeConfig[]> => {
-  const mapConfig = async (c: ValidatedServeConfig, endpoint: string): Promise<ServeConfig> => {
+): Promise<Resource[]> => {
+  const mapConfig = async (c: ValidatedServeConfig, endpoint: string): Promise<Resource> => {
     let responseBody: Data | undefined
 
     if (c.response.serveBodyPath) {
@@ -41,29 +42,29 @@ export const transformConfigs = async (
 
     return {
       name: c.name,
-      request: {
-        endpoint,
+      request: new Request({
+        endpoint: endpoint,
         method: c.request.method,
         body: c.request.bodyPath ? await readFixture(configPath, c.request.bodyPath) : c.request.body,
         headers: c.request.headers,
         type: c.request.type,
-      },
-      response: {
+      }),
+      response: new Response({
         code: c.response.code,
         body: responseBody,
         headers: c.response.headers,
         type: c.response.type,
-      },
+      }),
     }
   }
 
   return Promise.all(
-    configs.flatMap<Promise<ServeConfig>>((c) => {
-      const configTasks: Promise<ServeConfig>[] = []
+    configs.flatMap<Promise<Resource>>((c) => {
+      const configTasks: Promise<Resource>[] = []
 
       if (c.request.endpoints) {
         configTasks.push(
-          ...c.request.endpoints.map<Promise<ServeConfig>>((endpoint) => mapConfig(c, endpoint)),
+          ...c.request.endpoints.map<Promise<Resource>>((endpoint) => mapConfig(c, endpoint)),
         )
       }
 
@@ -72,21 +73,4 @@ export const transformConfigs = async (
       return configTasks
     }),
   )
-}
-
-export interface ServeConfig {
-  name: string
-  request: {
-    method: SupportedMethod
-    endpoint: string
-    body?: Data
-    type?: string
-    headers?: NcdcHeaders
-  }
-  response: {
-    code: number
-    body?: Data
-    type?: string
-    headers?: NcdcHeaders
-  }
 }

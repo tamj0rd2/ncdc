@@ -1,5 +1,5 @@
 import { resolve } from 'path'
-import { transformConfigs, ServeConfig, ValidatedServeConfig } from './config'
+import { transformResources, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import chokidar from 'chokidar'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
@@ -8,6 +8,7 @@ import { NcdcLogger } from '~logger'
 import { HandleError } from '~commands/shared'
 import { CompilerHook } from '~schema/watching-schema-generator'
 import { EventEmitter } from 'events'
+import { Resource } from '~config'
 
 export interface ServeArgs {
   configPath?: string
@@ -20,7 +21,7 @@ export interface ServeArgs {
 }
 
 interface NcdcServer {
-  start(routes: ServeConfig[]): Promise<void>
+  start(resources: Resource[]): Promise<void>
   stop(): Promise<void>
 }
 
@@ -84,7 +85,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     Promise.all(Object.values(servers).map((server) => server.stop()))
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
-    const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformConfigs, false)
+    const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformResources, false)
 
     switch (loadResult.type) {
       case LoadConfigStatus.Success:

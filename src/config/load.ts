@@ -2,7 +2,7 @@ import { readYamlAsync } from '~io'
 import { resolve, isAbsolute } from 'path'
 import { TypeValidator } from '~validation'
 import { validateConfigBodies, validateRawConfig, ValidatedRawConfig } from './validate'
-import { CommonConfig } from '~config/types'
+import { Resource } from '~config'
 
 export enum LoadConfigStatus {
   Success = 'Success',
@@ -16,7 +16,7 @@ export enum LoadConfigStatus {
 export type LoadConfigResponse =
   | {
       type: LoadConfigStatus.Success
-      configs: CommonConfig[]
+      configs: Resource[]
       absoluteFixturePaths: string[]
     }
   | {
@@ -31,19 +31,19 @@ export type LoadConfigResponse =
       message: string
     }
 
-export type TransformConfigs<T> = (configs: T[], absoluteConfigPath: string) => Promise<CommonConfig[]>
+export type TransformResources<T> = (resources: T[], absoluteConfigPath: string) => Promise<Resource[]>
 export type GetTypeValidator = () => Promise<TypeValidator>
 export type LoadConfig<T extends ValidatedRawConfig> = (
   configPath: string,
   getTypeValidator: GetTypeValidator,
-  transformConfigs: TransformConfigs<T>,
+  transformConfigs: TransformResources<T>,
   isTestMode: boolean,
 ) => Promise<LoadConfigResponse>
 
 const loadConfig = async <T extends ValidatedRawConfig>(
   configPath: string,
   getTypeValidator: GetTypeValidator,
-  transformConfigs: TransformConfigs<T>,
+  transformConfigs: TransformResources<T>,
   isTestMode: boolean,
 ): Promise<LoadConfigResponse> => {
   const absoluteConfigPath = resolve(configPath)

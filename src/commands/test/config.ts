@@ -1,5 +1,6 @@
-import { SupportedMethod, CommonConfig } from '~config/types'
+import { SupportedMethod, Resource } from '~config'
 import { readFixture } from '~io'
+import { Request, Response } from '~config'
 
 export interface ValidatedTestConfig {
   name: string
@@ -7,7 +8,7 @@ export interface ValidatedTestConfig {
   request: {
     method: SupportedMethod
     type?: string
-    headers?: NcdcHeaders
+    headers?: Record<string, string>
     endpoints: string[]
     body?: Data
     bodyPath?: string
@@ -15,38 +16,36 @@ export interface ValidatedTestConfig {
   response: {
     code: number
     type?: string
-    headers?: NcdcHeaders
+    headers?: Record<string, string>
     body?: Data
     bodyPath?: string
   }
 }
 
-export type TestConfig = CommonConfig
-
 // TODO: also needs to be responsible for filtering
 export const transformConfigs = async (
   configs: ValidatedTestConfig[],
   configPath: string,
-): Promise<TestConfig[]> => {
+): Promise<Resource[]> => {
   return Promise.all(
     configs
       .filter((c) => !c.serveOnly)
-      .flatMap<Promise<TestConfig>>((c) => {
-        return c.request.endpoints.map<Promise<TestConfig>>(async (endpoint) => ({
+      .flatMap<Promise<Resource>>((c) => {
+        return c.request.endpoints.map<Promise<Resource>>(async (endpoint) => ({
           name: c.name,
-          request: {
-            endpoint,
+          request: new Request({
+            endpoint: endpoint,
             method: c.request.method,
             body: c.request.bodyPath ? await readFixture(configPath, c.request.bodyPath) : c.request.body,
             headers: c.request.headers,
             type: c.request.type,
-          },
-          response: {
+          }),
+          response: new Response({
             code: c.response.code,
             body: c.response.bodyPath ? await readFixture(configPath, c.response.bodyPath) : c.response.body,
             headers: c.response.headers,
             type: c.response.type,
-          },
+          }),
         }))
       }),
   )

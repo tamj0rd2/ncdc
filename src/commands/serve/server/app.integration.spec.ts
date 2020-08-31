@@ -1,9 +1,9 @@
 import request from 'supertest'
 import { configureApp, verbsMap, PossibleMethod, ReqResLog } from './app'
-import { ConfigBuilder, SupportedMethod } from '~config/types'
+import { ResourceBuilder, SupportedMethod } from '~config'
 import { TypeValidator } from '~validation'
-import { mockObj, mockFn } from '~test-helpers'
-import { ServeConfig } from '../config'
+import { mockObj, mockFn, serialiseAsJson } from '~test-helpers'
+import { Resource } from '~config'
 import { NcdcLogger } from '~logger'
 
 describe('server', () => {
@@ -18,15 +18,19 @@ describe('server', () => {
   afterEach(() => jest.resetAllMocks())
   afterAll(() => jest.clearAllMocks())
 
-  const getApp = (configs: ServeConfig[]): Express.Application =>
-    configureApp('mysite.com', configs, mockFn().mockResolvedValue(mockTypeValidator), mockLogger)
+  const getApp = (resources: Resource[]): Express.Application =>
+    configureApp('mysite.com', resources, mockFn().mockResolvedValue(mockTypeValidator), mockLogger)
 
   it('sends configurations when visiting /', async () => {
-    const configs = [new ConfigBuilder().withRequestType('Some Type').build()]
+    const config = new ResourceBuilder().withRequestType('Some Type').build()
 
-    const app = getApp(configs)
+    const app = getApp([config])
 
-    await request(app).get('/').expect(200).expect('Content-Type', /json/).expect(configs)
+    await request(app)
+      .get('/')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .expect([serialiseAsJson(config)])
   })
 
   const { HEAD, ...verbsMinusHead } = verbsMap
@@ -34,7 +38,7 @@ describe('server', () => {
 
   it.each(methodCases)('handles a basic request with method: %s', async (verb, method) => {
     const endpoint = '/api/resource'
-    const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod(verb).build()]
+    const configs = [new ResourceBuilder().withEndpoint(endpoint).withMethod(verb).build()]
 
     const app = getApp(configs)
 
@@ -47,7 +51,7 @@ describe('server', () => {
 
   it('handles a basic request with method: HEAD', async () => {
     const endpoint = '/api/resource'
-    const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod('HEAD').build()]
+    const configs = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.HEAD).build()]
 
     const app = getApp(configs)
 
@@ -61,7 +65,7 @@ describe('server', () => {
   ]
 
   it.each(getCases)('serves routes matching the configured path %s', async (endpoint, pathToVisit) => {
-    const configs = [new ConfigBuilder().withEndpoint(endpoint).withMethod('GET').build()]
+    const configs = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.GET).build()]
     const app = getApp(configs)
 
     await request(app)
@@ -72,7 +76,7 @@ describe('server', () => {
   })
 
   it('returns a 404 when the requested endpoint could not be found', async () => {
-    const configs = [new ConfigBuilder().withEndpoint('/almost/correct').build()]
+    const configs = [new ResourceBuilder().withEndpoint('/almost/correct').build()]
 
     const app = getApp(configs)
 
@@ -83,7 +87,7 @@ describe('server', () => {
   })
 
   it('logs successful requests', async () => {
-    const configs = [new ConfigBuilder().withEndpoint('/api/resource').withResponseBody(undefined).build()]
+    const configs = [new ResourceBuilder().withEndpoint('/api/resource').withResponseBody(undefined).build()]
 
     const app = getApp(configs)
     await request(app).get('/api/resource?what=up').expect(200)
@@ -106,25 +110,25 @@ describe('server', () => {
 
   describe('request', () => {
     describe('headers', () => {
-      const config = new ConfigBuilder().withResponseCode(200).withRequestHeaders({ nice: 'meme' }).build()
+      const config = new ResourceBuilder().withResponseCode(200).withRequestHeaders({ nice: 'meme' }).build()
 
       it('fails when configured headers are not given', async () => {
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).send().expect(404)
+        await request(app).get(config.request.endpoint.toString()).send().expect(404)
       })
 
       it('passes when configured headers are given', async () => {
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).set('nice', 'meme').expect(200)
+        await request(app).get(config.request.endpoint.toString()).set('nice', 'meme').expect(200)
       })
     })
 
     describe('query', () => {
       it('still responds when a query matches in a different order', async () => {
         const configs = [
-          new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
+          new ResourceBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
         ]
 
         const app = getApp(configs)
@@ -134,12 +138,12 @@ describe('server', () => {
 
       it('responds when a query matches a different config', async () => {
         const configs = [
-          new ConfigBuilder()
+          new ResourceBuilder()
             .withName('Config1')
             .withEndpoint('/api/resource?greetings=hello&greetings=bye')
             .withResponseBody('nope')
             .build(),
-          new ConfigBuilder()
+          new ResourceBuilder()
             .withName('Config2')
             .withEndpoint('/api/resource?greetings=hi&greetings=bye')
             .withResponseCode(202)
@@ -154,7 +158,7 @@ describe('server', () => {
 
       it('gives a 404 if a query does not match any config', async () => {
         const configs = [
-          new ConfigBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
+          new ResourceBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
         ]
 
         const app = getApp(configs)
@@ -166,8 +170,8 @@ describe('server', () => {
     describe('type', () => {
       it('returns the desired response when the request body passes type validation', async () => {
         const configs = [
-          new ConfigBuilder()
-            .withMethod('POST')
+          new ResourceBuilder()
+            .withMethod(SupportedMethod.POST)
             .withEndpoint('/config1')
             .withRequestType('number')
             .withResponseCode(401)
@@ -178,19 +182,27 @@ describe('server', () => {
 
         const app = getApp(configs)
 
-        await request(app).post(configs[0].request.endpoint).send('Yo dude!').expect(401).expect('Noice')
+        await request(app)
+          .post(configs[0].request.endpoint.toString())
+          .send('Yo dude!')
+          .expect(401)
+          .expect('Noice')
       })
 
       it('gives a 404 when the request body fails type validation', async () => {
         const configs = [
-          new ConfigBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
+          new ResourceBuilder()
+            .withMethod(SupportedMethod.POST)
+            .withEndpoint('/config1')
+            .withRequestType('number')
+            .build(),
         ]
         mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
 
         const app = getApp(configs)
 
         await request(app)
-          .post(configs[0].request.endpoint)
+          .post(configs[0].request.endpoint.toString())
           .send('Yo dude!')
           .expect(404)
           .expect(/NCDC ERROR: Could not find an endpoint/)
@@ -199,23 +211,23 @@ describe('server', () => {
 
     describe('body', () => {
       it('returns a 404 when a request body is missing', async () => {
-        const config = new ConfigBuilder().withRequestBody('hello  there  ').build()
+        const config = new ResourceBuilder().withRequestBody('hello  there  ').build()
 
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).expect(404)
+        await request(app).get(config.request.endpoint.toString()).expect(404)
       })
 
       it('returns a 404 when the request bodies do not match', async () => {
-        const config = new ConfigBuilder().withRequestBody({ hello: 'world' }).build()
+        const config = new ResourceBuilder().withRequestBody({ hello: 'world' }).build()
 
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).send({ hello: 'werld' }).expect(404)
+        await request(app).get(config.request.endpoint.toString()).send({ hello: 'werld' }).expect(404)
       })
 
       it('ignores body validation if request.type is specified', async () => {
-        const config = new ConfigBuilder()
+        const config = new ResourceBuilder()
           .withRequestBody({ hello: 'world' })
           .withRequestType('memes')
           .build()
@@ -223,7 +235,7 @@ describe('server', () => {
 
         const app = getApp([config])
 
-        await request(app).get(config.request.endpoint).send({ ayy: 'lmao' }).expect(200)
+        await request(app).get(config.request.endpoint.toString()).send({ ayy: 'lmao' }).expect(200)
       })
     })
   })
@@ -232,7 +244,7 @@ describe('server', () => {
     describe('headers', () => {
       it('sets the headers when provided', async () => {
         const configs = [
-          new ConfigBuilder()
+          new ResourceBuilder()
             .withResponseHeaders({
               'content-type': 'application/xml',
               'another-header': 'my value',
@@ -243,7 +255,7 @@ describe('server', () => {
         const app = getApp(configs)
 
         await request(app)
-          .get(configs[0].request.endpoint)
+          .get(configs[0].request.endpoint.toString())
           .expect('Content-Type', /application\/xml/)
           .expect('another-header', 'my value')
       })

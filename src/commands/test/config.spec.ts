@@ -2,7 +2,7 @@ import { mocked, randomString, serialiseAsJson } from '~test-helpers'
 import { readFixture } from '~io'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { Resource } from '~config'
-import { Request, Response, SupportedMethod } from '~config/resource'
+import { Request, Response, SupportedMethod } from '~config'
 
 jest.disableAutomock()
 jest.mock('path')

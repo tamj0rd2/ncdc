@@ -10,7 +10,7 @@ import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
 import { resolve } from 'path'
 import NcdcServer from './server/ncdc-server'
-import { Request, Response, SupportedMethod } from '~config/resource'
+import { Request, Response, SupportedMethod } from '~config'
 
 jest.disableAutomock()
 jest.mock('path')

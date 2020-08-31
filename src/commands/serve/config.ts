@@ -1,6 +1,6 @@
 import { readFixture } from '~io'
 import { SupportedMethod, Resource } from '~config'
-import { Request, Response } from '~config/resource'
+import { Request, Response } from '~config'
 
 export interface ValidatedServeConfig {
   name: string

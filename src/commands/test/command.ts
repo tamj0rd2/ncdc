@@ -4,12 +4,8 @@ import * as opts from '~commands/options'
 import { createHandler, TestArgs, GetTestDeps } from './handler'
 import { runTests } from './test'
 import loadConfig from '~config/load'
-import { FsSchemaLoader } from '~schema'
-import { SchemaGenerator } from '~schema'
-import Ajv from 'ajv'
-import { TypeValidator } from '~validation'
+import TypeValidatorFactory from '~validation'
 import { createHttpClient } from './http-client'
-import TsHelpers from '~schema/ts-helpers'
 
 const builder = (yargs: Argv): Argv<TestArgs> =>
   yargs
@@ -36,6 +32,8 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
   const getTestDeps: GetTestDeps = (args) => {
     const { force, tsconfigPath, schemaPath, verbose } = args
     const { handleError, logger, reportMetric: reportMetric } = getCommonDeps(verbose)
+    const typeValidatorFactory = new TypeValidatorFactory(logger, reportMetric, { force })
+
     return {
       handleError,
       logger,
@@ -49,17 +47,7 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
           logger,
           reportMetric,
         ),
-      createTypeValidator: () => {
-        const ajv = new Ajv({ verbose: true, allErrors: true })
-        if (schemaPath) return Promise.resolve(new TypeValidator(ajv, new FsSchemaLoader(schemaPath)))
-
-        const tsHelpers = new TsHelpers(reportMetric, logger)
-        const schemaGenerator = new SchemaGenerator(
-          tsHelpers.createProgram(tsconfigPath, { shouldTypecheck: !force }),
-        )
-        schemaGenerator.init()
-        return Promise.resolve(new TypeValidator(ajv, schemaGenerator))
-      },
+      getTypeValidator: () => typeValidatorFactory.getValidator({ tsconfigPath, schemaPath }),
     }
   }
 

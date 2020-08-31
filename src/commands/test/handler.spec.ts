@@ -1,6 +1,6 @@
 import { mockFn, randomString, mocked, mockObj, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
-import { createHandler, TestArgs, GetTestDeps, CreateTypeValidator, RunTests } from './handler'
+import { createHandler, TestArgs, GetTestDeps, GetTypeValidator, RunTests } from './handler'
 import { resolve } from 'path'
 import { existsSync } from 'fs'
 import { TypeValidator } from '~validation'
@@ -15,7 +15,7 @@ jest.mock('path')
 
 const mockedHandleError = mockFn<HandleError>()
 const mockedTypeValidator = mockObj<TypeValidator>({})
-const mockedCreateTypeValidator = mockFn<CreateTypeValidator>()
+const mockGetTypeValidator = mockFn<GetTypeValidator>()
 const mockedExistsSync = mocked(existsSync)
 const mockedResolve = mocked(resolve)
 const resolvedTsconfigPath = randomString('resolved-tsconfig')
@@ -28,9 +28,9 @@ beforeEach(() => {
   jest.resetAllMocks()
   mockedExistsSync.mockReturnValue(true)
   mockedResolve.mockReturnValue(resolvedTsconfigPath)
-  mockedCreateTypeValidator.mockResolvedValue(mockedTypeValidator)
+  mockGetTypeValidator.mockResolvedValue(mockedTypeValidator)
   getTestDeps.mockReturnValue({
-    createTypeValidator: mockedCreateTypeValidator,
+    getTypeValidator: mockGetTypeValidator,
     handleError: mockedHandleError,
     loadConfig: mockedLoadConfig,
     logger: mockedLogger,
@@ -91,20 +91,6 @@ it('calls loadConfig with the correct args', async () => {
   expect(mockedLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs, true)
 })
 
-// TODO: this stuff should all be moved up into some "container" instantiation layer.
-it('only creates a type validator once for loading configs', async () => {
-  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
-  await handler(args)
-
-  const getTypeValidatorFn = mockedLoadConfig.mock.calls[0][1]
-  const timesToCall = randomNumber(1, 10)
-  await Array(timesToCall)
-    .fill(0)
-    .reduce((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
-
-  expect(mockedCreateTypeValidator).toBeCalledTimes(1)
-})
-
 const badStatuses = [
   LoadConfigStatus.InvalidBodies,
   LoadConfigStatus.InvalidConfig,
@@ -139,21 +125,6 @@ it('calls runTests with the correct arguments', async () => {
 
   expect(mockedHandleError).not.toBeCalled()
   expect(mockedRunTests).toBeCalledWith(args.baseURL, configs, expect.any(Function))
-})
-
-it('only creates a type validator once for running the tests', async () => {
-  const configs = [new ConfigBuilder().build()]
-  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
-
-  await handler(args)
-
-  const getTypeValidatorFn = mockedRunTests.mock.calls[0][2]
-  const timesToCall = randomNumber(1, 10)
-  await Array(timesToCall)
-    .fill(0)
-    .reduce<Promise<unknown>>((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
-
-  expect(mockedCreateTypeValidator).toBeCalledTimes(1)
 })
 
 it('handles errors thrown by testConfigs', async () => {

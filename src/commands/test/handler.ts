@@ -1,4 +1,4 @@
-import { LoadConfig, LoadConfigStatus, GetTypeValidator } from '~config/load'
+import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { ValidatedTestConfig, transformConfigs, TestConfig } from './config'
 import { red } from 'chalk'
 import { TypeValidator } from '~validation'
@@ -20,29 +20,23 @@ export type GetTestDeps = (args: TestArgs) => TestDeps
 export type RunTests = (
   baseUrl: string,
   configs: TestConfig[],
-  getTypeValidator: CreateTypeValidator,
+  getTypeValidator: GetTypeValidator,
 ) => Promise<'Success' | 'Failure'>
 
 export interface TestDeps {
   handleError: HandleError
   logger: NcdcLogger
-  createTypeValidator: CreateTypeValidator
+  getTypeValidator(): Promise<TypeValidator>
   runTests: RunTests
   loadConfig: LoadConfig<ValidatedTestConfig>
 }
 
-export type CreateTypeValidator = () => Promise<TypeValidator>
+export type GetTypeValidator = () => Promise<TypeValidator>
 
 export const createHandler = (getTestDeps: GetTestDeps) => async (args: TestArgs): Promise<void> => {
-  const { handleError, createTypeValidator, loadConfig, runTests } = getTestDeps(args)
+  const { handleError, getTypeValidator, loadConfig, runTests } = getTestDeps(args)
   if (!args.configPath) return handleError({ message: `configPath must be specified` })
   if (!args.baseURL) return handleError({ message: 'baseURL must be specified' })
-
-  let typeValidator: TypeValidator | undefined
-  const getTypeValidator: GetTypeValidator = async () => {
-    if (!typeValidator) typeValidator = await createTypeValidator()
-    return typeValidator
-  }
 
   const loadResult = await loadConfig(args.configPath, getTypeValidator, transformConfigs, true)
 

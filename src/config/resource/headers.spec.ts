@@ -1,4 +1,4 @@
-import { NcdcHeaders } from './resource'
+import { NcdcHeaders } from './headers'
 
 jest.disableAutomock()
 

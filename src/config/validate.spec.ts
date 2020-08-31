@@ -457,8 +457,8 @@ describe('validate config bodies', () => {
 
       await act([resource])
 
-      expect(mockTypeValidator.validate).toBeCalledWith(resource.request?.body, resource.request?.type)
-      expect(mockTypeValidator.validate).toBeCalledWith(resource.response?.body, resource.response?.type)
+      expect(mockTypeValidator.validate).toBeCalledWith(resource.request.body!.get(), resource.request.type)
+      expect(mockTypeValidator.validate).toBeCalledWith(resource.response.body!.get(), resource.response.type)
     })
 
     // This can happen if the original raw config had more than 1 endpoint, or an additional serve endpoint

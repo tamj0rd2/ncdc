@@ -1,9 +1,8 @@
-import express, { Express, Request, Response, ErrorRequestHandler } from 'express'
+import express, { Express, Request, Response, NextFunction } from 'express'
 import { blue } from 'chalk'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
 import { SupportedMethod, Resource } from '~config'
-import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
 
 export interface ReqResLog {
@@ -18,13 +17,13 @@ export interface ReqResLog {
 export type PossibleMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head'
 
 export const verbsMap: Record<SupportedMethod, PossibleMethod> = {
-  GET: 'get',
-  POST: 'post',
-  PUT: 'put',
-  DELETE: 'delete',
-  PATCH: 'patch',
-  OPTIONS: 'options',
-  HEAD: 'head',
+  [SupportedMethod.GET]: 'get',
+  [SupportedMethod.POST]: 'post',
+  [SupportedMethod.PUT]: 'put',
+  [SupportedMethod.DELETE]: 'delete',
+  [SupportedMethod.PATCH]: 'patch',
+  [SupportedMethod.OPTIONS]: 'options',
+  [SupportedMethod.HEAD]: 'head',
 }
 
 const mapLog = (
@@ -51,7 +50,10 @@ export const configureApp = (
   const ROOT = '/'
   const ignoredLogPaths = [ROOT]
 
-  const handleError: ErrorRequestHandler = (err: Error, req, res, next) => {
+  app.use(express.text())
+  app.use(express.json())
+  app.use(express.raw())
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     if (res.headersSent) return next()
 
     const { method, path, query, headers, body } = req
@@ -60,12 +62,7 @@ export const configureApp = (
       err,
     )
     res.status(500).send(err.stack?.toString() ?? err.toString())
-  }
-
-  app.use(handleError)
-  app.use(express.text())
-  app.use(express.json())
-  app.use(express.raw())
+  })
   app.get(ROOT, (_, res) => res.json(resources))
 
   if (resources.length === 0) {
@@ -100,7 +97,7 @@ export const configureApp = (
         }
 
         if (request.body && !request.type) {
-          if (!isDeeplyEqual(request.body, req.body)) {
+          if (!request.body.matches(req.body)) {
             logger.warn(`An endpoint for ${req.path} exists but the request body did not match`)
             return next()
           }
@@ -110,19 +107,12 @@ export const configureApp = (
         res.set(response.headers.getAll())
 
         if (!ignoredLogPaths.includes(req.path)) {
-          let bodyToLog: Data | undefined = response.body
-
-          if (!!response.body) {
-            const shortenedBody = response.body?.toString().substr(0, 30)
-            bodyToLog = `${shortenedBody}${shortenedBody && shortenedBody.length >= 30 ? '...' : ''}`
-          }
-
-          logger.info(mapLog(name, req, res, bodyToLog))
+          logger.info(mapLog(name, req, res, response.body?.toString()))
         }
 
-        res.send(response.body)
+        res.send(response.body?.get())
       } catch (err) {
-        handleError(err, req, res, next)
+        return next(err)
       }
     })
     logger.verbose(`Registered ${request.formatUrl(baseUrl)} from config: ${blue(name)}`)
@@ -145,7 +135,7 @@ export const configureApp = (
 
       res.send(responseBody)
     } catch (err) {
-      handleError(err, req, res, next)
+      return next(err)
     }
   })
 

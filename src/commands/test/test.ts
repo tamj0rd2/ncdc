@@ -2,7 +2,6 @@ import { TypeValidator } from '~validation'
 import { red, green, blue } from 'chalk'
 import { Resource } from '~config'
 import { inspect } from 'util'
-import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'
 import { ReportMetric } from '~commands/shared'
 
@@ -43,7 +42,7 @@ export const runTests = async (
       if (config.response.body) {
         if (res.data === undefined) {
           messages.push('No response body was received')
-        } else if (!isDeeplyEqual(config.response.body, res.data)) {
+        } else if (!config.response.body.matches(res.data)) {
           const message = `The response body was not deeply equal to your configured fixture`
           const formattedResponse = inspect(res.data, false, 4, true)
           messages.push(`${message}\nReceived:\n${formattedResponse}`)

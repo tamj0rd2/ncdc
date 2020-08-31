@@ -1,7 +1,6 @@
 import { mocked, randomString, serialiseAsJson } from '~test-helpers'
 import { readFixture } from '~io'
 import { ValidatedTestConfig, transformConfigs } from './config'
-import dot from 'dot-object'
 import { Resource } from '~config'
 import { Request, Response, SupportedMethod } from '~config/resource'
 
@@ -68,37 +67,28 @@ describe('transform configs', () => {
     expect(result[1].request.endpoint.toString()).toBe(config.request.endpoints![1])
   })
 
-  const bodyCases = ['request.body', 'response.body']
+  const bodyCases = ['request', 'response'] as const
   it.each(bodyCases.map((x) => [x]))('sets the %s', async (key) => {
     const config = createBasicConfig()
-    dot.set(key, randomString(), config)
+    const expectedBody = randomString('body')
+    config[key].body = expectedBody
 
-    const result = await transformConfigs([config], '')
+    const [resource] = await transformConfigs([config], '')
 
-    expect(result).toHaveLength(1)
-    const body = dot.pick(key, result[0])
-    expect(body).toBeDefined()
-    expect(body).toBe(dot.pick(key, config))
+    expect(resource[key].body!.get()).toBe(expectedBody)
   })
 
-  const bodyPathCases = [
-    ['request.bodyPath', 'request.body'],
-    ['response.bodyPath', 'response.body'],
-  ]
-  describe.each(bodyPathCases.map((x) => [x]))('when %s is present', ([bodyPath, destination]) => {
-    mockReadFixture.mockResolvedValue({ nice: 'one' })
+  it.each(bodyCases)(`loads and sets a body when %s bodyPath is provided`, async (key) => {
+    const config = createBasicConfig()
+    const expectedBodyPath = randomString('body path')
+    config[key].bodyPath = expectedBodyPath
+    const configPath = randomString('configPath')
+    const expectedBody = { nice: 'one' }
+    mockReadFixture.mockResolvedValue(expectedBody)
 
-    it(`loads and sets a body when ${bodyPath} is provided`, async () => {
-      const config = createBasicConfig()
-      const fixturePath = randomString('fixturePath')
-      dot.set(bodyPath, fixturePath, config)
-      const configPath = randomString('configPath')
+    const [resource] = await transformConfigs([config], configPath)
 
-      const result = await transformConfigs([config], configPath)
-
-      expect(mockReadFixture).toBeCalledWith(configPath, fixturePath)
-      expect(result).toHaveLength(1)
-      expect(dot.pick(destination, result[0])).toStrictEqual({ nice: 'one' })
-    })
+    expect(mockReadFixture).toBeCalledWith(configPath, expectedBodyPath)
+    expect(resource[key].body!.get()).toStrictEqual(expectedBody)
   })
 })

@@ -7,7 +7,7 @@ import { TypeValidator } from '~validation'
 import { NcdcLogger } from '~logger'
 import { LoadConfig, LoadConfigStatus } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
-import { ResourceBuilder } from '~config/types'
+import { ResourceBuilder } from '~config'
 
 jest.disableAutomock()
 jest.mock('fs')

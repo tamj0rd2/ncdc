@@ -4,7 +4,7 @@ import { red } from 'chalk'
 import { TypeValidator } from '~validation'
 import { HandleError } from '~commands/shared'
 import { NcdcLogger } from '~logger'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 
 export interface TestArgs {
   schemaPath?: string

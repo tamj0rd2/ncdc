@@ -1,6 +1,6 @@
 import { TypeValidator } from '~validation'
 import { red, green, blue } from 'chalk'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 import { inspect } from 'util'
 import { isDeeplyEqual } from '~util'
 import { NcdcLogger } from '~logger'

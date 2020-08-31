@@ -1,4 +1,4 @@
-import { Resource, supportedMethods } from './types'
+import { Resource, supportedMethods } from './resource'
 import { TypeValidator } from '~validation'
 import Joi from '@hapi/joi'
 import { blue, bold, red } from 'chalk'

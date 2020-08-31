@@ -1,9 +1,9 @@
 import request from 'supertest'
 import { configureApp, verbsMap, PossibleMethod, ReqResLog } from './app'
-import { ResourceBuilder, SupportedMethod } from '~config/types'
+import { ResourceBuilder, SupportedMethod } from '~config'
 import { TypeValidator } from '~validation'
 import { mockObj, mockFn, serialiseAsJson } from '~test-helpers'
-import { Resource } from '~config/types'
+import { Resource } from '~config'
 import { NcdcLogger } from '~logger'
 
 describe('server', () => {

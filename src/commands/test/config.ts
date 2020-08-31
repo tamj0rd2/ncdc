@@ -1,4 +1,4 @@
-import { SupportedMethod, Resource } from '~config/types'
+import { SupportedMethod, Resource } from '~config'
 import { readFixture } from '~io'
 import { Request, Response } from '~config/resource'
 

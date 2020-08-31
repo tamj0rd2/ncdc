@@ -10,7 +10,7 @@ import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
 import { resolve } from 'path'
 import NcdcServer from './server/ncdc-server'
-import { Request, Response } from '~config/resource'
+import { Request, Response, SupportedMethod } from '~config/resource'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -45,7 +45,7 @@ beforeEach(() => {
       name: randomString('name'),
       request: new Request({
         endpoint: randomString('endpoint'),
-        method: 'GET',
+        method: SupportedMethod.GET,
         body: undefined,
         headers: undefined,
         type: undefined,

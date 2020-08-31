@@ -47,10 +47,6 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
           description: 'minimum time in ms to wait between sending each request',
           type: 'number',
         })
-        .option(opts.SCHEMA_PATH, opts.SCHEMA_PATH_OPTS)
-        .option(opts.TSCONFIG_PATH, opts.TSCONFIG_PATH_OPTS)
-        .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
-        .option(opts.VERBOSE, opts.VERBOSE_OPTS)
         .example(opts.EXAMPLE_TEST_COMMAND, opts.EXAMPLE_TEST_DESCRIPTION),
     handler: createHandler(getTestDeps),
   }

@@ -25,9 +25,12 @@ export default function run(): void {
     }
   }
 
-  // TODO: figure out how I can remove this
   // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   mainYargs
+    .option(opts.TSCONFIG_PATH, opts.TSCONFIG_PATH_OPTS)
+    .option(opts.SCHEMA_PATH, opts.SCHEMA_PATH_OPTS)
+    .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
+    .option(opts.VERBOSE, opts.VERBOSE_OPTS)
     .command(createGenerateCommand(getCommonDeps))
     .command(createServeCommand(getCommonDeps))
     .command(createTestCommand(getCommonDeps))

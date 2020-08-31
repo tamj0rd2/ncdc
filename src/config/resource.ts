@@ -151,15 +151,22 @@ export interface Resource {
   response: Response
 }
 
-export const supportedMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const
-export type SupportedMethod = typeof supportedMethods[number]
+export enum SupportedMethod {
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  DELETE = 'DELETE',
+  PATCH = 'PATCH',
+  HEAD = 'HEAD',
+  OPTIONS = 'OPTIONS',
+}
 
 export class ResourceBuilder {
   private resource: Resource = {
     name: 'Test',
     request: new Request({
       endpoint: '/api/resource',
-      method: 'GET',
+      method: SupportedMethod.GET,
       body: undefined,
       headers: undefined,
       type: undefined,

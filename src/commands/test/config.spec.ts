@@ -3,7 +3,7 @@ import { readFixture } from '~io'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import dot from 'dot-object'
 import { Resource } from '~config'
-import { Request, Response } from '~config/resource'
+import { Request, Response, SupportedMethod } from '~config/resource'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -17,7 +17,7 @@ describe('transform configs', () => {
       name: randomString(),
       serveOnly: false,
       request: {
-        method: 'GET',
+        method: SupportedMethod.GET,
         endpoints: ['hola!'],
         headers: {},
         type: 'SomeType',

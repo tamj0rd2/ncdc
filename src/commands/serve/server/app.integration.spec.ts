@@ -51,7 +51,7 @@ describe('server', () => {
 
   it('handles a basic request with method: HEAD', async () => {
     const endpoint = '/api/resource'
-    const configs = [new ResourceBuilder().withEndpoint(endpoint).withMethod('HEAD').build()]
+    const configs = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.HEAD).build()]
 
     const app = getApp(configs)
 
@@ -65,7 +65,7 @@ describe('server', () => {
   ]
 
   it.each(getCases)('serves routes matching the configured path %s', async (endpoint, pathToVisit) => {
-    const configs = [new ResourceBuilder().withEndpoint(endpoint).withMethod('GET').build()]
+    const configs = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.GET).build()]
     const app = getApp(configs)
 
     await request(app)
@@ -171,7 +171,7 @@ describe('server', () => {
       it('returns the desired response when the request body passes type validation', async () => {
         const configs = [
           new ResourceBuilder()
-            .withMethod('POST')
+            .withMethod(SupportedMethod.POST)
             .withEndpoint('/config1')
             .withRequestType('number')
             .withResponseCode(401)
@@ -191,7 +191,11 @@ describe('server', () => {
 
       it('gives a 404 when the request body fails type validation', async () => {
         const configs = [
-          new ResourceBuilder().withMethod('POST').withEndpoint('/config1').withRequestType('number').build(),
+          new ResourceBuilder()
+            .withMethod(SupportedMethod.POST)
+            .withEndpoint('/config1')
+            .withRequestType('number')
+            .build(),
         ]
         mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
 

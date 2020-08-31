@@ -1,6 +1,6 @@
 import { validateRawConfig, ValidationFailure, ValidationSuccess, validateConfigBodies } from './validate'
 import strip from 'strip-ansi'
-import { supportedMethods, Resource } from './resource'
+import { SupportedMethod, Resource } from './resource'
 import { randomString, randomNumber, mockObj } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TypeValidator } from '~validation'
@@ -96,7 +96,7 @@ describe('validate', () => {
     })
 
     describe('request.method', () => {
-      it.each(supportedMethods.map((x) => [x]))('allows method %s', (method) => {
+      it.each(Object.values(SupportedMethod).map((x) => [x]))('allows method %s', (method) => {
         const config = { request: { method } }
         expectNotToGetErrorsConcerning(config, 'request.method')
       })
@@ -110,7 +110,7 @@ describe('validate', () => {
         const config = { request: { method } }
         expectValidationErors(
           config,
-          `config[0].request.method must be one of [${supportedMethods.join(', ')}]`,
+          `config[0].request.method must be one of [${Object.values(SupportedMethod).join(', ')}]`,
         )
       })
 
@@ -430,7 +430,7 @@ describe('validate config bodies', () => {
   const createResource = (withTypes = false, withBodies = false): Resource => ({
     name: randomString('name'),
     request: new Request({
-      method: 'GET',
+      method: SupportedMethod.GET,
       endpoint: randomString('endpoint'),
       type: withTypes ? randomString('request-type') : undefined,
       body: withBodies ? randomString('request-body') : undefined,
@@ -506,7 +506,7 @@ describe('validate config bodies', () => {
       type: randomString('yo'),
       endpoint: randomString('endpoint'),
       headers: undefined,
-      method: 'DELETE',
+      method: SupportedMethod.DELETE,
     })
 
     it('does not validate when forceRequestValidation is false', async () => {

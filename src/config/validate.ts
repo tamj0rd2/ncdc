@@ -1,4 +1,4 @@
-import { Resource, supportedMethods } from './resource'
+import { Resource, SupportedMethod } from './resource'
 import { TypeValidator } from '~validation'
 import Joi from '@hapi/joi'
 import { blue, bold, red } from 'chalk'
@@ -59,7 +59,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
         // TODO: the request schema needs to be customisable, or have some way to mutate it
         request: Joi.object({
           method: Joi.string()
-            .valid(...supportedMethods)
+            .valid(...Object.values(SupportedMethod))
             .uppercase()
             .required(),
           type: Joi.string(),

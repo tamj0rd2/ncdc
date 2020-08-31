@@ -13,15 +13,12 @@ export default function createGenerateCommand(getCommonDeps: GetRootDeps): Comma
     builder: (yargs) =>
       yargs
         .positional(opts.CONFIG_PATHS, opts.CONFIG_PATHS_OPTS)
-        .option(opts.TSCONFIG_PATH, opts.TSCONFIG_PATH_OPTS)
         .option('outputPath', {
           alias: ['o', 'output'],
           type: 'string',
           description: 'sets an output folder for the json schemas',
           default: './json-schema',
         })
-        .option(opts.FORCE_GENERATION, opts.FORCE_GENERATION_OPTS)
-        .option(opts.VERBOSE, opts.VERBOSE_OPTS)
         .example(opts.EXAMPLE_GENERATE_COMMAND, opts.EXAMPLE_GENERATE_DESCRIPTION),
     handler: createHandler(({ verbose }) => {
       const { handleError, logger, reportMetric: reportMetric } = getCommonDeps(verbose)

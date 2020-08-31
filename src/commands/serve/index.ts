@@ -44,10 +44,6 @@ export default function createServeCommand(getCommonDeps: GetRootDeps): CommandM
           type: 'boolean',
           default: false,
         })
-        .option(consts.SCHEMA_PATH, consts.SCHEMA_PATH_OPTS)
-        .option(consts.TSCONFIG_PATH, consts.TSCONFIG_PATH_OPTS)
-        .option(consts.FORCE_GENERATION, consts.FORCE_GENERATION_OPTS)
-        .option(consts.VERBOSE, consts.VERBOSE_OPTS)
         .example(consts.EXAMPLE_SERVE_COMMAND, consts.EXAMPLE_SERVE_DESCRIPTION),
     handler: createHandler(getServeDeps),
   }

@@ -14,9 +14,16 @@ export type GetRootDeps = (
   reportMetric: ReportMetric
 }
 
-export interface CommandModule<Args> extends YargsCommandModule<{}, Args> {
+interface CommonOptions {
+  tsconfigPath: string
+  schemaPath?: string
+  verbose: boolean
+  force: boolean
+}
+
+export interface CommandModule<Args> extends YargsCommandModule<CommonOptions, Args> {
   command: string
   describe: string
-  builder(yargs: Argv): Argv<Args>
+  builder(yargs: Argv<CommonOptions>): Argv<Args>
   handler(args: Args): Promise<void>
 }

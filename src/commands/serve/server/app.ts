@@ -53,9 +53,9 @@ export const configureApp = (
   app.use(express.text())
   app.use(express.json())
   app.use(express.raw())
+  // the below line is necessary because if next is omitted, I thinks we're using a normal request handler.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    if (res.headersSent) return next()
-
     const { method, path, query, headers, body } = req
     logger.error(
       `Error while serving ${inspect({ method, path, query, headers, body }, false, undefined, true)}`,

@@ -152,7 +152,7 @@ describe('ncdc test', () => {
 
     expect(result.success).toBeFalsy()
     expect(result.output).toContain('Hello')
-    expect(result.output).toContain('An error occurred while validating one of your configured fixtures')
+    expect(result.output).toContain('An error occurred while validating a fixture')
     expect(result.output).toContain('ENOENT: no such file or directory')
     expect(result.output).toContain('json-schemas/Hello.json')
   })

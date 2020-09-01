@@ -2,13 +2,14 @@ import { resolve } from 'path'
 import { transformResources, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import chokidar from 'chokidar'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
+import { LoadConfig } from '~config/load'
 import { red } from 'chalk'
 import { NcdcLogger } from '~logger'
 import { HandleError } from '~commands/shared'
 import { CompilerHook } from '~schema/watching-schema-generator'
 import { EventEmitter } from 'events'
 import { Resource } from '~config'
+import { NoServiceResourcesError } from '~config/errors'
 
 export interface ServeArgs {
   configPath?: string
@@ -85,27 +86,21 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     Promise.all(Object.values(servers).map((server) => server.stop()))
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
-    const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformResources, false)
+    try {
+      const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformResources, false)
 
-    switch (loadResult.type) {
-      case LoadConfigStatus.Success:
-        break
-      case LoadConfigStatus.InvalidConfig:
-      case LoadConfigStatus.InvalidBodies:
-      case LoadConfigStatus.ProblemReadingConfig:
-      case LoadConfigStatus.BodyValidationError:
-        throw new Error(loadResult.message)
-      case LoadConfigStatus.NoConfigs:
-        throw new Error(red('No configs to serve'))
-      default:
-        throw new Error('An unknown error ocurred')
-    }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const server = servers[args.configPath!]
+      await server.start(loadResult.configs)
+      return {
+        pathsToWatch: loadResult.absoluteFixturePaths,
+      }
+    } catch (err) {
+      if (err instanceof NoServiceResourcesError) {
+        err.message = red('No configs to serve')
+      }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const server = servers[args.configPath!]
-    await server.start(loadResult.configs)
-    return {
-      pathsToWatch: loadResult.absoluteFixturePaths,
+      throw err
     }
   }
 

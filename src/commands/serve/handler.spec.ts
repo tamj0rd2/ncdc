@@ -4,13 +4,14 @@ import { HandleError } from '~commands/shared'
 import { transformResources, ValidatedServeConfig } from './config'
 import chokidar, { FSWatcher } from 'chokidar'
 import stripAnsi from 'strip-ansi'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
+import { LoadConfig } from '~config/load'
 import { TypeValidator } from '~validation'
 import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
 import { resolve } from 'path'
 import NcdcServer from './server/ncdc-server'
 import { Request, Response, SupportedMethod } from '~config'
+import { NoServiceResourcesError } from '~config/errors'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -131,25 +132,8 @@ describe('runs the server with the correct configs', () => {
     expect(mockGetTypeValidator).toBeCalledTimes(timesToCall)
   })
 
-  const failureStatuses = [
-    LoadConfigStatus.InvalidBodies,
-    LoadConfigStatus.InvalidConfig,
-    LoadConfigStatus.ProblemReadingConfig,
-  ] as const
-
-  failureStatuses.forEach((status) => {
-    it(`handles the load config status ${status} as an error`, async () => {
-      const failureMessage = randomString('whoops')
-      mockLoadConfig.mockResolvedValue({ type: status, message: failureMessage })
-
-      await handler(args)
-
-      expect(mockHandleError).toBeCalledWith(expect.objectContaining({ message: failureMessage }))
-    })
-  })
-
   it('handles there being no configs to serve as an error', async () => {
-    mockLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
+    mockLoadConfig.mockRejectedValue(new NoServiceResourcesError('file path'))
 
     await handler(args)
 
@@ -161,7 +145,7 @@ describe('runs the server with the correct configs', () => {
     const configs = [new ResourceBuilder().build()]
     mockLoadConfig.mockImplementation(async (_, getTypeValidator) => {
       await getTypeValidator()
-      return { type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] }
+      return { configs, absoluteFixturePaths: [] }
     })
 
     await handler(args)

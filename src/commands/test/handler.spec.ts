@@ -34,20 +34,6 @@ describe('test handler', () => {
     }
   }
 
-  beforeEach(() => {
-    jest.resetAllMocks()
-    // mockExistsSync.mockReturnValue(true)
-    // mockResolve.mockReturnValue(dummyResolvedTsconfigPath)
-    // mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
-    // mockGetTestDeps.mockReturnValue({
-    //   getTypeValidator: mockGetTypeValidator,
-    //   handleError: mockHandleError,
-    //   loadConfig: mockLoadConfig,
-    //   logger: mockLogger,
-    //   runTests: mockRunTests,
-    // })
-  })
-
   afterEach(() => jest.resetAllMocks())
 
   describe('cli arg validation', () => {

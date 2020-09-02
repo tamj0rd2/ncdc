@@ -33,18 +33,7 @@ describe('test configs', () => {
     }
   }
 
-  beforeEach(() => {
-    // jest.resetAllMocks()
-    // mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
-    // dummyReportMetric.mockReturnValue(
-    //   mockObj<OperationResult>({ fail: jest.fn(), success: jest.fn() }),
-    // )
-  })
-
   afterEach(() => jest.resetAllMocks())
-
-  // const act = (...configs: Resource[]) =>
-  //   runTests(baseUrl, mockFetchResource, configs, mockGetTypeValidator, mockLogger, dummyReportMetric)
 
   const getLoggedMessage = (method: 'error' | 'info', logger: jest.Mocked<NcdcLogger>): string =>
     stripAnsi((logger[method].mock.calls[0][0] as unknown) as string)

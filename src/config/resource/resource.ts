@@ -11,6 +11,10 @@ export interface Resource {
 }
 
 export class ResourceBuilder {
+  public static get Default(): Resource {
+    return new ResourceBuilder().build()
+  }
+
   private resource: Resource = {
     name: 'Test',
     request: new Request({

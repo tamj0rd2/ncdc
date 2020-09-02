@@ -15,6 +15,7 @@ export interface ReqResLog {
 }
 
 export type PossibleMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head'
+export type GetTypeValidator = () => Promise<TypeValidator>
 
 export const verbsMap: Record<SupportedMethod, PossibleMethod> = {
   [SupportedMethod.GET]: 'get',
@@ -43,7 +44,7 @@ const mapLog = (
 export const configureApp = (
   baseUrl: string,
   resources: Resource[],
-  getTypeValidator: () => Promise<TypeValidator>,
+  getTypeValidator: GetTypeValidator,
   logger: NcdcLogger,
 ): Express => {
   const app = express()

@@ -44,12 +44,12 @@ export default class TsHelpers {
 
   public readTsConfig(path: string): ts.ParsedCommandLine {
     const tsconfigPath = resolve(path)
-    const rawConfigFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
-    if (rawConfigFile.error) throw new Error(this.formatErrorDiagnostic(rawConfigFile.error))
-    if (!rawConfigFile.config) throw new Error('Could not parse your tsconfig file')
+    const rawTsConfigFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
+    if (rawTsConfigFile.error) throw new Error(this.formatErrorDiagnostic(rawTsConfigFile.error))
+    if (!rawTsConfigFile.config) throw new Error('Could not parse your tsconfig file')
 
     const configFile = ts.parseJsonConfigFileContent(
-      rawConfigFile.config,
+      rawTsConfigFile.config,
       ts.sys,
       dirname(tsconfigPath),
       {},

@@ -5,45 +5,47 @@ import { Generate } from './generate'
 import { Logger } from 'winston'
 import { SchemaGenerator } from '~schema'
 
-jest.unmock('./handler')
+jest.disableAutomock()
 
 describe('Generate Command', () => {
-  const handleErrorStub = mockFn<HandleError>()
-  const getConfigTypes = mockFn<GetConfigTypes>()
-  const getSchemaGenMock = mockFn<GetSchemaGenerator>()
-  const generateStub = mockFn<Generate>()
-  const loggerStub = mockObj<Logger>({ info: jest.fn(), warn: jest.fn() })
+  function createTestDeps() {
+    const mockHandleError = mockFn<HandleError>()
+    const mockGetConfigTypes = mockFn<GetConfigTypes>()
+    const mockGetSchemaGenerator = mockFn<GetSchemaGenerator>()
+    const mockGenerate = mockFn<Generate>()
+    const mockLogger = mockObj<Logger>({ info: jest.fn(), warn: jest.fn() })
+    const dummyGetGenerateDeps = mockFn<GetGenerateDeps>().mockReturnValue({
+      generate: mockGenerate,
+      getConfigTypes: mockGetConfigTypes,
+      getSchemaGenerator: mockGetSchemaGenerator,
+      handleError: mockHandleError,
+      logger: mockLogger,
+    })
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  const getHandler = () =>
-    createHandler(
-      mockFn<GetGenerateDeps>().mockReturnValue({
-        logger: loggerStub,
-        generate: generateStub,
-        getConfigTypes,
-        getSchemaGenerator: getSchemaGenMock,
-        handleError: handleErrorStub,
-      }),
-    )
-
-  beforeEach(() => {
-    getConfigTypes.mockResolvedValue([randomString('some-type')])
-  })
+    return {
+      mockHandleError,
+      mockGetConfigTypes,
+      mockGetSchemaGenerator,
+      mockGenerate,
+      mockLogger,
+      handler: createHandler(dummyGetGenerateDeps),
+    }
+  }
 
   afterEach(() => jest.resetAllMocks())
 
   describe('CLI argument validation', () => {
     it('exits with exit code 1 if no config paths are specified', async () => {
-      const handler = getHandler()
-      const args: GenerateArgs = {
+      const { mockHandleError, handler } = createTestDeps()
+
+      await handler({
         outputPath: '',
         tsconfigPath: '',
         force: false,
         verbose: false,
-      }
-      await handler(args)
+      })
 
-      expect(handleErrorStub).toHaveBeenCalledWith(
+      expect(mockHandleError).toHaveBeenCalledWith(
         expect.objectContaining({ message: 'at least 1 ncdc config path must be given' }),
       )
     })
@@ -51,112 +53,110 @@ describe('Generate Command', () => {
 
   describe('reading config file', () => {
     it('reads the config file with the correct args', async () => {
-      const handler = getHandler()
-      const args: GenerateArgs = {
+      const { mockGetConfigTypes, handler } = createTestDeps()
+      mockGetConfigTypes.mockResolvedValueOnce([])
+      const expectedConfigPaths = [randomString('path1'), randomString('path2')]
+
+      await handler({
         outputPath: '',
         tsconfigPath: '',
-        configPaths: [randomString('path1'), randomString('path2')],
+        configPaths: expectedConfigPaths,
         force: false,
         verbose: false,
-      }
+      })
 
-      await handler(args)
-
-      expect(getConfigTypes).toHaveBeenCalledWith(args.configPaths)
+      expect(mockGetConfigTypes).toHaveBeenCalledWith(expectedConfigPaths)
     })
 
     it('calls the error handler if there is a problem reading the config', async () => {
-      const handler = getHandler()
-      const args: GenerateArgs = {
+      const { mockGetConfigTypes, mockHandleError, handler } = createTestDeps()
+      mockGetConfigTypes.mockRejectedValue(new Error('welp'))
+
+      await handler({
         outputPath: '',
         tsconfigPath: '',
         configPaths: ['config path'],
         force: false,
         verbose: false,
-      }
+      })
 
-      getConfigTypes.mockRejectedValue(new Error('welp'))
-
-      await handler(args)
-
-      expect(handleErrorStub).toHaveBeenCalledWith(expect.objectContaining({ message: 'welp' }))
+      expect(mockHandleError).toHaveBeenCalledWith(expect.objectContaining({ message: 'welp' }))
     })
   })
 
   it('logs a warning and exits if there are no types in the config file', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
+    const { mockGetConfigTypes, mockGetSchemaGenerator, handler, mockLogger } = createTestDeps()
+    mockGetConfigTypes.mockResolvedValue([])
+
+    await handler({
       outputPath: '',
       tsconfigPath: '',
       configPaths: ['config path'],
       force: false,
       verbose: false,
-    }
-    getConfigTypes.mockResolvedValue([])
+    })
 
-    await handler(args)
-
-    expect(loggerStub.warn).toBeCalledWith('No types were specified in the given config file')
-    expect(getSchemaGenMock).not.toBeCalled()
+    expect(mockLogger.warn).toBeCalledWith('No types were specified in the given config file')
+    expect(mockGetSchemaGenerator).not.toBeCalled()
   })
 
   it.each([[true], [false]])(
     'calls the schema generator with the correct args when force is %s',
     async (force) => {
-      const handler = getHandler()
-      const args: GenerateArgs = {
+      const { mockGetSchemaGenerator, handler, mockGetConfigTypes } = createTestDeps()
+      mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
+
+      await handler({
         verbose: false,
         outputPath: 'out',
         tsconfigPath: 'tsconfig',
         configPaths: ['config path'],
         force,
-      }
+      })
 
-      await handler(args)
-
-      expect(getSchemaGenMock).toHaveBeenCalledWith('tsconfig', force)
+      expect(mockGetSchemaGenerator).toHaveBeenCalledWith('tsconfig', force)
     },
   )
 
   it('calls the error handler if there is a problem creating the schema generator', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
+    const { mockGetSchemaGenerator, mockHandleError, handler, mockGetConfigTypes } = createTestDeps()
+    mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
+    mockGetSchemaGenerator.mockImplementation(() => {
+      throw new Error('wat')
+    })
+
+    await handler({
       verbose: false,
       outputPath: 'out',
       tsconfigPath: 'tsconfig',
       configPaths: ['config path'],
       force: false,
-    }
-    getSchemaGenMock.mockImplementation(() => {
-      throw new Error('wat')
     })
 
-    await handler(args)
-
-    expect(handleErrorStub).toHaveBeenCalledWith(expect.objectContaining({ message: 'wat' }))
+    expect(mockHandleError).toHaveBeenCalledWith(expect.objectContaining({ message: 'wat' }))
   })
 
   it('calls generate with the correct parameters', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
+    const { mockGenerate, mockGetConfigTypes, mockGetSchemaGenerator, handler } = createTestDeps()
+    const types = ['WickedType', 'SickFam', 'Noice']
+    mockGetConfigTypes.mockResolvedValue(types)
+    const dummySchemaGen = mockObj<SchemaGenerator>({ load: jest.fn() })
+    mockGetSchemaGenerator.mockReturnValue(dummySchemaGen)
+
+    await handler({
       verbose: false,
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPaths: ['config path'],
       force: false,
-    }
-    const types = ['WickedType', 'SickFam', 'Noice']
-    getConfigTypes.mockResolvedValue(types)
-    const dummySchemaGen = mockObj<SchemaGenerator>({ load: jest.fn() })
-    getSchemaGenMock.mockReturnValue(dummySchemaGen)
+    })
 
-    await handler(args)
-
-    expect(generateStub).toHaveBeenCalledWith(dummySchemaGen, types, 'outYouGo')
+    expect(mockGenerate).toHaveBeenCalledWith(dummySchemaGen, types, 'outYouGo')
   })
 
   it('logs a message if the schemas were written successfully', async () => {
-    const handler = getHandler()
+    const { handler, mockLogger, mockGetConfigTypes } = createTestDeps()
+    mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
     const args: GenerateArgs = {
       verbose: false,
       outputPath: 'outYouGo',
@@ -167,21 +167,21 @@ describe('Generate Command', () => {
 
     await handler(args)
 
-    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('JSON schemas have been written'))
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('JSON schemas have been written'))
   })
 
   it('calls the error handler if there is a problem writing schemas to disk', async () => {
-    const handler = getHandler()
-    const args: GenerateArgs = {
+    const { handler, mockLogger, mockGetConfigTypes } = createTestDeps()
+    mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
+
+    await handler({
       verbose: false,
       outputPath: 'outYouGo',
       tsconfigPath: 'tsconfig',
       configPaths: ['config path'],
       force: false,
-    }
+    })
 
-    await handler(args)
-
-    expect(loggerStub.info).toHaveBeenCalledWith(expect.stringContaining('JSON schemas have been written'))
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('JSON schemas have been written'))
   })
 })

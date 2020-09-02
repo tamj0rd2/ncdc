@@ -11,16 +11,24 @@ jest.mock('fs')
 jest.mock('~io')
 
 describe('Generate', () => {
-  const mockSchemaGenerator = mockObj<SchemaGenerator>({ load: jest.fn() })
-  const mockFs = mockObj(_fs)
-  const mockPath = mockObj(_path)
-  const mockedIo = mockObj(io)
+  function createTestDeps() {
+    const mockSchemaGenerator = mockObj<SchemaGenerator>({ load: jest.fn() })
+    const mockFs = mockObj(_fs)
+    const mockPath = mockObj(_path)
+    const mockedIo = mockObj(io)
+    return {
+      mockSchemaGenerator,
+      mockFs,
+      mockPath,
+      mockedIo,
+      generate,
+    }
+  }
 
-  afterEach(() => {
-    jest.resetAllMocks()
-  })
+  afterEach(() => jest.resetAllMocks())
 
   it('creates the output directory if it does not already exist', async () => {
+    const { generate, mockFs, mockPath, mockSchemaGenerator } = createTestDeps()
     mockPath.resolve.mockReturnValue('/abs/path/out')
     mockFs.existsSync.mockReturnValue(false)
 
@@ -31,6 +39,7 @@ describe('Generate', () => {
   })
 
   it('does not create an output directory if it already exist', async () => {
+    const { generate, mockFs, mockSchemaGenerator } = createTestDeps()
     mockFs.existsSync.mockReturnValue(true)
 
     await generate(mockSchemaGenerator, ['Hello', 'World'], './out')
@@ -39,6 +48,7 @@ describe('Generate', () => {
   })
 
   it('writes the generated json schema to a file', async () => {
+    const { generate, mockPath, mockSchemaGenerator, mockedIo } = createTestDeps()
     mockPath.resolve.mockImplementation((...args) => args.join('/'))
     const helloSchema = { $schema: 'Hello' }
     const worldSchema = { $schema: 'World!' }

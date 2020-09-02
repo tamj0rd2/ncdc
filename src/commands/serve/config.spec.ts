@@ -9,7 +9,12 @@ jest.mock('path')
 jest.mock('~io')
 
 describe('transform configs', () => {
-  const mockReadFixture = mocked(readFixture)
+  function createTestDeps() {
+    const mockReadFixture = mocked(readFixture)
+    return {
+      mockReadFixture,
+    }
+  }
 
   const createBasicConfig = (): ValidatedServeConfig => {
     return {
@@ -79,6 +84,7 @@ describe('transform configs', () => {
   })
 
   it.each(bodyCases)('sets the %s body when there is a request bodyPath', async (property) => {
+    const { mockReadFixture } = createTestDeps()
     const config = createBasicConfig()
     const bodyPath = randomString('bodyPath')
     config[property].bodyPath = bodyPath
@@ -93,6 +99,7 @@ describe('transform configs', () => {
   })
 
   it('sets the response body when a serveBodyPath is provided', async () => {
+    const { mockReadFixture } = createTestDeps()
     const config = createBasicConfig()
     const bodyPath = randomString('bodyPath')
     config.response.serveBodyPath = bodyPath

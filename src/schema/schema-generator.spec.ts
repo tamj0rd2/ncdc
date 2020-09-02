@@ -1,45 +1,29 @@
 import { SchemaGenerator } from './schema-generator'
 import ts from 'typescript'
-import { mockObj, randomString, mockFn } from '~test-helpers'
-import { ReportMetric } from '~commands/shared'
+import { mockObj, randomString, mockCtor } from '~test-helpers'
 import * as tsj from 'ts-json-schema-generator'
 import { NoRootTypeError } from 'ts-json-schema-generator'
-import { OperationResult } from '~metrics'
 
 jest.disableAutomock()
 jest.mock('ts-json-schema-generator')
-jest.mock('typescript')
-jest.mock('path')
-jest.mock('fs')
 
 describe('SchemaLoader', () => {
-  const mockedTsj = mockObj(tsj)
-  const mockedTsjGenerator = mockObj<tsj.SchemaGenerator>({ createSchema: jest.fn() })
-  const mockedTypescript = mockObj(ts)
-  const mockedreportMetric = mockFn<ReportMetric>()
+  const createTestDeps = () => {
+    const mockedTsjGenerator = mockObj<tsj.SchemaGenerator>({ createSchema: jest.fn() })
+    mockCtor(tsj.SchemaGenerator).mockImplementation(() => mockedTsjGenerator)
+    const dummyProgram: ts.Program = mockObj<ts.Program>({})
 
-  beforeEach(() => {
-    jest.resetAllMocks()
-    mockedTypescript.parseJsonConfigFileContent.mockReturnValue(
-      mockObj<ts.ParsedCommandLine>({ options: {} }),
-    )
-    mockedTypescript.createIncrementalProgram.mockReturnValue(
-      mockObj<ts.EmitAndSemanticDiagnosticsBuilderProgram>({
-        getProgram: jest.fn().mockReturnValue(mockObj<ts.Program>({})),
-      }),
-    )
-    mockedTypescript.getPreEmitDiagnostics.mockReturnValue([])
-    mockedTsj.SchemaGenerator.mockImplementation(() => mockedTsjGenerator)
-    mockedreportMetric.mockReturnValue(
-      mockObj<OperationResult>({ fail: jest.fn(), success: jest.fn() }),
-    )
-  })
+    return {
+      mockedTsjGenerator,
+      schemaGenerator: new SchemaGenerator(dummyProgram),
+    }
+  }
 
-  const createSchemaGenerator = (): SchemaGenerator => new SchemaGenerator(mockObj<ts.Program>({}))
+  afterEach(() => jest.resetAllMocks())
 
-  describe('loading schemas', () => {
-    it('throws if there is no generator', async () => {
-      const schemaGenerator = createSchemaGenerator()
+  describe('load', () => {
+    it('throws if it has not been instantiated', async () => {
+      const { schemaGenerator } = createTestDeps()
 
       await expect(() => schemaGenerator.load('bananas')).rejects.toThrowError(
         'This SchemaGenerator instance has not been initialised',
@@ -47,22 +31,21 @@ describe('SchemaLoader', () => {
     })
 
     it('throws if a type could not be found', async () => {
+      const { schemaGenerator, mockedTsjGenerator } = createTestDeps()
       mockedTsjGenerator.createSchema.mockImplementation(() => {
         throw new NoRootTypeError(randomString('yikes'))
       })
-
-      const schemaGenerator = createSchemaGenerator()
       schemaGenerator.init()
 
       await expect(schemaGenerator.load('lol')).rejects.toThrowError('Could not find type: lol')
     })
 
     it('throws if an error occurred while creating a type', async () => {
+      const { schemaGenerator, mockedTsjGenerator } = createTestDeps()
       mockedTsjGenerator.createSchema.mockImplementation(() => {
         throw new Error(randomString('yikes'))
       })
 
-      const schemaGenerator = createSchemaGenerator()
       schemaGenerator.init()
 
       await expect(schemaGenerator.load('lol')).rejects.toThrowError(
@@ -71,25 +54,25 @@ describe('SchemaLoader', () => {
     })
 
     it('returns the generated schema', async () => {
+      const { schemaGenerator, mockedTsjGenerator } = createTestDeps()
       const someSchema = { $schema: 'schema stuff' }
       mockedTsjGenerator.createSchema.mockReturnValue(someSchema)
 
-      const schemaLoader = createSchemaGenerator()
-      schemaLoader.init()
-      const schema = await schemaLoader.load('DealSchema')
+      schemaGenerator.init()
+      const schema = await schemaGenerator.load('DealSchema')
 
       expect(schema).toEqual(someSchema)
     })
 
     it('returns cached data for properties that are accessed multiple times', async () => {
+      const { schemaGenerator, mockedTsjGenerator } = createTestDeps()
       const someSchema = { $schema: 'schema stuff' }
       const someSchema2 = { $schema: 'schema stuff 2' }
       mockedTsjGenerator.createSchema.mockReturnValueOnce(someSchema).mockReturnValueOnce(someSchema2)
 
-      const schemaLoader = createSchemaGenerator()
-      schemaLoader.init()
-      const schema1 = await schemaLoader.load('DealSchema')
-      const schema2 = await schemaLoader.load('DealSchema')
+      schemaGenerator.init()
+      const schema1 = await schemaGenerator.load('DealSchema')
+      const schema2 = await schemaGenerator.load('DealSchema')
 
       expect(schema1).toEqual(someSchema)
       expect(mockedTsjGenerator.createSchema).toHaveBeenCalledTimes(1)

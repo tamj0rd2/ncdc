@@ -5,11 +5,15 @@ import { Resource } from '~config'
 import { Request, Response, SupportedMethod } from '~config'
 
 jest.disableAutomock()
-jest.mock('path')
 jest.mock('~io')
 
 describe('transform configs', () => {
-  const mockReadFixture = mocked(readFixture)
+  function createTestDeps() {
+    const mockReadFixture = mocked(readFixture)
+    return {
+      mockReadFixture,
+    }
+  }
 
   const createBasicConfig = (): ValidatedTestConfig => {
     return {
@@ -79,6 +83,8 @@ describe('transform configs', () => {
   })
 
   it.each(bodyCases)(`loads and sets a body when %s bodyPath is provided`, async (key) => {
+    const { mockReadFixture } = createTestDeps()
+
     const config = createBasicConfig()
     const expectedBodyPath = randomString('body path')
     config[key].bodyPath = expectedBodyPath

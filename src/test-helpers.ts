@@ -20,8 +20,8 @@ export function mockFn<T extends (...args: any[]) => ReturnType<T>>(fn?: T): any
   return fn ? (fn as jest.MockedFunction<T>) : jest.fn<ReturnType<T>, Parameters<T>>()
 }
 
-export function randomString(prefix = ''): string {
-  return `${prefix}-${Math.random().toString(36).substring(7)}`
+export function randomString(prefix = '', suffix = ''): string {
+  return `${prefix}-${Math.random().toString(36).substring(7)}${suffix}`
 }
 
 export function randomNumber(min = 0, max = 1000): number {

@@ -1,5 +1,4 @@
-import { readYamlAsync } from '~io'
-import { resolve, isAbsolute } from 'path'
+import { readYamlAsync, getFixturePath } from '~io'
 import { TypeValidator } from '~validation'
 import { validateConfigBodies, validateRawConfig, ValidatedRawConfig } from './validate'
 import { Resource } from '~config'
@@ -13,7 +12,7 @@ import {
 
 export type LoadConfigResponse = {
   configs: Resource[]
-  absoluteFixturePaths: string[]
+  fixturePaths: string[]
 }
 
 export type TransformResources<T> = (resources: T[], absoluteConfigPath: string) => Promise<Resource[]>
@@ -31,25 +30,24 @@ const loadConfig = async <T extends ValidatedRawConfig>(
   transformConfigs: TransformResources<T>,
   isTestMode: boolean,
 ): Promise<LoadConfigResponse> => {
-  const absoluteConfigPath = resolve(configPath)
   let rawConfigFile: unknown
 
   try {
-    rawConfigFile = await readYamlAsync(absoluteConfigPath)
+    rawConfigFile = await readYamlAsync(configPath)
   } catch (err) {
-    throw new ServiceConfigReadError(absoluteConfigPath, err.message)
+    throw new ServiceConfigReadError(configPath, err.message)
   }
 
   const validationResult = validateRawConfig<T>(rawConfigFile)
   if (!validationResult.success) {
-    throw new ServiceConfigInvalidError(absoluteConfigPath, validationResult.errors)
+    throw new ServiceConfigInvalidError(configPath, validationResult.errors)
   }
 
   if (!validationResult.validatedConfigs.length) {
-    throw new NoServiceResourcesError(absoluteConfigPath)
+    throw new NoServiceResourcesError(configPath)
   }
 
-  const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, absoluteConfigPath)
+  const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, configPath)
 
   if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
     let bodyValidationMessage: string | undefined
@@ -61,20 +59,20 @@ const loadConfig = async <T extends ValidatedRawConfig>(
         isTestMode,
       )
     } catch (err) {
-      throw new BodyValidationError(absoluteConfigPath, err.message)
+      throw new BodyValidationError(configPath, err.message)
     }
 
     if (bodyValidationMessage) {
-      throw new InvalidBodyTypeError(absoluteConfigPath, bodyValidationMessage)
+      throw new InvalidBodyTypeError(configPath, bodyValidationMessage)
     }
   }
 
   return {
     configs: transformedConfigs,
-    absoluteFixturePaths: validationResult.validatedConfigs
+    fixturePaths: validationResult.validatedConfigs
       .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
       .filter((x): x is string => !!x)
-      .map((p) => (isAbsolute(p) ? p : resolve(absoluteConfigPath, '..', p))),
+      .map((fixturePath) => getFixturePath(configPath, fixturePath)),
   }
 }
 

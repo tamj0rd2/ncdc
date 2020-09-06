@@ -1,4 +1,3 @@
-import { resolve } from 'path'
 import { readJsonAsync } from '~io'
 import type { Definition } from 'ts-json-schema-generator'
 import type { SchemaRetriever } from './types'
@@ -11,7 +10,7 @@ export class FsSchemaLoader implements SchemaRetriever {
   public async load(symbolName: string): Promise<Definition> {
     return (
       this.cache[symbolName] ??
-      (this.cache[symbolName] = await readJsonAsync(resolve(this.schemaPath, `${symbolName}.json`)))
+      (this.cache[symbolName] = await readJsonAsync(`${this.schemaPath}/${symbolName}.json`))
     )
   }
 }

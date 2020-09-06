@@ -6,7 +6,6 @@ import stripAnsi from 'strip-ansi'
 import { LoadConfig } from '~config/load'
 import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
-import { resolve } from 'path'
 import { NoServiceResourcesError } from '~config/errors'
 
 jest.disableAutomock()
@@ -23,7 +22,6 @@ describe('serve handler', () => {
     const mockGetServeDeps = mockFn<GetServeDeps>()
     const mockTransformConfigs = mocked(transformResources)
     const mockCreateServer = mockFn<CreateServer>()
-    const mockResolve = mockFn(resolve)
 
     return {
       mockHandleError,
@@ -33,7 +31,6 @@ describe('serve handler', () => {
       mockGetServeDeps,
       mockTransformConfigs,
       mockCreateServer,
-      mockResolve,
       handler: createHandler(mockGetServeDeps),
     }
   }
@@ -127,8 +124,8 @@ describe('serve handler', () => {
     const args: ServeArgs = {
       force: false,
       port: 4000,
-      tsconfigPath: randomString(),
-      configPath: randomString(),
+      tsconfigPath: randomString('tsconfigPath'),
+      configPath: randomString('configPath'),
       watch: false,
       verbose: false,
     }
@@ -142,12 +139,9 @@ describe('serve handler', () => {
         mockHandleError,
         mockLoadConfig,
         mockLogger,
-        mockResolve,
         mockTransformConfigs,
       } = createTestDeps()
 
-      const expectedConfigPath = randomString('lol') + args.configPath
-      mockResolve.mockReturnValue(expectedConfigPath)
       mockGetServeDeps.mockReturnValueOnce({
         createServer: mockCreateServer,
         getTypeValidator: mockGetTypeValidator,
@@ -159,7 +153,7 @@ describe('serve handler', () => {
       await handler(args)
 
       expect(mockLoadConfig).toBeCalledWith(
-        expectedConfigPath,
+        args.configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         false,
@@ -246,7 +240,7 @@ describe('serve handler', () => {
       const configs = [new ResourceBuilder().build()]
       mockLoadConfig.mockImplementation(async (_, getTypeValidator) => {
         await getTypeValidator()
-        return { configs, absoluteFixturePaths: [] }
+        return { configs, fixturePaths: [] }
       })
 
       await handler(args)

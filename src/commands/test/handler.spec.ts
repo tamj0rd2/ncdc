@@ -123,7 +123,7 @@ describe('test handler', () => {
       runTests: mockRunTests,
     })
     mockLoadConfig.mockResolvedValue({
-      absoluteFixturePaths: [],
+      fixturePaths: [],
       configs: [],
     })
 
@@ -205,7 +205,7 @@ describe('test handler', () => {
       runTests: mockRunTests,
     })
     const configs = [new ResourceBuilder().build()]
-    mockLoadConfig.mockResolvedValue({ configs, absoluteFixturePaths: [] })
+    mockLoadConfig.mockResolvedValue({ configs, fixturePaths: [] })
 
     await handler(args)
 
@@ -231,7 +231,7 @@ describe('test handler', () => {
       runTests: mockRunTests,
     })
     mockLoadConfig.mockResolvedValue({
-      absoluteFixturePaths: [],
+      fixturePaths: [],
       configs: [new ResourceBuilder().build()],
     })
     mockRunTests.mockResolvedValue('Failure')

@@ -1,4 +1,3 @@
-import { resolve } from 'path'
 import { transformResources, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import chokidar from 'chokidar'
@@ -70,7 +69,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
   if (args.watch && args.force)
     return handleError({ message: 'watch and force options cannot be used together' })
 
-  const absoluteConfigPath = resolve(args.configPath)
+  const configPath = args.configPath
 
   type PrepAndStartResult = {
     pathsToWatch: string[]
@@ -87,13 +86,13 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
     try {
-      const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformResources, false)
+      const loadResult = await loadConfig(configPath, getTypeValidator, transformResources, false)
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const server = servers[args.configPath!]
       await server.start(loadResult.configs)
       return {
-        pathsToWatch: loadResult.absoluteFixturePaths,
+        pathsToWatch: loadResult.fixturePaths,
       }
     } catch (err) {
       if (err instanceof NoServiceResourcesError) {
@@ -124,8 +123,8 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
 
   if (args.watch) {
     const fixturesToWatch = [...prepAndServeResult.pathsToWatch]
-    const chokidarWatchPaths = [absoluteConfigPath, ...fixturesToWatch]
-    if (args.schemaPath) chokidarWatchPaths.push(resolve(args.schemaPath))
+    const chokidarWatchPaths = [configPath, ...fixturesToWatch]
+    if (args.schemaPath) chokidarWatchPaths.push(args.schemaPath)
 
     const configWatcher = chokidar.watch(chokidarWatchPaths, {
       ignoreInitial: true,

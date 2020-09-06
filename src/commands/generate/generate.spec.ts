@@ -1,25 +1,18 @@
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
-import * as _fs from 'fs'
-import * as _path from 'path'
 import * as io from '~io'
-import { mockObj } from '~test-helpers'
+import { mockObj, randomString } from '~test-helpers'
+import { JSONSchema7 } from 'json-schema'
 
-jest.unmock('./generate')
-jest.mock('path')
-jest.mock('fs')
+jest.disableAutomock()
 jest.mock('~io')
 
 describe('Generate', () => {
   function createTestDeps() {
     const mockSchemaGenerator = mockObj<SchemaGenerator>({ load: jest.fn() })
-    const mockFs = mockObj(_fs)
-    const mockPath = mockObj(_path)
     const mockedIo = mockObj(io)
     return {
       mockSchemaGenerator,
-      mockFs,
-      mockPath,
       mockedIo,
       generate,
     }
@@ -27,38 +20,26 @@ describe('Generate', () => {
 
   afterEach(() => jest.resetAllMocks())
 
-  it('creates the output directory if it does not already exist', async () => {
-    const { generate, mockFs, mockPath, mockSchemaGenerator } = createTestDeps()
-    mockPath.resolve.mockReturnValue('/abs/path/out')
-    mockFs.existsSync.mockReturnValue(false)
+  it('loads a schema for each type', async () => {
+    const { generate, mockSchemaGenerator } = createTestDeps()
+    const types = [randomString('type1'), randomString('type2')]
 
-    await generate(mockSchemaGenerator, ['Hello', 'World'], './out')
+    await generate(mockSchemaGenerator, types, './out')
 
-    expect(mockPath.resolve).toHaveBeenCalledWith('./out')
-    expect(mockFs.mkdirSync).toHaveBeenCalledWith('/abs/path/out')
+    expect(mockSchemaGenerator.load).toHaveBeenNthCalledWith(1, types[0])
+    expect(mockSchemaGenerator.load).toHaveBeenNthCalledWith(2, types[1])
   })
 
-  it('does not create an output directory if it already exist', async () => {
-    const { generate, mockFs, mockSchemaGenerator } = createTestDeps()
-    mockFs.existsSync.mockReturnValue(true)
+  it('writes each generated json schema to disk', async () => {
+    const { generate, mockSchemaGenerator, mockedIo } = createTestDeps()
+    const types = [randomString('type1'), randomString('type2')]
+    const schema1 = mockObj<JSONSchema7>({ title: 'schema1' })
+    const schema2 = mockObj<JSONSchema7>({ title: 'schema2' })
+    mockSchemaGenerator.load.mockResolvedValueOnce(schema1).mockResolvedValueOnce(schema2)
 
-    await generate(mockSchemaGenerator, ['Hello', 'World'], './out')
+    await generate(mockSchemaGenerator, types, './out')
 
-    expect(mockFs.mkdirSync).not.toHaveBeenCalled()
-  })
-
-  it('writes the generated json schema to a file', async () => {
-    const { generate, mockPath, mockSchemaGenerator, mockedIo } = createTestDeps()
-    mockPath.resolve.mockImplementation((...args) => args.join('/'))
-    const helloSchema = { $schema: 'Hello' }
-    const worldSchema = { $schema: 'World!' }
-    mockSchemaGenerator.load.mockResolvedValueOnce(helloSchema).mockResolvedValueOnce(worldSchema)
-
-    await generate(mockSchemaGenerator, ['Hello', 'World'], './out')
-
-    expect(mockSchemaGenerator.load).toBeCalledWith('Hello')
-    expect(mockSchemaGenerator.load).toBeCalledWith('World')
-    expect(mockedIo.writeJsonAsync).toBeCalledWith(helloSchema, './out/Hello.json')
-    expect(mockedIo.writeJsonAsync).toBeCalledWith(worldSchema, './out/World.json')
+    expect(mockedIo.writeJsonAsync).toBeCalledWith(schema1, `./out/${types[0]}.json`)
+    expect(mockedIo.writeJsonAsync).toBeCalledWith(schema2, `./out/${types[1]}.json`)
   })
 })

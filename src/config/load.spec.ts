@@ -1,6 +1,5 @@
 import { mocked, randomString, mockFn } from '~test-helpers'
-import { readYamlAsync } from '~io'
-import { resolve, isAbsolute } from 'path'
+import { readYamlAsync, getFixturePath } from '~io'
 import { Resource, ResourceBuilder } from './resource'
 import loadConfig, { LoadConfigResponse, TransformResources, GetTypeValidator } from './load'
 import { validateRawConfig, ValidatedRawConfig, validateConfigBodies } from './validate'
@@ -14,29 +13,26 @@ import {
 import { RawConfigBuilder } from './builders'
 
 jest.disableAutomock()
-jest.mock('path')
 jest.mock('./validate')
 jest.mock('~io')
 
 describe('loadConfig', () => {
   function createTestDeps() {
     const mockReadYamlAsync = mocked(readYamlAsync)
-    const mockResolve = mocked(resolve)
     const mockValidateRawConfig = mocked(validateRawConfig)
     const mockValidateBodies = mocked(validateConfigBodies)
     const mockTransformConfigs = mockFn<TransformResources<unknown>>()
     const mockCreateTypeValidator = mockFn<GetTypeValidator>()
-    const mockIsAbsolute = mocked(isAbsolute)
+    const mockGetFixturePaths = mocked(getFixturePath)
     const dummyConfigPath = randomString('configPath')
 
     return {
       mockReadYamlAsync,
-      mockResolve,
+      mockGetFixturePaths,
       mockValidateRawConfig,
       mockValidateBodies,
       mockTransformConfigs,
       mockCreateTypeValidator,
-      mockIsAbsolute,
       dummyConfigPath,
     }
   }
@@ -48,13 +44,9 @@ describe('loadConfig', () => {
       dummyConfigPath,
       mockCreateTypeValidator,
       mockReadYamlAsync,
-      mockResolve,
       mockTransformConfigs,
       mockValidateRawConfig,
     } = createTestDeps()
-
-    const resolvedPath = 'wot m8'
-    mockResolve.mockReturnValue(resolvedPath)
     mockValidateRawConfig.mockReturnValue({
       success: true,
       validatedConfigs: [RawConfigBuilder.default],
@@ -63,8 +55,7 @@ describe('loadConfig', () => {
 
     await loadConfig(dummyConfigPath, mockCreateTypeValidator, mockTransformConfigs, false)
 
-    expect(mockResolve).toBeCalledWith(dummyConfigPath)
-    expect(mockReadYamlAsync).toBeCalledWith(resolvedPath)
+    expect(mockReadYamlAsync).toBeCalledWith(dummyConfigPath)
   })
 
   it('returns a failure response when readYamlAsync fails', async () => {
@@ -153,19 +144,16 @@ describe('loadConfig', () => {
     const {
       dummyConfigPath,
       mockCreateTypeValidator,
-      mockResolve,
       mockTransformConfigs,
       mockValidateRawConfig,
     } = createTestDeps()
     const validatedConfigs = [{ serveOnly: false, request: {}, response: {} }]
     mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs })
-    const absoulteConfigPath = randomString()
-    mockResolve.mockReturnValue(absoulteConfigPath)
     mockTransformConfigs.mockResolvedValue([])
 
     await loadConfig(dummyConfigPath, mockCreateTypeValidator, mockTransformConfigs, false)
 
-    expect(mockTransformConfigs).toBeCalledWith(validatedConfigs, absoulteConfigPath)
+    expect(mockTransformConfigs).toBeCalledWith(validatedConfigs, dummyConfigPath)
   })
 
   it('creates a type validator with the correct args when types are present in any config', async () => {
@@ -230,19 +218,20 @@ describe('loadConfig', () => {
   })
 
   describe('when everything else goes ok', () => {
+    // TODO: this test is a bit insane.
     it('returns a response with configs and fixture paths', async () => {
       const {
         dummyConfigPath,
         mockCreateTypeValidator,
-        mockIsAbsolute,
-        mockResolve,
         mockTransformConfigs,
         mockValidateRawConfig,
+        mockGetFixturePaths,
       } = createTestDeps()
-      const fixturePath1 = randomString('fixture1')
-      const fixturePath2 = randomString('fixture2')
-      const fixturePath3 = randomString('fixture3')
-      const expectedAbsPath = randomString('some abs path')
+      const [fixturePath1, fixturePath2, fixturePath3] = [
+        randomString('fixture1'),
+        randomString('fixture2'),
+        randomString('fixture3'),
+      ]
       const validatedConfigs: ValidatedRawConfig[] = [
         {
           serveOnly: false,
@@ -251,15 +240,20 @@ describe('loadConfig', () => {
         },
       ]
       mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs })
-      mockIsAbsolute.mockReturnValueOnce(true).mockReturnValueOnce(false).mockReturnValue(true)
-      mockResolve.mockReturnValue(expectedAbsPath)
+      mockGetFixturePaths
+        .mockReturnValueOnce(fixturePath1)
+        .mockReturnValueOnce(fixturePath2)
+        .mockReturnValueOnce(fixturePath3)
       const expectedResource = ResourceBuilder.Default
       mockTransformConfigs.mockResolvedValue([expectedResource])
 
       const result = await loadConfig(dummyConfigPath, mockCreateTypeValidator, mockTransformConfigs, false)
 
+      expect(mockGetFixturePaths).toBeCalledWith(dummyConfigPath, fixturePath1)
+      expect(mockGetFixturePaths).toBeCalledWith(dummyConfigPath, fixturePath2)
+      expect(mockGetFixturePaths).toBeCalledWith(dummyConfigPath, fixturePath3)
       expect(result).toStrictEqual<LoadConfigResponse>({
-        absoluteFixturePaths: [fixturePath1, expectedAbsPath, fixturePath3],
+        fixturePaths: [fixturePath1, fixturePath2, fixturePath3],
         configs: [expectedResource],
       })
     })

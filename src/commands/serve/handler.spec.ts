@@ -1,9 +1,15 @@
-import createHandler, { CreateServer, ServeArgs, GetTypeValidator, GetServeDeps } from './handler'
+import createHandler, {
+  CreateServer,
+  ServeArgs,
+  GetTypeValidator,
+  GetServeDeps,
+  ConfigLoader,
+  ServeDeps,
+} from './handler'
 import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
-import { transformResources, ValidatedServeConfig } from './config'
+import { transformResources } from './config'
 import stripAnsi from 'strip-ansi'
-import { LoadConfig } from '~config/load'
 import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
 import { NoServiceResourcesError } from '~config/errors'
@@ -17,20 +23,27 @@ describe('serve handler', () => {
   function createTestDeps() {
     const mockHandleError = mockFn<HandleError>()
     const mockGetTypeValidator = mockFn<GetTypeValidator>()
-    const mockLoadConfig = mockFn<LoadConfig<ValidatedServeConfig>>()
+    const mockConfigLoader = mockObj<ConfigLoader>({ load: jest.fn() })
     const mockLogger = mockObj<NcdcLogger>({})
     const mockGetServeDeps = mockFn<GetServeDeps>()
     const mockTransformConfigs = mocked(transformResources)
     const mockCreateServer = mockFn<CreateServer>()
+    const dummyServeDeps: ServeDeps = {
+      configLoader: mockConfigLoader,
+      createServer: mockCreateServer,
+      handleError: mockHandleError,
+      logger: mockLogger,
+    }
 
     return {
       mockHandleError,
       mockGetTypeValidator,
-      mockLoadConfig,
+      mockConfigLoader,
       mockLogger,
       mockGetServeDeps,
       mockTransformConfigs,
       mockCreateServer,
+      dummyServeDeps,
       handler: createHandler(mockGetServeDeps),
     }
   }
@@ -38,22 +51,8 @@ describe('serve handler', () => {
   afterEach(() => jest.resetAllMocks())
 
   it('handles when a config path is not supplied', async () => {
-    const {
-      handler,
-      mockCreateServer,
-      mockGetServeDeps,
-      mockGetTypeValidator,
-      mockHandleError,
-      mockLoadConfig,
-      mockLogger,
-    } = createTestDeps()
-    mockGetServeDeps.mockReturnValueOnce({
-      createServer: mockCreateServer,
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-    })
+    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+    mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
     await handler({ force: false, port: 8001, tsconfigPath: randomString(), watch: false, verbose: false })
 
@@ -61,22 +60,8 @@ describe('serve handler', () => {
   })
 
   it('handles when port is not a number', async () => {
-    const {
-      handler,
-      mockCreateServer,
-      mockGetServeDeps,
-      mockGetTypeValidator,
-      mockHandleError,
-      mockLoadConfig,
-      mockLogger,
-    } = createTestDeps()
-    mockGetServeDeps.mockReturnValueOnce({
-      createServer: mockCreateServer,
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-    })
+    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+    mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
     await handler({
       force: false,
@@ -91,22 +76,8 @@ describe('serve handler', () => {
   })
 
   it('handles when force and watch are used at the same time', async () => {
-    const {
-      handler,
-      mockCreateServer,
-      mockGetServeDeps,
-      mockGetTypeValidator,
-      mockHandleError,
-      mockLoadConfig,
-      mockLogger,
-    } = createTestDeps()
-    mockGetServeDeps.mockReturnValueOnce({
-      createServer: mockCreateServer,
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-    })
+    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+    mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
     await handler({
       force: true,
@@ -131,86 +102,24 @@ describe('serve handler', () => {
     }
 
     it('calls loadconfig with the correct args', async () => {
-      const {
-        handler,
-        mockCreateServer,
-        mockGetServeDeps,
-        mockGetTypeValidator,
-        mockHandleError,
-        mockLoadConfig,
-        mockLogger,
-        mockTransformConfigs,
-      } = createTestDeps()
-
-      mockGetServeDeps.mockReturnValueOnce({
-        createServer: mockCreateServer,
-        getTypeValidator: mockGetTypeValidator,
-        handleError: mockHandleError,
-        loadConfig: mockLoadConfig,
-        logger: mockLogger,
-      })
+      const { handler, mockGetServeDeps, dummyServeDeps, mockConfigLoader } = createTestDeps()
+      mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
       await handler(args)
 
-      expect(mockLoadConfig).toBeCalledWith(
-        args.configPath,
-        mockGetTypeValidator,
-        mockTransformConfigs,
-        false,
-      )
-    })
-
-    // this is because if we're loading from disk, we want to create a new
-    // validator each time the schema files change. It's a lot less expensive
-    // than generating schemas - it's basically instant.
-    it('creates a new type validator every time if schemaPath is defined', async () => {
-      const {
-        handler,
-        mockCreateServer,
-        mockGetServeDeps,
-        mockGetTypeValidator,
-        mockHandleError,
-        mockLoadConfig,
-        mockLogger,
-      } = createTestDeps()
-      mockGetServeDeps.mockReturnValueOnce({
-        createServer: mockCreateServer,
-        getTypeValidator: mockGetTypeValidator,
-        handleError: mockHandleError,
-        loadConfig: mockLoadConfig,
-        logger: mockLogger,
-      })
-
-      await handler({ ...args, schemaPath: randomString('schemaPath') })
-
-      const getTypeValidatorFn = mockLoadConfig.mock.calls[0][1]
-      const timesToCall = randomNumber(1, 10)
-      await Array(timesToCall)
-        .fill(0)
-        .reduce<Promise<unknown>>((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
-
-      expect(mockGetTypeValidator).toBeCalledTimes(timesToCall)
+      expect(mockConfigLoader.load).toBeCalledWith(args.configPath)
     })
 
     it('handles there being no configs to serve as an error', async () => {
       const {
         handler,
-        mockCreateServer,
         mockGetServeDeps,
-        mockGetTypeValidator,
         mockHandleError,
-        mockLoadConfig,
-        mockLogger,
+        mockConfigLoader,
+        dummyServeDeps,
       } = createTestDeps()
-      mockGetServeDeps.mockReturnValueOnce({
-        createServer: mockCreateServer,
-        getTypeValidator: mockGetTypeValidator,
-        handleError: mockHandleError,
-        loadConfig: mockLoadConfig,
-        logger: mockLogger,
-      })
-
-      mockLoadConfig.mockRejectedValue(new NoServiceResourcesError('file path'))
+      mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
+      mockConfigLoader.load.mockRejectedValue(new NoServiceResourcesError('file path'))
 
       await handler(args)
 
@@ -223,25 +132,15 @@ describe('serve handler', () => {
         handler,
         mockCreateServer,
         mockGetServeDeps,
-        mockGetTypeValidator,
         mockHandleError,
-        mockLoadConfig,
-        mockLogger,
+        mockConfigLoader,
+        dummyServeDeps,
       } = createTestDeps()
-      mockGetServeDeps.mockReturnValueOnce({
-        createServer: mockCreateServer,
-        getTypeValidator: mockGetTypeValidator,
-        handleError: mockHandleError,
-        loadConfig: mockLoadConfig,
-        logger: mockLogger,
-      })
+      mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
       mockCreateServer.mockReturnValue({ start: jest.fn(), stop: jest.fn() })
 
       const configs = [new ResourceBuilder().build()]
-      mockLoadConfig.mockImplementation(async (_, getTypeValidator) => {
-        await getTypeValidator()
-        return { configs, fixturePaths: [] }
-      })
+      mockConfigLoader.load.mockResolvedValue({ configs, fixturePaths: [] })
 
       await handler(args)
 

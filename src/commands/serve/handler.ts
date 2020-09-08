@@ -1,7 +1,6 @@
-import { transformResources, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import chokidar from 'chokidar'
-import { LoadConfig } from '~config/load'
+import { LoadConfigResponse } from '~config/load'
 import { NcdcLogger } from '~logger'
 import { HandleError } from '~commands/shared'
 import { CompilerHook } from '~schema/watching-schema-generator'
@@ -38,12 +37,15 @@ export type GetServeDeps = (args: ServeArgs, typescriptCompilerHooks: Typescript
 
 export type GetTypeValidator = () => Promise<TypeValidator>
 
-interface ServeDeps {
+export interface ConfigLoader {
+  load(configPath: string): Promise<LoadConfigResponse>
+}
+
+export interface ServeDeps {
   logger: NcdcLogger
   handleError: HandleError
-  getTypeValidator: GetTypeValidator
   createServer: CreateServer
-  loadConfig: LoadConfig<ValidatedServeConfig>
+  configLoader: ConfigLoader
 }
 
 enum Events {
@@ -58,10 +60,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     onSuccess: () => void eventEmitter.emit(Events.TypescriptCompileSucceeded),
     onFail: () => void eventEmitter.emit(Events.TypescriptCompileFailed),
   }
-  const { handleError, logger, loadConfig, createServer, getTypeValidator } = getServeDeps(
-    args,
-    typescriptCompilerHooks,
-  )
+  const { handleError, logger, configLoader, createServer } = getServeDeps(args, typescriptCompilerHooks)
 
   if (!args.configPath) return handleError({ message: 'config path must be supplied' })
   if (isNaN(args.port)) return handleError({ message: 'port must be a number' })
@@ -85,7 +84,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
     try {
-      const loadResult = await loadConfig(configPath, getTypeValidator, transformResources, false)
+      const loadResult = await configLoader.load(configPath)
 
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const server = servers[args.configPath!]

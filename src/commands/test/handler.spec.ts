@@ -1,9 +1,15 @@
 import { mockFn, randomString, mockObj, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
-import { createHandler, TestArgs, GetTestDeps, GetTypeValidator, RunTests } from './handler'
+import {
+  createHandler,
+  TestArgs,
+  GetTestDeps,
+  GetTypeValidator,
+  RunTests,
+  ConfigLoader,
+  TestDeps,
+} from './handler'
 import { NcdcLogger } from '~logger'
-import { LoadConfig } from '~config/load'
-import { ValidatedTestConfig, transformConfigs } from './config'
 import { ResourceBuilder } from '~config'
 import {
   InvalidBodyTypeError,
@@ -20,16 +26,24 @@ describe('test handler', () => {
     const mockGetTypeValidator = mockFn<GetTypeValidator>()
     const mockLogger = mockObj<NcdcLogger>({ warn: jest.fn() })
     const mockRunTests = mockFn<RunTests>()
-    const mockLoadConfig = mockFn<LoadConfig<ValidatedTestConfig>>()
+    const mockConfigLoader = mockObj<ConfigLoader>({ load: jest.fn() })
     const mockGetTestDeps = mockFn<GetTestDeps>()
+    const dummyTestDeps: TestDeps = {
+      configLoader: mockConfigLoader,
+      getTypeValidator: mockGetTypeValidator,
+      handleError: mockHandleError,
+      logger: mockLogger,
+      runTests: mockRunTests,
+    }
 
     return {
       mockHandleError,
       mockGetTypeValidator,
       mockLogger,
       mockRunTests,
-      mockLoadConfig,
+      mockConfigLoader,
       mockGetTestDeps,
+      dummyTestDeps,
       handler: createHandler(mockGetTestDeps),
     }
   }
@@ -38,22 +52,8 @@ describe('test handler', () => {
 
   describe('cli arg validation', () => {
     it('returns an error if a configPath is not given', async () => {
-      const {
-        handler,
-        mockGetTestDeps,
-        mockGetTypeValidator,
-        mockHandleError,
-        mockLoadConfig,
-        mockLogger,
-        mockRunTests,
-      } = createTestDeps()
-      mockGetTestDeps.mockReturnValue({
-        getTypeValidator: mockGetTypeValidator,
-        handleError: mockHandleError,
-        loadConfig: mockLoadConfig,
-        logger: mockLogger,
-        runTests: mockRunTests,
-      })
+      const { handler, mockGetTestDeps, mockHandleError, dummyTestDeps } = createTestDeps()
+      mockGetTestDeps.mockReturnValue(dummyTestDeps)
 
       await handler({
         force: false,
@@ -66,22 +66,8 @@ describe('test handler', () => {
     })
 
     it('returns an error if a baseURL is not given', async () => {
-      const {
-        handler,
-        mockGetTestDeps,
-        mockGetTypeValidator,
-        mockHandleError,
-        mockLoadConfig,
-        mockLogger,
-        mockRunTests,
-      } = createTestDeps()
-      mockGetTestDeps.mockReturnValue({
-        getTypeValidator: mockGetTypeValidator,
-        handleError: mockHandleError,
-        loadConfig: mockLoadConfig,
-        logger: mockLogger,
-        runTests: mockRunTests,
-      })
+      const { handler, mockGetTestDeps, mockHandleError, dummyTestDeps } = createTestDeps()
+      mockGetTestDeps.mockReturnValue(dummyTestDeps)
 
       await handler({
         force: false,
@@ -106,30 +92,13 @@ describe('test handler', () => {
   }
 
   it('calls loadConfig with the correct args', async () => {
-    const {
-      handler,
-      mockGetTestDeps,
-      mockGetTypeValidator,
-      mockHandleError,
-      mockLoadConfig,
-      mockLogger,
-      mockRunTests,
-    } = createTestDeps()
-    mockGetTestDeps.mockReturnValue({
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-      runTests: mockRunTests,
-    })
-    mockLoadConfig.mockResolvedValue({
-      fixturePaths: [],
-      configs: [],
-    })
+    const { handler, mockGetTestDeps, mockConfigLoader, dummyTestDeps } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockResolvedValue({ fixturePaths: [], configs: [] })
 
     await handler(args)
 
-    expect(mockLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs, true)
+    expect(mockConfigLoader.load).toBeCalledWith(args.configPath)
   })
 
   const badStatuses = [
@@ -138,23 +107,9 @@ describe('test handler', () => {
     new ServiceConfigReadError('file path', 'message'),
   ] as const
   it.each(badStatuses.map((x) => [x]))(`handles a %o response from loadConfig`, async (error) => {
-    const {
-      handler,
-      mockGetTestDeps,
-      mockGetTypeValidator,
-      mockHandleError,
-      mockLoadConfig,
-      mockLogger,
-      mockRunTests,
-    } = createTestDeps()
-    mockGetTestDeps.mockReturnValue({
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-      runTests: mockRunTests,
-    })
-    mockLoadConfig.mockRejectedValue(error)
+    const { handler, mockGetTestDeps, mockHandleError, mockConfigLoader, dummyTestDeps } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockRejectedValue(error)
 
     await handler(args)
 
@@ -162,23 +117,9 @@ describe('test handler', () => {
   })
 
   it('handles there being no configs to run as an error', async () => {
-    const {
-      handler,
-      mockGetTestDeps,
-      mockGetTypeValidator,
-      mockHandleError,
-      mockLoadConfig,
-      mockLogger,
-      mockRunTests,
-    } = createTestDeps()
-    mockGetTestDeps.mockReturnValue({
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-      runTests: mockRunTests,
-    })
-    mockLoadConfig.mockRejectedValue(new NoServiceResourcesError('file path'))
+    const { handler, mockGetTestDeps, mockHandleError, mockConfigLoader, dummyTestDeps } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockRejectedValue(new NoServiceResourcesError('file path'))
 
     await handler(args)
 
@@ -191,21 +132,14 @@ describe('test handler', () => {
     const {
       handler,
       mockGetTestDeps,
-      mockGetTypeValidator,
       mockHandleError,
-      mockLoadConfig,
-      mockLogger,
+      mockConfigLoader,
       mockRunTests,
+      dummyTestDeps,
     } = createTestDeps()
-    mockGetTestDeps.mockReturnValue({
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-      runTests: mockRunTests,
-    })
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
     const configs = [new ResourceBuilder().build()]
-    mockLoadConfig.mockResolvedValue({ configs, fixturePaths: [] })
+    mockConfigLoader.load.mockResolvedValue({ configs, fixturePaths: [] })
 
     await handler(args)
 
@@ -217,23 +151,13 @@ describe('test handler', () => {
     const {
       handler,
       mockGetTestDeps,
-      mockGetTypeValidator,
       mockHandleError,
-      mockLoadConfig,
-      mockLogger,
+      mockConfigLoader,
       mockRunTests,
+      dummyTestDeps,
     } = createTestDeps()
-    mockGetTestDeps.mockReturnValue({
-      getTypeValidator: mockGetTypeValidator,
-      handleError: mockHandleError,
-      loadConfig: mockLoadConfig,
-      logger: mockLogger,
-      runTests: mockRunTests,
-    })
-    mockLoadConfig.mockResolvedValue({
-      fixturePaths: [],
-      configs: [new ResourceBuilder().build()],
-    })
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockResolvedValue({ fixturePaths: [], configs: [new ResourceBuilder().build()] })
     mockRunTests.mockResolvedValue('Failure')
 
     await handler(args)

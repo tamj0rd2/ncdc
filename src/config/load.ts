@@ -15,65 +15,63 @@ export type LoadConfigResponse = {
   fixturePaths: string[]
 }
 
-export type TransformResources<T> = (resources: T[], absoluteConfigPath: string) => Promise<Resource[]>
+export type TransformResources<T extends ValidatedRawConfig = ValidatedRawConfig> = (
+  resources: T[],
+  absoluteConfigPath: string,
+) => Promise<Resource[]>
 export type GetTypeValidator = () => Promise<TypeValidator>
-export type LoadConfig<T extends ValidatedRawConfig> = (
-  configPath: string,
-  getTypeValidator: GetTypeValidator,
-  transformConfigs: TransformResources<T>,
-  isTestMode: boolean,
-) => Promise<LoadConfigResponse>
 
-const loadConfig = async <T extends ValidatedRawConfig>(
-  configPath: string,
-  getTypeValidator: GetTypeValidator,
-  transformConfigs: TransformResources<T>,
-  isTestMode: boolean,
-): Promise<LoadConfigResponse> => {
-  let rawConfigFile: unknown
+export default class ConfigLoader<T extends ValidatedRawConfig> {
+  constructor(
+    private readonly getTypeValidator: GetTypeValidator,
+    private readonly transformConfigs: TransformResources<T>,
+    private readonly forceRequestValidation: boolean,
+  ) {}
 
-  try {
-    rawConfigFile = await readYamlAsync(configPath)
-  } catch (err) {
-    throw new ServiceConfigReadError(configPath, err.message)
-  }
-
-  const validationResult = validateRawConfig<T>(rawConfigFile)
-  if (!validationResult.success) {
-    throw new ServiceConfigInvalidError(configPath, validationResult.errors)
-  }
-
-  if (!validationResult.validatedConfigs.length) {
-    throw new NoServiceResourcesError(configPath)
-  }
-
-  const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, configPath)
-
-  if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
-    let bodyValidationMessage: string | undefined
+  public load = async (configPath: string): Promise<LoadConfigResponse> => {
+    let rawConfigFile: unknown
 
     try {
-      bodyValidationMessage = await validateConfigBodies(
-        transformedConfigs,
-        await getTypeValidator(),
-        isTestMode,
-      )
+      rawConfigFile = await readYamlAsync(configPath)
     } catch (err) {
-      throw new BodyValidationError(configPath, err.message)
+      throw new ServiceConfigReadError(configPath, err.message)
     }
 
-    if (bodyValidationMessage) {
-      throw new InvalidBodyTypeError(configPath, bodyValidationMessage)
+    const validationResult = validateRawConfig<T>(rawConfigFile)
+    if (!validationResult.success) {
+      throw new ServiceConfigInvalidError(configPath, validationResult.errors)
     }
-  }
 
-  return {
-    configs: transformedConfigs,
-    fixturePaths: validationResult.validatedConfigs
-      .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
-      .filter((x): x is string => !!x)
-      .map((fixturePath) => getFixturePath(configPath, fixturePath)),
+    if (!validationResult.validatedConfigs.length) {
+      throw new NoServiceResourcesError(configPath)
+    }
+
+    const transformedConfigs = await this.transformConfigs(validationResult.validatedConfigs, configPath)
+
+    if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
+      let bodyValidationMessage: string | undefined
+
+      try {
+        bodyValidationMessage = await validateConfigBodies(
+          transformedConfigs,
+          await this.getTypeValidator(),
+          this.forceRequestValidation,
+        )
+      } catch (err) {
+        throw new BodyValidationError(configPath, err.message)
+      }
+
+      if (bodyValidationMessage) {
+        throw new InvalidBodyTypeError(configPath, bodyValidationMessage)
+      }
+    }
+
+    return {
+      configs: transformedConfigs,
+      fixturePaths: validationResult.validatedConfigs
+        .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
+        .filter((x): x is string => !!x)
+        .map((fixturePath) => getFixturePath(configPath, fixturePath)),
+    }
   }
 }
-
-export default loadConfig

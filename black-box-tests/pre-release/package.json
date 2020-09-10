@@ -20,7 +20,7 @@
     "express": "^4.17.1",
     "jest": "^26.1.0",
     "js-yaml": "^3.14.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "strip-ansi": "^6.0.0",
     "ts-jest": "^26.1.2"
   }

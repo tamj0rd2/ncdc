@@ -109,6 +109,6 @@
     "typescript": "^3.8.3",
     "typescript-json-schema": "^0.43.0",
     "winston": "^3.2.1",
-    "yargs": "^15.3.1"
+    "yargs": "^16.0.2"
   }
 }

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "NCDC_ENTRYPOINT=./node_modules/.bin/ncdc jest",
-    "typecheck": "tsc -b ./tsconfig.json"
+    "typecheck": "tsc -b ./tsconfig.json",
+    "install:ncdc": "cd ../../ && mv $(npm pack --prefix ../../ | tail -n 1) ./black-box-tests/pre-release/ncdc.tgz && cd - && npm install ./ncdc.tgz"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,6 @@
     "ts-jest": "^26.1.2"
   },
   "dependencies": {
-    "typescript": "^3.9.7"
+    "typescript": "^4.0.2"
   }
 }

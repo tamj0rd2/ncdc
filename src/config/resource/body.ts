@@ -1,4 +1,4 @@
-const isObject = (x: unknown): x is object => typeof x === 'object' && !!x
+const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && !!x
 
 export class Body {
   private readonly isObject = isObject(this.data)

@@ -11,7 +11,7 @@ const readFileAsync = (path: string): Promise<string> => {
   })
 }
 
-export const readJsonAsync = async <TOut = object>(path: string): Promise<TOut> =>
+export const readJsonAsync = async <TOut = Record<string, unknown>>(path: string): Promise<TOut> =>
   JSON.parse(await readFileAsync(path))
 
 export const readYamlAsync = async <TOut>(path: string, shouldResolvePath = true): Promise<TOut> =>
@@ -24,6 +24,7 @@ export const readFixture = (basePath: string, fixturePath: string): Promise<Data
   return readFileAsync(absolutePathToFile)
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const writeJsonAsync = (obj: object, path: string): Promise<void> => {
   const data = JSON.stringify(obj, undefined, 2)
   const outPath = resolve(path)

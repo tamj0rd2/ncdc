@@ -5,13 +5,24 @@ import { isAbsolute, resolve, dirname } from 'path'
 const { writeFile: writeFileAsync, mkdir: mkdirAsync, readFile: readFileAsync } = promises
 const utf8 = 'utf-8'
 
+export class EmptyFileError extends Error {
+  constructor(filePath: string) {
+    super(`The file ${filePath} was empty`)
+    Object.setPrototypeOf(this, EmptyFileError.prototype)
+  }
+}
+
 export const readJsonAsync = async <TOut = object>(
   pathSegment1: string,
   ...pathSegments: string[]
 ): Promise<TOut> => JSON.parse(await readFileAsync(resolve(pathSegment1, ...pathSegments), utf8))
 
-export const readYamlAsync = async <TOut>(path: string): Promise<TOut> =>
-  safeLoad(await readFileAsync(resolve(path), utf8))
+export const readYamlAsync = async <TOut>(path: string): Promise<TOut> => {
+  const filePath = resolve(path)
+  const content = await safeLoad(await readFileAsync(filePath, utf8))
+  if (!content) throw new EmptyFileError(filePath)
+  return content
+}
 
 export const getFixturePath = (basePath: string, fixturePath: string): string => {
   return isAbsolute(fixturePath) ? fixturePath : resolve(basePath, '..', fixturePath)

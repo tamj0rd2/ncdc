@@ -6,9 +6,8 @@ import { blue, green, red } from 'chalk'
 jest.disableAutomock()
 
 describe('metrics', () => {
-  const dummyLogger = mockObj<NcdcLogger>({ debug: jest.fn() })
-
   it('logs the correct message at the start and end of an operation', () => {
+    const dummyLogger = mockObj<NcdcLogger>({ debug: jest.fn() })
     const operation = randomString('operation')
 
     const { success, fail } = new MetricsReporter(dummyLogger).report(operation)

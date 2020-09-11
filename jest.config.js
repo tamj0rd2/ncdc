@@ -18,7 +18,8 @@ const commonSettings = {
     '<rootDir>\/black-box-tests\/test-environment.*',
     '<rootDir>\/lib.*',
     '<rootDir>\/coverage.*',
-  ],
+    'test-helpers.ts'
+  ]
 }
 
 const lowLevelTestSettings = {

@@ -9,27 +9,34 @@ jest.mock('./type-validator')
 jest.mock('~schema')
 
 describe('TypeValidatorFactory', () => {
-  const spyLogger = mockObj<NcdcLogger>({})
-  const stubReportMetric = mockFn<ReportMetric>()
+  function createTestDeps() {
+    const spyLogger = mockObj<NcdcLogger>({})
+    const dummyReportMetric: ReportMetric = mockFn<ReportMetric>().mockReturnValue({
+      fail: jest.fn(),
+      subMetric: jest.fn(),
+      success: jest.fn(),
+    })
+    return {
+      spyLogger,
+      dummyReportMetric,
+      factory: new TypeValidatorFactory(spyLogger, dummyReportMetric),
+    }
+  }
 
   afterEach(() => jest.resetAllMocks())
 
   describe('getValidator', () => {
     describe('when a schema path is provided', () => {
-      const schemaPath = randomString('schema path')
-      const factory = new TypeValidatorFactory(spyLogger, stubReportMetric)
-
-      const getValidator = () =>
-        factory.getValidator({
-          schemaPath,
-          tsconfigPath: randomString('tsconfig path'),
-        })
-
       it('creates a new type validator each time it is called', async () => {
+        const { factory } = createTestDeps()
+        const schemaPath = randomString('schema path')
         const timesToCallGetValidator = randomNumber(1, 10)
 
         for (let i = 0; i < timesToCallGetValidator; i++) {
-          await getValidator()
+          await factory.getValidator({
+            schemaPath,
+            tsconfigPath: randomString('tsconfig path'),
+          })
         }
 
         expect(TypeValidator).toBeCalledTimes(timesToCallGetValidator)
@@ -37,21 +44,25 @@ describe('TypeValidatorFactory', () => {
     })
 
     describe('when a schema path is not provided', () => {
-      const tsconfigPath = randomString('tsconfig')
-      const factory = new TypeValidatorFactory(spyLogger, stubReportMetric)
-
-      const getValidator = () => factory.getValidator({ tsconfigPath })
-
       it('creates a new type validator if one has not been cached yet', async () => {
-        await getValidator()
+        const { factory } = createTestDeps()
+        const tsconfigPath = randomString('tsconfig')
+
+        await factory.getValidator({ tsconfigPath })
 
         expect(TypeValidator).toBeCalledTimes(1)
       })
 
-      it('does not create a new type validator if one has been cached already', async () => {
-        await getValidator()
+      it('does not create a new type validator on subsequent calls', async () => {
+        const { factory } = createTestDeps()
+        const tsconfigPath = randomString('tsconfig')
+        const timesToCallGetValidator = randomNumber(2, 10)
 
-        expect(TypeValidator).toBeCalledTimes(0)
+        for (let i = 0; i < timesToCallGetValidator; i++) {
+          await factory.getValidator({ tsconfigPath })
+        }
+
+        expect(TypeValidator).toBeCalledTimes(1)
       })
     })
   })

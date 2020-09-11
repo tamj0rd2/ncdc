@@ -1,175 +1,154 @@
-import createHandler, { CreateServer, ServeArgs, GetTypeValidator, GetServeDeps } from './handler'
+import createHandler, {
+  CreateServer,
+  ServeArgs,
+  GetTypeValidator,
+  GetServeDeps,
+  ConfigLoader,
+  ServeDeps,
+} from './handler'
 import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
-import { transformResources, ValidatedServeConfig } from './config'
-import chokidar, { FSWatcher } from 'chokidar'
+import { transformResources } from './config'
 import stripAnsi from 'strip-ansi'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
-import { TypeValidator } from '~validation'
 import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
-import { resolve } from 'path'
-import NcdcServer from './server/ncdc-server'
-import { Request, Response, SupportedMethod } from '~config'
+import { NoServiceResourcesError } from '~config/errors'
 
 jest.disableAutomock()
 jest.mock('path')
 jest.mock('chokidar')
 jest.mock('./config')
 
-const mockHandleError = mockFn<HandleError>()
-const mockGetTypeValidator = mockFn<GetTypeValidator>()
-const mockLoadConfig = mockFn<LoadConfig<ValidatedServeConfig>>()
-const mockLogger = mockObj<NcdcLogger>({})
-const getServeDeps = mockFn<GetServeDeps>()
-const mockTransformConfigs = mocked(transformResources)
-const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
-const mockCreateServer = mockFn<CreateServer>()
-const mockResolve = mockFn(resolve)
+describe('serve handler', () => {
+  function createTestDeps() {
+    const mockHandleError = mockFn<HandleError>()
+    const mockGetTypeValidator = mockFn<GetTypeValidator>()
+    const mockConfigLoader = mockObj<ConfigLoader>({ load: jest.fn() })
+    const mockLogger = mockObj<NcdcLogger>({})
+    const mockGetServeDeps = mockFn<GetServeDeps>()
+    const mockTransformConfigs = mocked(transformResources)
+    const mockCreateServer = mockFn<CreateServer>()
+    const dummyServeDeps: ServeDeps = {
+      configLoader: mockConfigLoader,
+      createServer: mockCreateServer,
+      handleError: mockHandleError,
+      logger: mockLogger,
+    }
 
-beforeEach(() => {
-  jest.resetAllMocks()
-  mockObj(chokidar).watch.mockReturnValue(
-    mockObj<FSWatcher>({ on: jest.fn() }),
-  )
-  getServeDeps.mockReturnValue({
-    getTypeValidator: mockGetTypeValidator,
-    handleError: mockHandleError,
-    loadConfig: mockLoadConfig,
-    logger: mockLogger,
-    createServer: mockCreateServer,
-  })
-  mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
-  mockTransformConfigs.mockResolvedValue([
-    {
-      name: randomString('name'),
-      request: new Request({
-        endpoint: randomString('endpoint'),
-        method: SupportedMethod.GET,
-        body: undefined,
-        headers: undefined,
-        type: undefined,
-      }),
-      response: new Response({ code: randomNumber(), body: undefined, headers: undefined, type: undefined }),
-    },
-  ])
-  mockCreateServer.mockReturnValue(
-    mockObj<NcdcServer>({ start: jest.fn(), stop: jest.fn() }),
-  )
-})
-
-const handler = createHandler(getServeDeps)
-
-it('handles when a config path is not supplied', async () => {
-  await handler({ force: false, port: 8001, tsconfigPath: randomString(), watch: false, verbose: false })
-
-  expect(mockHandleError).toBeCalledWith({ message: 'config path must be supplied' })
-})
-
-it('handles when port is not a number', async () => {
-  await handler({
-    force: false,
-    port: NaN,
-    tsconfigPath: randomString(),
-    configPath: randomString(),
-    watch: false,
-    verbose: false,
-  })
-
-  expect(mockHandleError).toBeCalledWith({ message: 'port must be a number' })
-})
-
-it('handles when force and watch are used at the same time', async () => {
-  await handler({
-    force: true,
-    port: randomNumber(),
-    tsconfigPath: randomString(),
-    configPath: randomString(),
-    watch: true,
-    verbose: false,
-  })
-
-  expect(mockHandleError).toBeCalledWith({ message: 'watch and force options cannot be used together' })
-})
-
-describe('runs the server with the correct configs', () => {
-  const args: ServeArgs = {
-    force: false,
-    port: 4000,
-    tsconfigPath: randomString(),
-    configPath: randomString(),
-    watch: false,
-    verbose: false,
+    return {
+      mockHandleError,
+      mockGetTypeValidator,
+      mockConfigLoader,
+      mockLogger,
+      mockGetServeDeps,
+      mockTransformConfigs,
+      mockCreateServer,
+      dummyServeDeps,
+      handler: createHandler(mockGetServeDeps),
+    }
   }
 
-  it('calls loadconfig with the correct args', async () => {
-    const expectedConfigPath = randomString('lol') + args.configPath
-    mockResolve.mockReturnValue(expectedConfigPath)
+  afterEach(() => jest.resetAllMocks())
 
-    await handler(args)
+  it('handles when a config path is not supplied', async () => {
+    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+    mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
-    expect(mockLoadConfig).toBeCalledWith(
-      expectedConfigPath,
-      mockGetTypeValidator,
-      mockTransformConfigs,
-      false,
-    )
+    await handler({ force: false, port: 8001, tsconfigPath: randomString(), watch: false, verbose: false })
+
+    expect(mockHandleError).toBeCalledWith({ message: 'config path must be supplied' })
   })
 
-  // this is because if we're loading from disk, we want to create a new
-  // validator each time the schema files change. It's a lot less expensive
-  // than generating schemas - it's basically instant.
-  it('creates a new type validator every time if schemaPath is defined', async () => {
-    await handler({ ...args, schemaPath: randomString('schemaPath') })
+  it('handles when port is not a number', async () => {
+    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+    mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
-    const getTypeValidatorFn = mockLoadConfig.mock.calls[0][1]
-    const timesToCall = randomNumber(1, 10)
-    await Array(timesToCall)
-      .fill(0)
-      .reduce<Promise<unknown>>((prev) => prev.then(getTypeValidatorFn), Promise.resolve())
+    await handler({
+      force: false,
+      port: NaN,
+      tsconfigPath: randomString(),
+      configPath: randomString(),
+      watch: false,
+      verbose: false,
+    })
 
-    expect(mockGetTypeValidator).toBeCalledTimes(timesToCall)
+    expect(mockHandleError).toBeCalledWith({ message: 'port must be a number' })
   })
 
-  const failureStatuses = [
-    LoadConfigStatus.InvalidBodies,
-    LoadConfigStatus.InvalidConfig,
-    LoadConfigStatus.ProblemReadingConfig,
-  ] as const
+  it('handles when force and watch are used at the same time', async () => {
+    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+    mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
-  failureStatuses.forEach((status) => {
-    it(`handles the load config status ${status} as an error`, async () => {
-      const failureMessage = randomString('whoops')
-      mockLoadConfig.mockResolvedValue({ type: status, message: failureMessage })
+    await handler({
+      force: true,
+      port: randomNumber(),
+      tsconfigPath: randomString(),
+      configPath: randomString(),
+      watch: true,
+      verbose: false,
+    })
+
+    expect(mockHandleError).toBeCalledWith({ message: 'watch and force options cannot be used together' })
+  })
+
+  describe('runs the server with the correct configs', () => {
+    const args: ServeArgs = {
+      force: false,
+      port: 4000,
+      tsconfigPath: randomString('tsconfigPath'),
+      configPath: randomString('configPath'),
+      watch: false,
+      verbose: false,
+    }
+
+    it('calls loadconfig with the correct args', async () => {
+      const { handler, mockGetServeDeps, dummyServeDeps, mockConfigLoader } = createTestDeps()
+      mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
 
       await handler(args)
 
-      expect(mockHandleError).toBeCalledWith(expect.objectContaining({ message: failureMessage }))
-    })
-  })
-
-  it('handles there being no configs to serve as an error', async () => {
-    mockLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
-
-    await handler(args)
-
-    expect(mockHandleError).toBeCalled()
-    expect(stripAnsi(mockHandleError.mock.calls[0][0].message)).toEqual('No configs to serve')
-  })
-
-  it('creates the server with the correct args', async () => {
-    const configs = [new ResourceBuilder().build()]
-    mockLoadConfig.mockImplementation(async (_, getTypeValidator) => {
-      await getTypeValidator()
-      return { type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] }
+      expect(mockConfigLoader.load).toBeCalledWith(args.configPath)
     })
 
-    await handler(args)
+    it('handles there being no configs to serve as an error', async () => {
+      const {
+        handler,
+        mockGetServeDeps,
+        mockHandleError,
+        mockConfigLoader,
+        dummyServeDeps,
+      } = createTestDeps()
+      mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
+      mockConfigLoader.load.mockRejectedValue(new NoServiceResourcesError('file path'))
 
-    expect(mockHandleError).not.toBeCalled()
-    expect(mockCreateServer).toBeCalledTimes(1)
-    expect(mockCreateServer).toBeCalledWith(args.port)
+      await handler(args)
+
+      expect(mockHandleError).toBeCalled()
+      expect(stripAnsi(mockHandleError.mock.calls[0][0].message)).toEqual('No configs to serve')
+    })
+
+    it('creates the server with the correct args', async () => {
+      const {
+        handler,
+        mockCreateServer,
+        mockGetServeDeps,
+        mockHandleError,
+        mockConfigLoader,
+        dummyServeDeps,
+      } = createTestDeps()
+      mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
+      mockCreateServer.mockReturnValue({ start: jest.fn(), stop: jest.fn() })
+
+      const configs = [new ResourceBuilder().build()]
+      mockConfigLoader.load.mockResolvedValue({ configs, fixturePaths: [] })
+
+      await handler(args)
+
+      expect(mockHandleError).not.toBeCalled()
+      expect(mockCreateServer).toBeCalledTimes(1)
+      expect(mockCreateServer).toBeCalledWith(args.port)
+    })
+
+    it.todo('starts the server with the correct args')
   })
-
-  it.todo('starts the server with the correct args')
 })

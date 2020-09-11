@@ -13,12 +13,19 @@ jest.mock('util', () => {
 })
 
 describe('error messages', () => {
-  const ajv = new Ajv({ allErrors: true, verbose: true })
-  const mockSchemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
-  const typeValidator = new TypeValidator(ajv, mockSchemaRetriever)
-  const type = randomString()
+  function createTestDeps() {
+    const ajv = new Ajv({ allErrors: true, verbose: true })
+    const mockSchemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
+    const typeValidator = new TypeValidator(ajv, mockSchemaRetriever)
+
+    return {
+      mockSchemaRetriever,
+      typeValidator,
+    }
+  }
 
   test('missing required properties', async () => {
+    const { mockSchemaRetriever, typeValidator } = createTestDeps()
     mockSchemaRetriever.load.mockResolvedValue({
       type: 'object',
       properties: {
@@ -29,7 +36,7 @@ describe('error messages', () => {
     })
     const data = { allowed: 'hello' }
 
-    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+    const result = (await typeValidator.validate(data, randomString('type'))) as TypeValidationFailure
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)
@@ -37,6 +44,7 @@ describe('error messages', () => {
   })
 
   test('wrong type', async () => {
+    const { mockSchemaRetriever, typeValidator } = createTestDeps()
     mockSchemaRetriever.load.mockResolvedValue({
       type: 'object',
       properties: {
@@ -46,7 +54,7 @@ describe('error messages', () => {
     })
     const data = { hello: 123 }
 
-    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+    const result = (await typeValidator.validate(data, randomString('type'))) as TypeValidationFailure
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)
@@ -54,6 +62,7 @@ describe('error messages', () => {
   })
 
   test('null instead of the correct type', async () => {
+    const { mockSchemaRetriever, typeValidator } = createTestDeps()
     mockSchemaRetriever.load.mockResolvedValue({
       type: 'object',
       properties: {
@@ -63,7 +72,7 @@ describe('error messages', () => {
     })
     const data = { hello: null }
 
-    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+    const result = (await typeValidator.validate(data, randomString('type'))) as TypeValidationFailure
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)
@@ -71,6 +80,7 @@ describe('error messages', () => {
   })
 
   test('enum', async () => {
+    const { mockSchemaRetriever, typeValidator } = createTestDeps()
     mockSchemaRetriever.load.mockResolvedValue({
       type: 'object',
       properties: {
@@ -80,7 +90,7 @@ describe('error messages', () => {
     })
     const data = { hello: 123 }
 
-    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+    const result = (await typeValidator.validate(data, randomString('type'))) as TypeValidationFailure
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)
@@ -90,6 +100,7 @@ describe('error messages', () => {
   })
 
   test('object enum', async () => {
+    const { mockSchemaRetriever, typeValidator } = createTestDeps()
     mockSchemaRetriever.load.mockResolvedValue({
       type: 'object',
       properties: {
@@ -99,7 +110,7 @@ describe('error messages', () => {
     })
     const data = { hello: { success: false } }
 
-    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+    const result = (await typeValidator.validate(data, randomString('type'))) as TypeValidationFailure
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)
@@ -107,6 +118,7 @@ describe('error messages', () => {
   })
 
   test('array expected but got an object', async () => {
+    const { mockSchemaRetriever, typeValidator } = createTestDeps()
     mockSchemaRetriever.load.mockResolvedValue({
       type: 'object',
       properties: {
@@ -124,7 +136,7 @@ describe('error messages', () => {
     })
     const data = { criteria: [{ hello: 'world!' }] }
 
-    const result = (await typeValidator.validate(data, type)) as TypeValidationFailure
+    const result = (await typeValidator.validate(data, randomString('type'))) as TypeValidationFailure
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(1)

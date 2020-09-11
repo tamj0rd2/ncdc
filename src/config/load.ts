@@ -1,109 +1,77 @@
-import { readYamlAsync } from '~io'
-import { resolve, isAbsolute } from 'path'
+import { readYamlAsync, getFixturePath } from '~io'
 import { TypeValidator } from '~validation'
 import { validateConfigBodies, validateRawConfig, ValidatedRawConfig } from './validate'
 import { Resource } from '~config'
+import {
+  ServiceConfigReadError,
+  ServiceConfigInvalidError,
+  NoServiceResourcesError,
+  BodyValidationError,
+  InvalidBodyTypeError,
+} from './errors'
 
-export enum LoadConfigStatus {
-  Success = 'Success',
-  ProblemReadingConfig = 'Problem reading config',
-  InvalidConfig = 'Invalid config',
-  NoConfigs = 'No configs',
-  InvalidBodies = 'Invalid config bodies',
-  BodyValidationError = 'Body validation error',
+export type LoadConfigResponse = {
+  configs: Resource[]
+  fixturePaths: string[]
 }
 
-export type LoadConfigResponse =
-  | {
-      type: LoadConfigStatus.Success
-      configs: Resource[]
-      absoluteFixturePaths: string[]
-    }
-  | {
-      type: LoadConfigStatus.NoConfigs
-    }
-  | {
-      type:
-        | LoadConfigStatus.InvalidBodies
-        | LoadConfigStatus.InvalidConfig
-        | LoadConfigStatus.ProblemReadingConfig
-        | LoadConfigStatus.BodyValidationError
-      message: string
-    }
-
-export type TransformResources<T> = (resources: T[], absoluteConfigPath: string) => Promise<Resource[]>
+export type TransformResources<T extends ValidatedRawConfig = ValidatedRawConfig> = (
+  resources: T[],
+  absoluteConfigPath: string,
+) => Promise<Resource[]>
 export type GetTypeValidator = () => Promise<TypeValidator>
-export type LoadConfig<T extends ValidatedRawConfig> = (
-  configPath: string,
-  getTypeValidator: GetTypeValidator,
-  transformConfigs: TransformResources<T>,
-  isTestMode: boolean,
-) => Promise<LoadConfigResponse>
 
-const loadConfig = async <T extends ValidatedRawConfig>(
-  configPath: string,
-  getTypeValidator: GetTypeValidator,
-  transformConfigs: TransformResources<T>,
-  isTestMode: boolean,
-): Promise<LoadConfigResponse> => {
-  const absoluteConfigPath = resolve(configPath)
-  let rawConfigFile: unknown
+export default class ConfigLoader<T extends ValidatedRawConfig> {
+  constructor(
+    private readonly getTypeValidator: GetTypeValidator,
+    private readonly transformConfigs: TransformResources<T>,
+    private readonly forceRequestValidation: boolean,
+  ) {}
 
-  try {
-    rawConfigFile = await readYamlAsync(absoluteConfigPath)
-  } catch (err) {
-    return {
-      type: LoadConfigStatus.ProblemReadingConfig,
-      message: `There was a problem reading your config file:\n\n${err.message}`,
-    }
-  }
-
-  const validationResult = validateRawConfig<T>(rawConfigFile)
-  if (!validationResult.success) {
-    return {
-      type: LoadConfigStatus.InvalidConfig,
-      message: `Your config file is invalid:\n\n${validationResult.errors.join('\n')}`,
-    }
-  }
-
-  if (!validationResult.validatedConfigs.length) {
-    return { type: LoadConfigStatus.NoConfigs }
-  }
-
-  const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, absoluteConfigPath)
-
-  if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
-    let bodyValidationMessage: string | undefined
+  public load = async (configPath: string): Promise<LoadConfigResponse> => {
+    let rawConfigFile: unknown
 
     try {
-      bodyValidationMessage = await validateConfigBodies(
-        transformedConfigs,
-        await getTypeValidator(),
-        isTestMode,
-      )
+      rawConfigFile = await readYamlAsync(configPath)
     } catch (err) {
-      return {
-        type: LoadConfigStatus.BodyValidationError,
-        message: `An error occurred while validating one of your configured fixtures:\n${err.message}`,
+      throw new ServiceConfigReadError(configPath, err.message)
+    }
+
+    const validationResult = validateRawConfig<T>(rawConfigFile)
+    if (!validationResult.success) {
+      throw new ServiceConfigInvalidError(configPath, validationResult.errors)
+    }
+
+    if (!validationResult.validatedConfigs.length) {
+      throw new NoServiceResourcesError(configPath)
+    }
+
+    const transformedConfigs = await this.transformConfigs(validationResult.validatedConfigs, configPath)
+
+    if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
+      let bodyValidationMessage: string | undefined
+
+      try {
+        bodyValidationMessage = await validateConfigBodies(
+          transformedConfigs,
+          await this.getTypeValidator(),
+          this.forceRequestValidation,
+        )
+      } catch (err) {
+        throw new BodyValidationError(configPath, err.message)
+      }
+
+      if (bodyValidationMessage) {
+        throw new InvalidBodyTypeError(configPath, bodyValidationMessage)
       }
     }
 
-    if (bodyValidationMessage) {
-      return {
-        type: LoadConfigStatus.InvalidBodies,
-        message: `One or more of your configured bodies do not match the correct type:\n\n${bodyValidationMessage}`,
-      }
+    return {
+      configs: transformedConfigs,
+      fixturePaths: validationResult.validatedConfigs
+        .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
+        .filter((x): x is string => !!x)
+        .map((fixturePath) => getFixturePath(configPath, fixturePath)),
     }
-  }
-
-  return {
-    type: LoadConfigStatus.Success,
-    configs: transformedConfigs,
-    absoluteFixturePaths: validationResult.validatedConfigs
-      .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
-      .filter((x): x is string => !!x)
-      .map((p) => (isAbsolute(p) ? p : resolve(absoluteConfigPath, '..', p))),
   }
 }
-
-export default loadConfig

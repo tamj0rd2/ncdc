@@ -1,14 +1,12 @@
-import { resolve } from 'path'
-import { transformResources, ValidatedServeConfig } from './config'
 import { TypeValidator } from '~validation'
 import chokidar from 'chokidar'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
-import { red } from 'chalk'
+import { LoadConfigResponse } from '~config/load'
 import { NcdcLogger } from '~logger'
 import { HandleError } from '~commands/shared'
 import { CompilerHook } from '~schema/watching-schema-generator'
 import { EventEmitter } from 'events'
 import { Resource } from '~config'
+import { NoServiceResourcesError } from '~config/errors'
 
 export interface ServeArgs {
   configPath?: string
@@ -39,12 +37,15 @@ export type GetServeDeps = (args: ServeArgs, typescriptCompilerHooks: Typescript
 
 export type GetTypeValidator = () => Promise<TypeValidator>
 
-interface ServeDeps {
+export interface ConfigLoader {
+  load(configPath: string): Promise<LoadConfigResponse>
+}
+
+export interface ServeDeps {
   logger: NcdcLogger
   handleError: HandleError
-  getTypeValidator: GetTypeValidator
   createServer: CreateServer
-  loadConfig: LoadConfig<ValidatedServeConfig>
+  configLoader: ConfigLoader
 }
 
 enum Events {
@@ -59,17 +60,14 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     onSuccess: () => void eventEmitter.emit(Events.TypescriptCompileSucceeded),
     onFail: () => void eventEmitter.emit(Events.TypescriptCompileFailed),
   }
-  const { handleError, logger, loadConfig, createServer, getTypeValidator } = getServeDeps(
-    args,
-    typescriptCompilerHooks,
-  )
+  const { handleError, logger, configLoader, createServer } = getServeDeps(args, typescriptCompilerHooks)
 
   if (!args.configPath) return handleError({ message: 'config path must be supplied' })
   if (isNaN(args.port)) return handleError({ message: 'port must be a number' })
   if (args.watch && args.force)
     return handleError({ message: 'watch and force options cannot be used together' })
 
-  const absoluteConfigPath = resolve(args.configPath)
+  const configPath = args.configPath
 
   type PrepAndStartResult = {
     pathsToWatch: string[]
@@ -85,27 +83,21 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     Promise.all(Object.values(servers).map((server) => server.stop()))
 
   const prepAndStartServer = async (): Promise<PrepAndStartResult> => {
-    const loadResult = await loadConfig(absoluteConfigPath, getTypeValidator, transformResources, false)
+    try {
+      const loadResult = await configLoader.load(configPath)
 
-    switch (loadResult.type) {
-      case LoadConfigStatus.Success:
-        break
-      case LoadConfigStatus.InvalidConfig:
-      case LoadConfigStatus.InvalidBodies:
-      case LoadConfigStatus.ProblemReadingConfig:
-      case LoadConfigStatus.BodyValidationError:
-        throw new Error(loadResult.message)
-      case LoadConfigStatus.NoConfigs:
-        throw new Error(red('No configs to serve'))
-      default:
-        throw new Error('An unknown error ocurred')
-    }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const server = servers[args.configPath!]
+      await server.start(loadResult.configs)
+      return {
+        pathsToWatch: loadResult.fixturePaths,
+      }
+    } catch (err) {
+      if (err instanceof NoServiceResourcesError) {
+        err.message = err.formatCustomMessage('No configs to serve')
+      }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const server = servers[args.configPath!]
-    await server.start(loadResult.configs)
-    return {
-      pathsToWatch: loadResult.absoluteFixturePaths,
+      throw err
     }
   }
 
@@ -129,8 +121,8 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
 
   if (args.watch) {
     const fixturesToWatch = [...prepAndServeResult.pathsToWatch]
-    const chokidarWatchPaths = [absoluteConfigPath, ...fixturesToWatch]
-    if (args.schemaPath) chokidarWatchPaths.push(resolve(args.schemaPath))
+    const chokidarWatchPaths = [configPath, ...fixturesToWatch]
+    if (args.schemaPath) chokidarWatchPaths.push(args.schemaPath)
 
     const configWatcher = chokidar.watch(chokidarWatchPaths, {
       ignoreInitial: true,

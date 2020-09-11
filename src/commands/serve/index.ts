@@ -1,9 +1,10 @@
 import { GetRootDeps, CommandModule } from '../shared'
 import * as consts from '~commands/options'
 import createHandler, { ServeArgs, GetServeDeps } from './handler'
-import loadConfig from '~config/load'
+import ConfigLoader from '~config/load'
 import TypeValidatorFactory, { TypeValidator } from '~validation'
 import NcdcServer from './server/ncdc-server'
+import { transformResources } from './config'
 
 export default function createServeCommand(getCommonDeps: GetRootDeps): CommandModule<ServeArgs> {
   const getServeDeps: GetServeDeps = (args, compilerHooks) => {
@@ -22,9 +23,9 @@ export default function createServeCommand(getCommonDeps: GetRootDeps): CommandM
     return {
       handleError,
       logger,
-      loadConfig,
       createServer: (port) => new NcdcServer(port, getTypeValidator, logger),
       getTypeValidator,
+      configLoader: new ConfigLoader(getTypeValidator, transformResources, false),
     }
   }
 

@@ -7,51 +7,70 @@ import strip from 'strip-ansi'
 jest.unmock('./type-validator')
 
 describe('validate', () => {
-  const validator = mockObj<Ajv>({ compile: jest.fn() })
-  const schemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
-  const typeValidator = new TypeValidator(validator, schemaRetriever)
+  function createTestDeps() {
+    const stubValidator = mockObj<Ajv>({ compile: jest.fn() })
+    const stubSchemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
+    const typeValidator = new TypeValidator(stubValidator, stubSchemaRetriever)
 
-  const body = randomString('body')
-  const type = randomString('type')
+    return {
+      stubValidator,
+      stubSchemaRetriever,
+      typeValidator,
+    }
+  }
+
+  // const body = randomString('body')
+  // const type = randomString('type')
 
   beforeEach(() => {
-    validator.compile.mockReturnValue(jest.fn())
+    // validator.compile.mockReturnValue(jest.fn())
   })
 
-  it('calls the schema retriver with the correct args', async () => {
-    await typeValidator.validate(body, type)
+  afterEach(() => jest.resetAllMocks())
 
-    expect(schemaRetriever.load).toBeCalledWith(type)
+  it('calls the schema retriver with the correct args', async () => {
+    const { stubSchemaRetriever, typeValidator, stubValidator } = createTestDeps()
+    const expectedType = randomString('type')
+    stubValidator.compile.mockReturnValue(jest.fn())
+
+    await typeValidator.validate(randomString('body'), expectedType)
+
+    expect(stubSchemaRetriever.load).toBeCalledWith(expectedType)
   })
 
   it('creates a validator function using the correct args', async () => {
+    const { stubSchemaRetriever, typeValidator, stubValidator } = createTestDeps()
     const schema = { [randomString('key')]: randomString('value') }
-    schemaRetriever.load.mockResolvedValue(schema)
+    stubSchemaRetriever.load.mockResolvedValue(schema)
+    stubValidator.compile.mockReturnValue(jest.fn())
 
-    await typeValidator.validate(body, type)
+    await typeValidator.validate(randomString('body'), randomString('type'))
 
-    expect(validator.compile).toBeCalledWith(schema)
+    expect(stubValidator.compile).toBeCalledWith(schema)
   })
 
   it('calls the validator func with the correct args', async () => {
-    const body = randomString('body')
+    const { typeValidator, stubValidator } = createTestDeps()
     const validateFn = mockFn<ValidateFunction>()
-    validator.compile.mockReturnValue(validateFn)
+    stubValidator.compile.mockReturnValue(validateFn)
+    const expectedBody = randomString('body')
 
-    await typeValidator.validate(body, type)
+    await typeValidator.validate(expectedBody, randomString('type'))
 
-    expect(validateFn).toBeCalledWith(body)
+    expect(validateFn).toBeCalledWith(expectedBody)
   })
 
   it('returns a success result if the data does match the type', async () => {
-    validator.compile.mockReturnValue(mockFn<ValidateFunction>().mockReturnValue(true))
+    const { typeValidator, stubValidator } = createTestDeps()
+    stubValidator.compile.mockReturnValue(mockFn<ValidateFunction>().mockReturnValue(true))
 
-    const result = await typeValidator.validate(body, type)
+    const result = await typeValidator.validate(randomString('body'), randomString('type'))
 
     expect(result.success).toBe(true)
   })
 
   it('returns validation messages if the data does not match the type', async () => {
+    const { typeValidator, stubValidator } = createTestDeps()
     const error1: Partial<ErrorObject> = {
       dataPath: randomString('.datapath1'),
       message: randomString('error-message1'),
@@ -63,9 +82,12 @@ describe('validate', () => {
 
     const validatorFn: ValidateFunction = mockFn<ValidateFunction>().mockReturnValue(false)
     validatorFn.errors = [error1, error2] as ErrorObject[]
-    validator.compile.mockReturnValue(validatorFn)
+    stubValidator.compile.mockReturnValue(validatorFn)
 
-    const result = (await typeValidator.validate(body, type)) as TypeValidationFailure
+    const result = (await typeValidator.validate(
+      randomString('body'),
+      randomString('type'),
+    )) as TypeValidationFailure
 
     expect(result.success).toBe(false)
     expect(result.errors).toHaveLength(2)

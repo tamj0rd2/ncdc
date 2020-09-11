@@ -1,141 +1,167 @@
-import { mockFn, randomString, mocked, mockObj, randomNumber } from '~test-helpers'
+import { mockFn, randomString, mockObj, randomNumber } from '~test-helpers'
 import { HandleError } from '~commands/shared'
-import { createHandler, TestArgs, GetTestDeps, GetTypeValidator, RunTests } from './handler'
-import { resolve } from 'path'
-import { existsSync } from 'fs'
-import { TypeValidator } from '~validation'
+import {
+  createHandler,
+  TestArgs,
+  GetTestDeps,
+  GetTypeValidator,
+  RunTests,
+  ConfigLoader,
+  TestDeps,
+} from './handler'
 import { NcdcLogger } from '~logger'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
-import { ValidatedTestConfig, transformConfigs } from './config'
 import { ResourceBuilder } from '~config'
+import {
+  InvalidBodyTypeError,
+  ServiceConfigInvalidError,
+  ServiceConfigReadError,
+  NoServiceResourcesError,
+} from '~config/errors'
 
 jest.disableAutomock()
-jest.mock('fs')
-jest.mock('path')
 
-const mockedHandleError = mockFn<HandleError>()
-const mockedTypeValidator = mockObj<TypeValidator>({})
-const mockGetTypeValidator = mockFn<GetTypeValidator>()
-const mockedExistsSync = mocked(existsSync)
-const mockedResolve = mocked(resolve)
-const resolvedTsconfigPath = randomString('resolved-tsconfig')
-const mockedLogger = mockObj<NcdcLogger>({ warn: jest.fn() })
-const mockedRunTests = mockFn<RunTests>()
-const mockedLoadConfig = mockFn<LoadConfig<ValidatedTestConfig>>()
-const getTestDeps = mockFn<GetTestDeps>()
-
-beforeEach(() => {
-  jest.resetAllMocks()
-  mockedExistsSync.mockReturnValue(true)
-  mockedResolve.mockReturnValue(resolvedTsconfigPath)
-  mockGetTypeValidator.mockResolvedValue(mockedTypeValidator)
-  getTestDeps.mockReturnValue({
-    getTypeValidator: mockGetTypeValidator,
-    handleError: mockedHandleError,
-    loadConfig: mockedLoadConfig,
-    logger: mockedLogger,
-    runTests: mockedRunTests,
-  })
-})
-
-const handler = createHandler(getTestDeps)
-
-describe('cli arg validation', () => {
-  it('returns an error if a configPath is not given', async () => {
-    const args: TestArgs = {
-      force: false,
-      tsconfigPath: randomString(),
-      verbose: false,
-      timeout: randomNumber(),
+describe('test handler', () => {
+  function createTestDeps() {
+    const mockHandleError = mockFn<HandleError>()
+    const mockGetTypeValidator = mockFn<GetTypeValidator>()
+    const mockLogger = mockObj<NcdcLogger>({ warn: jest.fn() })
+    const mockRunTests = mockFn<RunTests>()
+    const mockConfigLoader = mockObj<ConfigLoader>({ load: jest.fn() })
+    const mockGetTestDeps = mockFn<GetTestDeps>()
+    const dummyTestDeps: TestDeps = {
+      configLoader: mockConfigLoader,
+      getTypeValidator: mockGetTypeValidator,
+      handleError: mockHandleError,
+      logger: mockLogger,
+      runTests: mockRunTests,
     }
 
-    await handler(args)
-
-    expect(mockedHandleError).toBeCalledWith({ message: 'configPath must be specified' })
-  })
-
-  it('returns an error if a baseURL is not given', async () => {
-    const args: TestArgs = {
-      force: false,
-      tsconfigPath: randomString(),
-      configPath: randomString(),
-      verbose: false,
-      timeout: randomNumber(),
+    return {
+      mockHandleError,
+      mockGetTypeValidator,
+      mockLogger,
+      mockRunTests,
+      mockConfigLoader,
+      mockGetTestDeps,
+      dummyTestDeps,
+      handler: createHandler(mockGetTestDeps),
     }
+  }
+
+  afterEach(() => jest.resetAllMocks())
+
+  describe('cli arg validation', () => {
+    it('returns an error if a configPath is not given', async () => {
+      const { handler, mockGetTestDeps, mockHandleError, dummyTestDeps } = createTestDeps()
+      mockGetTestDeps.mockReturnValue(dummyTestDeps)
+
+      await handler({
+        force: false,
+        tsconfigPath: randomString(),
+        verbose: false,
+        timeout: randomNumber(),
+      })
+
+      expect(mockHandleError).toBeCalledWith({ message: 'configPath must be specified' })
+    })
+
+    it('returns an error if a baseURL is not given', async () => {
+      const { handler, mockGetTestDeps, mockHandleError, dummyTestDeps } = createTestDeps()
+      mockGetTestDeps.mockReturnValue(dummyTestDeps)
+
+      await handler({
+        force: false,
+        tsconfigPath: randomString(),
+        configPath: randomString(),
+        verbose: false,
+        timeout: randomNumber(),
+      })
+
+      expect(mockHandleError).toBeCalledWith({ message: 'baseURL must be specified' })
+    })
+  })
+
+  const args: TestArgs = {
+    force: false,
+    tsconfigPath: randomString('tsconfig-path'),
+    configPath: randomString('config-path'),
+    baseURL: randomString('baseURL'),
+    schemaPath: randomString('schema-path'),
+    verbose: false,
+    timeout: randomNumber(),
+  }
+
+  it('calls loadConfig with the correct args', async () => {
+    const { handler, mockGetTestDeps, mockConfigLoader, dummyTestDeps } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockResolvedValue({ fixturePaths: [], configs: [] })
 
     await handler(args)
 
-    expect(mockedHandleError).toBeCalledWith({ message: 'baseURL must be specified' })
-  })
-})
-
-const args: TestArgs = {
-  force: false,
-  tsconfigPath: randomString('tsconfig-path'),
-  configPath: randomString('config-path'),
-  baseURL: randomString('baseURL'),
-  schemaPath: randomString('schema-path'),
-  verbose: false,
-  timeout: randomNumber(),
-}
-
-it('calls loadConfig with the correct args', async () => {
-  mockedLoadConfig.mockResolvedValue({
-    type: LoadConfigStatus.Success,
-    absoluteFixturePaths: [],
-    configs: [],
+    expect(mockConfigLoader.load).toBeCalledWith(args.configPath)
   })
 
-  await handler(args)
-
-  expect(mockedLoadConfig).toBeCalledWith(args.configPath, expect.any(Function), transformConfigs, true)
-})
-
-const badStatuses = [
-  LoadConfigStatus.InvalidBodies,
-  LoadConfigStatus.InvalidConfig,
-  LoadConfigStatus.ProblemReadingConfig,
-] as const
-badStatuses.forEach((status) => {
-  it(`handles a ${status} response from loadConfig`, async () => {
-    const expectedMessage = randomString('message')
-    mockedLoadConfig.mockResolvedValue({ type: status, message: expectedMessage })
+  const badStatuses = [
+    new InvalidBodyTypeError('file path', 'message'),
+    new ServiceConfigInvalidError('file path', ['error1']),
+    new ServiceConfigReadError('file path', 'message'),
+  ] as const
+  it.each(badStatuses.map((x) => [x]))(`handles a %o response from loadConfig`, async (error) => {
+    const { handler, mockGetTestDeps, mockHandleError, mockConfigLoader, dummyTestDeps } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockRejectedValue(error)
 
     await handler(args)
 
-    expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: expectedMessage }))
+    expect(mockHandleError).toBeCalledWith(expect.objectContaining({ message: error.message }))
   })
-})
 
-it('handles there being no configs to run as an error', async () => {
-  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
+  it('handles there being no configs to run as an error', async () => {
+    const { handler, mockGetTestDeps, mockHandleError, mockConfigLoader, dummyTestDeps } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockRejectedValue(new NoServiceResourcesError('file path'))
 
-  await handler(args)
+    await handler(args)
 
-  expect(mockedHandleError).toBeCalledWith(
-    expect.objectContaining({ message: expect.stringContaining('No configs to test') }),
-  )
-})
-
-it('calls runTests with the correct arguments', async () => {
-  const configs = [new ResourceBuilder().build()]
-  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
-
-  await handler(args)
-
-  expect(mockedHandleError).not.toBeCalled()
-  expect(mockedRunTests).toBeCalledWith(args.baseURL, configs, expect.any(Function))
-})
-
-it('handles errors thrown by testConfigs', async () => {
-  mockedLoadConfig.mockResolvedValue({
-    type: LoadConfigStatus.Success,
-    absoluteFixturePaths: [],
-    configs: [new ResourceBuilder().build()],
+    expect(mockHandleError).toBeCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('No configs to test') }),
+    )
   })
-  mockedRunTests.mockResolvedValue('Failure')
 
-  await handler(args)
+  it('calls runTests with the correct arguments', async () => {
+    const {
+      handler,
+      mockGetTestDeps,
+      mockHandleError,
+      mockConfigLoader,
+      mockRunTests,
+      dummyTestDeps,
+    } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    const configs = [new ResourceBuilder().build()]
+    mockConfigLoader.load.mockResolvedValue({ configs, fixturePaths: [] })
 
-  expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: 'Not all tests passed' }))
+    await handler(args)
+
+    expect(mockHandleError).not.toBeCalled()
+    expect(mockRunTests).toBeCalledWith(args.baseURL, configs, expect.any(Function))
+  })
+
+  it('handles errors thrown by testConfigs', async () => {
+    const {
+      handler,
+      mockGetTestDeps,
+      mockHandleError,
+      mockConfigLoader,
+      mockRunTests,
+      dummyTestDeps,
+    } = createTestDeps()
+    mockGetTestDeps.mockReturnValue(dummyTestDeps)
+    mockConfigLoader.load.mockResolvedValue({ fixturePaths: [], configs: [new ResourceBuilder().build()] })
+    mockRunTests.mockResolvedValue('Failure')
+
+    await handler(args)
+
+    expect(mockHandleError).toBeCalledWith(expect.objectContaining({ message: 'Not all tests passed' }))
+  })
 })

@@ -1,21 +1,23 @@
 import { GetRootDeps, CommandModule } from '../shared'
 import * as opts from '~commands/options'
-import { createHandler, TestArgs, GetTestDeps } from './handler'
+import { createHandler, TestArgs, GetTestDeps, GetTypeValidator } from './handler'
 import { runTests } from './test'
-import loadConfig from '~config/load'
 import TypeValidatorFactory from '~validation'
 import { createHttpClient } from './http-client'
+import ConfigLoader from '~config/load'
+import { transformConfigs } from './config'
 
 export default function createTestCommand(getCommonDeps: GetRootDeps): CommandModule<TestArgs> {
   const getTestDeps: GetTestDeps = (args) => {
     const { force, tsconfigPath, schemaPath, verbose } = args
     const { handleError, logger, reportMetric: reportMetric } = getCommonDeps(verbose)
     const typeValidatorFactory = new TypeValidatorFactory(logger, reportMetric, { force })
+    const getTypeValidator: GetTypeValidator = () =>
+      typeValidatorFactory.getValidator({ tsconfigPath, schemaPath })
 
     return {
       handleError,
       logger,
-      loadConfig,
       runTests: (baseUrl, configs, getTypeValidator) =>
         runTests(
           baseUrl,
@@ -25,7 +27,8 @@ export default function createTestCommand(getCommonDeps: GetRootDeps): CommandMo
           logger,
           reportMetric,
         ),
-      getTypeValidator: () => typeValidatorFactory.getValidator({ tsconfigPath, schemaPath }),
+      getTypeValidator,
+      configLoader: new ConfigLoader(getTypeValidator, transformConfigs, true),
     }
   }
 

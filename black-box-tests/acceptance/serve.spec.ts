@@ -114,7 +114,7 @@ describe('ncdc serve', () => {
       configWrapper.editConfig('Books', (c) => ({ ...c, request: {} }))
 
       await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
-      await serve.waitForOutput('Your config file is invalid')
+      await serve.waitForOutput(/Invalid service config file \(.*config.yml\)/)
     })
 
     it('can recover from the config file having problems', async () => {
@@ -390,7 +390,7 @@ describe('ncdc serve', () => {
       it('gives a useful message when an error is thrown during body/type validation', async () => {
         configWrapper.deleteType('Book')
 
-        await serve.waitForOutput('An error occurred while validating one of your configured fixtures:')
+        await serve.waitForOutput('An error occurred while validating a fixture')
         await serve.waitForOutput('Could not find type: Book')
       })
     })

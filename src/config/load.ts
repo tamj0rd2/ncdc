@@ -3,33 +3,18 @@ import { resolve, isAbsolute } from 'path'
 import { TypeValidator } from '~validation'
 import { validateConfigBodies, validateRawConfig, ValidatedRawConfig } from './validate'
 import { Resource } from '~config'
+import {
+  ServiceConfigReadError,
+  ServiceConfigInvalidError,
+  NoServiceResourcesError,
+  BodyValidationError,
+  InvalidBodyTypeError,
+} from './errors'
 
-export enum LoadConfigStatus {
-  Success = 'Success',
-  ProblemReadingConfig = 'Problem reading config',
-  InvalidConfig = 'Invalid config',
-  NoConfigs = 'No configs',
-  InvalidBodies = 'Invalid config bodies',
-  BodyValidationError = 'Body validation error',
+export type LoadConfigResponse = {
+  configs: Resource[]
+  absoluteFixturePaths: string[]
 }
-
-export type LoadConfigResponse =
-  | {
-      type: LoadConfigStatus.Success
-      configs: Resource[]
-      absoluteFixturePaths: string[]
-    }
-  | {
-      type: LoadConfigStatus.NoConfigs
-    }
-  | {
-      type:
-        | LoadConfigStatus.InvalidBodies
-        | LoadConfigStatus.InvalidConfig
-        | LoadConfigStatus.ProblemReadingConfig
-        | LoadConfigStatus.BodyValidationError
-      message: string
-    }
 
 export type TransformResources<T> = (resources: T[], absoluteConfigPath: string) => Promise<Resource[]>
 export type GetTypeValidator = () => Promise<TypeValidator>
@@ -52,22 +37,16 @@ const loadConfig = async <T extends ValidatedRawConfig>(
   try {
     rawConfigFile = await readYamlAsync(absoluteConfigPath)
   } catch (err) {
-    return {
-      type: LoadConfigStatus.ProblemReadingConfig,
-      message: `There was a problem reading your config file:\n\n${err.message}`,
-    }
+    throw new ServiceConfigReadError(absoluteConfigPath, err.message)
   }
 
   const validationResult = validateRawConfig<T>(rawConfigFile)
   if (!validationResult.success) {
-    return {
-      type: LoadConfigStatus.InvalidConfig,
-      message: `Your config file is invalid:\n\n${validationResult.errors.join('\n')}`,
-    }
+    throw new ServiceConfigInvalidError(absoluteConfigPath, validationResult.errors)
   }
 
   if (!validationResult.validatedConfigs.length) {
-    return { type: LoadConfigStatus.NoConfigs }
+    throw new NoServiceResourcesError(absoluteConfigPath)
   }
 
   const transformedConfigs = await transformConfigs(validationResult.validatedConfigs, absoluteConfigPath)
@@ -82,22 +61,15 @@ const loadConfig = async <T extends ValidatedRawConfig>(
         isTestMode,
       )
     } catch (err) {
-      return {
-        type: LoadConfigStatus.BodyValidationError,
-        message: `An error occurred while validating one of your configured fixtures:\n${err.message}`,
-      }
+      throw new BodyValidationError(absoluteConfigPath, err.message)
     }
 
     if (bodyValidationMessage) {
-      return {
-        type: LoadConfigStatus.InvalidBodies,
-        message: `One or more of your configured bodies do not match the correct type:\n\n${bodyValidationMessage}`,
-      }
+      throw new InvalidBodyTypeError(absoluteConfigPath, bodyValidationMessage)
     }
   }
 
   return {
-    type: LoadConfigStatus.Success,
     configs: transformedConfigs,
     absoluteFixturePaths: validationResult.validatedConfigs
       .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])

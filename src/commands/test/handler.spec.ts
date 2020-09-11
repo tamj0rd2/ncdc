@@ -5,9 +5,15 @@ import { resolve } from 'path'
 import { existsSync } from 'fs'
 import { TypeValidator } from '~validation'
 import { NcdcLogger } from '~logger'
-import { LoadConfig, LoadConfigStatus } from '~config/load'
+import { LoadConfig } from '~config/load'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { ResourceBuilder } from '~config'
+import {
+  InvalidBodyTypeError,
+  ServiceConfigInvalidError,
+  ServiceConfigReadError,
+  NoServiceResourcesError,
+} from '~config/errors'
 
 jest.disableAutomock()
 jest.mock('fs')
@@ -81,7 +87,6 @@ const args: TestArgs = {
 
 it('calls loadConfig with the correct args', async () => {
   mockedLoadConfig.mockResolvedValue({
-    type: LoadConfigStatus.Success,
     absoluteFixturePaths: [],
     configs: [],
   })
@@ -92,23 +97,20 @@ it('calls loadConfig with the correct args', async () => {
 })
 
 const badStatuses = [
-  LoadConfigStatus.InvalidBodies,
-  LoadConfigStatus.InvalidConfig,
-  LoadConfigStatus.ProblemReadingConfig,
+  new InvalidBodyTypeError('file path', 'message'),
+  new ServiceConfigInvalidError('file path', ['error1']),
+  new ServiceConfigReadError('file path', 'message'),
 ] as const
-badStatuses.forEach((status) => {
-  it(`handles a ${status} response from loadConfig`, async () => {
-    const expectedMessage = randomString('message')
-    mockedLoadConfig.mockResolvedValue({ type: status, message: expectedMessage })
+it.each(badStatuses.map((x) => [x]))(`handles a %o response from loadConfig`, async (error) => {
+  mockedLoadConfig.mockRejectedValue(error)
 
-    await handler(args)
+  await handler(args)
 
-    expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: expectedMessage }))
-  })
+  expect(mockedHandleError).toBeCalledWith(expect.objectContaining({ message: error.message }))
 })
 
 it('handles there being no configs to run as an error', async () => {
-  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.NoConfigs })
+  mockedLoadConfig.mockRejectedValue(new NoServiceResourcesError('file path'))
 
   await handler(args)
 
@@ -119,7 +121,7 @@ it('handles there being no configs to run as an error', async () => {
 
 it('calls runTests with the correct arguments', async () => {
   const configs = [new ResourceBuilder().build()]
-  mockedLoadConfig.mockResolvedValue({ type: LoadConfigStatus.Success, configs, absoluteFixturePaths: [] })
+  mockedLoadConfig.mockResolvedValue({ configs, absoluteFixturePaths: [] })
 
   await handler(args)
 
@@ -129,7 +131,6 @@ it('calls runTests with the correct arguments', async () => {
 
 it('handles errors thrown by testConfigs', async () => {
   mockedLoadConfig.mockResolvedValue({
-    type: LoadConfigStatus.Success,
     absoluteFixturePaths: [],
     configs: [new ResourceBuilder().build()],
   })

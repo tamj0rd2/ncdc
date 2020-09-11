@@ -1,3 +1,15 @@
+# [1.0.0-alpha.3](https://github.com/tamj0rd2/ncdc/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2020-09-11)
+
+
+### chore
+
+* upgrade to typescript 4 ([95ce432](https://github.com/tamj0rd2/ncdc/commit/95ce432db057df739bb978488a46d43e25b26239)), closes [#405](https://github.com/tamj0rd2/ncdc/issues/405)
+
+
+### BREAKING CHANGES
+
+* Upgrade typescript dependency to version 4
+
 # [1.0.0-alpha.2](https://github.com/tamj0rd2/ncdc/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2020-08-28)
 
 

@@ -80,7 +80,7 @@
     "cz-conventional-changelog": "^3.1.0",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
-    "eslint-plugin-jest": "^23.0.4",
+    "eslint-plugin-jest": "^24.0.0",
     "eslint-plugin-prettier": "^3.1.1",
     "husky": "^4.0.10",
     "jest": "^26.0.0",
@@ -113,6 +113,6 @@
     "qs": "^6.9.3",
     "ts-json-schema-generator": "^0.70.0",
     "winston": "^3.2.1",
-    "yargs": "^15.3.1"
+    "yargs": "^16.0.2"
   }
 }

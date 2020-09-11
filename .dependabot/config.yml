@@ -3,6 +3,34 @@ update_configs:
   - package_manager: "javascript"
     directory: "/"
     update_schedule: "live"
+    ignored_updates:
+      - match:
+          dependency_name: "@types/node"
+          version_requirement: ">=13.x"
+    automerged_updates:
+      - match:
+          dependency_type: "all"
+          update_type: "all"
+
+  - package_manager: "javascript"
+    directory: "/black-box-tests/pre-release"
+    update_schedule: "live"
+    ignored_updates:
+      - match:
+          dependency_name: "@types/node"
+          version_requirement: ">=13.x"
+    automerged_updates:
+      - match:
+          dependency_type: "all"
+          update_type: "all"
+
+  - package_manager: "docker"
+    directory: "/"
+    update_schedule: "live"
+    ignored_updates:
+      - match:
+          dependency_name: "node"
+          version_requirement: ">=13"
     automerged_updates:
       - match:
           dependency_type: "all"

@@ -1,8 +1,10 @@
 import strip from 'strip-ansi'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Matchers<R> {
       toThrowColouredError(expectedMessage: string, opts?: ToThrowColouredErrorOpts): R
     }

@@ -1,6 +1,6 @@
 import qs from 'qs'
 
-const isObject = (x: unknown): x is object => typeof x === 'object' && !!x
+const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && !!x
 
 export class Body {
   private readonly isFormEncodedData = this.contentType?.includes('application/x-www-form-urlencoded')
@@ -8,14 +8,14 @@ export class Body {
   constructor(private readonly data: Data, private readonly contentType?: string) {}
 
   public serialize = (): string => {
-    if (!isObject(this.data)) return this.data?.toString()
+    if (typeof this.data === 'string') return this.data?.toString()
 
     return this.isFormEncodedData ? qs.stringify(this.data) : JSON.stringify(this.data)
   }
 
   public matches = (bodyToCompare: unknown): boolean => {
     if (this.isFormEncodedData) {
-      const body = isObject(this.data) ? this.data : qs.parse(this.data)
+      const body = typeof this.data === 'string' ? qs.parse(this.data) : this.data
       return this.isDeeplyEqual(body, bodyToCompare)
     }
 

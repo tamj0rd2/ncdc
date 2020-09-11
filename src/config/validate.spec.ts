@@ -3,9 +3,11 @@ import strip from 'strip-ansi'
 import { SupportedMethod } from './resource'
 import { randomNumber, randomString } from '~test-helpers'
 import '../jest-extensions'
-import { RawConfigBuilder } from './raw-config-builder'
+import { RawConfig, RawConfigBuilder } from './raw-config-builder'
 
 jest.disableAutomock()
+
+type CustomObject = Record<string, unknown>
 
 describe('validate', () => {
   function createTestDeps() {
@@ -20,7 +22,10 @@ describe('validate', () => {
     }
   }
 
-  const expectValidationErors = (config?: object | object[], ...expectedErrors: string[]): void => {
+  const expectValidationErors = (
+    config?: CustomObject | CustomObject[] | RawConfig,
+    ...expectedErrors: string[]
+  ): void => {
     const { filePath, constructExpectedError } = createTestDeps()
 
     const validate = () => validateRawConfig(Array.isArray(config) ? config : [config], filePath)
@@ -30,7 +35,7 @@ describe('validate', () => {
   }
 
   const expectNotToGetErrorsConcerning = (
-    config?: object | object[],
+    config?: CustomObject | CustomObject[] | RawConfig,
     ...unexpectedStrings: string[]
   ): void => {
     try {
@@ -133,7 +138,7 @@ describe('validate', () => {
       const { filePath, constructExpectedError } = createTestDeps()
       const rawConfig = new RawConfigBuilder()
         .withRequest(
-          // @ts-expect-error
+          // @ts-expect-error should be an error because strings are not valid request objects
           'not an object',
         )
         .build()
@@ -371,7 +376,7 @@ describe('validate', () => {
     it('throws an error if response is not an object', () => {
       const rawConfig = new RawConfigBuilder()
         .withResponse(
-          // @ts-expect-error
+          // @ts-expect-error should be an error because strings are not valid response objects
           'not an object',
         )
         .build()

@@ -149,6 +149,11 @@ purposes.
 You can find more information about generating schemas and why you might want to
 do that [here](#generate)
 
+## Typescript Compatability
+
+- Typescript 3 - Everything below ncdc version 1.0.0
+- Typescript 4 - Everything above ncdc version 1.0.0
+
 ## CLI usage
 
 ```

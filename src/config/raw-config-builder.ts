@@ -53,8 +53,7 @@ export class RawConfigBuilder {
 
   public withRequest(request: RawConfig['request'] | undefined): RawConfigBuilder {
     if (request !== undefined) this.config.request = request
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
+    // @ts-expect-error this is an error because request is a required field
     else delete this.config.request
     return this
   }
@@ -121,8 +120,7 @@ export class RawConfigBuilder {
 
   public withResponse(response: RawConfig['response'] | undefined): RawConfigBuilder {
     if (response !== undefined) this.config.response = response
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
+    // @ts-expect-error response is a required field
     else delete this.config.response
     return this
   }

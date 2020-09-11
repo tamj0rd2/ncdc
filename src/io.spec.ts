@@ -1,4 +1,4 @@
-import { readFixture, readYamlAsync, writeJsonAsync, readJsonAsync } from '~io'
+import { readFixture, readYamlAsync, writeJsonAsync, readJsonAsync, EmptyFileError } from '~io'
 import { randomString, mockObj, mocked } from '~test-helpers'
 import path, { resolve } from 'path'
 import { promises as fsPromises } from 'fs'
@@ -63,7 +63,8 @@ describe('io', () => {
       const filePath = randomString('filePath')
       const resolvedFilePath = randomString('resolvedPath')
       mockPath.resolve.mockReturnValueOnce(resolvedFilePath)
-      mockFs.readFile.mockResolvedValue('hello: world')
+      mockFs.readFile.mockResolvedValueOnce('hello: world')
+      mockSafeLoad.mockResolvedValueOnce({})
 
       await readYamlAsync(filePath)
 
@@ -80,6 +81,13 @@ describe('io', () => {
       const data = await readYamlAsync(randomString('filePath'))
 
       expect(data).toBe(expectedData)
+    })
+
+    it('throws if the loaded file is empty', async () => {
+      const { mockSafeLoad } = createTestDeps()
+      mockSafeLoad.mockResolvedValueOnce(undefined)
+
+      await expect(readYamlAsync(randomString('filePath'))).rejects.toThrowError(EmptyFileError)
     })
   })
 

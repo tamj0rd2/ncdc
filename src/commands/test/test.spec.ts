@@ -15,7 +15,7 @@ describe('test configs', () => {
     const baseUrl = randomString('http://example') + '.com'
     const mockLogger = mockObj<Logger>({ error: jest.fn(), info: jest.fn() })
     const mockFetchResource = mockFn<FetchResource>()
-    const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
+    const mockTypeValidator = mockObj<TypeValidator>({ assert: jest.fn() })
     const mockGetTypeValidator = mockFn<GetTypeValidator>()
     const dummyReportMetric: ReportMetric = () => ({
       fail: jest.fn(),
@@ -222,7 +222,6 @@ describe('test configs', () => {
         .build()
       const actualData = randomString('data')
       mockFetchResource.mockResolvedValue({ status: 200, data: actualData })
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
       mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
 
       await runTests(
@@ -234,7 +233,7 @@ describe('test configs', () => {
         dummyReportMetric,
       )
 
-      expect(mockTypeValidator.validate).toBeCalledWith(actualData, config.response.type)
+      expect(mockTypeValidator.assert).toBeCalledWith(actualData, config.response.type)
     })
 
     it('logs a success message when the types match', async () => {
@@ -252,7 +251,6 @@ describe('test configs', () => {
         .withResponseType(randomString('res type'))
         .withResponseBody(undefined)
         .build()
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
       mockFetchResource.mockResolvedValue({ status: 200 })
       mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
 
@@ -284,9 +282,8 @@ describe('test configs', () => {
         .withResponseType(randomString('res type'))
         .withResponseBody(undefined)
         .build()
-      const error1 = randomString('error2')
-      const error2 = randomString('error2')
-      mockTypeValidator.validate.mockResolvedValue({ success: false, errors: [error1, error2] })
+      const errorMessage = randomString('error')
+      mockTypeValidator.assert.mockRejectedValue(new Error(errorMessage))
       mockFetchResource.mockResolvedValue({ status: 200 })
       mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
 
@@ -299,11 +296,10 @@ describe('test configs', () => {
         dummyReportMetric,
       )
 
-      const expectedPart1 = `FAILED: Bob - ${baseUrl}/jim\n`
-      const expectedPart2 = `The received body does not match the type ${config.response.type}\n`
-      const expectedPart3 = `${error1}\n${error2}`
+      const expectedPart1 = `FAILED: Bob - ${baseUrl}/jim`
+      const expectedPart2 = `The received body does not match the type ${config.response.type}`
       expect(getLoggedMessage('error', mockLogger)).toEqual(
-        `${expectedPart1}${expectedPart2}${expectedPart3}`,
+        `${expectedPart1}\n${expectedPart2}\n${errorMessage}`,
       )
       expect(result).toEqual('Failure')
     })

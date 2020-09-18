@@ -1,54 +1,17 @@
 import { Ajv } from 'ajv'
 import { SchemaRetriever } from '~schema'
-import { inspect } from 'util'
-import { blue } from 'chalk'
-
-export type TypeValidationFailure = {
-  success: false
-  errors: string[]
-}
-
-export type TypeValidationResult =
-  | {
-      success: true
-    }
-  | TypeValidationFailure
+import { TypeValidationError } from './errors'
 
 export default class TypeValidator {
   constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) {}
 
-  public async validate(data: Data | undefined, type: string): Promise<TypeValidationResult> {
+  public async assert(data: Data | undefined, type: string): Promise<void> {
     const jsonSchema = await this.schemaRetriever.load(type)
     const validator = this.validator.compile(jsonSchema)
-    const isValid = validator(data)
+    await validator(data)
 
-    if (isValid || !validator.errors) return { success: true }
-    return {
-      success: false,
-      errors: validator.errors.map((e) => {
-        const baseMessage = `${blue.bold('<root>' + e.dataPath)} ${e.message?.replace(/'(.*)'/, blue('$&'))}`
-        if (e.keyword === 'enum' && 'allowedValues' in e.params) {
-          return `${baseMessage} ${this.formatData(e.params.allowedValues)} but received ${this.formatData(
-            e.data,
-          )}`
-        }
-
-        if (e.keyword === 'type') {
-          return `${baseMessage} but got ${this.getTypeToShow(e.data)}`
-        }
-
-        return baseMessage
-      }),
+    if (validator.errors?.length) {
+      throw new TypeValidationError(validator.errors)
     }
-  }
-
-  private getTypeToShow(data: unknown): string | null {
-    if (data === null) return data
-    if (Array.isArray(data)) return 'array'
-    return typeof data
-  }
-
-  private formatData(data: Data): string {
-    return inspect(data, false, 1, true)
   }
 }

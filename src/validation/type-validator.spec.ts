@@ -1,10 +1,10 @@
-import TypeValidator, { TypeValidationFailure } from './type-validator'
+import TypeValidator from './type-validator'
 import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
 import { SchemaRetriever } from '~schema'
 import { mockObj, randomString, mockFn } from '~test-helpers'
-import strip from 'strip-ansi'
+import '../jest-extensions'
 
-jest.unmock('./type-validator')
+jest.disableAutomock()
 
 describe('validate', () => {
   function createTestDeps() {
@@ -33,7 +33,7 @@ describe('validate', () => {
     const expectedType = randomString('type')
     stubValidator.compile.mockReturnValue(jest.fn())
 
-    await typeValidator.validate(randomString('body'), expectedType)
+    await typeValidator.assert(randomString('body'), expectedType)
 
     expect(stubSchemaRetriever.load).toBeCalledWith(expectedType)
   })
@@ -44,7 +44,7 @@ describe('validate', () => {
     stubSchemaRetriever.load.mockResolvedValue(schema)
     stubValidator.compile.mockReturnValue(jest.fn())
 
-    await typeValidator.validate(randomString('body'), randomString('type'))
+    await typeValidator.assert(randomString('body'), randomString('type'))
 
     expect(stubValidator.compile).toBeCalledWith(schema)
   })
@@ -55,18 +55,16 @@ describe('validate', () => {
     stubValidator.compile.mockReturnValue(validateFn)
     const expectedBody = randomString('body')
 
-    await typeValidator.validate(expectedBody, randomString('type'))
+    await typeValidator.assert(expectedBody, randomString('type'))
 
     expect(validateFn).toBeCalledWith(expectedBody)
   })
 
-  it('returns a success result if the data does match the type', async () => {
+  it('does not throw if the data does match the type', async () => {
     const { typeValidator, stubValidator } = createTestDeps()
     stubValidator.compile.mockReturnValue(mockFn<ValidateFunction>().mockReturnValue(true))
 
-    const result = await typeValidator.validate(randomString('body'), randomString('type'))
-
-    expect(result.success).toBe(true)
+    await typeValidator.assert(randomString('body'), randomString('type'))
   })
 
   it('returns validation messages if the data does not match the type', async () => {
@@ -84,14 +82,11 @@ describe('validate', () => {
     validatorFn.errors = [error1, error2] as ErrorObject[]
     stubValidator.compile.mockReturnValue(validatorFn)
 
-    const result = (await typeValidator.validate(
-      randomString('body'),
-      randomString('type'),
-    )) as TypeValidationFailure
+    const body = randomString('body')
+    const type = randomString('type')
 
-    expect(result.success).toBe(false)
-    expect(result.errors).toHaveLength(2)
-    expect(strip(result.errors[0])).toBe(`<root>${error1.dataPath} ${error1.message}`)
-    expect(strip(result.errors[1])).toBe(`<root> ${error2.message}`)
+    await expect(typeValidator.assert(body, type)).rejects.toThrowColouredError(
+      `<root>${error1.dataPath} ${error1.message}\n<root> ${error2.message}`,
+    )
   })
 })

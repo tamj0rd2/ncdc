@@ -1,6 +1,6 @@
 import { validateRawConfig, ValidationFailure, ValidationSuccess, validateConfigBodies } from './validate'
 import strip from 'strip-ansi'
-import { SupportedMethod, Resource } from './resource'
+import { SupportedMethod, Resource, ResourceBuilder } from './resource'
 import { randomString, randomNumber, mockObj } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TypeValidator } from '~validation'
@@ -426,7 +426,7 @@ describe('validate', () => {
 })
 
 describe('validate config bodies', () => {
-  const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
+  const mockTypeValidator = mockObj<TypeValidator>({ assert: jest.fn() })
   const createResource = (withTypes = false, withBodies = false): Resource => ({
     name: randomString('name'),
     request: new Request({
@@ -452,13 +452,18 @@ describe('validate config bodies', () => {
 
   describe('when a config has a type and body', () => {
     it('calls the body validator with the correct arguments', async () => {
-      const resource = createResource(true, true)
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
+      // const resource = createResource(true, true)
+      const resource = new ResourceBuilder()
+        .withRequestBody('hi')
+        .withResponseBody('bye')
+        .withRequestType('requestType')
+        .withResponseType('responseType')
+        .build()
 
       await act([resource])
 
-      expect(mockTypeValidator.validate).toBeCalledWith(resource.request.body!.get(), resource.request.type)
-      expect(mockTypeValidator.validate).toBeCalledWith(resource.response.body!.get(), resource.response.type)
+      expect(mockTypeValidator.assert).toBeCalledWith(resource.request.body!.get(), resource.request.type)
+      expect(mockTypeValidator.assert).toBeCalledWith(resource.response.body!.get(), resource.response.type)
     })
 
     // This can happen if the original raw config had more than 1 endpoint, or an additional serve endpoint
@@ -466,15 +471,13 @@ describe('validate config bodies', () => {
       const config1 = createResource(true, true)
       const config2 = { ...createResource(true, true), name: config1.name }
 
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
       await act([config1, config2])
 
-      expect(mockTypeValidator.validate).toBeCalledTimes(2)
+      expect(mockTypeValidator.assert).toBeCalledTimes(2)
     })
 
     it('returns undefined when there are no validation issues', async () => {
       const config = createResource()
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
 
       const result = await act([config])
 
@@ -485,15 +488,13 @@ describe('validate config bodies', () => {
       const config = createResource(true, true)
       const error1 = randomString('error-message-1')
       const error2 = randomString('error-message-2')
-      const error3 = randomString('error-message-3')
-      mockTypeValidator.validate.mockResolvedValueOnce({ success: false, errors: [error1, error2] })
-      mockTypeValidator.validate.mockResolvedValueOnce({ success: false, errors: [error3] })
+      mockTypeValidator.assert.mockRejectedValueOnce(new Error(error1))
+      mockTypeValidator.assert.mockRejectedValueOnce(new Error(error2))
 
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
       const result = await act([config])
 
-      const errPart1 = `Config ${config.name} request body failed type validation:\n${error1}\n${error2}`
-      const errPart2 = `Config ${config.name} response body failed type validation:\n${error3}`
+      const errPart1 = `Config ${config.name} request body failed type validation:\n${error1}`
+      const errPart2 = `Config ${config.name} response body failed type validation:\n${error2}`
       expect(stripAnsi(result!)).toEqual(`${errPart1}\n${errPart2}`)
     })
   })
@@ -512,15 +513,13 @@ describe('validate config bodies', () => {
     it('does not validate when forceRequestValidation is false', async () => {
       await act([config])
 
-      expect(mockTypeValidator.validate).not.toBeCalled()
+      expect(mockTypeValidator.assert).not.toBeCalled()
     })
 
     it('validates when forceRequestValidation is true', async () => {
-      mockTypeValidator.validate.mockResolvedValue({ success: true })
-
       const result = await act([config], true)
 
-      expect(mockTypeValidator.validate).toBeCalledWith(undefined, config.request.type)
+      expect(mockTypeValidator.assert).toBeCalledWith(undefined, config.request.type)
       expect(result).toBeUndefined()
     })
   })
@@ -530,6 +529,6 @@ describe('validate config bodies', () => {
 
     await act([config])
 
-    expect(mockTypeValidator.validate).not.toBeCalled()
+    expect(mockTypeValidator.assert).not.toBeCalled()
   })
 })

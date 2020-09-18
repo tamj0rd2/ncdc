@@ -148,20 +148,24 @@ export const validateConfigBodies = async (
   for (const config of uniqueConfigs) {
     const validationErrors: string[] = []
 
+    const formatError = (target: 'request' | 'response', err: unknown): string => {
+      const prefix = red(`Config ${bold(config.name)} ${target} body failed type validation:`)
+      return `${prefix}\n${err instanceof Error ? err.message : err}`
+    }
+
     if (config.request.type && (config.request.body || forceReqValidation)) {
-      const result = await typeValidator.validate(config.request.body?.get(), config.request.type)
-      if (!result.success) {
-        const prefix = red(`Config ${bold(config.name)} request body failed type validation:`)
-        const message = `${prefix}\n${result.errors.join('\n')}`
-        validationErrors.push(message)
+      try {
+        await typeValidator.assert(config.request.body?.get(), config.request.type)
+      } catch (err) {
+        validationErrors.push(formatError('request', err))
       }
     }
+
     if (config.response.type && config.response.body) {
-      const result = await typeValidator.validate(config.response.body?.get(), config.response.type)
-      if (!result.success) {
-        const prefix = red(`Config ${bold(config.name)} response body failed type validation:`)
-        const message = `${prefix}\n${result.errors.join('\n')}`
-        validationErrors.push(message)
+      try {
+        await typeValidator.assert(config.response.body?.get(), config.response.type)
+      } catch (err) {
+        validationErrors.push(formatError('response', err))
       }
     }
 

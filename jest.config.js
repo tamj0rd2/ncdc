@@ -19,7 +19,7 @@ const commonSettings = {
     '<rootDir>\/lib.*',
     '<rootDir>\/coverage.*',
     'test-helpers.ts'
-  ]
+  ],
 }
 
 const lowLevelTestSettings = {

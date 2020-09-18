@@ -7,7 +7,7 @@ import { NcdcLogger } from '~logger'
 
 describe('server', () => {
   function createTestDeps() {
-    const mockTypeValidator = mockObj<TypeValidator>({ validate: jest.fn() })
+    const mockTypeValidator = mockObj<TypeValidator>({ assert: jest.fn() })
     const mockLogger = mockObj<NcdcLogger>({
       info: jest.fn(),
       verbose: jest.fn(),
@@ -33,7 +33,7 @@ describe('server', () => {
       mockTypeValidator,
       configureApp,
     } = createTestDeps()
-    mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+    mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
 
     const resource = new ResourceBuilder().withRequestType('Some Type').build()
     const app = configureApp(dummyBaseUrl, [resource], mockGetTypeValidator, mockLogger)
@@ -56,7 +56,7 @@ describe('server', () => {
       mockTypeValidator,
       configureApp,
     } = createTestDeps()
-    mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+    mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
     const endpoint = '/api/resource'
 
     const resources = [new ResourceBuilder().withEndpoint(endpoint).withMethod(verb).build()]
@@ -77,7 +77,7 @@ describe('server', () => {
       mockTypeValidator,
       configureApp,
     } = createTestDeps()
-    mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+    mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
     const endpoint = '/api/resource'
     const resources = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.HEAD).build()]
 
@@ -100,7 +100,7 @@ describe('server', () => {
       mockTypeValidator,
       configureApp,
     } = createTestDeps()
-    mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+    mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
     const resources = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.GET).build()]
     const app = configureApp(dummyBaseUrl, resources, mockGetTypeValidator, mockLogger)
 
@@ -119,7 +119,7 @@ describe('server', () => {
       mockTypeValidator,
       configureApp,
     } = createTestDeps()
-    mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+    mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
     const resources = [new ResourceBuilder().withEndpoint('/almost/correct').build()]
 
     const app = configureApp(dummyBaseUrl, resources, mockGetTypeValidator, mockLogger)
@@ -138,7 +138,7 @@ describe('server', () => {
       mockTypeValidator,
       configureApp,
     } = createTestDeps()
-    mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+    mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
     const resources = [
       new ResourceBuilder().withEndpoint('/api/resource').withResponseBody(undefined).build(),
     ]
@@ -177,7 +177,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const app = configureApp(dummyBaseUrl, [resource], mockGetTypeValidator, mockLogger)
 
         await request(app).get(resource.request.endpoint.toString()).send().expect(404)
@@ -191,7 +191,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const app = configureApp(dummyBaseUrl, [resource], mockGetTypeValidator, mockLogger)
 
         await request(app).get(resource.request.endpoint.toString()).set('nice', 'meme').expect(200)
@@ -207,7 +207,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
         ]
@@ -225,7 +225,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder()
             .withName('Config1')
@@ -253,7 +253,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder().withEndpoint('/api/resource?greetings=hello&greetings=bye').build(),
         ]
@@ -273,7 +273,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder()
             .withMethod(SupportedMethod.POST)
@@ -283,7 +283,6 @@ describe('server', () => {
             .withResponseBody('Noice')
             .build(),
         ]
-        mockTypeValidator.validate.mockResolvedValue({ success: true })
 
         const app = configureApp(dummyBaseUrl, resources, mockGetTypeValidator, mockLogger)
 
@@ -302,7 +301,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder()
             .withMethod(SupportedMethod.POST)
@@ -310,7 +309,7 @@ describe('server', () => {
             .withRequestType('number')
             .build(),
         ]
-        mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
+        mockTypeValidator.assert.mockRejectedValue(new Error('whoops'))
 
         const app = configureApp(dummyBaseUrl, resources, mockGetTypeValidator, mockLogger)
 
@@ -351,7 +350,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resource = new ResourceBuilder().withRequestBody('hello  there  ').build()
 
         const app = configureApp(dummyBaseUrl, [resource], mockGetTypeValidator, mockLogger)
@@ -367,7 +366,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resource = new ResourceBuilder().withRequestBody({ hello: 'world' }).build()
 
         const app = configureApp(dummyBaseUrl, [resource], mockGetTypeValidator, mockLogger)
@@ -383,16 +382,19 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resource = new ResourceBuilder()
           .withRequestBody({ hello: 'world' })
           .withRequestType('memes')
           .build()
-        mockTypeValidator.validate.mockResolvedValue({ success: true })
 
         const app = configureApp(dummyBaseUrl, [resource], mockGetTypeValidator, mockLogger)
 
-        await request(app).get(resource.request.endpoint.toString()).send({ ayy: 'lmao' }).expect(200)
+        // await request(app).get(resource.request.endpoint.toString()).send({ ayy: 'lmao' }).expect(200)
+        await request(app).get(resource.request.endpoint.toString()).send({ ayy: 'lmao' })
+
+        expect(mockLogger.warn).not.toBeCalled()
+        expect(mockLogger.error).not.toBeCalled()
       })
     })
   })
@@ -407,7 +409,7 @@ describe('server', () => {
           mockTypeValidator,
           configureApp,
         } = createTestDeps()
-        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder()
             .withResponseHeaders({

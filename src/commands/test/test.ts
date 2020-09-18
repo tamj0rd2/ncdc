@@ -51,10 +51,11 @@ export const runTests = async (
 
       if (config.response.type) {
         const typeValidator = await getTypeValidator()
-        const validationResult = await typeValidator.validate(res.data, config.response.type)
-        if (!validationResult.success) {
-          const message = `The received body does not match the type ${config.response.type}`
-          messages.push(`${message}\n${validationResult.errors.join('\n')}`)
+        try {
+          await typeValidator.assert(res.data, config.response.type)
+        } catch (err) {
+          const prefix = `The received body does not match the type ${config.response.type}`
+          messages.push(`${prefix}\n${err.message}`)
         }
       }
 

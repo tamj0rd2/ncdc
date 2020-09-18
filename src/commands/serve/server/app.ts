@@ -87,9 +87,10 @@ export const configureApp = (
         }
 
         if (request.type) {
-          const typeValidator = await getTypeValidator()
-          const validationResult = await typeValidator.validate(req.body, request.type)
-          if (!validationResult.success) {
+          try {
+            const typeValidator = await getTypeValidator()
+            await typeValidator.assert(req.body, request.type)
+          } catch (err) {
             logger.warn(`An endpoint for ${req.path} exists but the request body did not match the type`)
 
             // TODO: something like this to capture better response codes

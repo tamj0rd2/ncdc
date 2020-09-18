@@ -11,8 +11,13 @@ export interface Resource {
 }
 
 export class ResourceBuilder {
-  public static get Default(): Resource {
+  public static random(): Resource {
     return new ResourceBuilder().build()
+  }
+
+  /** @deprecated use ResourceBuilder.random() */
+  public static get Default(): Resource {
+    return ResourceBuilder.random()
   }
 
   private resource: Resource = {

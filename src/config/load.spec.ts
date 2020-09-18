@@ -2,7 +2,7 @@ import { mocked, randomString, mockFn } from '~test-helpers'
 import { readYamlAsync, getFixturePath } from '~io'
 import { Resource, ResourceBuilder } from './resource'
 import { LoadConfigResponse, TransformResources, GetTypeValidator } from './load'
-import { validateRawConfig, ValidatedRawConfig, validateConfigBodies } from './validate'
+import { validateRawConfig, ValidatedRawConfig } from './validate'
 import {
   BodyValidationError,
   InvalidBodyTypeError,
@@ -12,9 +12,11 @@ import {
 } from './errors'
 import { RawConfigBuilder } from './builders'
 import ConfigLoader from './load'
+import { validateConfigBodies } from './validate-config-bodies'
 
 jest.disableAutomock()
 jest.mock('./validate')
+jest.mock('./validate-config-bodies')
 jest.mock('~io')
 
 describe('ConfigLoader', () => {

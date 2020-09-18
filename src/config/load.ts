@@ -1,6 +1,6 @@
 import { readYamlAsync, getFixturePath } from '~io'
 import { TypeValidator } from '~validation'
-import { validateConfigBodies, validateRawConfig, ValidatedRawConfig } from './validate'
+import { validateRawConfig, ValidatedRawConfig } from './validate'
 import { Resource } from '~config'
 import {
   ServiceConfigReadError,
@@ -9,6 +9,7 @@ import {
   BodyValidationError,
   InvalidBodyTypeError,
 } from './errors'
+import { validateConfigBodies } from './validate-config-bodies'
 
 export type LoadConfigResponse = {
   configs: Resource[]

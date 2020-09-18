@@ -1,6 +1,6 @@
 import { mocked, randomString, mockFn } from '~test-helpers'
 import { readYamlAsync, getFixturePath } from '~io'
-import { Resource, ResourceBuilder } from './resource'
+import { ResourceBuilder } from './resource'
 import { LoadConfigResponse, TransformResources, GetTypeValidator } from './load'
 import { validateRawConfig, ValidatedRawConfig } from './validate'
 import {
@@ -176,7 +176,7 @@ describe('ConfigLoader', () => {
         validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
       })
       mockTransformConfigs.mockResolvedValue([
-        { request: { type: randomString() }, response: {} } as Resource,
+        new ResourceBuilder().withRequestType(randomString('type')).build(),
       ])
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
@@ -198,7 +198,7 @@ describe('ConfigLoader', () => {
         validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
       })
       mockTransformConfigs.mockResolvedValue([
-        { request: { type: randomString() }, response: {} } as Resource,
+        new ResourceBuilder().withRequestType(randomString('type')).build(),
       ])
       const validationError = randomString('oops')
       mockValidateBodies.mockResolvedValue(validationError)
@@ -221,7 +221,7 @@ describe('ConfigLoader', () => {
         validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
       })
       mockTransformConfigs.mockResolvedValue([
-        { request: {}, response: { type: randomString('some type') } } as Resource,
+        new ResourceBuilder().withResponseType(randomString('type')).build(),
       ])
       mockValidateBodies.mockRejectedValue(new Error(randomString('some error message')))
 

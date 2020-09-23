@@ -1,6 +1,5 @@
 import { readYamlAsync } from '~io'
-import { validateRawConfig, ValidationSuccess } from '~config/validate'
-import { red } from 'chalk'
+import { validateRawConfig } from '~config/validate'
 
 export type GenerateConfig = {
   name: string
@@ -8,26 +7,22 @@ export type GenerateConfig = {
   response: { type?: string }
 }
 
-type SuccessResults = {
-  path: string
-  validationResult: ValidationSuccess<GenerateConfig>
-}[]
-
 export const getConfigTypes = async (configPaths: string[]): Promise<string[]> => {
-  const configFiles = await Promise.all(
+  const configFiles = await Promise.allSettled(
     configPaths.map(async (path) => {
       const rawConfig = await readYamlAsync(path)
-      const validationResult = validateRawConfig<GenerateConfig>(rawConfig)
-      return { path, validationResult }
+      return validateRawConfig<GenerateConfig>(rawConfig, path)
     }),
   )
 
-  const configsAreValid = (c: typeof configFiles): c is SuccessResults =>
-    !c.find((x) => x.validationResult.success !== true)
-  if (configsAreValid(configFiles)) {
+  const allConfigsDidLoadSuccessfully = (
+    results: typeof configFiles,
+  ): results is PromiseFulfilledResult<GenerateConfig[]>[] => !results.some((x) => x.status === 'rejected')
+
+  if (allConfigsDidLoadSuccessfully(configFiles)) {
     return Array.from(
       configFiles.reduce((accum, configFile) => {
-        configFile.validationResult.validatedConfigs.forEach(({ request, response }) => {
+        configFile.value.forEach(({ request, response }) => {
           if (request.type) accum.add(request.type)
           if (response.type) accum.add(response.type)
         })
@@ -37,10 +32,7 @@ export const getConfigTypes = async (configPaths: string[]): Promise<string[]> =
   }
 
   const errorMessages = configFiles.reduce<string[]>((messages, configFile) => {
-    if (configFile.validationResult.success) return messages
-    const prefix = red(`Invalid config file - ${configFile.path}`)
-    messages.push(`${prefix}\n${configFile.validationResult.errors.join('\n')}`)
-    return messages
+    return configFile.status === 'rejected' ? [...messages, configFile.reason.message] : messages
   }, [])
 
   throw new Error(errorMessages.join('\n\n'))

@@ -1,18 +1,13 @@
-import { mocked, randomString, mockFn } from '~test-helpers'
+import { randomString, mockFn } from '~test-helpers'
 import { readYamlAsync, getFixturePath } from '~io'
 import { ResourceBuilder } from './resource'
 import { LoadConfigResponse, TransformResources, GetTypeValidator } from './load'
 import { validateRawConfig, ValidatedRawConfig } from './validate'
-import {
-  BodyValidationError,
-  InvalidBodyTypeError,
-  NoServiceResourcesError,
-  ServiceConfigInvalidError,
-  ServiceConfigReadError,
-} from './errors'
-import { RawConfigBuilder } from './builders'
+import { BodyValidationError, InvalidBodyTypeError, NoServiceResourcesError } from './errors'
+import { ValidatedRawConfigBuilder } from './builders'
 import ConfigLoader from './load'
 import { validateConfigBodies } from './validate-config-bodies'
+import { RawConfigBuilder } from './raw-config-builder'
 
 jest.disableAutomock()
 jest.mock('./validate')
@@ -21,13 +16,13 @@ jest.mock('~io')
 
 describe('ConfigLoader', () => {
   function createTestDeps() {
-    const mockReadYamlAsync = mocked(readYamlAsync)
-    const mockValidateRawConfig = mocked(validateRawConfig)
-    const mockValidateBodies = mocked(validateConfigBodies)
+    const mockReadYamlAsync = mockFn(readYamlAsync)
+    const mockValidateRawConfig = mockFn(validateRawConfig)
+    const mockValidateBodies = mockFn(validateConfigBodies)
     const mockTransformConfigs = mockFn<TransformResources>()
     const mockGetTypeValidator = mockFn<GetTypeValidator>()
-    const mockGetFixturePaths = mocked(getFixturePath)
-    const dummyConfigPath = randomString('configPath')
+    const mockGetFixturePaths = mockFn(getFixturePath)
+    const configPath = randomString('configPath')
 
     return {
       mockReadYamlAsync,
@@ -36,7 +31,7 @@ describe('ConfigLoader', () => {
       mockValidateBodies,
       mockTransformConfigs,
       mockGetTypeValidator,
-      dummyConfigPath,
+      configPath,
     }
   }
 
@@ -45,158 +40,141 @@ describe('ConfigLoader', () => {
 
     it('calls readYamlAsync with the correct config path', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockReadYamlAsync,
         mockTransformConfigs,
         mockValidateRawConfig,
       } = createTestDeps()
-      mockValidateRawConfig.mockReturnValue({
-        success: true,
-        validatedConfigs: [RawConfigBuilder.default],
-      })
-      mockTransformConfigs.mockResolvedValue([ResourceBuilder.Default])
+      mockValidateRawConfig.mockReturnValue([ValidatedRawConfigBuilder.default])
+      mockTransformConfigs.mockResolvedValue([ResourceBuilder.random()])
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
-      await configLoader.load(dummyConfigPath)
+      await configLoader.load(configPath)
 
-      expect(mockReadYamlAsync).toBeCalledWith(dummyConfigPath)
+      expect(mockReadYamlAsync).toBeCalledWith(configPath)
     })
 
     it('returns a failure response when readYamlAsync fails', async () => {
-      const {
-        dummyConfigPath,
-        mockGetTypeValidator,
-        mockReadYamlAsync,
-        mockTransformConfigs,
-      } = createTestDeps()
-      mockReadYamlAsync.mockRejectedValue(new Error('that aint right'))
+      const { configPath, mockGetTypeValidator, mockReadYamlAsync, mockTransformConfigs } = createTestDeps()
+      const expectedError = new Error('that aint right')
+      mockReadYamlAsync.mockRejectedValue(expectedError)
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
 
-      await expect(configLoader.load(dummyConfigPath)).rejects.toThrowError(ServiceConfigReadError)
+      await expect(configLoader.load(configPath)).rejects.toThrowError(expectedError)
     })
 
     it('calls validate with the correct args', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockReadYamlAsync,
         mockTransformConfigs,
         mockValidateRawConfig,
       } = createTestDeps()
-      const rawConfigs: unknown[] = [{ name: 'My Raw Config' }]
+      const rawConfigs = [RawConfigBuilder.random()]
       mockReadYamlAsync.mockResolvedValue(rawConfigs)
-      mockValidateRawConfig.mockReturnValue({
-        success: true,
-        validatedConfigs: [RawConfigBuilder.default],
-      })
+      mockValidateRawConfig.mockReturnValue([ValidatedRawConfigBuilder.default])
       mockTransformConfigs.mockResolvedValue([])
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
-      await configLoader.load(dummyConfigPath)
+      await configLoader.load(configPath)
 
-      expect(mockValidateRawConfig).toBeCalledWith(rawConfigs)
+      expect(mockValidateRawConfig).toBeCalledWith(rawConfigs, configPath)
     })
 
     it('returns a failure response when config validation fails', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         mockValidateRawConfig,
       } = createTestDeps()
-      const errors = [randomString(), randomString()]
-      mockValidateRawConfig.mockReturnValue({ success: false, errors })
+      const expectedError = new Error(randomString('error'))
+      mockValidateRawConfig.mockImplementationOnce(() => {
+        throw expectedError
+      })
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
 
-      await expect(configLoader.load(dummyConfigPath)).rejects.toThrowError(ServiceConfigInvalidError)
+      await expect(configLoader.load(configPath)).rejects.toThrowError(expectedError)
     })
 
     it('returns a warning response if there are no validated configs returned', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         mockValidateRawConfig,
       } = createTestDeps()
-      mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs: [] })
+      mockValidateRawConfig.mockReturnValue([])
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
 
-      await expect(configLoader.load(dummyConfigPath)).rejects.toThrowError(NoServiceResourcesError)
+      await expect(configLoader.load(configPath)).rejects.toThrowError(NoServiceResourcesError)
     })
 
     it('does not create a type validator if no configs have associated types', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         mockValidateRawConfig,
       } = createTestDeps()
-      mockValidateRawConfig.mockReturnValue({
-        success: true,
-        validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
-      })
+      mockValidateRawConfig.mockReturnValue([{ serveOnly: false, request: {}, response: {} }])
       mockTransformConfigs.mockResolvedValue([])
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
-      await configLoader.load(dummyConfigPath)
+      await configLoader.load(configPath)
 
       expect(mockGetTypeValidator).not.toBeCalled()
     })
 
     it('calls the transform func with the correct args', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         mockValidateRawConfig,
       } = createTestDeps()
       const validatedConfigs = [{ serveOnly: false, request: {}, response: {} }]
-      mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs })
+      mockValidateRawConfig.mockReturnValue(validatedConfigs)
       mockTransformConfigs.mockResolvedValue([])
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
-      await configLoader.load(dummyConfigPath)
+      await configLoader.load(configPath)
 
-      expect(mockTransformConfigs).toBeCalledWith(validatedConfigs, dummyConfigPath)
+      expect(mockTransformConfigs).toBeCalledWith(validatedConfigs, configPath)
     })
 
     it('creates a type validator with the correct args when types are present in any config', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         mockValidateRawConfig,
       } = createTestDeps()
-      mockValidateRawConfig.mockReturnValue({
-        success: true,
-        validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
-      })
+      mockValidateRawConfig.mockReturnValue([{ serveOnly: false, request: {}, response: {} }])
       mockTransformConfigs.mockResolvedValue([
         new ResourceBuilder().withRequestType(randomString('type')).build(),
       ])
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
-      await configLoader.load(dummyConfigPath)
+      await configLoader.load(configPath)
 
       expect(mockGetTypeValidator).toBeCalled()
     })
 
     it('throws an error if a body does not match the correct type', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         mockValidateBodies,
         mockValidateRawConfig,
       } = createTestDeps()
-      mockValidateRawConfig.mockReturnValue({
-        success: true,
-        validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
-      })
+      mockValidateRawConfig.mockReturnValue([{ serveOnly: false, request: {}, response: {} }])
       mockTransformConfigs.mockResolvedValue([
         new ResourceBuilder().withRequestType(randomString('type')).build(),
       ])
@@ -205,21 +183,18 @@ describe('ConfigLoader', () => {
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
 
-      await expect(configLoader.load(dummyConfigPath)).rejects.toThrowError(InvalidBodyTypeError)
+      await expect(configLoader.load(configPath)).rejects.toThrowError(InvalidBodyTypeError)
     })
 
     it('throws when there is a problem trying to validate a body against a type', async () => {
       const {
-        dummyConfigPath,
+        configPath,
         mockGetTypeValidator,
         mockTransformConfigs,
         mockValidateBodies,
         mockValidateRawConfig,
       } = createTestDeps()
-      mockValidateRawConfig.mockReturnValue({
-        success: true,
-        validatedConfigs: [{ serveOnly: false, request: {}, response: {} }],
-      })
+      mockValidateRawConfig.mockReturnValue([{ serveOnly: false, request: {}, response: {} }])
       mockTransformConfigs.mockResolvedValue([
         new ResourceBuilder().withResponseType(randomString('type')).build(),
       ])
@@ -227,14 +202,14 @@ describe('ConfigLoader', () => {
 
       const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
 
-      await expect(configLoader.load(dummyConfigPath)).rejects.toThrowError(BodyValidationError)
+      await expect(configLoader.load(configPath)).rejects.toThrowError(BodyValidationError)
     })
 
     describe('when everything else goes ok', () => {
       // TODO: this test is a bit insane.
       it('returns a response with configs and fixture paths', async () => {
         const {
-          dummyConfigPath,
+          configPath,
           mockGetTypeValidator,
           mockTransformConfigs,
           mockValidateRawConfig,
@@ -252,7 +227,7 @@ describe('ConfigLoader', () => {
             response: { bodyPath: fixturePath2, serveBodyPath: fixturePath3 },
           },
         ]
-        mockValidateRawConfig.mockReturnValue({ success: true, validatedConfigs })
+        mockValidateRawConfig.mockReturnValue(validatedConfigs)
         mockGetFixturePaths
           .mockReturnValueOnce(fixturePath1)
           .mockReturnValueOnce(fixturePath2)
@@ -261,11 +236,11 @@ describe('ConfigLoader', () => {
         mockTransformConfigs.mockResolvedValue([expectedResource])
 
         const configLoader = new ConfigLoader(mockGetTypeValidator, mockTransformConfigs, false)
-        const result = await configLoader.load(dummyConfigPath)
+        const result = await configLoader.load(configPath)
 
-        expect(mockGetFixturePaths).toBeCalledWith(dummyConfigPath, fixturePath1)
-        expect(mockGetFixturePaths).toBeCalledWith(dummyConfigPath, fixturePath2)
-        expect(mockGetFixturePaths).toBeCalledWith(dummyConfigPath, fixturePath3)
+        expect(mockGetFixturePaths).toBeCalledWith(configPath, fixturePath1)
+        expect(mockGetFixturePaths).toBeCalledWith(configPath, fixturePath2)
+        expect(mockGetFixturePaths).toBeCalledWith(configPath, fixturePath3)
         expect(result).toStrictEqual<LoadConfigResponse>({
           fixturePaths: [fixturePath1, fixturePath2, fixturePath3],
           configs: [expectedResource],

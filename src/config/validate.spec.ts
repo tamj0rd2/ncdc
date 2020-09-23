@@ -1,137 +1,221 @@
-import { validateRawConfig, ValidationFailure, ValidationSuccess } from './validate'
+import { validateRawConfig } from './validate'
 import strip from 'strip-ansi'
 import { SupportedMethod } from './resource'
-import { randomNumber } from '~test-helpers'
+import { randomNumber, randomString } from '~test-helpers'
+import '../jest-extensions'
+import { RawConfigBuilder } from './raw-config-builder'
 
 jest.disableAutomock()
 
 describe('validate', () => {
-  const expectValidationErors = (config?: object | object[], ...expectedErrors: string[]): string[] => {
-    const { success, errors } = validateRawConfig(
-      Array.isArray(config) ? config : [config],
-    ) as ValidationFailure
-    expect(success).toBe(false)
-
-    const strippedErrors = errors.map((e) => strip(e))
-    for (const expectedError of expectedErrors) {
-      expect(strippedErrors).toContain(expectedError)
+  function createTestDeps() {
+    const filePath = randomString('filePath')
+    return {
+      filePath: filePath,
+      constructExpectedError: (...messages: string[]) =>
+        [`Invalid service config file (${filePath}):`, ...messages].join('\n'),
+      nonRelativeEndpoint: randomString('https://example.com/api/resource'),
+      endpointMissingSlash: randomString('api/resource'),
+      relativeEndpoint: randomString('/api/resource'),
     }
-    return errors
+  }
+
+  const expectValidationErors = (config?: object | object[], ...expectedErrors: string[]): void => {
+    const { filePath, constructExpectedError } = createTestDeps()
+
+    const validate = () => validateRawConfig(Array.isArray(config) ? config : [config], filePath)
+
+    const expectedError = constructExpectedError(...expectedErrors)
+    expect(validate).toThrowColouredError(expectedError)
   }
 
   const expectNotToGetErrorsConcerning = (
     config?: object | object[],
     ...unexpectedStrings: string[]
-  ): ValidationSuccess | ValidationFailure => {
-    const validationResult = validateRawConfig(Array.isArray(config) ? config : [config])
-    if (validationResult.success) return validationResult
-
-    const allErrors = strip(validationResult.errors.join('\n'))
-    for (const unexpectedString of unexpectedStrings) {
-      expect(allErrors).not.toContain(unexpectedString)
+  ): void => {
+    try {
+      validateRawConfig(Array.isArray(config) ? config : [config], randomString('filePath'))
+    } catch (err) {
+      const errorMessage = strip(err.message)
+      unexpectedStrings.forEach((unexpectedString) => expect(errorMessage).not.toContain(unexpectedString))
     }
-
-    return validationResult
   }
 
-  it('returns a helpful error if the config is empty', () => {
-    const { success, errors } = validateRawConfig(undefined) as ValidationFailure
+  // TODO: these cases need fleshing out
+  describe('It validates/casts some basic cases', () => {
+    test.todo('most slimlined raw config')
 
-    expect(success).toBe(false)
-    expect(errors).toContain('Your config file cannot be empty')
-    expect(errors).toHaveLength(1)
+    test('fullest raw config', () => {
+      const { filePath } = createTestDeps()
+      const rawConfig = new RawConfigBuilder().withRequestHeaders({ accept: 'application/json' }).build()
+
+      expect(() => validateRawConfig([rawConfig], filePath)).not.toThrow()
+    })
   })
 
-  it('returns an error when the config file is an empty array', () => {
-    const { success, errors } = validateRawConfig([]) as ValidationFailure
+  describe('basic validation', () => {
+    it('throws an error when the config file is an empty array', () => {
+      const { filePath, constructExpectedError } = createTestDeps()
+      const configFileContent: unknown[] = []
 
-    expect(success).toBe(false)
-    expect(errors).toContain('Your config file must contain at least 1 config item')
-  })
+      const validate = () => validateRawConfig(configFileContent, filePath)
 
-  it('returns an error when the config file has an empty config item', () => {
-    const errors = expectValidationErors(undefined, 'config[0] must not be a sparse array item')
-    expect(errors).toHaveLength(1)
-  })
+      const expectedError = constructExpectedError('Your config file must contain at least 1 config item')
+      expect(validate).toThrowColouredError(expectedError)
+    })
 
-  it('returns an error if config name is missing', () => {
-    expectValidationErors({}, 'config[0].name is required')
-  })
+    it('throws an error when the config file has an empty config item', () => {
+      const { filePath, constructExpectedError } = createTestDeps()
+      const configFileContent = [undefined]
 
-  it('shows the config name in errors if supplied', () => {
-    const config = { name: 'Yo fam', fake: 'property' }
-    expectValidationErors(config, 'config[Yo fam].fake is not allowed')
-  })
+      const validate = () => validateRawConfig(configFileContent, filePath)
 
-  it('accepts configs with different names', () => {
-    const configs = [{ name: 'Noice' }, { name: 'Toight' }]
-    expectNotToGetErrorsConcerning(
-      configs,
-      'config[Noice] must have a unique name',
-      'config[Toight] must have a unique name',
-    )
-  })
+      const expectedError = constructExpectedError('config[0] must not be a sparse array item')
+      expect(validate).toThrowColouredError(expectedError)
+    })
 
-  it('returns an error if any configs have the same name', () => {
-    const configs = [{ name: 'Noice' }, { name: 'Noice' }]
-    expectValidationErors(configs, 'config[Noice] must have a unique name')
+    it('throws an error if config name is missing', () => {
+      const { filePath, constructExpectedError } = createTestDeps()
+      const configFileContent = [new RawConfigBuilder().withName(undefined).build()]
+
+      const validate = () => validateRawConfig(configFileContent, filePath)
+
+      const expectedError = constructExpectedError('config[0].name is required')
+      expect(validate).toThrowColouredError(expectedError)
+    })
+
+    it('throws an error if there are unrecognised keys', () => {
+      const { filePath, constructExpectedError } = createTestDeps()
+      const badKey = randomString('randomKey')
+      const rawConfig = { ...RawConfigBuilder.random(), [badKey]: randomString('randomValue') }
+
+      const validate = () => validateRawConfig([rawConfig], filePath)
+
+      const expectedError = constructExpectedError(`config[${rawConfig.name}].${badKey} is not allowed`)
+      expect(validate).toThrowColouredError(expectedError)
+    })
+
+    it('throws an error if any configs have the same name', () => {
+      const { filePath, constructExpectedError } = createTestDeps()
+      const config1 = RawConfigBuilder.random()
+      const config2 = new RawConfigBuilder().withName(config1.name).build()
+
+      const validate = () => validateRawConfig([config1, config2], filePath)
+
+      // TODO: this error can probably be improved
+      const expectedError = constructExpectedError(`config[${config1.name}] must have a unique name`)
+      expect(validate).toThrowColouredError(expectedError)
+    })
+
+    it('allows configs with different names', () => {
+      const { filePath } = createTestDeps()
+      const config1 = RawConfigBuilder.random()
+      const config2 = RawConfigBuilder.random()
+
+      const validate = () => validateRawConfig([config1, config2], filePath)
+
+      expect(validate).not.toThrow()
+    })
   })
 
   describe('request', () => {
-    it('returns an error if request is missing', () => {
-      expectValidationErors({}, 'config[0].request is required')
+    it('throws an error if request is missing', () => {
+      const { filePath, constructExpectedError } = createTestDeps()
+      const rawConfig = new RawConfigBuilder().withRequest(undefined).build()
+
+      const validate = () => validateRawConfig([rawConfig], filePath)
+
+      const expectedError = constructExpectedError(`config[${rawConfig.name}].request is required`)
+      expect(validate).toThrowColouredError(expectedError)
     })
 
-    it('returns an error if request is not an object', () => {
-      const config = { request: 'ayy' }
-      expectValidationErors(config, 'config[0].request must be of type object')
+    it('throws an error if request is not an object', () => {
+      const { filePath, constructExpectedError } = createTestDeps()
+      const rawConfig = new RawConfigBuilder()
+        .withRequest(
+          // @ts-expect-error
+          'not an object',
+        )
+        .build()
+
+      const validate = () => validateRawConfig([rawConfig], filePath)
+
+      const expectedError = constructExpectedError(`config[${rawConfig.name}].request must be of type object`)
+      expect(validate).toThrowColouredError(expectedError)
     })
 
     it('does not allow unknown fields', () => {
-      const config = { request: { what: 'the' } }
-      expectValidationErors(config, 'config[0].request.what is not allowed')
+      const { filePath, constructExpectedError } = createTestDeps()
+      const badKey = randomString('badKey')
+      const rawConfig = new RawConfigBuilder()
+        .withRequest({
+          endpoints: randomString('/endpoint'),
+          method: 'get',
+          [badKey]: randomString('randomValue'),
+        })
+        .build()
+
+      const validate = () => validateRawConfig([rawConfig], filePath)
+
+      const expectedError = constructExpectedError(
+        `config[${rawConfig.name}].request.${badKey} is not allowed`,
+      )
+      expect(validate).toThrowColouredError(expectedError)
     })
 
     describe('request.method', () => {
       it.each(Object.values(SupportedMethod).map((x) => [x]))('allows method %s', (method) => {
-        const config = { request: { method } }
-        expectNotToGetErrorsConcerning(config, 'request.method')
+        const { filePath } = createTestDeps()
+        const rawConfig = new RawConfigBuilder().withRequestMethod(method).build()
+
+        const validate = () => validateRawConfig([rawConfig], filePath)
+
+        expect(validate).not.toThrow()
       })
 
       it('allows lower case versions of the methods', () => {
-        const config = { request: { method: 'get' } }
-        expectNotToGetErrorsConcerning(config, 'request.method')
+        const { filePath } = createTestDeps()
+        const rawConfig = new RawConfigBuilder().withRequestMethod('get').build()
+
+        const validate = () => validateRawConfig([rawConfig], filePath)
+
+        expect(validate).not.toThrow()
       })
 
-      it.each(['LOL', 'WUT'].map((x) => [x]))('returns an error for unknown method "%s"', (method) => {
-        const config = { request: { method } }
+      it.each(['LOL', 'WUT'].map((x) => [x]))('throws an error for unknown method "%s"', (method) => {
+        const rawConfig = new RawConfigBuilder().withRequestMethod(method).build()
+
         expectValidationErors(
-          config,
-          `config[0].request.method must be one of [${Object.values(SupportedMethod).join(', ')}]`,
+          rawConfig,
+          `config[${rawConfig.name}].request.method must be one of [${Object.values(SupportedMethod).join(
+            ', ',
+          )}]`,
         )
       })
 
-      it('returns an error if missing', () => {
-        const config = { request: {} }
-        expectValidationErors(config, 'config[0].request.method is required')
+      it('throws an error if missing', () => {
+        const rawConfig = new RawConfigBuilder().withRequestMethod(undefined).build()
+
+        expectValidationErors(rawConfig, `config[${rawConfig.name}].request.method is required`)
       })
     })
 
     describe('request.type', () => {
-      it('returns an error when request.type is an empty string', () => {
-        const config = { request: { type: '' } }
-        expectValidationErors(config, 'config[0].request.type is not allowed to be empty')
+      it('throws an error when request.type is an empty string', () => {
+        const rawConfig = new RawConfigBuilder().withRequestType('').build()
+
+        expectValidationErors(rawConfig, `config[${rawConfig.name}].request.type is not allowed to be empty`)
       })
     })
 
     describe('request.headers', () => {
       it('is an object', () => {
-        const config = { request: { headers: {} } }
-        expectNotToGetErrorsConcerning(config, 'request.headers')
+        const rawConfig = new RawConfigBuilder().withRequestHeaders({ accept: 'application/json' }).build()
+
+        expectNotToGetErrorsConcerning(rawConfig, 'request.headers')
       })
     })
 
-    const badEndpoints = ['https://example.com/api/yay', 'example.com/api/yay']
     describe('request.endpoints', () => {
       it('accepts a relative uri', () => {
         const config = { request: { endpoints: '/api/whatevs' } }
@@ -143,30 +227,34 @@ describe('validate', () => {
         expectNotToGetErrorsConcerning(config, 'request.endpoints')
       })
 
-      it.each(badEndpoints.map((x) => [x]))(
-        'returns an error if the endpoint does not start with a / like in %s',
-        (endpoint) => {
-          const config = { request: { endpoints: endpoint } }
-          expectValidationErors(config, 'config[0].request.endpoints must start with /')
-        },
-      )
+      it('throws an error if an endpoint does not start with /', () => {
+        const { endpointMissingSlash } = createTestDeps()
+        const rawConfig = new RawConfigBuilder().withRequestEndpoints(endpointMissingSlash).build()
+
+        expectValidationErors(rawConfig, `config[${rawConfig.name}].request.endpoints must start with /`)
+      })
+
+      it('throws an error if the endpoint is not relative', () => {
+        const { nonRelativeEndpoint } = createTestDeps()
+        const rawConfig = new RawConfigBuilder().withRequestEndpoints(nonRelativeEndpoint).build()
+
+        expectValidationErors(
+          rawConfig,
+          `config[${rawConfig.name}].request.endpoints should be a relative uri`,
+          `config[${rawConfig.name}].request.endpoints must start with /`,
+        )
+      })
 
       it('casts it to an array of strings if it is a single string', () => {
+        const { filePath } = createTestDeps()
         const config = {
           name: 'hmm',
           request: { method: 'post', endpoints: '/hello' },
           response: { code: 200, body: 'ayy' },
         }
-        const result = validateRawConfig([config])
+        const result = validateRawConfig([config], filePath)
 
-        if (!result.success) {
-          expect(result.errors).toStrictEqual([])
-          expect(result.success).toBe(true)
-          return
-        }
-
-        expect(result.success).toBe(true)
-        expect(result.validatedConfigs[0].request.endpoints).toStrictEqual(['/hello'])
+        expect(result[0].request.endpoints).toStrictEqual(['/hello'])
       })
 
       it('accepts a list of endpoints starting with /', () => {
@@ -174,12 +262,18 @@ describe('validate', () => {
         expectNotToGetErrorsConcerning(config, 'request.endpoints')
       })
 
-      it('returns an error if any of the endpoints do not start with a /', () => {
-        const config = {
-          request: { endpoints: [badEndpoints[0], '/api/good-one', ''], 'hell bound': 123 },
-        }
-        expectValidationErors(config, 'config[0].request.endpoints[0] must start with /')
-        expectValidationErors(config, 'config[0].request.endpoints[2] is not allowed to be empty')
+      it('throws an error if any of the endpoints do not start with a /', () => {
+        const { nonRelativeEndpoint, relativeEndpoint } = createTestDeps()
+        const rawConfig = new RawConfigBuilder()
+          .withRequestEndpoints([nonRelativeEndpoint, relativeEndpoint, ''])
+          .build()
+
+        expectValidationErors(
+          rawConfig,
+          `config[${rawConfig.name}].request.endpoints[0] should be a relative uri`,
+          `config[${rawConfig.name}].request.endpoints[0] must start with /`,
+          `config[${rawConfig.name}].request.endpoints[2] is not allowed to be empty`,
+        )
       })
     })
 
@@ -190,8 +284,14 @@ describe('validate', () => {
       })
 
       it('must start with a /', () => {
-        const config = { request: { serveEndpoint: badEndpoints[0] } }
-        expectValidationErors(config, 'config[0].request.serveEndpoint must start with /')
+        const { nonRelativeEndpoint } = createTestDeps()
+        const rawConfig = new RawConfigBuilder().withRequestServeEndpoint(nonRelativeEndpoint).build()
+
+        expectValidationErors(
+          rawConfig,
+          `config[${rawConfig.name}].request.serveEndpoint should be a relative uri`,
+          `config[${rawConfig.name}].request.serveEndpoint must start with /`,
+        )
       })
     })
 
@@ -209,11 +309,17 @@ describe('validate', () => {
       expectNotToGetErrorsConcerning(config, 'request.endpoints', 'request.serveEndpoint')
     })
 
-    it('returns an error if request.endpoints and request.serveEndpoint are both undefined', () => {
-      const config = { serveOnly: true, request: { method: 'delete' } }
+    it('throws an error if request.endpoints and request.serveEndpoint are both undefined', () => {
+      const rawConfig = new RawConfigBuilder()
+        // TODO: I don't understand why serveOnly is true here
+        .withServeOnly(true)
+        .withRequestEndpoints(undefined)
+        .withRequestServeEndpoint(undefined)
+        .build()
+
       expectValidationErors(
-        config,
-        'config[0].request must contain at least one of [endpoints, serveEndpoint]',
+        rawConfig,
+        `config[${rawConfig.name}].request must contain at least one of [endpoints, serveEndpoint]`,
       )
     })
 
@@ -241,29 +347,42 @@ describe('validate', () => {
         expectNotToGetErrorsConcerning(config, 'request.body', 'request.bodyPath')
       })
 
-      it('returns an error if request.body and request.bodyPath are both specified', () => {
-        const config = { request: { bodyPath: 'my file path', body: { my: 'body' } } }
+      it('throws an error if request.body and request.bodyPath are both specified', () => {
+        const rawConfig = new RawConfigBuilder()
+          .withRequestBody(randomString('body'))
+          .withRequestBodyPath(randomString('bodyPath'))
+          .build()
+
         expectValidationErors(
-          config,
-          'config[0].request contains a conflict between optional exclusive peers [body, bodyPath]',
+          rawConfig,
+          `config[${rawConfig.name}].request contains a conflict between optional exclusive peers [body, bodyPath]`,
         )
       })
     })
   })
 
   describe('response', () => {
-    it('returns an error if response is missing', () => {
-      expectValidationErors({}, 'config[0].response is required')
+    it('throws an error if response is missing', () => {
+      const rawConfig = new RawConfigBuilder().withResponse(undefined).build()
+
+      expectValidationErors(rawConfig, `config[${rawConfig.name}].response is required`)
     })
 
-    it('returns an error if response is not an object', () => {
-      const config = { response: 'ayy' }
-      expectValidationErors(config, 'config[0].response must be of type object')
+    it('throws an error if response is not an object', () => {
+      const rawConfig = new RawConfigBuilder()
+        .withResponse(
+          // @ts-expect-error
+          'not an object',
+        )
+        .build()
+
+      expectValidationErors(rawConfig, `config[${rawConfig.name}].response must be of type object`)
     })
 
     it('does not allow unknown fields', () => {
-      const config = { response: { what: 'the' } }
-      expectValidationErors(config, 'config[0].response.what is not allowed')
+      const rawConfig = new RawConfigBuilder().withResponse({ code: randomNumber(), what: 'the' }).build()
+
+      expectValidationErors(rawConfig, `config[${rawConfig.name}].response.what is not allowed`)
     })
 
     describe('response.code', () => {
@@ -324,14 +443,18 @@ describe('validate', () => {
       })
     })
 
-    describe('all response body types', () => {
-      test('only one can be defined', () => {
-        const config = {
-          response: { body: 'ello', bodyPath: 'path1', serveBody: 'cya', serveBodyPath: 'path2' },
-        }
+    describe('all response body properties', () => {
+      test('only one can be defined at a time', () => {
+        const rawConfig = new RawConfigBuilder()
+          .withResponseBody(randomString('body'))
+          .withResponseBodyPath(randomString('bodyPath'))
+          .withResponseServeBody(randomString('serveBody'))
+          .withResponseServeBodyPath(randomString('serveBodyPath'))
+          .build()
+
         expectValidationErors(
-          config,
-          'config[0].response contains a conflict between optional exclusive peers [body, bodyPath, serveBody, serveBodyPath]',
+          rawConfig,
+          `config[${rawConfig.name}].response contains a conflict between optional exclusive peers [body, bodyPath, serveBody, serveBodyPath]`,
         )
       })
 
@@ -350,27 +473,19 @@ describe('validate', () => {
 
   describe('serveOnly', () => {
     it('is false by default if not supplied', () => {
-      const config = {
-        name: 'My Config',
-        request: { method: 'get', endpoints: '/api' },
-        response: { code: randomNumber() },
-      }
-      const validationResult = expectNotToGetErrorsConcerning(config, 'serveOnly')
+      const { filePath } = createTestDeps()
+      const rawConfig = new RawConfigBuilder().withServeOnly(undefined).build()
 
-      if (!validationResult.success) {
-        expect(validationResult.errors).toStrictEqual([])
-        expect(validationResult.success).toBe(true)
-        return
-      }
+      const result = validateRawConfig([rawConfig], filePath)
 
-      expect(validationResult.success).toBe(true)
-      expect(validationResult.validatedConfigs[0].serveOnly).toBe(false)
+      expect(result[0].serveOnly).toBe(false)
     })
 
     describe('when false', () => {
-      it('returns an error if request.endpoints is not defined', () => {
-        const config = { request: {} }
-        expectValidationErors(config, 'config[0].request.endpoints is required')
+      it('throws an error if request.endpoints is not defined', () => {
+        const rawConfig = new RawConfigBuilder().withServeOnly(false).withRequestEndpoints(undefined).build()
+
+        expectValidationErors(rawConfig, `config[${rawConfig.name}].request.endpoints is required`)
       })
 
       it('allows request.endpoints and request.serveEndpoints to co-exist', () => {
@@ -380,11 +495,16 @@ describe('validate', () => {
     })
 
     describe('when true', () => {
-      it('returns an error if request.endpoints and request.serveEndpoint are both undefined', () => {
-        const config = { serveOnly: true, request: { method: 'delete' } }
+      it('throws an error if request.endpoints and request.serveEndpoint are both undefined', () => {
+        const rawConfig = new RawConfigBuilder()
+          .withServeOnly(true)
+          .withRequestEndpoints(undefined)
+          .withRequestServeEndpoint(undefined)
+          .build()
+
         expectValidationErors(
-          config,
-          'config[0].request must contain at least one of [endpoints, serveEndpoint]',
+          rawConfig,
+          `config[${rawConfig.name}].request must contain at least one of [endpoints, serveEndpoint]`,
         )
       })
     })
@@ -392,6 +512,7 @@ describe('validate', () => {
 
   describe('cases that should pass', () => {
     test('a pretty basic config', () => {
+      const { filePath } = createTestDeps()
       const config = {
         name: 'Books',
         request: {
@@ -409,15 +530,7 @@ describe('validate', () => {
         },
       }
 
-      const result = validateRawConfig([config])
-
-      if (!result.success) {
-        expect(result.errors).toBeUndefined()
-        expect(result.success).toBe(true)
-        return
-      }
-
-      expect(result.success).toBe(true)
+      expect(() => validateRawConfig([config], filePath)).not.toThrow()
     })
   })
 })

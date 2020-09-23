@@ -14,10 +14,45 @@ export const mockCtor = (target: jest.Constructable) => target as jest.MockedCla
 
 export const mocked = <T extends (...args: any[]) => ReturnType<T>>(fn: T) => fn as jest.MockedFunction<T>
 
-export function mockFn<T extends (...args: any[]) => ReturnType<T>>(): jest.Mock<ReturnType<T>, Parameters<T>>
-export function mockFn<T extends (...args: any[]) => ReturnType<T>>(fn: T): jest.MockedFunction<T>
-export function mockFn<T extends (...args: any[]) => ReturnType<T>>(fn?: T): any {
-  return fn ? (fn as jest.MockedFunction<T>) : jest.fn<ReturnType<T>, Parameters<T>>()
+type MockExtensions<T extends (...args: any[]) => ReturnType<T>> = {
+  mockReturnValueTimes(value: ReturnType<T>, times: number): MockFn<T>
+  mockResolvedValueTimes(value: jest.ResolvedValue<ReturnType<T>>, times: number): MockFn<T>
+}
+
+type MockFn<T extends (...args: any[]) => ReturnType<T>> = (
+  | jest.Mock<ReturnType<T>, Parameters<T>>
+  | jest.MockedFunction<T>
+) &
+  MockExtensions<T>
+
+export function mockFn<T extends (...args: any[]) => ReturnType<T>>(): jest.Mock<
+  ReturnType<T>,
+  Parameters<T>
+> &
+  MockExtensions<T>
+export function mockFn<T extends (...args: any[]) => ReturnType<T>>(
+  fn: T,
+): jest.MockedFunction<T> & MockExtensions<T>
+export function mockFn<T extends (...args: any[]) => ReturnType<T>>(fn?: T): MockFn<T> {
+  const mockedFn = fn ? (fn as jest.MockedFunction<T>) : jest.fn<ReturnType<T>, Parameters<T>>()
+  // @ts-expect-error no idea hot to fix properly
+  mockedFn.mockReturnValueTimes = (value: ReturnType<T>, times: number) => {
+    for (let i = 0; i < times; i++) {
+      mockedFn.mockReturnValueOnce(value)
+    }
+    return mockedFn
+  }
+
+  // @ts-expect-error no idea hot to fix properly
+  mockedFn.mockResolvedValueTimes = (value: jest.ResolvedValue<ReturnType<T>>, times: number) => {
+    for (let i = 0; i < times; i++) {
+      mockedFn.mockResolvedValueOnce(value)
+    }
+    return mockedFn
+  }
+
+  // @ts-expect-error no idea hot to fix properly
+  return mockedFn
 }
 
 export function randomString(prefix = '', suffix = ''): string {

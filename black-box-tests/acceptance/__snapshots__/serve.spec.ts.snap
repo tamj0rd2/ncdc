@@ -1,0 +1,842 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ncdc serve can serve a type checked config: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/123', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve handles switching from a fixture file to an inline body: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: config
+verbose: Registered http://localhost:4000/api/books/456 from config: config
+verbose: Registered http://localhost:4000/api/books/* from config: config
+info: Endpoints are being served on http://localhost:4000
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: config
+verbose: Registered http://localhost:4000/api/books/456 from config: config
+verbose: Registered http://localhost:4000/api/books/* from config: config
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'config',
+  request: { method: 'GET', path: '/api/books/blah', query: {}, body: {} },
+  response: { status: 200, body: 'somebody' }
+}"
+`;
+
+exports[`ncdc serve handles switching from an inline body to a fixture file: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: config
+verbose: Registered http://localhost:4000/api/books/456 from config: config
+verbose: Registered http://localhost:4000/api/books/* from config: config
+info: Endpoints are being served on http://localhost:4000
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: config
+verbose: Registered http://localhost:4000/api/books/456 from config: config
+verbose: Registered http://localhost:4000/api/books/* from config: config
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'config',
+  request: { method: 'GET', path: '/api/books/blah', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve logs an error and exists if a fixture file does not exist: toMatchStrippedSnapshot 1`] = `"error: ENOENT: no such file or directory, open '/test-environment/fixtures/my-fixture.json'"`;
+
+exports[`ncdc serve serves an endpoint from a fixture file: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/cooldude', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve starts serving on port 4000: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hooray', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve type checking in watch mode when composite is true and noEmit is false during schema generation does not show errors: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000"
+`;
+
+exports[`ncdc serve type checking in watch mode when there are already typescript compilation errors gives a useful error and exits: toMatchStrippedSnapshot 1`] = `
+"verbose: Error 1005: ';' expected.
+verbose: Error 1005: ';' expected.
+verbose: Error 1128: Declaration or statement expected.
+error: An error occurred while validating a fixture within /test-environment/config.yml:
+Could not compile your typescript source files"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation can recover from incorrect body type validation: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should have required property 'ISBN'
+<root> should have required property 'ISBN_13'
+<root> should have required property 'author'
+<root>.title should be string but got number
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation can recover from the typescript compilation being broken: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should have required property 'ISBN'
+<root> should have required property 'ISBN_13'
+<root> should have required property 'author'
+<root>.title should be string but got number
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root>.ISBN should be number but got string
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+verbose: Error 1005: ';' expected.
+verbose: Error 1005: ';' expected.
+verbose: Error 1128: Declaration or statement expected.
+error: Your source code has compilation errors. Fix them to resume serving endpoints
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation can recover when a source file changes that fixes a type and response being out of sync: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should have required property 'ISBN'
+<root> should have required property 'ISBN_13'
+<root> should have required property 'author'
+<root>.title should be string but got number
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root>.ISBN should be number but got string
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation gives a useful message when an error is thrown during body/type validation: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should have required property 'ISBN'
+<root> should have required property 'ISBN_13'
+<root> should have required property 'author'
+<root>.title should be string but got number
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root>.ISBN should be number but got string
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+verbose: Error 1005: ';' expected.
+verbose: Error 1005: ';' expected.
+verbose: Error 1128: Declaration or statement expected.
+error: Your source code has compilation errors. Fix them to resume serving endpoints
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+An error occurred while validating a fixture within /test-environment/config.yml:
+Could not find type: Book"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation it serves when the type matches the body: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation stops the server if a body stops matching the type: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should have required property 'ISBN'
+<root> should have required property 'ISBN_13'
+<root> should have required property 'author'
+<root>.title should be string but got number"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation stops the server if a source file changes that breaks typescript compilation: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should have required property 'ISBN'
+<root> should have required property 'ISBN_13'
+<root> should have required property 'author'
+<root>.title should be string but got number
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root>.ISBN should be number but got string
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+verbose: Error 1005: ';' expected.
+verbose: Error 1005: ';' expected.
+verbose: Error 1128: Declaration or statement expected.
+error: Your source code has compilation errors. Fix them to resume serving endpoints"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema generation stops the server if a source file changes that puts the type and response out of sync: toMatchStrippedSnapshot 1`] = `
+"verbose: able to get a program via the solution watcher
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hello', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should have required property 'ISBN'
+<root> should have required property 'ISBN_13'
+<root> should have required property 'author'
+<root>.title should be string but got number
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/asdf', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: Detected a change to your source files
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root>.ISBN should be number but got string"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema loading from json files can recover if the json schema matches the body again: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/123', query: {}, body: {} },
+  response: { status: 200, body: 'Hello!' }
+}
+info: change event detected for /test-environment/json-schemas/Book.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should be number but got string
+info: change event detected for /test-environment/json-schemas/Book.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/123', query: {}, body: {} },
+  response: { status: 200, body: 'Hello!' }
+}"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema loading from json files restarts and fails when the json schema no longer matches: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/123', query: {}, body: {} },
+  response: { status: 200, body: 'Hello!' }
+}
+info: change event detected for /test-environment/json-schemas/Book.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+One or more of your configured fixtures do not match the correct type:
+Config Books response body failed type validation:
+<root> should be number but got string"
+`;
+
+exports[`ncdc serve type checking in watch mode with schema loading from json files serves when the type matches the body: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/123', query: {}, body: {} },
+  response: { status: 200, body: 'Hello!' }
+}"
+`;
+
+exports[`ncdc serve watching config.yml can recover from config.yml being deleted when file is re-added: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Invalid service config file (/test-environment/config.yml):
+config[Books].request must contain at least one of [endpoints, serveEndpoint]
+config[Books].request.method is required
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}
+info: unlink event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+There was a problem reading your service config file (/test-environment/config.yml'
+info: add event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 401, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve watching config.yml can recover from the config file having problems: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Invalid service config file (/test-environment/config.yml):
+config[Books].request must contain at least one of [endpoints, serveEndpoint]
+config[Books].request.method is required
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve watching config.yml logs a message and kills the server when config.yml has been deleted: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Invalid service config file (/test-environment/config.yml):
+config[Books].request must contain at least one of [endpoints, serveEndpoint]
+config[Books].request.method is required
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}
+info: unlink event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+There was a problem reading your service config file (/test-environment/config.yml'"
+`;
+
+exports[`ncdc serve watching config.yml logs a message and kills the server when the config file has problems: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Invalid service config file (/test-environment/config.yml):
+config[Books].request must contain at least one of [endpoints, serveEndpoint]
+config[Books].request.method is required"
+`;
+
+exports[`ncdc serve watching config.yml restarts when config.yml is changed: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/config.yml
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/789', query: {}, body: {} },
+  response: { status: 234, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve watching fixture files can recover from a bad fixture file: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Unexpected token b in JSON at position 83
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve watching fixture files can recover from fixture file deletion: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Unexpected token b in JSON at position 83
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: unlink event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+ENOENT: no such file or directory, open '/test-environment/fixtures/MyFixture.json'
+info: add event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/29847234', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve watching fixture files handles deletion of fixture file: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Unexpected token b in JSON at position 83
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: unlink event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+ENOENT: no such file or directory, open '/test-environment/fixtures/MyFixture.json'"
+`;
+
+exports[`ncdc serve watching fixture files logs and error and kills the server when a fixture file has problems: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+error: Could not restart ncdc server
+Unexpected token b in JSON at position 83"
+`;
+
+exports[`ncdc serve watching fixture files restarts the server when a fixture file changes: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: change event detected for /test-environment/fixtures/MyFixture.json
+info: Attempting to restart ncdc server
+verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/memes', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;

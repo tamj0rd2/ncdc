@@ -13,15 +13,16 @@ export const runGenerateCommand = (extraConfigPath?: string): Promise<string> =>
     const ncdc: ChildProcess = exec(createCommand(extraConfigPath))
     const output: string[] = []
     const getRawOutput = (): string => output.join('')
+    const getStrippedOutput = (): string => stripAnsi(getRawOutput())
 
     ncdc.stdout && ncdc.stdout.on('data', (data) => output.push(data))
     ncdc.stderr && ncdc.stderr.on('data', (data) => output.push(data))
     ncdc.on('exit', (code, signal) => {
       if (code !== 0 && signal !== 'SIGTERM') {
         const quickInfo = `Code: ${code} | Signal: ${signal}`
-        return resolve(`${quickInfo} | Output:\n\n${stripAnsi(getRawOutput())}`)
+        return resolve(`${quickInfo} | Output:\n\n${getStrippedOutput()}`)
       }
 
-      resolve(getRawOutput())
+      resolve(getStrippedOutput())
     })
   })

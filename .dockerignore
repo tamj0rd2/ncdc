@@ -4,3 +4,5 @@ lib
 .nyc_output
 out
 test-environment
+docker-compose*
+Dockerfile

@@ -32,6 +32,7 @@ describe('ncdc test', () => {
 
     expect(result.success).toBeTruthy()
     expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
+    expect(result.output).toMatchSnapshot()
   })
 
   it('does not break when using a rate limit', async () => {
@@ -50,6 +51,7 @@ describe('ncdc test', () => {
 
     expect(result.success).toBeTruthy()
     expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
+    expect(result.output).toMatchSnapshot()
   })
 
   it('passes even if a request or response has additional properties', async () => {
@@ -78,6 +80,7 @@ describe('ncdc test', () => {
       success: true,
       output: expect.stringContaining(`info: PASSED: lel - ${REAL_SERVER_HOST}/api/resource`),
     })
+    expect(result.output).toMatchSnapshot()
   })
 
   it('can test endpoints that return json', async () => {
@@ -108,6 +111,7 @@ describe('ncdc test', () => {
 
     expect(result.success).toBeTruthy()
     expect(result.output).toContain(`info: PASSED: Hello - ${REAL_SERVER_HOST}/api/resource`)
+    expect(result.output).toMatchSnapshot()
   })
 
   it('gives back a useful message when a configured body does not match the real response', async () => {
@@ -131,6 +135,7 @@ describe('ncdc test', () => {
     expect(result.success).toBeFalsy()
     expect(result.output).toContain('FAILED: Hello - http://localhost:5000/api/resource')
     expect(result.output).toContain('The response body was not deeply equal to your configured fixture')
+    expect(result.output).toMatchSnapshot()
   })
 
   it('gives back a useful error message when a type does not exist on the FS', async () => {
@@ -155,5 +160,6 @@ describe('ncdc test', () => {
     expect(result.output).toContain('An error occurred while validating a fixture')
     expect(result.output).toContain('ENOENT: no such file or directory')
     expect(result.output).toContain('json-schemas/Hello.json')
+    expect(result.output).toMatchSnapshot()
   })
 })

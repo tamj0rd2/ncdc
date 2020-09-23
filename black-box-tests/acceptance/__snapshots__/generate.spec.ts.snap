@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ncdc generate can generate multiple configs 1`] = `
+"info: JSON schemas have been written to disk
+"
+`;
+
+exports[`ncdc generate can run the generate command 1`] = `
+"info: JSON schemas have been written to disk
+"
+`;
+
+exports[`ncdc generate can run the generate command with noEmit false and composite true 1`] = `
+"info: JSON schemas have been written to disk
+"
+`;

@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ncdc test can run the test command 1`] = `
+"info: PASSED: Shorts - http://localhost:5000/api/resource
+"
+`;
+
+exports[`ncdc test can test endpoints that return json 1`] = `
+"info: PASSED: Hello - http://localhost:5000/api/resource
+"
+`;
+
+exports[`ncdc test does not break when using a rate limit 1`] = `
+"info: PASSED: Shorts - http://localhost:5000/api/resource
+"
+`;
+
+exports[`ncdc test gives back a useful error message when a type does not exist on the FS 1`] = `
+"Code: 1 | Signal: null | Output:
+
+error: An error occurred while validating a fixture within /Users/tamara/coding/ncdc/black-box-tests/test-environment/config.yml:
+ENOENT: no such file or directory, open '/Users/tamara/coding/ncdc/black-box-tests/test-environment/json-schemas/Hello.json'
+"
+`;
+
+exports[`ncdc test gives back a useful message when a configured body does not match the real response 1`] = `
+"Code: 1 | Signal: null | Output:
+
+error: FAILED: Hello - http://localhost:5000/api/resource
+The response body was not deeply equal to your configured fixture
+Received:
+{ hello: 123 }
+error: Not all tests passed
+"
+`;
+
+exports[`ncdc test passes even if a request or response has additional properties 1`] = `
+"info: PASSED: lel - http://localhost:5000/api/resource
+"
+`;

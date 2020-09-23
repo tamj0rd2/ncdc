@@ -53,6 +53,7 @@ export const configureApp = (
 
   app.use(express.text())
   app.use(express.json())
+  app.use(express.urlencoded({ extended: true }))
   app.use(express.raw())
   // the below line is necessary because if next is omitted, I thinks we're using a normal request handler.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

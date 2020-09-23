@@ -310,7 +310,10 @@ describe('server', () => {
             .withRequestType('number')
             .build(),
         ]
-        mockTypeValidator.validate.mockResolvedValue({ success: false, errors: ['oops'] })
+        mockTypeValidator.validate.mockResolvedValue({
+          success: false,
+          errors: ['oops'],
+        })
 
         const app = configureApp(dummyBaseUrl, resources, mockGetTypeValidator, mockLogger)
 
@@ -323,6 +326,24 @@ describe('server', () => {
     })
 
     describe('body', () => {
+      it('decodes form data when sent in the request', async () => {
+        const {
+          dummyBaseUrl,
+          mockGetTypeValidator,
+          mockLogger,
+          mockTypeValidator,
+          configureApp,
+        } = createTestDeps()
+        mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
+        const resource = new ResourceBuilder()
+          .withMethod(SupportedMethod.POST)
+          .withRequestBody({ hello: 'world' })
+          .build()
+
+        const app = configureApp(dummyBaseUrl, [resource], mockGetTypeValidator, mockLogger)
+        await request(app).post(resource.request.endpoint.toString()).send('hello=world').expect(200)
+      })
+
       it('returns a 404 when a request body is missing', async () => {
         const {
           dummyBaseUrl,

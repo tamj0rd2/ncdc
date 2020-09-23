@@ -23,8 +23,16 @@ describe('Body', () => {
     })
 
     it('returns true when 2 objects are deeply equal', () => {
-      const obj1 = { hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 }
-      const obj2 = { hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 }
+      const obj1 = {
+        hello: ['to', 'the', { world: 'earth' }],
+        cya: 'later',
+        mate: 23,
+      }
+      const obj2 = {
+        hello: ['to', 'the', { world: 'earth' }],
+        cya: 'later',
+        mate: 23,
+      }
 
       const result = new Body(obj1).matches(obj2)
 
@@ -32,12 +40,27 @@ describe('Body', () => {
     })
 
     it('returns false when objects are not deeply equal', () => {
-      const obj1 = { hello: ['to', 'the', { world: 'earth' }], cya: 'later', mate: 23 }
+      const obj1 = {
+        hello: ['to', 'the', { world: 'earth' }],
+        cya: 'later',
+        mate: 23,
+      }
       const obj2 = { hello: 'world' }
 
       const result = new Body(obj1).matches(obj2)
 
       expect(result).toBe(false)
+    })
+  })
+
+  describe('serialize', () => {
+    it('returns form data when header is url encoded', () => {
+      const result = new Body(
+        { hello: 'world', name: 'bob' },
+        'application/x-www-form-urlencoded',
+      ).serialize()
+
+      expect(result).toBe('hello=world&name=bob')
     })
   })
 })

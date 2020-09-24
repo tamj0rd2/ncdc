@@ -1,35 +1,3 @@
-# [1.0.0-alpha.3](https://github.com/tamj0rd2/ncdc/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2020-09-11)
-
-
-### chore
-
-* upgrade to typescript 4 ([95ce432](https://github.com/tamj0rd2/ncdc/commit/95ce432db057df739bb978488a46d43e25b26239)), closes [#405](https://github.com/tamj0rd2/ncdc/issues/405)
-
-
-### BREAKING CHANGES
-
-* Upgrade typescript dependency to version 4
-
-# [1.0.0-alpha.2](https://github.com/tamj0rd2/ncdc/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2020-08-28)
-
-
-### Bug Fixes
-
-* **serve:** fix project reference related crash ([71f949e](https://github.com/tamj0rd2/ncdc/commit/71f949e95210b9a8da4de0b54f6af52ecb6daab3)), closes [#401](https://github.com/tamj0rd2/ncdc/issues/401)
-
-# [1.0.0-alpha.1](https://github.com/tamj0rd2/ncdc/compare/v0.13.1...v1.0.0-alpha.1) (2020-08-27)
-
-
-### chore
-
-* **deps:** make typescript a peer dependency ([24cc110](https://github.com/tamj0rd2/ncdc/commit/24cc11083a394b849fb4dc451069de4d328992fd))
-
-
-### BREAKING CHANGES
-
-* **deps:** Typescript is no longer a dependency of this project.
-It is a peer dependency and you will need to install it yourself
-
 # [0.14.0](https://github.com/tamj0rd2/ncdc/compare/v0.13.2...v0.14.0) (2020-09-23)
 
 

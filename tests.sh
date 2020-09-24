@@ -36,7 +36,6 @@ docker-compose run integration-tests
 print 'acceptance tests'
 docker-compose run acceptance-tests
 
-print 'uploading coverage'
 bash <(curl -s https://codecov.io/bash) -Z
 
 print 'pre release tests'

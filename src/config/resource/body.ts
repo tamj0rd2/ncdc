@@ -1,6 +1,5 @@
 import qs from 'qs'
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 const isObject = (x: unknown): x is object => typeof x === 'object' && !!x
 
 export class Body {

@@ -39,7 +39,7 @@ describe('Test command', () => {
   })
 
   it('works', async () => {
-    realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, { eat: 'my shorts' }).start()
+    realServer = new RealServerBuilder().withGetEndpoint('/api/resource', 200, 'eat my shorts!').start()
 
     new ConfigWrapper()
       .addTsconfig()
@@ -47,17 +47,14 @@ describe('Test command', () => {
         new ConfigBuilder()
           .withName('Shorts')
           .withEndpoints('/api/resource')
-          .withResponseHeaders({ 'content-type': 'application/json' })
-          .withResponseType('Book')
-          .withResponseBody({ eat: 'my shorts' })
+          .withResponseHeaders({ 'content-type': 'text/plain' })
           .build(),
       )
-      .addType('Book', { eat: 'string' })
 
     const result = await runTestCommand()
 
-    expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
     expect(result.success).toBeTruthy()
+    expect(result.output).toContain(`info: PASSED: Shorts - ${REAL_SERVER_HOST}/api/resource`)
   })
 })
 
@@ -72,15 +69,7 @@ describe('Serve command', () => {
   })
 
   it('works', async () => {
-    new ConfigWrapper()
-      .addTsconfig()
-      .addConfig(new ConfigBuilder().withResponseType('Book').build())
-      .addType('Book', {
-        ISBN: 'string',
-        ISBN_13: 'string',
-        author: 'string',
-        title: 'string',
-      })
+    new ConfigWrapper().addTsconfig().addConfig()
 
     const { waitForOutput } = await prepareServe(cleanupTasks)()
     await waitForOutput(`Endpoints are being served`)

@@ -3,17 +3,12 @@
   "compilerOptions": {
     "baseUrl": "../../",
     "rootDir": "./",
-    "typeRoots": ["../../node_modules/@types"],
-    "noEmit": false,
-    "emitDeclarationOnly": true,
-    "outDir": "../out/acceptance",
-    "composite": true,
+    "noEmit": true,
+    "composite": false,
     "paths": {
-      "~shared/*": ["./black-box-tests/shared/*"],
-      "~*": ["src/*"]
+      "~shared/*": ["./black-box-tests/shared/*"]
     }
   },
-  "references": [{ "path": "../shared/tsconfig.json" }],
-  "include": ["**/*.ts"],
-  "files": ["../../src/index.d.ts"]
+  "references": [{ "path": "../shared" }],
+  "include": ["**/*.ts"]
 }

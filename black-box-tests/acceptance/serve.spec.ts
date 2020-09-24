@@ -115,7 +115,7 @@ describe('ncdc serve', () => {
     })
 
     it('logs a message and kills the server when the config file has problems', async () => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
       // @ts-ignore
       configWrapper.editConfig('Books', (c) => ({ ...c, request: {} }))
 

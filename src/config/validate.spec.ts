@@ -8,13 +8,8 @@ import { Request, Response } from './resource'
 
 jest.disableAutomock()
 
-type CustomObject = Record<string, unknown>
-
 describe('validate', () => {
-  const expectValidationErors = (
-    config?: CustomObject | CustomObject[],
-    ...expectedErrors: string[]
-  ): string[] => {
+  const expectValidationErors = (config?: object | object[], ...expectedErrors: string[]): string[] => {
     const { success, errors } = validateRawConfig(
       Array.isArray(config) ? config : [config],
     ) as ValidationFailure
@@ -28,7 +23,7 @@ describe('validate', () => {
   }
 
   const expectNotToGetErrorsConcerning = (
-    config?: CustomObject | CustomObject[],
+    config?: object | object[],
     ...unexpectedStrings: string[]
   ): ValidationSuccess | ValidationFailure => {
     const validationResult = validateRawConfig(Array.isArray(config) ? config : [config])

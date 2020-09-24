@@ -4,9 +4,8 @@
     "lib": ["esnext"],
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "rootDir": "./",
-    "baseUrl": "./",
-    "typeRoots": ["./node_modules/@types"],
+    "rootDir": ".",
+    "baseUrl": "../../",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
@@ -14,9 +13,12 @@
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": true,
     "inlineSourceMap": true,
-    "outDir": "../out/shared",
+    "outDir": "../out",
     "noEmit": false,
-    "composite": true
+    "composite": true,
+    "paths": {
+      "*": ["./pre-release/node_modules/*"]
+    }
   },
   "include": ["**/*.ts"]
 }

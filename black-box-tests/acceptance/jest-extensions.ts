@@ -1,11 +1,9 @@
 import strip from 'strip-ansi'
 import { toMatchSnapshot } from 'jest-snapshot'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface Matchers<R> {
       toMatchStrippedSnapshot(): R
     }
@@ -22,7 +20,7 @@ expect.extend({
       })
       .join('\n')
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore do not know how to fix this "this" type mismatch
     return toMatchSnapshot.call(this, content, 'toMatchStrippedSnapshot')
   },

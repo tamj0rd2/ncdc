@@ -12,7 +12,7 @@ export class EmptyFileError extends Error {
   }
 }
 
-export const readJsonAsync = async <TOut = Record<string, unknown>>(
+export const readJsonAsync = async <TOut = object>(
   pathSegment1: string,
   ...pathSegments: string[]
 ): Promise<TOut> => JSON.parse(await readFileAsync(resolve(pathSegment1, ...pathSegments), utf8))
@@ -36,7 +36,6 @@ export const readFixture = (basePath: string, fixturePath: string): Promise<Data
 }
 
 // TODO: swap these args around
-// eslint-disable-next-line @typescript-eslint/ban-types
 export const writeJsonAsync = async (obj: object, path: string): Promise<void> => {
   const outputPath = resolve(path)
   await mkdirAsync(dirname(outputPath), { recursive: true })

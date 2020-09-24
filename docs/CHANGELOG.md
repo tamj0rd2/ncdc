@@ -1,3 +1,10 @@
+# [1.0.0-alpha.4](https://github.com/tamj0rd2/ncdc/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2020-09-24)
+
+
+### Features
+
+* add support for url-encoded bodies ([9a46997](https://github.com/tamj0rd2/ncdc/commit/9a469971cbf90e1cb94457941c8f12c0fcb4aa0f))
+
 # [1.0.0-alpha.3](https://github.com/tamj0rd2/ncdc/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2020-09-11)
 
 

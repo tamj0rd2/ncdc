@@ -1,8 +1,8 @@
-import strip from 'strip-ansi'
 import { runGenerateCommand } from '~shared/generate-wrapper'
 import { ConfigWrapper, TEST_ENV, TYPES_FILE } from '~shared/config-wrapper'
 import { ConfigBuilder } from '~shared/config-builder'
 import { writeFileSync } from 'fs'
+import './jest-extensions'
 
 jest.useRealTimers()
 jest.setTimeout(10000)
@@ -23,7 +23,8 @@ describe('ncdc generate', () => {
 
     const output = await runGenerateCommand()
 
-    expect(strip(output)).toContain(`JSON schemas have been written to disk`)
+    expect(output).toContain(`JSON schemas have been written to disk`)
+    expect(output).toMatchStrippedSnapshot()
   })
 
   // TODO: now that multiple configs are a thing, this whole config wrapping thing definitely needs a redo
@@ -54,7 +55,8 @@ describe('ncdc generate', () => {
 
     const output = await runGenerateCommand(config2Path)
 
-    expect(strip(output)).toContain(`JSON schemas have been written to disk`)
+    expect(output).toContain(`JSON schemas have been written to disk`)
+    expect(output).toMatchStrippedSnapshot()
   })
 
   it('handles a case where a type does not exist gracefully', async () => {
@@ -71,7 +73,7 @@ describe('ncdc generate', () => {
 
     const output = await runGenerateCommand()
 
-    expect(strip(output)).toContain('error: Could not find type: RTypeDelta')
+    expect(output).toContain('error: Could not find type: RTypeDelta')
   })
 
   it('can run the generate command with noEmit false and composite true', async () => {
@@ -98,6 +100,7 @@ describe('ncdc generate', () => {
 
     const output = await runGenerateCommand()
 
-    expect(strip(output)).toContain(`JSON schemas have been written to disk`)
+    expect(output).toContain(`JSON schemas have been written to disk`)
+    expect(output).toMatchStrippedSnapshot()
   })
 })

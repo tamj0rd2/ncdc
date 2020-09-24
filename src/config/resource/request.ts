@@ -24,9 +24,9 @@ export class Request {
   public constructor(input: RequestInput) {
     this.method = input.method
     this.endpoint = input.endpoint
-    this.body = input.body ? new Body(input.body) : undefined
-    this.type = input.type
     this.headers = new NcdcHeaders(input.headers)
+    this.body = input.body ? new Body(input.body, this.headers.get('content-type')) : undefined
+    this.type = input.type
 
     const { query, pathname } = url.parse(this.endpoint)
     this.query = new Query(query)

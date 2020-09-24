@@ -9,6 +9,7 @@ import {
   MESSAGE_RESTARTING,
   MESSAGE_RESTARTING_FAILURE,
 } from '~shared/serve-wrapper'
+import './jest-extensions'
 
 jest.useRealTimers()
 jest.setTimeout(13000)
@@ -29,11 +30,12 @@ describe('ncdc serve', () => {
     new ConfigWrapper().addTsconfig().addConfig()
 
     // act
-    const { waitForOutput } = await serve()
+    const { waitForOutput, getStrippedOutput } = await serve()
     await waitForOutput(`Endpoints are being served`)
 
     // assert
     await expect(fetch('/api/books/hooray')).resolves.toMatchObject({ status: 200 })
+    expect(getStrippedOutput()).toMatchStrippedSnapshot()
   })
 
   it('serves an endpoint from a fixture file', async () => {
@@ -49,13 +51,14 @@ describe('ncdc serve', () => {
       })
 
     // act
-    await serve()
+    const { getStrippedOutput } = await serve()
     const res = await fetch('/api/books/cooldude')
     const json = await res.json()
 
     // assert
     expect(res.status).toBe(200)
     expect(json.title).toBe('nice meme lol')
+    expect(getStrippedOutput()).toMatchStrippedSnapshot()
   })
 
   it('logs an error and exists if a fixture file does not exist', async () => {
@@ -65,11 +68,12 @@ describe('ncdc serve', () => {
       .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('my-fixture').build())
 
     // act
-    const { waitForOutput } = await serve('', false)
+    const { waitForOutput, getStrippedOutput } = await serve('', false)
 
     // assert
     await waitForOutput('no such file or directory')
     await expect(fetch('/')).rejects.toThrowError()
+    expect(getStrippedOutput()).toMatchStrippedSnapshot()
   })
 
   it('can serve a type checked config', async () => {
@@ -78,10 +82,11 @@ describe('ncdc serve', () => {
       .addConfig(new ConfigBuilder().withResponseType('Book').build())
       .addType('Book', { author: 'string' })
 
-    const { waitUntilAvailable } = await prepareServe(cleanupTasks, 10)()
+    const { waitUntilAvailable, getStrippedOutput } = await prepareServe(cleanupTasks, 10)()
 
     await waitUntilAvailable()
     await expect(fetch('/api/books/123')).resolves.toMatchObject({ status: 200 })
+    expect(getStrippedOutput()).toMatchStrippedSnapshot()
   })
 
   describe('watching config.yml', () => {
@@ -106,6 +111,7 @@ describe('ncdc serve', () => {
       await serve.waitUntilAvailable()
 
       await expect(fetch('/api/books/789')).resolves.toMatchObject({ status: 234 })
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('logs a message and kills the server when the config file has problems', async () => {
@@ -115,6 +121,7 @@ describe('ncdc serve', () => {
 
       await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
       await serve.waitForOutput(/Invalid service config file \(.*config.yml\)/)
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('can recover from the config file having problems', async () => {
@@ -126,6 +133,7 @@ describe('ncdc serve', () => {
       await serve.waitForOutput(MESSAGE_RESTARTING)
       await serve.waitUntilAvailable()
       await expect(fetch('/api/books/789')).resolves.toMatchObject({ status: 234 })
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('logs a message and kills the server when config.yml has been deleted', async () => {
@@ -133,6 +141,7 @@ describe('ncdc serve', () => {
 
       await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
       await serve.waitForOutput(/no such file or directory.*config\.yml/)
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('can recover from config.yml being deleted when file is re-added', async () => {
@@ -140,6 +149,7 @@ describe('ncdc serve', () => {
 
       await serve.waitUntilAvailable()
       await expect(fetch('/api/books/789')).resolves.toMatchObject({ status: 401 })
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
   })
 
@@ -173,6 +183,7 @@ describe('ncdc serve', () => {
 
       const res = await fetch('/api/books/memes')
       await expect(res.json()).resolves.toMatchObject({ title: 'shit meme' })
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('logs and error and kills the server when a fixture file has problems', async () => {
@@ -180,6 +191,7 @@ describe('ncdc serve', () => {
 
       await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
       await serve.waitForOutput('Unexpected token b')
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('can recover from a bad fixture file', async () => {
@@ -190,6 +202,7 @@ describe('ncdc serve', () => {
 
       const res = await fetch('/api/books/memes')
       await expect(res.json()).resolves.toMatchObject({ title: 'cool bean' })
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('handles deletion of fixture file', async () => {
@@ -199,6 +212,7 @@ describe('ncdc serve', () => {
       // assert
       await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
       await serve.waitForOutput(/no such file or directory.*MyFixture\.json/)
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
 
     it('can recover from fixture file deletion', async () => {
@@ -211,6 +225,7 @@ describe('ncdc serve', () => {
       // assert
       const res = await fetch('/api/books/29847234')
       await expect(res.json()).resolves.toMatchObject({ ISBN: '123' })
+      expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
     })
   })
 
@@ -221,7 +236,7 @@ describe('ncdc serve', () => {
         new ConfigBuilder().withName('config').withServeBody(undefined).withServeBodyPath('fixture').build(),
       )
       .addFixture('fixture', { hello: 'world' })
-    const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+    const { waitForOutput, waitUntilAvailable, getStrippedOutput } = await serve('--watch')
 
     configWrapper.editConfig('config', (c) => ({
       ...c,
@@ -233,13 +248,14 @@ describe('ncdc serve', () => {
     const res = await fetch('/api/books/blah')
     expect(res.status).toBe(200)
     await expect(res.text()).resolves.toBe('somebody')
+    expect(getStrippedOutput()).toMatchStrippedSnapshot()
   })
 
   it('handles switching from an inline body to a fixture file', async () => {
     const configWrapper = new ConfigWrapper()
       .addTsconfig()
       .addConfig(new ConfigBuilder().withName('config').build())
-    const { waitForOutput, waitUntilAvailable } = await serve('--watch')
+    const { waitForOutput, waitUntilAvailable, getStrippedOutput } = await serve('--watch')
 
     configWrapper
       .editConfig('config', (c) => ({
@@ -253,6 +269,7 @@ describe('ncdc serve', () => {
     const res = await fetch('/api/books/blah')
     expect(res.status).toBe(200)
     await expect(res.json()).resolves.toMatchObject({ hello: 'world' })
+    expect(getStrippedOutput()).toMatchStrippedSnapshot()
   })
 
   describe('type checking in watch mode', () => {
@@ -277,11 +294,13 @@ describe('ncdc serve', () => {
         const res = await fetch('/api/books/123')
         expect(res.status).toBe(200)
         await expect(res.text()).resolves.toBe('Hello!')
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('restarts and fails when the json schema no longer matches', async () => {
         configWrapper.editSchemaFile(schemaName, { type: 'number' })
         await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('can recover if the json schema matches the body again', async () => {
@@ -292,6 +311,7 @@ describe('ncdc serve', () => {
         const res = await fetch('/api/books/123')
         expect(res.status).toBe(200)
         await expect(res.text()).resolves.toBe('Hello!')
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
     })
 
@@ -318,6 +338,7 @@ describe('ncdc serve', () => {
         serve = await prepareServe(typecheckingCleanup, 10)('--watch')
 
         await expect(fetch('/api/books/hello')).resolves.toMatchObject({ status: 200 })
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('stops the server if a body stops matching the type', async () => {
@@ -335,6 +356,7 @@ describe('ncdc serve', () => {
         await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
         await serve.waitForOutput('Config Books response body failed type validation')
         await expect(fetch('/api/books/aldksj')).rejects.toThrowError()
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('can recover from incorrect body type validation', async () => {
@@ -354,6 +376,7 @@ describe('ncdc serve', () => {
         await serve.waitForOutput(MESSAGE_RESTARTING)
 
         await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('stops the server if a source file changes that puts the type and response out of sync', async () => {
@@ -361,6 +384,7 @@ describe('ncdc serve', () => {
 
         await serve.waitForOutput(MESSAGE_RESTARTING_FAILURE)
         await serve.waitForOutput('<root>.ISBN should be number but got string')
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('can recover when a source file changes that fixes a type and response being out of sync', async () => {
@@ -369,6 +393,7 @@ describe('ncdc serve', () => {
         await serve.waitForOutput(MESSAGE_RESTARTING)
         await serve.waitUntilAvailable()
         await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('stops the server if a source file changes that breaks typescript compilation', async () => {
@@ -377,6 +402,7 @@ describe('ncdc serve', () => {
         await serve.waitForOutput(
           'Your source code has compilation errors. Fix them to resume serving endpoints',
         )
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('can recover from the typescript compilation being broken', async () => {
@@ -385,6 +411,7 @@ describe('ncdc serve', () => {
         await serve.waitForOutput(MESSAGE_RESTARTING)
         await serve.waitUntilAvailable()
         await expect(fetch('/api/books/asdf')).resolves.toMatchObject({ status: 200 })
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
 
       it('gives a useful message when an error is thrown during body/type validation', async () => {
@@ -392,6 +419,7 @@ describe('ncdc serve', () => {
 
         await serve.waitForOutput('An error occurred while validating a fixture')
         await serve.waitForOutput('Could not find type: Book')
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
     })
 
@@ -407,9 +435,10 @@ describe('ncdc serve', () => {
             title: 'string',
           })
 
-        const { waitForOutput } = await serve('--watch', false)
+        const { waitForOutput, getStrippedOutput } = await serve('--watch', false)
 
         await waitForOutput('Could not compile your typescript source files')
+        expect(getStrippedOutput()).toMatchStrippedSnapshot()
       })
     })
 
@@ -442,6 +471,7 @@ describe('ncdc serve', () => {
         const serve = await prepareServe(cleanupTasks, 10)('--watch')
 
         await serve.waitForOutput('Endpoints are being served')
+        expect(serve.getStrippedOutput()).toMatchStrippedSnapshot()
       })
     })
   })

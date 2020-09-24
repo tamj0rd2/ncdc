@@ -42,7 +42,7 @@ export const MESSAGE_RESTARTING = 'Attempting to restart ncdc server'
 export const MESSAGE_RESTARTING_FAILURE = 'Could not restart ncdc server'
 
 export type ServeResult = {
-  getAllOutput(): string
+  getStrippedOutput(): string
   waitForOutput(target: string | RegExp): Promise<void>
   waitUntilAvailable(): Promise<void>
 }
@@ -62,6 +62,7 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
   const ncdc: ChildProcess = exec(command)
   const output: string[] = []
   const getRawOutput = (): string => output.join('\n')
+  const getStrippedOutput = (): string => strip(getRawOutput())
 
   ncdc.stdout && ncdc.stdout.on('data', (data: string) => output.push(...data.split('\n').filter((x) => !!x)))
   ncdc.stderr && ncdc.stderr.on('data', (data: string) => output.push(...data.split('\n').filter((x) => !!x)))
@@ -117,9 +118,9 @@ export const prepareServe = (cleanupTasks: CleanupTask[], timeout = 5) => async 
   const waitUntilAvailable: ServeResult['waitUntilAvailable'] = () =>
     waitForX(async () => {
       const { status } = await fetch('/')
-      return status === 200 && !strip(getRawOutput()).includes('EADDRINUSE')
+      return status === 200 && !getStrippedOutput().includes('EADDRINUSE')
     }, timeout).catch(failNicely(`The ncdc server was not contactable at ${SERVE_HOST}/`))
 
   if (checkAvailability) await waitUntilAvailable()
-  return { getAllOutput: getRawOutput, waitForOutput, waitUntilAvailable }
+  return { getStrippedOutput, waitForOutput, waitUntilAvailable }
 }

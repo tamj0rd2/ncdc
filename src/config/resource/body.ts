@@ -1,15 +1,25 @@
-const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && !!x
+import qs from 'qs'
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+const isObject = (x: unknown): x is object => typeof x === 'object' && !!x
 
 export class Body {
-  private readonly isObject = isObject(this.data)
+  private readonly isFormEncodedData = this.contentType?.includes('application/x-www-form-urlencoded')
 
-  constructor(private readonly data: Data) {}
+  constructor(private readonly data: Data, private readonly contentType?: string) {}
 
   public serialize = (): string => {
-    return this.isObject ? JSON.stringify(this.data) : this.data?.toString()
+    if (!isObject(this.data)) return this.data?.toString()
+
+    return this.isFormEncodedData ? qs.stringify(this.data) : JSON.stringify(this.data)
   }
 
   public matches = (bodyToCompare: unknown): boolean => {
+    if (this.isFormEncodedData) {
+      const body = isObject(this.data) ? this.data : qs.parse(this.data)
+      return this.isDeeplyEqual(body, bodyToCompare)
+    }
+
     return this.isDeeplyEqual(this.data, bodyToCompare)
   }
 

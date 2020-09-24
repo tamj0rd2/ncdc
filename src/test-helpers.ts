@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 export type DeepPartial<T> = {
@@ -28,4 +29,5 @@ export function randomNumber(min = 0, max = 1000): number {
   return Math.floor(Math.random() * (max - min) + min)
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export const serialiseAsJson = <T extends object>(data: T): T => JSON.parse(JSON.stringify(data))

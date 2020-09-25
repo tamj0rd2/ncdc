@@ -105,7 +105,7 @@
     "js-yaml": "^3.13.1",
     "node-fetch": "^2.6.0",
     "qs": "^6.9.3",
-    "ts-json-schema-generator": "^0.70.0",
+    "ts-json-schema-generator": "^0.74.0",
     "typescript": "^3.8.3",
     "typescript-json-schema": "^0.43.0",
     "winston": "^3.2.1",

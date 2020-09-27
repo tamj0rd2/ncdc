@@ -1,5 +1,6 @@
 import { readYamlAsync } from '~io'
 import { validateRawConfig } from '~config/validate'
+import { Type } from '~config/resource/type'
 
 export type GenerateConfig = {
   name: string
@@ -7,7 +8,7 @@ export type GenerateConfig = {
   response: { type?: string }
 }
 
-export const getConfigTypes = async (configPaths: string[]): Promise<string[]> => {
+export const getConfigTypes = async (configPaths: string[]): Promise<Type[]> => {
   const configFiles = await Promise.allSettled(
     configPaths.map(async (path) => {
       const rawConfig = await readYamlAsync(path)
@@ -20,7 +21,7 @@ export const getConfigTypes = async (configPaths: string[]): Promise<string[]> =
   ): results is PromiseFulfilledResult<GenerateConfig[]>[] => !results.some((x) => x.status === 'rejected')
 
   if (allConfigsDidLoadSuccessfully(configFiles)) {
-    return Array.from(
+    const types = Array.from(
       configFiles.reduce((accum, configFile) => {
         configFile.value.forEach(({ request, response }) => {
           if (request.type) accum.add(request.type)
@@ -29,6 +30,7 @@ export const getConfigTypes = async (configPaths: string[]): Promise<string[]> =
         return accum
       }, new Set<string>()),
     )
+    return types.map((type) => new Type(type))
   }
 
   const errorMessages = configFiles.reduce<string[]>((messages, configFile) => {

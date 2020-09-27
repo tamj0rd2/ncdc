@@ -1,9 +1,11 @@
 import createHandler, { GenerateArgs, GetSchemaGenerator, GetConfigTypes, GetGenerateDeps } from './handler'
-import { mockFn, mockObj, randomString } from '~test-helpers'
+import { arrayOfLength, mockFn, mockObj, randomString } from '~test-helpers'
 import { HandleError } from '~commands'
 import { Generate } from './generate'
 import { Logger } from 'winston'
 import { SchemaGenerator } from '~schema'
+import { Type } from '~config/resource/type'
+import { TypeBuilder } from '~config/resource/builders'
 
 jest.disableAutomock()
 
@@ -104,7 +106,7 @@ describe('Generate Command', () => {
     'calls the schema generator with the correct args when force is %s',
     async (force) => {
       const { mockGetSchemaGenerator, handler, mockGetConfigTypes } = createTestDeps()
-      mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
+      mockGetConfigTypes.mockResolvedValueOnce([TypeBuilder.random()])
 
       await handler({
         verbose: false,
@@ -120,7 +122,7 @@ describe('Generate Command', () => {
 
   it('calls the error handler if there is a problem creating the schema generator', async () => {
     const { mockGetSchemaGenerator, mockHandleError, handler, mockGetConfigTypes } = createTestDeps()
-    mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
+    mockGetConfigTypes.mockResolvedValueOnce([TypeBuilder.random()])
     mockGetSchemaGenerator.mockImplementation(() => {
       throw new Error('wat')
     })
@@ -138,7 +140,7 @@ describe('Generate Command', () => {
 
   it('calls generate with the correct parameters', async () => {
     const { mockGenerate, mockGetConfigTypes, mockGetSchemaGenerator, handler } = createTestDeps()
-    const types = ['WickedType', 'SickFam', 'Noice']
+    const types = arrayOfLength(3, (i) => new Type(`type${i}`))
     mockGetConfigTypes.mockResolvedValue(types)
     const dummySchemaGen = mockObj<SchemaGenerator>({ load: jest.fn() })
     mockGetSchemaGenerator.mockReturnValue(dummySchemaGen)
@@ -156,7 +158,7 @@ describe('Generate Command', () => {
 
   it('logs a message if the schemas were written successfully', async () => {
     const { handler, mockLogger, mockGetConfigTypes } = createTestDeps()
-    mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
+    mockGetConfigTypes.mockResolvedValueOnce([TypeBuilder.random()])
     const args: GenerateArgs = {
       verbose: false,
       outputPath: 'outYouGo',
@@ -172,7 +174,7 @@ describe('Generate Command', () => {
 
   it('calls the error handler if there is a problem writing schemas to disk', async () => {
     const { handler, mockLogger, mockGetConfigTypes } = createTestDeps()
-    mockGetConfigTypes.mockResolvedValueOnce([randomString('some type')])
+    mockGetConfigTypes.mockResolvedValueOnce([TypeBuilder.random()])
 
     await handler({
       verbose: false,

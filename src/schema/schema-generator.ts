@@ -8,6 +8,7 @@ import {
   NoRootTypeError,
 } from 'ts-json-schema-generator'
 import { JSONSchema7 } from 'json-schema'
+import { Type } from '~config/resource/type'
 
 type JsonSchemaGenerator = (type: string) => JSONSchema7
 
@@ -21,7 +22,8 @@ export class SchemaGenerator implements SchemaRetriever {
     this.generateJsonSchema = this.createGenerator(this.program)
   }
 
-  public load = async (symbolName: string): Promise<JSONSchema7> => {
+  public load = async (type: Type): Promise<JSONSchema7> => {
+    const symbolName = type.get()
     const cachedSchema = this.cache.get(symbolName)
     if (cachedSchema) {
       return cachedSchema

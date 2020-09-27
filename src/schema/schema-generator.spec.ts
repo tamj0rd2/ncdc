@@ -3,6 +3,8 @@ import ts from 'typescript'
 import { mockObj, randomString, mockCtor } from '~test-helpers'
 import * as tsj from 'ts-json-schema-generator'
 import { NoRootTypeError } from 'ts-json-schema-generator'
+import { Type } from '~config/resource/type'
+import { TypeBuilder } from '~config/resource/builders'
 
 jest.disableAutomock()
 jest.mock('ts-json-schema-generator')
@@ -25,7 +27,7 @@ describe('SchemaLoader', () => {
     it('throws if it has not been instantiated', async () => {
       const { schemaGenerator } = createTestDeps()
 
-      await expect(() => schemaGenerator.load('bananas')).rejects.toThrowError(
+      await expect(() => schemaGenerator.load(TypeBuilder.random())).rejects.toThrowError(
         'This SchemaGenerator instance has not been initialised',
       )
     })
@@ -37,7 +39,7 @@ describe('SchemaLoader', () => {
       })
       schemaGenerator.init()
 
-      await expect(schemaGenerator.load('lol')).rejects.toThrowError('Could not find type: lol')
+      await expect(schemaGenerator.load(new Type('lol'))).rejects.toThrowError('Could not find type: lol')
     })
 
     it('throws if an error occurred while creating a type', async () => {
@@ -48,7 +50,7 @@ describe('SchemaLoader', () => {
 
       schemaGenerator.init()
 
-      await expect(schemaGenerator.load('lol')).rejects.toThrowError(
+      await expect(schemaGenerator.load(new Type('lol'))).rejects.toThrowError(
         'Could not create a schema for type: lol\nyikes',
       )
     })
@@ -59,20 +61,20 @@ describe('SchemaLoader', () => {
       mockedTsjGenerator.createSchema.mockReturnValue(someSchema)
 
       schemaGenerator.init()
-      const schema = await schemaGenerator.load('DealSchema')
+      const schema = await schemaGenerator.load(TypeBuilder.random())
 
       expect(schema).toEqual(someSchema)
     })
 
-    it('returns cached data for properties that are accessed multiple times', async () => {
+    it('returns cached data for types that are loaded more than once', async () => {
       const { schemaGenerator, mockedTsjGenerator } = createTestDeps()
       const someSchema = { $schema: 'schema stuff' }
-      const someSchema2 = { $schema: 'schema stuff 2' }
-      mockedTsjGenerator.createSchema.mockReturnValueOnce(someSchema).mockReturnValueOnce(someSchema2)
+      mockedTsjGenerator.createSchema.mockReturnValueOnce(someSchema)
+      const type = TypeBuilder.random()
 
       schemaGenerator.init()
-      const schema1 = await schemaGenerator.load('DealSchema')
-      const schema2 = await schemaGenerator.load('DealSchema')
+      const schema1 = await schemaGenerator.load(type)
+      const schema2 = await schemaGenerator.load(type)
 
       expect(schema1).toEqual(someSchema)
       expect(mockedTsjGenerator.createSchema).toHaveBeenCalledTimes(1)

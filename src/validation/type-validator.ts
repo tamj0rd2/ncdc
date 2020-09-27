@@ -1,6 +1,6 @@
 import { Ajv } from 'ajv'
 import { SchemaRetriever } from '~schema'
-import { TypeValidationError } from './errors'
+import { TypeValidationMismatchError } from './errors'
 
 export default class TypeValidator {
   constructor(private readonly validator: Ajv, private readonly schemaRetriever: SchemaRetriever) {}
@@ -11,7 +11,7 @@ export default class TypeValidator {
     await validator(data)
 
     if (validator.errors?.length) {
-      throw new TypeValidationError(validator.errors)
+      throw new TypeValidationMismatchError(validator.errors)
     }
   }
 }

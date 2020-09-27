@@ -20,13 +20,6 @@ describe('validate', () => {
     }
   }
 
-  // const body = randomString('body')
-  // const type = randomString('type')
-
-  beforeEach(() => {
-    // validator.compile.mockReturnValue(jest.fn())
-  })
-
   afterEach(() => jest.resetAllMocks())
 
   it('calls the schema retriver with the correct args', async () => {

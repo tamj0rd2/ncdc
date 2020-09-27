@@ -1,6 +1,7 @@
 import { Resource } from './resource'
 import { TypeValidator } from '~validation'
 import { bold, red } from 'chalk'
+import { TypeValidationMismatchError } from '~validation/errors'
 
 export const validateConfigBodies = async (
   configs: Resource[],
@@ -18,16 +19,20 @@ export const validateConfigBodies = async (
   for (const config of uniqueConfigs) {
     const validationErrors: string[] = []
 
-    const formatError = (target: 'request' | 'response', err: unknown): string => {
+    const formatError = (target: 'request' | 'response', err: TypeValidationMismatchError): string => {
       const prefix = red(`Config ${bold(config.name)} ${target} body failed type validation:`)
-      return `${prefix}\n${err instanceof Error ? err.message : err}`
+      return `${prefix}\n${err.message}`
     }
 
     if (config.request.type && (config.request.body || forceReqValidation)) {
       try {
         await typeValidator.assert(config.request.body?.get(), config.request.type)
       } catch (err) {
-        validationErrors.push(formatError('request', err))
+        if (err instanceof TypeValidationMismatchError) {
+          validationErrors.push(formatError('request', err))
+        } else {
+          throw err
+        }
       }
     }
 
@@ -35,7 +40,11 @@ export const validateConfigBodies = async (
       try {
         await typeValidator.assert(config.response.body?.get(), config.response.type)
       } catch (err) {
-        validationErrors.push(formatError('response', err))
+        if (err instanceof TypeValidationMismatchError) {
+          validationErrors.push(formatError('response', err))
+        } else {
+          throw err
+        }
       }
     }
 

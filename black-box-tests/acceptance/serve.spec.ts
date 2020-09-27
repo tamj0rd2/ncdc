@@ -25,68 +25,70 @@ describe('ncdc serve', () => {
     }
   })
 
-  it('starts serving on port 4000', async () => {
-    // arrange
-    new ConfigWrapper().addTsconfig().addConfig()
+  describe('basic functionality', () => {
+    it('starts serving on port 4000', async () => {
+      // arrange
+      new ConfigWrapper().addTsconfig().addConfig()
 
-    // act
-    const { waitForOutput, getStrippedOutput } = await serve()
-    await waitForOutput(`Endpoints are being served`)
+      // act
+      const { waitForOutput, getStrippedOutput } = await serve()
+      await waitForOutput(`Endpoints are being served`)
 
-    // assert
-    await expect(fetch('/api/books/hooray')).resolves.toMatchObject({ status: 200 })
-    expect(getStrippedOutput()).toMatchStrippedSnapshot()
-  })
+      // assert
+      await expect(fetch('/api/books/hooray')).resolves.toMatchObject({ status: 200 })
+      expect(getStrippedOutput()).toMatchStrippedSnapshot()
+    })
 
-  it('serves an endpoint from a fixture file', async () => {
-    // arrange
-    new ConfigWrapper()
-      .addTsconfig()
-      .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('response').build())
-      .addFixture('response', {
-        title: 'nice meme lol',
-        ISBN: 'asdf',
-        ISBN_13: 'asdf',
-        author: 'me',
-      })
+    it('serves an endpoint from a fixture file', async () => {
+      // arrange
+      new ConfigWrapper()
+        .addTsconfig()
+        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('response').build())
+        .addFixture('response', {
+          title: 'nice meme lol',
+          ISBN: 'asdf',
+          ISBN_13: 'asdf',
+          author: 'me',
+        })
 
-    // act
-    const { getStrippedOutput } = await serve()
-    const res = await fetch('/api/books/cooldude')
-    const json = await res.json()
+      // act
+      const { getStrippedOutput } = await serve()
+      const res = await fetch('/api/books/cooldude')
+      const json = await res.json()
 
-    // assert
-    expect(res.status).toBe(200)
-    expect(json.title).toBe('nice meme lol')
-    expect(getStrippedOutput()).toMatchStrippedSnapshot()
-  })
+      // assert
+      expect(res.status).toBe(200)
+      expect(json.title).toBe('nice meme lol')
+      expect(getStrippedOutput()).toMatchStrippedSnapshot()
+    })
 
-  it('logs an error and exists if a fixture file does not exist', async () => {
-    // arrange
-    new ConfigWrapper()
-      .addTsconfig()
-      .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('my-fixture').build())
+    it('logs an error and exits if a fixture file does not exist', async () => {
+      // arrange
+      new ConfigWrapper()
+        .addTsconfig()
+        .addConfig(new ConfigBuilder().withServeBody(undefined).withServeBodyPath('my-fixture').build())
 
-    // act
-    const { waitForOutput, getStrippedOutput } = await serve('', false)
+      // act
+      const { waitForOutput, getStrippedOutput } = await serve('', false)
 
-    // assert
-    await waitForOutput('no such file or directory')
-    await expect(fetch('/')).rejects.toThrowError()
-    expect(getStrippedOutput()).toMatchStrippedSnapshot()
-  })
+      // assert
+      await waitForOutput('no such file or directory')
+      await expect(fetch('/')).rejects.toThrowError()
+      expect(getStrippedOutput()).toMatchStrippedSnapshot()
+    })
 
-  it('can serve a type checked config', async () => {
-    new ConfigWrapper()
-      .addTsconfig()
-      .addConfig(new ConfigBuilder().withResponseType('Book').build())
-      .addType('Book', { author: 'string' })
+    it('can serve a type checked config', async () => {
+      new ConfigWrapper()
+        .addTsconfig()
+        .addConfig(new ConfigBuilder().withResponseType('Book').build())
+        .addType('Book', { author: 'string' })
 
-    const { waitUntilAvailable, getStrippedOutput } = await prepareServe(cleanupTasks, 10)()
+      const { waitUntilAvailable, getStrippedOutput } = await prepareServe(cleanupTasks, 10)()
 
-    await waitUntilAvailable()
-    await expect(fetch('/api/books/123')).resolves.toMatchObject({ status: 200 })
-    expect(getStrippedOutput()).toMatchStrippedSnapshot()
+      await waitUntilAvailable()
+      await expect(fetch('/api/books/123')).resolves.toMatchObject({ status: 200 })
+      expect(getStrippedOutput()).toMatchStrippedSnapshot()
+    })
   })
 
   describe('watching config.yml', () => {
@@ -229,47 +231,53 @@ describe('ncdc serve', () => {
     })
   })
 
-  it('handles switching from a fixture file to an inline body', async () => {
-    const configWrapper = new ConfigWrapper()
-      .addTsconfig()
-      .addConfig(
-        new ConfigBuilder().withName('config').withServeBody(undefined).withServeBodyPath('fixture').build(),
-      )
-      .addFixture('fixture', { hello: 'world' })
-    const { waitForOutput, waitUntilAvailable, getStrippedOutput } = await serve('--watch')
+  describe('switching fixture sources in watch mode', () => {
+    it('handles switching from a fixture file to an inline body', async () => {
+      const configWrapper = new ConfigWrapper()
+        .addTsconfig()
+        .addConfig(
+          new ConfigBuilder()
+            .withName('config')
+            .withServeBody(undefined)
+            .withServeBodyPath('fixture')
+            .build(),
+        )
+        .addFixture('fixture', { hello: 'world' })
+      const { waitForOutput, waitUntilAvailable, getStrippedOutput } = await serve('--watch')
 
-    configWrapper.editConfig('config', (c) => ({
-      ...c,
-      response: { serveBody: 'somebody', code: c.response.code },
-    }))
-    await waitForOutput(MESSAGE_RESTARTING)
-    await waitUntilAvailable()
-
-    const res = await fetch('/api/books/blah')
-    expect(res.status).toBe(200)
-    await expect(res.text()).resolves.toBe('somebody')
-    expect(getStrippedOutput()).toMatchStrippedSnapshot()
-  })
-
-  it('handles switching from an inline body to a fixture file', async () => {
-    const configWrapper = new ConfigWrapper()
-      .addTsconfig()
-      .addConfig(new ConfigBuilder().withName('config').build())
-    const { waitForOutput, waitUntilAvailable, getStrippedOutput } = await serve('--watch')
-
-    configWrapper
-      .editConfig('config', (c) => ({
+      configWrapper.editConfig('config', (c) => ({
         ...c,
-        response: { serveBodyPath: './fixtures/my-fixture.json', code: c.response.code },
+        response: { serveBody: 'somebody', code: c.response.code },
       }))
-      .addFixture('my-fixture', { hello: 'world' })
-    await waitForOutput(MESSAGE_RESTARTING)
-    await waitUntilAvailable()
+      await waitForOutput(MESSAGE_RESTARTING)
+      await waitUntilAvailable()
 
-    const res = await fetch('/api/books/blah')
-    expect(res.status).toBe(200)
-    await expect(res.json()).resolves.toMatchObject({ hello: 'world' })
-    expect(getStrippedOutput()).toMatchStrippedSnapshot()
+      const res = await fetch('/api/books/blah')
+      expect(res.status).toBe(200)
+      await expect(res.text()).resolves.toBe('somebody')
+      expect(getStrippedOutput()).toMatchStrippedSnapshot()
+    })
+
+    it('handles switching from an inline body to a fixture file', async () => {
+      const configWrapper = new ConfigWrapper()
+        .addTsconfig()
+        .addConfig(new ConfigBuilder().withName('config').build())
+      const { waitForOutput, waitUntilAvailable, getStrippedOutput } = await serve('--watch')
+
+      configWrapper
+        .editConfig('config', (c) => ({
+          ...c,
+          response: { serveBodyPath: './fixtures/my-fixture.json', code: c.response.code },
+        }))
+        .addFixture('my-fixture', { hello: 'world' })
+      await waitForOutput(MESSAGE_RESTARTING)
+      await waitUntilAvailable()
+
+      const res = await fetch('/api/books/blah')
+      expect(res.status).toBe(200)
+      await expect(res.json()).resolves.toMatchObject({ hello: 'world' })
+      expect(getStrippedOutput()).toMatchStrippedSnapshot()
+    })
   })
 
   describe('type checking in watch mode', () => {

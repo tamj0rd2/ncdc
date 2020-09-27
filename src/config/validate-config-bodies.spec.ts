@@ -3,6 +3,7 @@ import { ResourceBuilder } from './resource'
 import { randomString, mockObj } from '~test-helpers'
 import stripAnsi from 'strip-ansi'
 import { TypeValidator } from '~validation'
+import { TypeValidationMismatchError } from '~validation/errors'
 
 jest.disableAutomock()
 
@@ -56,19 +57,34 @@ describe('validate config bodies', () => {
       expect(result).toBeUndefined()
     })
 
-    it('returns errors if a config body fails type validation', async () => {
+    it('returns errors if a config body does not match the correct type', async () => {
       const { mockTypeValidator } = createTestDeps()
       const config = new ResourceBuilder().withRandomTypes().withRandomBodies().build()
-      const error1 = randomString('error-message-1')
-      const error2 = randomString('error-message-2')
-      mockTypeValidator.assert.mockRejectedValueOnce(new Error(error1))
-      mockTypeValidator.assert.mockRejectedValueOnce(new Error(error2))
+
+      const error1 = new TypeValidationMismatchError([])
+      error1.message = randomString('error1')
+      const error2 = new TypeValidationMismatchError([])
+      error2.message = randomString('error2')
+      mockTypeValidator.assert.mockRejectedValueOnce(error1)
+      mockTypeValidator.assert.mockRejectedValueOnce(error2)
 
       const result = await validateConfigBodies([config], mockTypeValidator, false)
 
-      const errPart1 = `Config ${config.name} request body failed type validation:\n${error1}`
-      const errPart2 = `Config ${config.name} response body failed type validation:\n${error2}`
-      expect(stripAnsi(result!)).toEqual(`${errPart1}\n${errPart2}`)
+      const expectedError = [
+        `Config ${config.name} request body failed type validation:\n${error1.message}`,
+        `Config ${config.name} response body failed type validation:\n${error2.message}`,
+      ].join('\n')
+      expect(stripAnsi(result!)).toEqual(expectedError)
+    })
+
+    it('rethrows errors that are thrown while validating a body matches a type', async () => {
+      const { mockTypeValidator } = createTestDeps()
+      const config = new ResourceBuilder().withRandomTypes().withRandomBodies().build()
+      const error1 = new Error('error-message-1')
+      mockTypeValidator.assert.mockRejectedValueOnce(error1)
+      mockTypeValidator.assert.mockRejectedValueOnce(new Error('error-message-2'))
+
+      await expect(validateConfigBodies([config], mockTypeValidator, false)).rejects.toThrowError(error1)
     })
   })
 

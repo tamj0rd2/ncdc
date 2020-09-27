@@ -2,24 +2,24 @@ import ajv from 'ajv'
 import { blue } from 'chalk'
 import { inspect } from 'util'
 
-export class TypeValidationError extends Error {
+export class TypeValidationMismatchError extends Error {
   constructor(errors: ajv.ErrorObject[]) {
-    super(errors.map(TypeValidationError.mapErrorMessage).join('\n'))
+    super(errors.map(TypeValidationMismatchError.mapErrorMessage).join('\n'))
     this.name = 'TypeValidationError'
-    Object.setPrototypeOf(this, TypeValidationError.prototype)
+    Object.setPrototypeOf(this, TypeValidationMismatchError.prototype)
   }
 
   private static mapErrorMessage(err: ajv.ErrorObject): string {
     const baseMessage = `${blue.bold('<root>' + err.dataPath)} ${err.message?.replace(/'(.*)'/, blue('$&'))}`
 
     if (err.keyword === 'enum' && 'allowedValues' in err.params) {
-      return `${baseMessage} ${TypeValidationError.formatData(
+      return `${baseMessage} ${TypeValidationMismatchError.formatData(
         err.params.allowedValues,
-      )} but received ${TypeValidationError.formatData(err.data)}`
+      )} but received ${TypeValidationMismatchError.formatData(err.data)}`
     }
 
     if (err.keyword === 'type') {
-      return `${baseMessage} but got ${TypeValidationError.getPrimitiveType(err.data)}`
+      return `${baseMessage} but got ${TypeValidationMismatchError.getPrimitiveType(err.data)}`
     }
 
     return baseMessage

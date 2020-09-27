@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ncdc serve can serve a type checked config: toMatchStrippedSnapshot 1`] = `
+exports[`ncdc serve basic functionality can serve a type checked config: toMatchStrippedSnapshot 1`] = `
 "verbose: Registered http://localhost:4000/api/books/123 from config: Books
 verbose: Registered http://localhost:4000/api/books/456 from config: Books
 verbose: Registered http://localhost:4000/api/books/* from config: Books
@@ -12,7 +12,33 @@ info: {
 }"
 `;
 
-exports[`ncdc serve handles switching from a fixture file to an inline body: toMatchStrippedSnapshot 1`] = `
+exports[`ncdc serve basic functionality logs an error and exits if a fixture file does not exist: toMatchStrippedSnapshot 1`] = `"error: ENOENT: no such file or directory, open '/test-environment/fixtures/my-fixture.json'"`;
+
+exports[`ncdc serve basic functionality serves an endpoint from a fixture file: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/cooldude', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve basic functionality starts serving on port 4000: toMatchStrippedSnapshot 1`] = `
+"verbose: Registered http://localhost:4000/api/books/123 from config: Books
+verbose: Registered http://localhost:4000/api/books/456 from config: Books
+verbose: Registered http://localhost:4000/api/books/* from config: Books
+info: Endpoints are being served on http://localhost:4000
+info: {
+  name: 'Books',
+  request: { method: 'GET', path: '/api/books/hooray', query: {}, body: {} },
+  response: { status: 200, body: '[object Object]' }
+}"
+`;
+
+exports[`ncdc serve switching fixture sources in watch mode handles switching from a fixture file to an inline body: toMatchStrippedSnapshot 1`] = `
 "verbose: Registered http://localhost:4000/api/books/123 from config: config
 verbose: Registered http://localhost:4000/api/books/456 from config: config
 verbose: Registered http://localhost:4000/api/books/* from config: config
@@ -30,7 +56,7 @@ info: {
 }"
 `;
 
-exports[`ncdc serve handles switching from an inline body to a fixture file: toMatchStrippedSnapshot 1`] = `
+exports[`ncdc serve switching fixture sources in watch mode handles switching from an inline body to a fixture file: toMatchStrippedSnapshot 1`] = `
 "verbose: Registered http://localhost:4000/api/books/123 from config: config
 verbose: Registered http://localhost:4000/api/books/456 from config: config
 verbose: Registered http://localhost:4000/api/books/* from config: config
@@ -44,32 +70,6 @@ info: Endpoints are being served on http://localhost:4000
 info: {
   name: 'config',
   request: { method: 'GET', path: '/api/books/blah', query: {}, body: {} },
-  response: { status: 200, body: '[object Object]' }
-}"
-`;
-
-exports[`ncdc serve logs an error and exists if a fixture file does not exist: toMatchStrippedSnapshot 1`] = `"error: ENOENT: no such file or directory, open '/test-environment/fixtures/my-fixture.json'"`;
-
-exports[`ncdc serve serves an endpoint from a fixture file: toMatchStrippedSnapshot 1`] = `
-"verbose: Registered http://localhost:4000/api/books/123 from config: Books
-verbose: Registered http://localhost:4000/api/books/456 from config: Books
-verbose: Registered http://localhost:4000/api/books/* from config: Books
-info: Endpoints are being served on http://localhost:4000
-info: {
-  name: 'Books',
-  request: { method: 'GET', path: '/api/books/cooldude', query: {}, body: {} },
-  response: { status: 200, body: '[object Object]' }
-}"
-`;
-
-exports[`ncdc serve starts serving on port 4000: toMatchStrippedSnapshot 1`] = `
-"verbose: Registered http://localhost:4000/api/books/123 from config: Books
-verbose: Registered http://localhost:4000/api/books/456 from config: Books
-verbose: Registered http://localhost:4000/api/books/* from config: Books
-info: Endpoints are being served on http://localhost:4000
-info: {
-  name: 'Books',
-  request: { method: 'GET', path: '/api/books/hooray', query: {}, body: {} },
   response: { status: 200, body: '[object Object]' }
 }"
 `;
@@ -537,7 +537,7 @@ info: {
 info: unlink event detected for /test-environment/config.yml
 info: Attempting to restart ncdc server
 error: Could not restart ncdc server
-There was a problem reading your service config file (/test-environment/config.yml'
+ENOENT: no such file or directory, open '/test-environment/config.yml'
 info: add event detected for /test-environment/config.yml
 info: Attempting to restart ncdc server
 verbose: Registered http://localhost:4000/api/books/123 from config: Books
@@ -628,7 +628,7 @@ info: {
 info: unlink event detected for /test-environment/config.yml
 info: Attempting to restart ncdc server
 error: Could not restart ncdc server
-There was a problem reading your service config file (/test-environment/config.yml'"
+ENOENT: no such file or directory, open '/test-environment/config.yml'"
 `;
 
 exports[`ncdc serve watching config.yml logs a message and kills the server when the config file has problems: toMatchStrippedSnapshot 1`] = `

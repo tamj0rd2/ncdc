@@ -12,6 +12,10 @@ const commonSettings = {
     '!**/*.spec.ts',
     '!**/*.d.ts',
     '!**/types.ts',
+    "!**/jest-extensions.ts",
+    "!**/builders.ts",
+    "!**/*builders.ts",
+    "!**/*builder.ts"
   ],
   testEnvironment: 'node',
   watchPathIgnorePatterns: [

@@ -5,6 +5,7 @@ import { NcdcLogger } from '~logger'
 import { ReportMetric } from '~commands/shared'
 import TsHelpers from './ts-helpers'
 import { resolve } from 'path'
+import { TypeBuilder } from '~config/resource/builders'
 
 jest.disableAutomock()
 jest.mock('typescript')
@@ -67,9 +68,7 @@ describe('watching schema generator', () => {
     it('throws an error if the generator has not been initiated', async () => {
       const { gen } = createTestDeps()
 
-      await expect(gen.load(randomString('my type'))).rejects.toThrowError(
-        'Watcher has not been initiated yet',
-      )
+      await expect(gen.load(TypeBuilder.random())).rejects.toThrowError('Watcher has not been initiated yet')
     })
   })
 })

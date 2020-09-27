@@ -6,6 +6,7 @@ import type { Definition } from 'ts-json-schema-generator'
 import { NcdcLogger } from '~logger'
 import { ReportMetric } from '~commands/shared'
 import TsHelpers from './ts-helpers'
+import { Type } from '~config/resource/type'
 
 export type CompilerHook = () => Promise<void> | void
 
@@ -115,10 +116,10 @@ export class WatchingSchemaGenerator implements SchemaRetriever {
     })
   }
 
-  public load = async (symbolName: string): Promise<Definition> => {
+  public load = async (type: Type): Promise<Definition> => {
     if (!this.state.isInitiated) throw new Error('Watcher has not been initiated yet')
     if (!this.schemaGenerator) throw new Error('No schema generator... somehow')
-    return this.schemaGenerator.load(symbolName)
+    return this.schemaGenerator.load(type)
   }
 
   public subscribeToWatchStatus = (onSuccess: CompilerHook, onFailure: CompilerHook): void => {

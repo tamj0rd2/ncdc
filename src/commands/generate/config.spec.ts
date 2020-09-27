@@ -1,9 +1,10 @@
-import { randomString, mockFn, mockObj } from '~test-helpers'
-import { getConfigTypes, GenerateConfig } from './config'
+import { randomString, mockFn } from '~test-helpers'
+import { getConfigTypes } from './config'
 import { readYamlAsync } from '~io'
 import { validateRawConfig } from '~config/validate'
 import { RawConfigBuilder } from '~config/raw-config-builder'
 import '../../jest-extensions'
+import { Type } from '~config/resource/type'
 
 jest.disableAutomock()
 jest.mock('~io')
@@ -67,18 +68,18 @@ describe('getConfigTypes', () => {
   it('can return a list of types', async () => {
     const { getConfigTypes, mockValidateRawConfig } = createTestDeps()
     const configPaths = [randomString('path1'), randomString('path2')]
-    const createConfig = (reqType?: string, resType?: string): GenerateConfig =>
-      mockObj<GenerateConfig>({ request: { type: reqType }, response: { type: resType } })
-
     mockValidateRawConfig
       .mockReturnValueOnce([
         new RawConfigBuilder().withRequestType('RType').build(),
         new RawConfigBuilder().withResponseType('Delta').build(),
       ])
-      .mockReturnValueOnce([createConfig(undefined, 'Doom'), createConfig('Machine', 'Guns')])
+      .mockReturnValueOnce([
+        new RawConfigBuilder().withResponseType('Doom').build(),
+        new RawConfigBuilder().withRequestType('Machine').withResponseType('Guns').build(),
+      ])
 
     const result = await getConfigTypes(configPaths)
 
-    expect(result).toStrictEqual(['RType', 'Delta', 'Doom', 'Machine', 'Guns'])
+    expect(result).toStrictEqual(['RType', 'Delta', 'Doom', 'Machine', 'Guns'].map((type) => new Type(type)))
   })
 })

@@ -1,5 +1,6 @@
 import { NcdcHeaders } from './headers'
 import { Body } from './body'
+import { Type } from './type'
 
 interface ResponseInput {
   code: number
@@ -11,13 +12,13 @@ interface ResponseInput {
 export class Response {
   public readonly code: number
   public readonly body: Body | undefined
-  public readonly type: string | undefined
+  public readonly type: Type | undefined
   public readonly headers: NcdcHeaders
 
   constructor(input: ResponseInput) {
     this.code = input.code
     this.body = input.body ? new Body(input.body) : undefined
-    this.type = input.type
+    this.type = input.type ? new Type(input.type) : undefined
     this.headers = new NcdcHeaders(input.headers)
   }
 
@@ -26,7 +27,7 @@ export class Response {
       code: response.code,
       body: response.body?.get(),
       headers: response.headers.getAll(),
-      type: response.type,
+      type: response.type?.get(),
     })
   }
 }

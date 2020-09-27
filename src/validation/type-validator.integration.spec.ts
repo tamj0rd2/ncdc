@@ -1,8 +1,9 @@
 import Ajv from 'ajv'
 import { TypeValidator } from '~validation'
-import { mockObj, randomString } from '~test-helpers'
+import { mockObj } from '~test-helpers'
 import { SchemaRetriever } from '~schema'
 import '../jest-extensions'
+import { TypeBuilder } from '~config/resource/builders'
 
 describe('error messages', () => {
   function createTestDeps() {
@@ -13,7 +14,7 @@ describe('error messages', () => {
     return {
       mockSchemaRetriever,
       typeValidator,
-      type: randomString('type'),
+      type: TypeBuilder.random(),
     }
   }
 

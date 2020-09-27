@@ -64,3 +64,7 @@ export function randomNumber(min = 0, max = 1000): number {
 }
 
 export const serialiseAsJson = <T extends object>(data: T): T => JSON.parse(JSON.stringify(data))
+
+export const arrayOfLength = <T>(length: number, map: (i: number) => T) => {
+  return [...Array(length).fill(null)].map((_, i) => map(i))
+}

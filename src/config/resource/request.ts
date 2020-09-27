@@ -3,6 +3,7 @@ import { Query } from './query'
 import { NcdcHeaders } from './headers'
 import { Body } from './body'
 import url from 'url'
+import { Type } from './type'
 
 interface RequestInput {
   method: SupportedMethod
@@ -18,7 +19,7 @@ export class Request {
   public readonly pathName: string
   public readonly query: Query
   public readonly headers: NcdcHeaders
-  public readonly type: string | undefined
+  public readonly type: Type | undefined
   public readonly body: Body | undefined
 
   public constructor(input: RequestInput) {
@@ -26,7 +27,7 @@ export class Request {
     this.endpoint = input.endpoint
     this.headers = new NcdcHeaders(input.headers)
     this.body = input.body ? new Body(input.body, this.headers.get('content-type')) : undefined
-    this.type = input.type
+    this.type = input.type ? new Type(input.type) : undefined
 
     const { query, pathname } = url.parse(this.endpoint)
     this.query = new Query(query)
@@ -45,7 +46,7 @@ export class Request {
       method: request.method,
       body: request.body?.get(),
       headers: request.headers.getAll(),
-      type: request.type,
+      type: request.type?.get(),
     })
   }
 }

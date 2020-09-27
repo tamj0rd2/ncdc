@@ -1,5 +1,6 @@
 import type { Definition } from 'ts-json-schema-generator'
+import { Type } from '~config/resource/type'
 
 export interface SchemaRetriever {
-  load: (symbolName: string) => Promise<Definition>
+  load: (type: Type) => Promise<Definition>
 }

@@ -5,6 +5,7 @@ import { Request } from './request'
 import { Response } from './response'
 import { randomString } from '~test-helpers'
 import { Resource } from './resource'
+import { Type } from './type'
 
 export class ResourceBuilder {
   public static random(): Resource {
@@ -44,7 +45,7 @@ export class ResourceBuilder {
   }
 
   public withRequestType(type: string): ResourceBuilder {
-    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, type })
+    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, type: new Type(type) })
     return this
   }
 
@@ -75,7 +76,10 @@ export class ResourceBuilder {
   }
 
   public withResponseType(type: Optional<string>): ResourceBuilder {
-    this.resource.response = Response.CreateFromResponse({ ...this.resource.response, type })
+    this.resource.response = Response.CreateFromResponse({
+      ...this.resource.response,
+      type: type ? new Type(type) : undefined,
+    })
     return this
   }
 

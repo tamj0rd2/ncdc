@@ -3,6 +3,7 @@ import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
 import { SchemaRetriever } from '~schema'
 import { mockObj, randomString, mockFn } from '~test-helpers'
 import '../jest-extensions'
+import { TypeBuilder } from '~config/resource/builders'
 
 jest.disableAutomock()
 
@@ -30,7 +31,7 @@ describe('validate', () => {
 
   it('calls the schema retriver with the correct args', async () => {
     const { stubSchemaRetriever, typeValidator, stubValidator } = createTestDeps()
-    const expectedType = randomString('type')
+    const expectedType = TypeBuilder.random()
     stubValidator.compile.mockReturnValue(jest.fn())
 
     await typeValidator.assert(randomString('body'), expectedType)
@@ -44,7 +45,7 @@ describe('validate', () => {
     stubSchemaRetriever.load.mockResolvedValue(schema)
     stubValidator.compile.mockReturnValue(jest.fn())
 
-    await typeValidator.assert(randomString('body'), randomString('type'))
+    await typeValidator.assert(randomString('body'), TypeBuilder.random())
 
     expect(stubValidator.compile).toBeCalledWith(schema)
   })
@@ -55,7 +56,7 @@ describe('validate', () => {
     stubValidator.compile.mockReturnValue(validateFn)
     const expectedBody = randomString('body')
 
-    await typeValidator.assert(expectedBody, randomString('type'))
+    await typeValidator.assert(expectedBody, TypeBuilder.random())
 
     expect(validateFn).toBeCalledWith(expectedBody)
   })
@@ -64,7 +65,7 @@ describe('validate', () => {
     const { typeValidator, stubValidator } = createTestDeps()
     stubValidator.compile.mockReturnValue(mockFn<ValidateFunction>().mockReturnValue(true))
 
-    await typeValidator.assert(randomString('body'), randomString('type'))
+    await typeValidator.assert(randomString('body'), TypeBuilder.random())
   })
 
   it('returns validation messages if the data does not match the type', async () => {
@@ -83,7 +84,7 @@ describe('validate', () => {
     stubValidator.compile.mockReturnValue(validatorFn)
 
     const body = randomString('body')
-    const type = randomString('type')
+    const type = TypeBuilder.random()
 
     await expect(typeValidator.assert(body, type)).rejects.toThrowColouredError(
       `<root>${error1.dataPath} ${error1.message}\n<root> ${error2.message}`,

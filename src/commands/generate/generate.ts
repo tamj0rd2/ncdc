@@ -1,9 +1,10 @@
 import { SchemaRetriever } from '~schema'
 import { writeJsonAsync } from '~io'
+import { Type } from '~config/resource/type'
 
 export const generate = async (
   schemaRetriever: SchemaRetriever,
-  types: string[],
+  types: Type[],
   outputPath: string,
 ): Promise<void> => {
   await Promise.all(

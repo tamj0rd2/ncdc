@@ -1,8 +1,9 @@
 import { SchemaGenerator } from '~schema'
 import { generate } from './generate'
 import * as io from '~io'
-import { mockObj, randomString } from '~test-helpers'
+import { arrayOfLength, mockObj } from '~test-helpers'
 import { JSONSchema7 } from 'json-schema'
+import { TypeBuilder } from '~config/resource/builders'
 
 jest.disableAutomock()
 jest.mock('~io')
@@ -22,7 +23,7 @@ describe('Generate', () => {
 
   it('loads a schema for each type', async () => {
     const { generate, mockSchemaGenerator } = createTestDeps()
-    const types = [randomString('type1'), randomString('type2')]
+    const types = arrayOfLength(2, (i) => new TypeBuilder().withType(i).build())
 
     await generate(mockSchemaGenerator, types, './out')
 
@@ -32,7 +33,7 @@ describe('Generate', () => {
 
   it('writes each generated json schema to disk', async () => {
     const { generate, mockSchemaGenerator, mockedIo } = createTestDeps()
-    const types = [randomString('type1'), randomString('type2')]
+    const types = arrayOfLength(2, (i) => new TypeBuilder().withType(i).build())
     const schema1 = mockObj<JSONSchema7>({ title: 'schema1' })
     const schema2 = mockObj<JSONSchema7>({ title: 'schema2' })
     mockSchemaGenerator.load.mockResolvedValueOnce(schema1).mockResolvedValueOnce(schema2)

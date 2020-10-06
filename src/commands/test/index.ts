@@ -1,1 +1,1 @@
-export { default } from './command'
+export { testCommand } from './command'

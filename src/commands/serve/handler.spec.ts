@@ -7,12 +7,11 @@ import createHandler, {
   ServeDeps,
 } from './handler'
 import { mockFn, randomString, mockObj, mocked, randomNumber } from '~test-helpers'
-import { HandleError } from '~commands/shared'
 import { transformResources } from './config'
-import stripAnsi from 'strip-ansi'
 import { ResourceBuilder } from '~config'
 import { NcdcLogger } from '~logger'
 import { NoServiceResourcesError } from '~config/errors'
+import NcdcServer from './server/ncdc-server'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -21,7 +20,6 @@ jest.mock('./config')
 
 describe('serve handler', () => {
   function createTestDeps() {
-    const mockHandleError = mockFn<HandleError>()
     const mockGetTypeValidator = mockFn<GetTypeValidator>()
     const mockConfigLoader = mockObj<ConfigLoader>({ load: jest.fn() })
     const mockLogger = mockObj<NcdcLogger>({})
@@ -31,12 +29,10 @@ describe('serve handler', () => {
     const dummyServeDeps: ServeDeps = {
       configLoader: mockConfigLoader,
       createServer: mockCreateServer,
-      handleError: mockHandleError,
       logger: mockLogger,
     }
 
     return {
-      mockHandleError,
       mockGetTypeValidator,
       mockConfigLoader,
       mockLogger,
@@ -50,45 +46,48 @@ describe('serve handler', () => {
 
   afterEach(() => jest.resetAllMocks())
 
-  it('handles when a config path is not supplied', async () => {
-    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+  it('throws when a config path is not supplied', async () => {
+    const { handler, mockGetServeDeps, dummyServeDeps } = createTestDeps()
     mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
+    const args: ServeArgs = {
+      force: false,
+      port: 8001,
+      tsconfigPath: randomString(),
+      watch: false,
+      verbose: false,
+    }
 
-    await handler({ force: false, port: 8001, tsconfigPath: randomString(), watch: false, verbose: false })
-
-    expect(mockHandleError).toBeCalledWith({ message: 'config path must be supplied' })
+    await expect(handler(args)).rejects.toThrowError('config path must be supplied')
   })
 
-  it('handles when port is not a number', async () => {
-    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+  it('throws when port is not a number', async () => {
+    const { handler, mockGetServeDeps, dummyServeDeps } = createTestDeps()
     mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
-
-    await handler({
+    const args: ServeArgs = {
       force: false,
       port: NaN,
       tsconfigPath: randomString(),
       configPath: randomString(),
       watch: false,
       verbose: false,
-    })
+    }
 
-    expect(mockHandleError).toBeCalledWith({ message: 'port must be a number' })
+    await expect(handler(args)).rejects.toThrow('port must be a number')
   })
 
-  it('handles when force and watch are used at the same time', async () => {
-    const { handler, mockGetServeDeps, mockHandleError, dummyServeDeps } = createTestDeps()
+  it('throws when force and watch are used at the same time', async () => {
+    const { handler, mockGetServeDeps, dummyServeDeps } = createTestDeps()
     mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
-
-    await handler({
+    const args: ServeArgs = {
       force: true,
       port: randomNumber(),
       tsconfigPath: randomString(),
       configPath: randomString(),
       watch: true,
       verbose: false,
-    })
+    }
 
-    expect(mockHandleError).toBeCalledWith({ message: 'watch and force options cannot be used together' })
+    await expect(handler(args)).rejects.toThrowError('watch and force options cannot be used together')
   })
 
   describe('runs the server with the correct configs', () => {
@@ -102,29 +101,36 @@ describe('serve handler', () => {
     }
 
     it('calls loadconfig with the correct args', async () => {
-      const { handler, mockGetServeDeps, dummyServeDeps, mockConfigLoader } = createTestDeps()
+      const {
+        handler,
+        mockGetServeDeps,
+        dummyServeDeps,
+        mockConfigLoader,
+        mockCreateServer,
+      } = createTestDeps()
       mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
+      mockCreateServer.mockReturnValue(
+        mockObj<NcdcServer>({ start: jest.fn() }),
+      )
+      mockConfigLoader.load.mockResolvedValue({ configs: [], fixturePaths: [] })
 
       await handler(args)
 
       expect(mockConfigLoader.load).toBeCalledWith(args.configPath)
     })
 
-    it('handles there being no configs to serve as an error', async () => {
+    it('throws when there are no configs to serve', async () => {
       const {
         handler,
         mockGetServeDeps,
-        mockHandleError,
+
         mockConfigLoader,
         dummyServeDeps,
       } = createTestDeps()
       mockGetServeDeps.mockReturnValueOnce(dummyServeDeps)
       mockConfigLoader.load.mockRejectedValue(new NoServiceResourcesError('file path'))
 
-      await handler(args)
-
-      expect(mockHandleError).toBeCalled()
-      expect(stripAnsi(mockHandleError.mock.calls[0][0].message)).toEqual('No configs to serve')
+      await expect(handler(args)).rejects.toThrowColouredError('No configs to serve')
     })
 
     it('creates the server with the correct args', async () => {
@@ -132,7 +138,6 @@ describe('serve handler', () => {
         handler,
         mockCreateServer,
         mockGetServeDeps,
-        mockHandleError,
         mockConfigLoader,
         dummyServeDeps,
       } = createTestDeps()
@@ -144,7 +149,6 @@ describe('serve handler', () => {
 
       await handler(args)
 
-      expect(mockHandleError).not.toBeCalled()
       expect(mockCreateServer).toBeCalledTimes(1)
       expect(mockCreateServer).toBeCalledWith(args.port)
     })

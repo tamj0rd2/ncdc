@@ -24,6 +24,7 @@ const commonSettings = {
     '<rootDir>\/coverage.*',
     'test-helpers.ts'
   ],
+  setupFilesAfterEnv: ['<rootDir>/src/jest-extensions.ts']
 }
 
 const lowLevelTestSettings = {

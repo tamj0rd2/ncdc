@@ -2,7 +2,6 @@ import { TypeValidator } from '~validation'
 import chokidar from 'chokidar'
 import { LoadConfigResponse } from '~config/load'
 import { NcdcLogger } from '~logger'
-import { HandleError } from '~commands/shared'
 import { CompilerHook } from '~schema/watching-schema-generator'
 import { EventEmitter } from 'events'
 import { Resource } from '~config'
@@ -43,7 +42,6 @@ export interface ConfigLoader {
 
 export interface ServeDeps {
   logger: NcdcLogger
-  handleError: HandleError
   createServer: CreateServer
   configLoader: ConfigLoader
 }
@@ -60,20 +58,17 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     onSuccess: () => void eventEmitter.emit(Events.TypescriptCompileSucceeded),
     onFail: () => void eventEmitter.emit(Events.TypescriptCompileFailed),
   }
-  const { handleError, logger, configLoader, createServer } = getServeDeps(args, typescriptCompilerHooks)
+  const { logger, configLoader, createServer } = getServeDeps(args, typescriptCompilerHooks)
 
-  if (!args.configPath) return handleError({ message: 'config path must be supplied' })
-  if (isNaN(args.port)) return handleError({ message: 'port must be a number' })
-  if (args.watch && args.force)
-    return handleError({ message: 'watch and force options cannot be used together' })
+  if (!args.configPath) throw new Error('config path must be supplied')
+  if (isNaN(args.port)) throw new Error('port must be a number')
+  if (args.watch && args.force) throw new Error('watch and force options cannot be used together')
 
   const configPath = args.configPath
 
   type PrepAndStartResult = {
     pathsToWatch: string[]
   }
-
-  let prepAndServeResult: PrepAndStartResult
 
   const servers: Record<string, NcdcServer> = {
     [args.configPath]: createServer(args.port),
@@ -113,11 +108,7 @@ const createHandler = (getServeDeps: GetServeDeps) => async (args: ServeArgs): P
     return stopAllServers()
   })
 
-  try {
-    prepAndServeResult = await prepAndStartServer()
-  } catch (err) {
-    return handleError(err)
-  }
+  let prepAndServeResult = await prepAndStartServer()
 
   if (args.watch) {
     const fixturesToWatch = [...prepAndServeResult.pathsToWatch]

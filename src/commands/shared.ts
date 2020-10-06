@@ -2,17 +2,7 @@ import createNcdcLogger, { NcdcLogger } from '~logger'
 import MetricsReporter, { OperationResult } from '~metrics'
 import { CommandModule as YargsCommandModule, Argv } from 'yargs'
 
-export type HandleError = (error: { message: string }) => never
-
 export type ReportMetric = (operation: string) => OperationResult
-
-export type GetRootDeps = (
-  verbose: boolean,
-) => {
-  logger: NcdcLogger
-  handleError: HandleError
-  reportMetric: ReportMetric
-}
 
 interface CommonArgs {
   tsconfigPath: string
@@ -21,16 +11,9 @@ interface CommonArgs {
   force: boolean
 }
 
-export interface CommonDeps {
+interface CommonDeps {
   logger: NcdcLogger
   reportMetric: ReportMetric
-}
-
-export interface CommandModule<Args> extends YargsCommandModule<CommonArgs, Args> {
-  command: string
-  describe: string
-  builder(yargs: Argv<CommonArgs>): Argv<Args>
-  handler(args: Args): Promise<void>
 }
 
 export const createCommand = <Args>(opts: {

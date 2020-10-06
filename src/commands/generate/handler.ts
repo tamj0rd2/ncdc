@@ -1,6 +1,5 @@
 import { SchemaRetriever } from '~schema'
 import { Generate } from './generate'
-import { HandleError } from '~commands/shared'
 import { NcdcLogger } from '~logger'
 import { Type } from '~config/resource/type'
 
@@ -15,7 +14,6 @@ export interface GenerateArgs {
 export type GetGenerateDeps = (args: GenerateArgs) => GenerateDeps
 export interface GenerateDeps {
   logger: NcdcLogger
-  handleError: HandleError
   getConfigTypes: GetConfigTypes
   getSchemaGenerator: GetSchemaGenerator
   generate: Generate
@@ -25,36 +23,19 @@ export type GetSchemaGenerator = (tsconfigPath: string, force: boolean) => Schem
 export type GetConfigTypes = (configPaths: string[]) => Promise<Type[]>
 
 const createHandler = (getGeneratorDeps: GetGenerateDeps) => async (args: GenerateArgs): Promise<void> => {
-  const { handleError, logger, generate, getConfigTypes, getSchemaGenerator } = getGeneratorDeps(args)
-  if (!args.configPaths) return handleError(new Error('at least 1 ncdc config path must be given'))
+  const { logger, generate, getConfigTypes, getSchemaGenerator } = getGeneratorDeps(args)
+  if (!args.configPaths) throw new Error('at least 1 ncdc config path must be given')
 
-  let types: Type[]
-  try {
-    types = await getConfigTypes(args.configPaths)
-  } catch (err) {
-    return handleError(err)
-  }
-
+  const types = await getConfigTypes(args.configPaths)
   if (!types.length) {
     logger.warn('No types were specified in the given config file')
     return
   }
 
-  let schemaRetriever: SchemaRetriever
+  const schemaRetriever = getSchemaGenerator(args.tsconfigPath, args.force)
 
-  try {
-    schemaRetriever = getSchemaGenerator(args.tsconfigPath, args.force)
-  } catch (err) {
-    return handleError(err)
-  }
-
-  try {
-    await generate(schemaRetriever, types, args.outputPath)
-  } catch (err) {
-    return handleError(err)
-  } finally {
-    logger.info('JSON schemas have been written to disk')
-  }
+  await generate(schemaRetriever, types, args.outputPath)
+  logger.info('JSON schemas have been written to disk')
 }
 
 export default createHandler

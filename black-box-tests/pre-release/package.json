@@ -18,7 +18,7 @@
     "@types/node": "^14.0.23",
     "@types/node-fetch": "^2.5.7",
     "express": "^4.17.1",
-    "jest": "^26.6.0",
+    "jest": "^26.6.1",
     "js-yaml": "^3.14.0",
     "node-fetch": "^2.6.1",
     "strip-ansi": "^6.0.0",

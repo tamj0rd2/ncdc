@@ -1,3 +1,26 @@
+# [2.0.0](https://github.com/tamj0rd2/ncdc/compare/v1.0.0...v2.0.0) (2020-10-29)
+
+
+### chore
+
+* upgrade to typescript 4 ([e0d8800](https://github.com/tamj0rd2/ncdc/commit/e0d88006f1aeb2f03e1f0446093cdb5589d827e3)), closes [#405](https://github.com/tamj0rd2/ncdc/issues/405)
+* **deps:** make typescript a peer dependency ([97c68c2](https://github.com/tamj0rd2/ncdc/commit/97c68c2a1fd55377ee5dfe2d9238c1c830448a7b))
+
+
+### Reverts
+
+* revert ts-json-schema-update ([8129fe8](https://github.com/tamj0rd2/ncdc/commit/8129fe8ba019293d1de3b2e9e366895723d963d4))
+* revert typescript update ([8f752ad](https://github.com/tamj0rd2/ncdc/commit/8f752ad78f39e4e29b92827176018088f945492e))
+* revert version bump ([9f4e5b3](https://github.com/tamj0rd2/ncdc/commit/9f4e5b34a1d136c06ba9ee8b1b89f0e126bc92b8))
+* undo merge from alpha ([7be0447](https://github.com/tamj0rd2/ncdc/commit/7be0447f9a21a89525680c77db48d8bfe926c082))
+
+
+### BREAKING CHANGES
+
+* Upgrade typescript dependency to version 4
+* **deps:** Typescript is no longer a dependency of this project.
+It is a peer dependency and you will need to install it yourself
+
 # [0.14.0](https://github.com/tamj0rd2/ncdc/compare/v0.13.2...v0.14.0) (2020-09-23)
 
 

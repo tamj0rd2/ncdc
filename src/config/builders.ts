@@ -1,9 +1,9 @@
 import { ValidatedRawConfig } from './validate'
 import { randomString } from '~test-helpers'
 
-export class RawConfigBuilder {
+export class ValidatedRawConfigBuilder {
   public static get default(): ValidatedRawConfig {
-    return new RawConfigBuilder().build()
+    return new ValidatedRawConfigBuilder().build()
   }
 
   public build(): ValidatedRawConfig {

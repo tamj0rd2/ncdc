@@ -9,7 +9,7 @@ export class ServiceConfigReadError extends Error {
 
 export class ServiceConfigInvalidError extends Error {
   constructor(filePath: string, validationErrors: string[]) {
-    super(`Invalid service config file (${filePath}):\n\n${validationErrors.join('\n')}`)
+    super(`Invalid service config file (${filePath}):\n${validationErrors.join('\n')}`)
     Object.setPrototypeOf(this, ServiceConfigInvalidError.prototype)
   }
 }

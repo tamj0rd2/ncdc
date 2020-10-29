@@ -2,16 +2,7 @@ import { SupportedMethod } from './resource'
 import Joi from '@hapi/joi'
 import { blue, bold } from 'chalk'
 import dot from 'dot-object'
-
-export interface ValidationSuccess<T = ValidatedRawConfig> {
-  success: true
-  validatedConfigs: T[]
-}
-
-export interface ValidationFailure {
-  success: false
-  errors: string[]
-}
+import { ServiceConfigInvalidError } from './errors'
 
 export interface ValidatedRawConfig {
   serveOnly: boolean
@@ -29,15 +20,10 @@ export interface ValidatedRawConfig {
 
 export type MutateRequest = (schema: Joi.ObjectSchema) => Joi.ObjectSchema
 
-export const validateRawConfig = <TOut = ValidatedRawConfig>(
-  config: unknown,
-): ValidationSuccess<TOut> | ValidationFailure => {
-  if (!config) {
-    return { success: false, errors: ['Your config file cannot be empty'] }
-  }
-
+export const validateRawConfig = <TOut = ValidatedRawConfig>(config: unknown, filePath: string): TOut[] => {
   const endpointSchema = Joi.string()
     .uri({ relativeOnly: true, allowQuerySquareBrackets: true })
+    .message('should be a relative uri')
     .ruleset.pattern(/^\//)
     .message('must start with /')
 
@@ -104,7 +90,7 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
   })
 
   if (!validationResult.error) {
-    return { success: true, validatedConfigs: validationResult.value }
+    return validationResult.value
   }
 
   const formattedErrors = validationResult.error.details
@@ -128,5 +114,5 @@ export const validateRawConfig = <TOut = ValidatedRawConfig>(
       return `${blue(pathPrefix)}${message.replace(/(".*" )/, '')}`
     })
 
-  return { success: false, errors: formattedErrors }
+  throw new ServiceConfigInvalidError(filePath, formattedErrors)
 }

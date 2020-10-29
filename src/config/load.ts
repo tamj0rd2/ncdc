@@ -2,13 +2,7 @@ import { readYamlAsync, getFixturePath } from '~io'
 import { TypeValidator } from '~validation'
 import { validateRawConfig, ValidatedRawConfig } from './validate'
 import { Resource } from '~config'
-import {
-  ServiceConfigReadError,
-  ServiceConfigInvalidError,
-  NoServiceResourcesError,
-  BodyValidationError,
-  InvalidBodyTypeError,
-} from './errors'
+import { NoServiceResourcesError, BodyValidationError, InvalidBodyTypeError } from './errors'
 import { validateConfigBodies } from './validate-config-bodies'
 
 export type LoadConfigResponse = {
@@ -29,25 +23,15 @@ export default class ConfigLoader<T extends ValidatedRawConfig> {
     private readonly forceRequestValidation: boolean,
   ) {}
 
-  public load = async (configPath: string): Promise<LoadConfigResponse> => {
-    let rawConfigFile: unknown
+  public async load(configPath: string): Promise<LoadConfigResponse> {
+    const rawConfigFile = await readYamlAsync(configPath)
+    const validatedConfigs = validateRawConfig<T>(rawConfigFile, configPath)
 
-    try {
-      rawConfigFile = await readYamlAsync(configPath)
-    } catch (err) {
-      throw new ServiceConfigReadError(configPath, err.message)
-    }
-
-    const validationResult = validateRawConfig<T>(rawConfigFile)
-    if (!validationResult.success) {
-      throw new ServiceConfigInvalidError(configPath, validationResult.errors)
-    }
-
-    if (!validationResult.validatedConfigs.length) {
+    if (!validatedConfigs.length) {
       throw new NoServiceResourcesError(configPath)
     }
 
-    const transformedConfigs = await this.transformConfigs(validationResult.validatedConfigs, configPath)
+    const transformedConfigs = await this.transformConfigs(validatedConfigs, configPath)
 
     if (!!transformedConfigs.find((c) => c.request.type || c.response.type)) {
       let bodyValidationMessage: string | undefined
@@ -69,7 +53,7 @@ export default class ConfigLoader<T extends ValidatedRawConfig> {
 
     return {
       configs: transformedConfigs,
-      fixturePaths: validationResult.validatedConfigs
+      fixturePaths: validatedConfigs
         .flatMap((c) => [c.request.bodyPath, c.response.bodyPath, c.response.serveBodyPath])
         .filter((x): x is string => !!x)
         .map((fixturePath) => getFixturePath(configPath, fixturePath)),

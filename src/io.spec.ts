@@ -100,7 +100,7 @@ describe('io', () => {
       mockPath.resolve.mockReturnValueOnce(resolvedFilePath)
       mockPath.dirname.mockReturnValueOnce(folderPath)
 
-      await writeJsonAsync({}, filePath)
+      await writeJsonAsync(filePath, {})
 
       expect(mockPath.resolve).toBeCalledWith<Parameters<Resolve>>(filePath)
       expect(mockPath.dirname).toBeCalledWith<Parameters<Dirname>>(resolvedFilePath)
@@ -114,7 +114,7 @@ describe('io', () => {
       mockPath.resolve.mockReturnValueOnce(resolvedFilePath)
 
       const data = { hello: 'world' }
-      await writeJsonAsync(data, filePath)
+      await writeJsonAsync(filePath, data)
 
       expect(mockPath.resolve).toBeCalledWith<Parameters<Resolve>>(filePath)
       expect(mockFs.writeFile).toBeCalledWith<Parameters<WriteFile>>(

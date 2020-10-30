@@ -10,7 +10,7 @@ export const generate = async (
   await Promise.all(
     types.map(async (type) => {
       const schema = await schemaRetriever.load(type)
-      return writeJsonAsync(schema, `${outputPath}/${type}.json`)
+      return writeJsonAsync(`${outputPath}/${type.get()}.json`, schema)
     }),
   )
 }

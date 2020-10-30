@@ -1,5 +1,6 @@
 import { promises } from 'fs'
 import { safeLoad } from 'js-yaml'
+import { JSONSchema7 } from 'json-schema'
 import { isAbsolute, resolve, dirname } from 'path'
 
 const { writeFile: writeFileAsync, mkdir: mkdirAsync, readFile: readFileAsync } = promises
@@ -36,8 +37,10 @@ export const readFixture = (basePath: string, fixturePath: string): Promise<Data
 }
 
 // TODO: swap these args around
-// eslint-disable-next-line @typescript-eslint/ban-types
-export const writeJsonAsync = async (obj: object, path: string): Promise<void> => {
+export const writeJsonAsync = async (
+  path: string,
+  obj: Record<string, unknown> | JSONSchema7,
+): Promise<void> => {
   const outputPath = resolve(path)
   await mkdirAsync(dirname(outputPath), { recursive: true })
 

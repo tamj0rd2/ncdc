@@ -40,7 +40,7 @@ describe('Generate', () => {
 
     await generate(mockSchemaGenerator, types, './out')
 
-    expect(mockedIo.writeJsonAsync).toBeCalledWith(schema1, `./out/${types[0]}.json`)
-    expect(mockedIo.writeJsonAsync).toBeCalledWith(schema2, `./out/${types[1]}.json`)
+    expect(mockedIo.writeJsonAsync).toBeCalledWith(`./out/${types[0].get()}.json`, schema1)
+    expect(mockedIo.writeJsonAsync).toBeCalledWith(`./out/${types[1].get()}.json`, schema2)
   })
 })

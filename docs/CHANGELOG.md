@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/tamj0rd2/ncdc/compare/v2.0.0...v2.0.1) (2020-10-30)
+
+
+### Bug Fixes
+
+* **generate:** fix generate command producing files with wrong name ([2e32feb](https://github.com/tamj0rd2/ncdc/commit/2e32feb608b9893378bafa404e33441996c9b8fe)), closes [#535](https://github.com/tamj0rd2/ncdc/issues/535)
+
 # [2.0.0](https://github.com/tamj0rd2/ncdc/compare/v1.0.0...v2.0.0) (2020-10-29)
 
 

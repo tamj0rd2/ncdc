@@ -16,5 +16,25 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Install dependencies
         run: npm ci
-      - name: Upgrade to latest typescript
-        run: ./support-latest-ts.sh
+      - name: Get current version number
+        run: echo "::set-output name=version::$(npx tsc --version | sed 's/Version //g')"
+        id: current_version_check
+      - name: Install latest ts version
+        run: npm i -D typescript@latest
+      - name: Get updated version number
+        run: echo "::set-output name=version::$(npx tsc --version | sed 's/Version //g')"
+        id: updated_version_check
+      - name: Install required ts dependencies
+        if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
+        run: |
+          npm i -D --prefix ./black-box-tests/pre-release typescript@latest
+          npm i ts-json-schema-generator@latest
+      - name: Create pull request
+        if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.NCDC_GITHUB_RELEASE_TOKEN }}
+          commit-message: "feat(deps): add support for typescript ${{ steps.updated_version_check.outputs.version }}"
+          title: Add support for Typescript ${{ steps.updated_version_check.outputs.version }}
+          base: master
+          branch: bump-ts-version

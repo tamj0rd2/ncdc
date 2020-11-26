@@ -19,7 +19,7 @@ function finish {
 }
 trap finish EXIT
 
-if [[ "$(git st | grep -cim1 'untracked files')" -eq 1 || "$(git st | grep -cim1 'not staged')" -eq 1 ]]
+if [[ "$(git status | grep -cim1 'untracked files')" -eq 1 || "$(git status | grep -cim1 'not staged')" -eq 1 ]]
 then
   print 'You have unstaged changes. Commit or stash them first'
   exit 1
@@ -27,6 +27,7 @@ fi
 
 
 CURRENT_VERSION="$(npx tsc --version | sed 's/Version //g')"
+print "Current typescript version is v${CURRENT_VERSION}"
 
 print 'npm i -D typescript@latest'
 npm i -D typescript@latest
@@ -38,6 +39,8 @@ then
   print 'Already using the latest version of typescript'
   exit 0
 fi
+
+print "Going to update to typescript v${UPDATED_VERSION}"
 
 print 'npm i -D --prefix ./black-box-tests/pre-release typescript@latest'
 npm i -D --prefix ./black-box-tests/pre-release typescript@latest
@@ -51,5 +54,7 @@ docker-compose build typecheck unit-tests integration-tests acceptance-tests pre
 print './tests.sh'
 ./tests.sh
 
-print 'TODO: commit the changes back in'
-# git commit -am "feat(deps): support for typescript v${UPDATED_VERSION}" --no-verify
+print 'Committing the changes'
+git config --local user.email "tamara.jordan1+coding@hotmail.com"
+git config --local user.name "Tamara Jordan"
+HUSKY_SKIP_HOOKS=1 git commit -am "feat(deps): add support for typescript v${UPDATED_VERSION}" --no-verify

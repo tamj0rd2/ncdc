@@ -6,3 +6,4 @@ out
 test-environment
 docker-compose*
 Dockerfile
+.github

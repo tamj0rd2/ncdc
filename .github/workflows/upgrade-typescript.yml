@@ -1,0 +1,23 @@
+name: Support latest typescript version
+on: [workflow_dispatch]
+jobs:
+  upgrade:
+    name: Upgrade and commit
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Read .nvmrc
+        run: echo ::set-output name=NVMRC::$(cat .nvmrc)
+        id: nvm
+      - name: Setup Node.jobs
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Upgrade to latest typescript
+        run: ./support-latest-ts.sh

@@ -25,7 +25,8 @@ jobs:
         run: echo "::set-output name=version::$(npx tsc --version | sed 's/Version //g')"
         id: updated_version_check
       - name: Install required ts dependencies
-        if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
+        # TODO: eventually add this back in
+        # if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
         run: |
           npm i -D --prefix ./black-box-tests/pre-release typescript@latest
           npm i ts-json-schema-generator@latest

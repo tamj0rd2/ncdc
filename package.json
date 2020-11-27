@@ -1,6 +1,6 @@
 {
   "name": "ncdc",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "A CLI that takes a consumer driven contract defined in yaml and allows you to run tests and/or create a fake server",
   "main": "lib/index.js",
   "bin": {

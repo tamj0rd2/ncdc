@@ -37,11 +37,8 @@ help out with PRs/give guidance.
 
 ## Adding support for new versions of typescript:
 
-1. `npm i -D typescript@latest`
-2. `npm i -D --prefix ./black-box-tests/pre-release typescript@latest`
-3. `npm i ts-json-schema-generator@latest`
-4. Make a commit with the title `feat: add support for typescript <version no>`
-5. Push to a branch and create a PR
+This is controlled by the `Support latest typescript version` workflow (upgrade-typescript.yml).
+It runs twice a day but can be triggered manually from the Actions tab in github.
 
 ## Releases
 

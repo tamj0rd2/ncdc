@@ -1,5 +1,9 @@
 name: Support latest typescript version
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9,18 * * *"
+
 jobs:
   upgrade:
     name: Upgrade and commit
@@ -20,19 +24,17 @@ jobs:
         run: echo "::set-output name=version::$(npx tsc --version | sed 's/Version //g')"
         id: current_version_check
       - name: Install latest ts version
-        run: npm i -D typescript@latest
+        run: npm i -D typescript@4.*
       - name: Get updated version number
         run: echo "::set-output name=version::$(npx tsc --version | sed 's/Version //g')"
         id: updated_version_check
       - name: Install required ts dependencies
-        # TODO: eventually add this back in
-        # if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
+        if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
         run: |
-          npm i -D --prefix ./black-box-tests/pre-release typescript@latest
+          npm i --prefix ./black-box-tests/pre-release typescript@4.*
           npm i ts-json-schema-generator@latest
-          touch hello.txt
       - name: Create pull request
-        # if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
+        if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.NCDC_GITHUB_TOKEN }}
@@ -40,3 +42,4 @@ jobs:
           title: Add support for Typescript ${{ steps.updated_version_check.outputs.version }}
           base: master
           branch: bump-ts-version
+          labels: merge

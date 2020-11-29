@@ -64,7 +64,7 @@ describe('io', () => {
       const resolvedFilePath = randomString('resolvedPath')
       mockPath.resolve.mockReturnValueOnce(resolvedFilePath)
       mockFs.readFile.mockResolvedValueOnce('hello: world')
-      mockSafeLoad.mockResolvedValueOnce({})
+      mockSafeLoad.mockReturnValueOnce({})
 
       await readYamlAsync(filePath)
 
@@ -76,7 +76,7 @@ describe('io', () => {
     it('returns some json', async () => {
       const { mockSafeLoad } = createTestDeps()
       const expectedData = { hello: 'world' }
-      mockSafeLoad.mockResolvedValueOnce(expectedData)
+      mockSafeLoad.mockReturnValueOnce(expectedData)
 
       const data = await readYamlAsync(randomString('filePath'))
 
@@ -85,7 +85,7 @@ describe('io', () => {
 
     it('throws if the loaded file is empty', async () => {
       const { mockSafeLoad } = createTestDeps()
-      mockSafeLoad.mockResolvedValueOnce(undefined)
+      mockSafeLoad.mockReturnValueOnce(undefined)
 
       await expect(readYamlAsync(randomString('filePath'))).rejects.toThrowError(EmptyFileError)
     })
@@ -170,7 +170,7 @@ describe('io', () => {
         const { mockSafeLoad } = createTestDeps()
         const fixturePath = randomString() + ext
         const expectedData = { goodbye: 'world' }
-        mockSafeLoad.mockResolvedValue(expectedData)
+        mockSafeLoad.mockReturnValueOnce(expectedData)
 
         const result = await readFixture(basePath, fixturePath)
 

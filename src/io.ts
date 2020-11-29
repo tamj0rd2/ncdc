@@ -18,11 +18,11 @@ export const readJsonAsync = async <TOut = Record<string, unknown>>(
   ...pathSegments: string[]
 ): Promise<TOut> => JSON.parse(await readFileAsync(resolve(pathSegment1, ...pathSegments), utf8))
 
-export const readYamlAsync = async <TOut>(path: string): Promise<TOut> => {
+export const readYamlAsync = async <TOut extends Data>(path: string): Promise<TOut> => {
   const filePath = resolve(path)
-  const content = await safeLoad(await readFileAsync(filePath, utf8))
+  const content = safeLoad(await readFileAsync(filePath, utf8))
   if (!content) throw new EmptyFileError(filePath)
-  return content
+  return content as TOut
 }
 
 export const getFixturePath = (basePath: string, fixturePath: string): string => {

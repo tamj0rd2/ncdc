@@ -21,6 +21,8 @@ export interface RawConfig {
     serveBodyPath?: string
     [index: string]: unknown
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [index: string]: any
 }
 
 export class RawConfigBuilder {

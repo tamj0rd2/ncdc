@@ -30,11 +30,12 @@ jobs:
         run: |
           npm i -D --prefix ./black-box-tests/pre-release typescript@latest
           npm i ts-json-schema-generator@latest
+          touch hello.txt
       - name: Create pull request
-        if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
+        # if: ${{ steps.current_version_check.outputs.version != steps.updated_version_check.outputs.version }}
         uses: peter-evans/create-pull-request@v3
         with:
-          token: ${{ secrets.NCDC_GITHUB_RELEASE_TOKEN }}
+          token: ${{ secrets.NCDC_GITHUB_TOKEN }}
           commit-message: "feat(deps): add support for typescript ${{ steps.updated_version_check.outputs.version }}"
           title: Add support for Typescript ${{ steps.updated_version_check.outputs.version }}
           base: master

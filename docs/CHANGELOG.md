@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/tamj0rd2/ncdc/compare/v2.1.0...v2.2.0) (2020-12-12)
+
+
+### Features
+
+* **deps:** add support for typescript 4.1.3 ([2059d7f](https://github.com/tamj0rd2/ncdc/commit/2059d7f9d0026174a565dfec6b67ad6f206b2a89))
+
 # [2.1.0](https://github.com/tamj0rd2/ncdc/compare/v2.0.1...v2.1.0) (2020-11-27)
 
 

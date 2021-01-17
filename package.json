@@ -3,6 +3,7 @@
   "version": "2.2.0",
   "description": "A CLI that takes a consumer driven contract defined in yaml and allows you to run tests and/or create a fake server",
   "main": "lib/index.js",
+  "types": "./lib/api/index.d.ts",
   "bin": {
     "ncdc": "./bin/ncdc"
   },

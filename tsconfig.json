@@ -14,8 +14,10 @@
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": true,
     "outDir": "lib",
-    "noEmit": true,
     "inlineSourceMap": true,
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
     "paths": {
       "~*": ["src/*"]
     }

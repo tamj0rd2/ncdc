@@ -1,3 +1,4 @@
+export * from './api'
 import mainYargs from 'yargs'
 import { generateCommand, serveCommand, testCommand } from './commands'
 import { opts } from './commands'

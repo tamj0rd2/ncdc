@@ -1,6 +1,8 @@
 import { Method } from './method'
 import { randomString } from '~test-helpers'
-import { Resource, ResourceInput } from './resource'
+import { Resource } from './resource'
+import { Request, RequestInput } from './request'
+import { Response, ResponseInput } from './response'
 
 export class ResourceBuilder {
   public static random(): Resource {
@@ -88,6 +90,16 @@ export class ResourceBuilder {
   }
 
   public build(): Resource {
-    return new Resource(this.resourceInput)
+    return {
+      name: this.resourceInput.name,
+      request: new Request(this.resourceInput.request),
+      response: new Response(this.resourceInput.response),
+    }
   }
+}
+
+interface ResourceInput {
+  name: string
+  request: RequestInput
+  response: ResponseInput
 }

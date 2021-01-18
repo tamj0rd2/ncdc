@@ -1,4 +1,3 @@
-import { Resource } from '../config'
 import NcdcServer from '../commands/serve/server/ncdc-server-new'
 import createNcdcLogger from '../logger'
 import MetricsReporter from '../metrics'
@@ -7,7 +6,7 @@ import { CommonConfig, Service } from './types'
 
 export { Method } from '../config'
 
-export async function serve(services: Record<string, Service>, config: ServeConfig): Promise<ServeResult> {
+export async function serve(services: Service[], config: ServeConfig): Promise<ServeResult> {
   const logger = createNcdcLogger(config.verbose ?? false)
   const reporter = new MetricsReporter(logger)
   const validatorFactory = new TypeValidatorFactory(logger, reporter.report, {
@@ -23,8 +22,8 @@ export async function serve(services: Record<string, Service>, config: ServeConf
     },
   })
 
-  const servers = Object.entries(services).map(
-    ([name, service]) =>
+  const servers = services.map(
+    (service) =>
       new NcdcServer(
         service.port,
         () =>
@@ -32,8 +31,8 @@ export async function serve(services: Record<string, Service>, config: ServeConf
             tsconfigPath: config.tsconfigPath,
             schemaPath: config.schemaPath,
           }),
-        logger.child({ label: name }),
-        service.resources.map((input) => new Resource(input)),
+        logger.child({ label: service.name }),
+        service.resources,
       ),
   )
 

@@ -2,7 +2,7 @@ import { transformResources, ValidatedServeConfig } from './config'
 import { randomString, mocked, serialiseAsJson } from '~test-helpers'
 import { readFixture } from '~io'
 import { Resource } from '~config'
-import { Request, Response, SupportedMethod } from '~config'
+import { Request, Response, Method } from '~config'
 
 jest.disableAutomock()
 jest.mock('path')
@@ -21,7 +21,7 @@ describe('transform configs', () => {
       name: randomString(),
       serveOnly: false,
       request: {
-        method: SupportedMethod.GET,
+        method: Method.GET,
         endpoints: ['hola!'],
         headers: {},
         type: 'SomeType',

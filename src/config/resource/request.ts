@@ -1,12 +1,12 @@
-import { SupportedMethod } from './method'
+import { Method } from './method'
 import { Query } from './query'
 import { NcdcHeaders } from './headers'
 import { Body } from './body'
 import url from 'url'
 import { Type } from './type'
 
-interface RequestInput {
-  method: SupportedMethod
+export interface RequestInput {
+  method: Method
   endpoint: string
   body: Data | undefined
   type: string | undefined
@@ -14,7 +14,7 @@ interface RequestInput {
 }
 
 export class Request {
-  public readonly method: SupportedMethod
+  public readonly method: Method
   public readonly endpoint: string
   public readonly pathName: string
   public readonly query: Query
@@ -38,15 +38,5 @@ export class Request {
 
   public formatUrl = (baseUrl: string): string => {
     return `${baseUrl}${this.endpoint}`
-  }
-
-  public static CreateFromRequest = (request: Request): Request => {
-    return new Request({
-      endpoint: request.endpoint,
-      method: request.method,
-      body: request.body?.get(),
-      headers: request.headers.getAll(),
-      type: request.type?.get(),
-    })
   }
 }

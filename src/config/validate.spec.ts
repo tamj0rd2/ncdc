@@ -1,6 +1,6 @@
 import { validateRawConfig } from './validate'
 import strip from 'strip-ansi'
-import { SupportedMethod } from './resource'
+import { Method } from './resource'
 import { randomNumber, randomString } from '~test-helpers'
 import '../jest-extensions'
 import { RawConfig, RawConfigBuilder } from './raw-config-builder'
@@ -169,7 +169,7 @@ describe('validate', () => {
     })
 
     describe('request.method', () => {
-      it.each(Object.values(SupportedMethod).map((x) => [x]))('allows method %s', (method) => {
+      it.each(Object.values(Method).map((x) => [x]))('allows method %s', (method) => {
         const { filePath } = createTestDeps()
         const rawConfig = new RawConfigBuilder().withRequestMethod(method).build()
 
@@ -192,9 +192,7 @@ describe('validate', () => {
 
         expectValidationErors(
           rawConfig,
-          `config[${rawConfig.name}].request.method must be one of [${Object.values(SupportedMethod).join(
-            ', ',
-          )}]`,
+          `config[${rawConfig.name}].request.method must be one of [${Object.values(Method).join(', ')}]`,
         )
       })
 

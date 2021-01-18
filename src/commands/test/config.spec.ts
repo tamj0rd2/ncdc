@@ -2,7 +2,7 @@ import { mocked, randomString, serialiseAsJson } from '~test-helpers'
 import { readFixture } from '~io'
 import { ValidatedTestConfig, transformConfigs } from './config'
 import { Resource } from '~config'
-import { Request, Response, SupportedMethod } from '~config'
+import { Request, Response, Method } from '~config'
 
 jest.disableAutomock()
 jest.mock('~io')
@@ -20,7 +20,7 @@ describe('transform configs', () => {
       name: randomString(),
       serveOnly: false,
       request: {
-        method: SupportedMethod.GET,
+        method: Method.GET,
         endpoints: ['hola!'],
         headers: {},
         type: 'SomeType',

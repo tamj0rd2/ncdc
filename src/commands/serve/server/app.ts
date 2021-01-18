@@ -2,7 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express'
 import { blue } from 'chalk'
 import { TypeValidator } from '~validation'
 import { inspect } from 'util'
-import { SupportedMethod, Resource } from '~config'
+import { Method, Resource } from '~config'
 import { NcdcLogger } from '~logger'
 
 export interface ReqResLog {
@@ -17,14 +17,14 @@ export interface ReqResLog {
 export type PossibleMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head'
 export type GetTypeValidator = () => Promise<TypeValidator>
 
-export const verbsMap: Record<SupportedMethod, PossibleMethod> = {
-  [SupportedMethod.GET]: 'get',
-  [SupportedMethod.POST]: 'post',
-  [SupportedMethod.PUT]: 'put',
-  [SupportedMethod.DELETE]: 'delete',
-  [SupportedMethod.PATCH]: 'patch',
-  [SupportedMethod.OPTIONS]: 'options',
-  [SupportedMethod.HEAD]: 'head',
+export const verbsMap: Record<Method, PossibleMethod> = {
+  [Method.GET]: 'get',
+  [Method.POST]: 'post',
+  [Method.PUT]: 'put',
+  [Method.DELETE]: 'delete',
+  [Method.PATCH]: 'patch',
+  [Method.OPTIONS]: 'options',
+  [Method.HEAD]: 'head',
 }
 
 const mapLog = (

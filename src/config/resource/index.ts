@@ -1,4 +1,4 @@
-export { Resource, ResourceInput } from './resource'
+export { Resource } from './resource'
 export { ResourceBuilder } from './resource-builder'
 export { Request } from './request'
 export { Response } from './response'

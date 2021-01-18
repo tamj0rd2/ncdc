@@ -30,48 +30,30 @@ export class Resource {
   }
 }
 
-export enum UseCase {
-  Serving,
-  Testing,
-  Generating,
-}
-
-export class Service {
+abstract class Service {
   public readonly name: string
   public readonly resources: Resource[]
   public readonly port: number
+  public readonly baseUrl: string
 
-  constructor(serviceInput: ServiceInput, useCase: UseCase) {
+  constructor(serviceInput: ServiceInput) {
     const parsedService: ParsedService = serviceParser.parse(serviceInput)
 
     this.name = parsedService.name
     this.port = parsedService.port
+    this.baseUrl = parsedService.baseUrl
     this.resources = parsedService.resources.flatMap((parsedResource) => {
       const { request } = parsedResource
       const resources: Resource[] = []
 
-      resources.push(
-        ...request.endpoints.map((endpoint) => this.mapResource(parsedResource, endpoint, useCase)),
-      )
-      if (request.serveEndpoints)
-        resources.push(this.mapResource(parsedResource, request.serveEndpoints, useCase))
+      resources.push(...request.endpoints.map((endpoint) => this.mapResource(parsedResource, endpoint)))
+      if (request.serveEndpoints) resources.push(this.mapResource(parsedResource, request.serveEndpoints))
 
       return resources
     })
   }
 
-  private mapResource = (parsedResource: ParsedResource, endpoint: string, useCase: UseCase): Resource => {
-    const getResponseBody = (): Optional<Data> => {
-      switch (useCase) {
-        case UseCase.Serving:
-          return parsedResource.response.serveBody ?? parsedResource.response.body
-        case UseCase.Testing:
-          return parsedResource.response.body
-        case UseCase.Generating:
-          return undefined
-      }
-    }
-
+  private mapResource = (parsedResource: ParsedResource, endpoint: string): Resource => {
     return new Resource({
       name: parsedResource.name,
       serveOnly: parsedResource.serveOnly,
@@ -83,16 +65,49 @@ export class Service {
       },
       response: {
         ...parsedResource.response,
-        body: getResponseBody(),
+        body: this.getResponseBody(parsedResource.response),
         type: parsedResource.response.type ?? undefined,
       },
     })
+  }
+
+  protected abstract getResponseBody(response: ParsedResource['response']): Optional<Data>
+}
+
+export class ServeService extends Service {
+  constructor(serviceInput: ServiceInput) {
+    super(serviceInput)
+  }
+
+  protected getResponseBody(response: ParsedResource['response']): Optional<Data> {
+    return response.serveBody ?? response.body
+  }
+}
+
+export class TestService extends Service {
+  constructor(serviceInput: ServiceInput) {
+    super(serviceInput)
+  }
+
+  protected getResponseBody(response: ParsedResource['response']): Optional<Data> {
+    return response.body
+  }
+}
+
+export class GenerateService extends Service {
+  constructor(serviceInput: ServiceInput) {
+    super(serviceInput)
+  }
+
+  protected getResponseBody(response: ParsedResource['response']): Optional<Data> {
+    return response.body
   }
 }
 
 const serviceParser = z.object({
   name: z.string().nonempty(),
   port: z.number(),
+  baseUrl: z.string(),
   resources: z.array(
     z.object({
       name: z.string().nonempty(),

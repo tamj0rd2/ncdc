@@ -2,11 +2,11 @@ import NcdcServer from '../commands/serve/server/ncdc-server-new'
 import createNcdcLogger from '../logger'
 import MetricsReporter from '../metrics'
 import TypeValidatorFactory from '../validation'
-import { CommonConfig, Service } from './types'
+import { CommonConfig, ServeService } from './types'
 
 export { Method } from '../config'
 
-export async function serve(services: Service[], config: ServeConfig): Promise<ServeResult> {
+export async function serve(services: ServeService[], config: ServeConfig): Promise<ServeResult> {
   const logger = createNcdcLogger(config.verbose ?? false)
   const reporter = new MetricsReporter(logger)
   const validatorFactory = new TypeValidatorFactory(logger, reporter.report, {

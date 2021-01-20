@@ -1,4 +1,4 @@
-import { Method } from './method'
+import { SupportedMethod } from './method'
 import { Query } from './query'
 import { NcdcHeaders } from './headers'
 import { Body } from './body'
@@ -6,7 +6,7 @@ import url from 'url'
 import { Type } from './type'
 
 export interface RequestInput {
-  method: Method
+  method: SupportedMethod
   endpoint: string
   body: Data | undefined
   type: string | undefined
@@ -14,7 +14,7 @@ export interface RequestInput {
 }
 
 export class Request {
-  public readonly method: Method
+  public readonly method: SupportedMethod
   public readonly endpoint: string
   public readonly pathName: string
   public readonly query: Query

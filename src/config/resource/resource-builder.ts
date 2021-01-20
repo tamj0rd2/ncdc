@@ -1,4 +1,4 @@
-import { Method } from './method'
+import { SupportedMethod } from './method'
 import { randomString } from '~test-helpers'
 import { Resource } from './resource'
 import { Request, RequestInput } from './request'
@@ -18,7 +18,7 @@ export class ResourceBuilder {
     name: 'Test',
     request: {
       endpoint: '/api/resource',
-      method: Method.GET,
+      method: SupportedMethod.GET,
       body: undefined,
       headers: undefined,
       type: undefined,
@@ -41,7 +41,7 @@ export class ResourceBuilder {
     return this
   }
 
-  public withMethod(method: Method): ResourceBuilder {
+  public withMethod(method: SupportedMethod): ResourceBuilder {
     this.resourceInput.request = { ...this.resourceInput.request, method }
     return this
   }

@@ -1,4 +1,4 @@
-export enum Method {
+export enum SupportedMethod {
   GET = 'GET',
   POST = 'POST',
   PUT = 'PUT',

@@ -8,7 +8,7 @@ import MetricsReporter from '../metrics'
 import TypeValidatorFactory, { TypeValidator } from '../validation'
 import { CommonConfig, ServeService } from './types'
 
-export { Method } from '../config'
+export { SupportedMethod } from '../config'
 
 export async function serve(
   services: ServeService[],

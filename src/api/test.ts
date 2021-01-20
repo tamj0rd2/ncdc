@@ -1,9 +1,9 @@
-import { ReportMetric } from '~commands/shared'
-import { createHttpClient } from '~commands/test/http-client'
-import { runTests } from '~commands/test/test'
-import { NcdcLogger } from '~logger'
-import MetricsReporter from '~metrics'
-import TypeValidatorFactory from '~validation'
+import { ReportMetric } from '../commands/shared'
+import { createHttpClient } from '../commands/test/http-client'
+import { runTests } from '../commands/test/test'
+import { NcdcLogger } from '../logger'
+import MetricsReporter from '../metrics'
+import TypeValidatorFactory from '../validation'
 import { CommonConfig, TestService } from './types'
 
 export async function test(

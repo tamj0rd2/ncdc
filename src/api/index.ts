@@ -26,7 +26,7 @@ export class NCDC {
   public generate = (config: Omit<GenerateConfig, keyof CommonConfig>): Promise<GenerateResults> =>
     generate(
       this.rawServices.map((s) => new GenerateService(s)),
-      config,
+      { ...this.commonConfig, ...config },
       { logger: this.logger, reportMetric: this.reportMetric },
     )
       .then(this.handleSuccess)

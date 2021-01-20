@@ -1,12 +1,17 @@
+import { ReportMetric } from '~commands/shared'
 import { createHttpClient } from '~commands/test/http-client'
 import { runTests } from '~commands/test/test'
-import createNcdcLogger from '~logger'
+import { NcdcLogger } from '~logger'
 import MetricsReporter from '~metrics'
 import TypeValidatorFactory from '~validation'
 import { CommonConfig, TestService } from './types'
 
-export async function test(services: TestService[], testConfig: TestConfig): Promise<TestResults> {
-  const logger = createNcdcLogger(testConfig.verbose ?? false)
+export async function test(
+  services: TestService[],
+  testConfig: TestConfig,
+  deps: TestDeps,
+): Promise<TestResults> {
+  const { logger } = deps
   const metricsReporter = new MetricsReporter(logger)
   const typeValidatorFactory = new TypeValidatorFactory(logger, metricsReporter.report)
 
@@ -28,4 +33,9 @@ export type TestResults = void
 export interface TestConfig extends CommonConfig {
   timeoutMs?: number
   rateLimit?: number
+}
+
+interface TestDeps {
+  logger: NcdcLogger
+  reportMetric: ReportMetric
 }

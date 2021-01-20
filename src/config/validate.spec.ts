@@ -307,7 +307,7 @@ describe('validate', () => {
       expectNotToGetErrorsConcerning({}, 'serveOnly')
     })
 
-    it('allows request.endpoints and request.serveEndpoints to co-exist', () => {
+    it('allows request.endpoints and request.serveEndpoint to co-exist', () => {
       const config = { request: { endpoints: '/yo', serveEndpoint: '/dawg' } }
       expectNotToGetErrorsConcerning(config, 'request.endpoints', 'request.serveEndpoint')
     })
@@ -491,7 +491,7 @@ describe('validate', () => {
         expectValidationErors(rawConfig, `config[${rawConfig.name}].request.endpoints is required`)
       })
 
-      it('allows request.endpoints and request.serveEndpoints to co-exist', () => {
+      it('allows request.endpoints and request.serveEndpoint to co-exist', () => {
         const config = { request: { endpoints: '/yo', serveEndpoint: '/dawg' } }
         expectNotToGetErrorsConcerning(config, 'request.endpoints', 'request.serveEndpoint')
       })

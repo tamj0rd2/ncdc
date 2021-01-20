@@ -47,7 +47,7 @@ abstract class Service {
       const resources: Resource[] = []
 
       resources.push(...request.endpoints.map((endpoint) => this.mapResource(parsedResource, endpoint)))
-      if (request.serveEndpoints) resources.push(this.mapResource(parsedResource, request.serveEndpoints))
+      if (request.serveEndpoint) resources.push(this.mapResource(parsedResource, request.serveEndpoint))
 
       return resources
     })
@@ -117,7 +117,7 @@ const serviceParser = z.object({
         type: z.string().nonempty().optional(),
         headers: z.transformer(z.record(z.string()).optional(), z.record(z.string()), (val) => val ?? {}),
         endpoints: z.array(z.string()),
-        serveEndpoints: z.string().nonempty().optional(),
+        serveEndpoint: z.string().nonempty().optional(),
         body: z.any().optional(),
       }),
       response: z.object({

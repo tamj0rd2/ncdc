@@ -36,19 +36,19 @@ export const migrateCommand = createCommand<{ configPaths?: string[] }>({
 
           if (resource.request.bodyPath) {
             const fixturePath = resource.request.bodyPath
-            resource.request.body = fixtureFolder + fixturePath.replace(/^\./, '')
+            resource.request.body = 'REQUIRE' + fixtureFolder + fixturePath.replace(/^\./, '')
             delete resource.request.bodyPath
           }
 
           if (resource.response.bodyPath) {
             const fixturePath = resource.response.bodyPath
-            resource.response.body = fixtureFolder + fixturePath.replace(/^\./, '')
+            resource.response.body = 'REQUIRE' + fixtureFolder + fixturePath.replace(/^\./, '')
             delete resource.response.bodyPath
           }
 
           if (resource.response.serveBodyPath) {
             const fixturePath = resource.response.serveBodyPath
-            resource.response.serveBody = fixtureFolder + fixturePath.replace(/^\./, '')
+            resource.response.serveBody = 'REQUIRE' + fixtureFolder + fixturePath.replace(/^\./, '')
             delete resource.response.serveBodyPath
           }
 
@@ -62,7 +62,7 @@ export const migrateCommand = createCommand<{ configPaths?: string[] }>({
         '{{SERVICES}}',
         JSON.stringify(services, null, 2)
           .replace(/"method": "(.*)"/g, '"method": Method.$1')
-          .replace(/"(body|serveBody)": (".*")/g, '"$1": require(resolve(rootPath, $2))')
+          .replace(/"REQUIRE(body|serveBody)": (".*")/g, '"$1": require(resolve(process.cwd(), $2))')
           .replace(/"([a-z0-9]+)": (.*)/gim, '$1: $2')
           .split('\n')
           .map((line, i) => (i === 0 ? line : `    ${line}`))
@@ -72,7 +72,9 @@ export const migrateCommand = createCommand<{ configPaths?: string[] }>({
       .replace('{{TSCONFIG_PATH}}', args.tsconfigPath)
       .replace('{{SCHEMA_PATH}}', args.schemaPath ?? 'undefined')
 
-    await promises.writeFile(resolve(process.cwd(), 'ncdc.config.ts'), content)
+    const outPath = resolve(process.cwd(), 'ncdc.config.ts')
+    await promises.writeFile(outPath, content)
+    deps.logger.info(`Written to ${outPath}`)
   },
 })
 
@@ -81,7 +83,6 @@ import { resolve } from 'path'
 import { NCDC, Method } from 'ncdc'
 
 async function start(): Promise<void> {
-  const rootPath = process.cwd()
   const ncdc = new NCDC(
     {{SERVICES}},
     {
@@ -105,5 +106,8 @@ async function start(): Promise<void> {
   return
 }
 
-void start().catch(() => process.exit(1))
+void start().catch((err) => {
+  console.log('fatal error', err)
+  process.exit(1)
+})
 `

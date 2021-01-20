@@ -1,8 +1,8 @@
-import { generate as coreGenerate } from '~commands/generate/generate'
-import { ReportMetric } from '~commands/shared'
-import { Type } from '~config/resource/type'
-import { NcdcLogger } from '~logger'
-import { SchemaGenerator, TsHelpers } from '~schema'
+import { generate as coreGenerate } from '../commands/generate/generate'
+import { ReportMetric } from '../commands/shared'
+import { Type } from '../config/resource/type'
+import { NcdcLogger } from '../logger'
+import { SchemaGenerator, TsHelpers } from '../schema'
 import { CommonConfig, GenerateService } from './types'
 
 export async function generate(

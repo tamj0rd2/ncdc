@@ -1,6 +1,6 @@
 import { RequestInput } from '../config/resource/request'
 import { ResponseInput } from '../config/resource/response'
-import { Method, Request, Response } from '../config'
+import { SupportedMethod, Request, Response } from '../config'
 import * as z from 'zod'
 
 export interface CommonConfig {
@@ -117,7 +117,7 @@ const serviceParser = z.object({
       name: z.string().nonempty(),
       serveOnly: z.transformer(z.boolean().optional(), z.boolean(), (val) => val ?? false),
       request: z.object({
-        method: z.nativeEnum(Method),
+        method: z.nativeEnum(SupportedMethod),
         type: z.string().nonempty().optional(),
         headers: z.transformer(z.record(z.string()).optional(), z.record(z.string()), (val) => val ?? {}),
         endpoints: z.array(z.string()),

@@ -1,12 +1,12 @@
 import { readFixture } from '~io'
-import { Method, Resource } from '~config'
+import { SupportedMethod, Resource } from '~config'
 import { Request, Response } from '~config'
 
 export interface ValidatedServeConfig {
   name: string
   serveOnly: boolean
   request: {
-    method: Method
+    method: SupportedMethod
     type?: string
     headers?: Record<string, string>
     endpoints?: string[]

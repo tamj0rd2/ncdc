@@ -15,17 +15,21 @@ export async function test(
   const metricsReporter = new MetricsReporter(logger)
   const typeValidatorFactory = new TypeValidatorFactory(logger, metricsReporter.report)
 
-  const service = services[0]
-  const result = await runTests(
-    service.baseUrl,
-    createHttpClient(service.baseUrl, testConfig.timeoutMs, testConfig.rateLimit),
-    service.resources,
-    () => typeValidatorFactory.getValidator(testConfig),
-    logger,
-    metricsReporter.report,
-  )
+  await services.reduce<Promise<void>>(async (promise, service) => {
+    await promise
 
-  if (result === 'Failure') throw new Error('Not all tests passed')
+    const result = await runTests(
+      service.baseUrl,
+      createHttpClient(service.baseUrl, testConfig.timeoutMs, testConfig.rateLimit),
+      service.resources.filter((r) => r.serveOnly !== true),
+      () => typeValidatorFactory.getValidator(testConfig),
+      logger.child({ label: service.name }),
+      metricsReporter.report,
+    )
+    if (result === 'Failure') throw new Error('Not all tests passed')
+
+    return promise
+  }, Promise.resolve())
 }
 
 export type TestResults = void

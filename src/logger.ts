@@ -42,7 +42,7 @@ const getLoggerOptions = (verbose: boolean): LoggerOptions => {
           normalizeMessage(),
           extractStack(),
           format.printf((info) => {
-            let result = info.metadata.label ? `${info.metadata.label} | ` : ''
+            let result = info.metadata.label ? `${info.metadata.label}\t| ` : ''
             result += `${info.level} `
             result += info.message
             result += IS_DEBUG_MODE && info?.stack ? `\n${info?.stack}` : ''

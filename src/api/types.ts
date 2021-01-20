@@ -47,16 +47,20 @@ abstract class Service {
       const resources: Resource[] = []
 
       resources.push(...request.endpoints.map((endpoint) => this.mapResource(parsedResource, endpoint)))
-      if (request.serveEndpoint) resources.push(this.mapResource(parsedResource, request.serveEndpoint))
+      if (request.serveEndpoint) resources.push(this.mapResource(parsedResource, request.serveEndpoint, true))
 
       return resources
     })
   }
 
-  private mapResource = (parsedResource: ParsedResource, endpoint: string): Resource => {
+  private mapResource = (
+    parsedResource: ParsedResource,
+    endpoint: string,
+    isServeEndpoint = false,
+  ): Resource => {
     return new Resource({
       name: parsedResource.name,
-      serveOnly: parsedResource.serveOnly,
+      serveOnly: parsedResource.serveOnly || isServeEndpoint,
       request: {
         ...parsedResource.request,
         body: parsedResource.request.body ?? undefined,

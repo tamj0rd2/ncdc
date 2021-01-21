@@ -15,10 +15,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build deps
         run: docker-compose build release
-      # - name: Tests
-      #   run: ./tests.sh
-      #   env:
-      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Tests
+        run: ./tests.sh
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Release
         if: ${{ github.event_name != 'pull_request' }}
         run: docker-compose run $CI_ENV release

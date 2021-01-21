@@ -1,4 +1,4 @@
-import { Ajv } from 'ajv'
+import Ajv from 'ajv'
 import { Type } from '~config/resource/type'
 import { SchemaRetriever } from '~schema'
 import { TypeValidationMismatchError } from './errors'

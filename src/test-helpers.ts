@@ -26,6 +26,9 @@ type MockFn<T extends (...args: any[]) => ReturnType<T>> = (
 ) &
   MockExtensions<T>
 
+export type MockedFn<T extends (...args: any[]) => ReturnType<T>> = jest.Mock<ReturnType<T>, Parameters<T>> &
+  MockExtensions<T>
+
 export function mockFn<T extends (...args: any[]) => ReturnType<T>>(): jest.Mock<
   ReturnType<T>,
   Parameters<T>

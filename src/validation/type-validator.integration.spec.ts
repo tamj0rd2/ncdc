@@ -6,18 +6,6 @@ import '../jest-extensions'
 import { TypeBuilder } from '~config/resource/builders'
 
 describe('error messages', () => {
-  function createTestDeps() {
-    const ajv = new Ajv({ allErrors: true, verbose: true })
-    const mockSchemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
-    const typeValidator = new TypeValidator(ajv, mockSchemaRetriever)
-
-    return {
-      mockSchemaRetriever,
-      typeValidator,
-      type: TypeBuilder.random(),
-    }
-  }
-
   test('missing required properties', async () => {
     const { mockSchemaRetriever, typeValidator, type } = createTestDeps()
     mockSchemaRetriever.load.mockResolvedValue({
@@ -126,3 +114,15 @@ describe('error messages', () => {
     )
   })
 })
+
+function createTestDeps() {
+  const ajv = new Ajv({ allErrors: true, verbose: true })
+  const mockSchemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
+  const typeValidator = new TypeValidator(ajv, mockSchemaRetriever)
+
+  return {
+    mockSchemaRetriever,
+    typeValidator,
+    type: TypeBuilder.random(),
+  }
+}

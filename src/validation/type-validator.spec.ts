@@ -1,7 +1,7 @@
 import TypeValidator from './type-validator'
-import { Ajv, ValidateFunction, ErrorObject } from 'ajv'
+import Ajv, { ValidateFunction } from 'ajv'
 import { SchemaRetriever } from '~schema'
-import { mockObj, randomString, mockFn } from '~test-helpers'
+import { mockObj, randomString } from '~test-helpers'
 import '../jest-extensions'
 import { TypeBuilder } from '~config/resource/builders'
 
@@ -10,6 +10,7 @@ jest.disableAutomock()
 describe('validate', () => {
   function createTestDeps() {
     const stubValidator = mockObj<Ajv>({ compile: jest.fn() })
+    const stubValidateFn = mockObj<ValidateFunction>({})
     const stubSchemaRetriever = mockObj<SchemaRetriever>({ load: jest.fn() })
     const typeValidator = new TypeValidator(stubValidator, stubSchemaRetriever)
 
@@ -17,15 +18,17 @@ describe('validate', () => {
       stubValidator,
       stubSchemaRetriever,
       typeValidator,
+      stubValidateFn,
+      spyValidateFn: stubValidateFn,
     }
   }
 
   afterEach(() => jest.resetAllMocks())
 
   it('calls the schema retriver with the correct args', async () => {
-    const { stubSchemaRetriever, typeValidator, stubValidator } = createTestDeps()
+    const { stubSchemaRetriever, typeValidator, stubValidator, stubValidateFn } = createTestDeps()
     const expectedType = TypeBuilder.random()
-    stubValidator.compile.mockReturnValue(jest.fn())
+    stubValidator.compile.mockReturnValue(stubValidateFn)
 
     await typeValidator.assert(randomString('body'), expectedType)
 
@@ -33,10 +36,10 @@ describe('validate', () => {
   })
 
   it('creates a validator function using the correct args', async () => {
-    const { stubSchemaRetriever, typeValidator, stubValidator } = createTestDeps()
+    const { stubSchemaRetriever, typeValidator, stubValidator, stubValidateFn } = createTestDeps()
     const schema = { [randomString('key')]: randomString('value') }
     stubSchemaRetriever.load.mockResolvedValue(schema)
-    stubValidator.compile.mockReturnValue(jest.fn())
+    stubValidator.compile.mockReturnValue(stubValidateFn)
 
     await typeValidator.assert(randomString('body'), TypeBuilder.random())
 
@@ -44,43 +47,12 @@ describe('validate', () => {
   })
 
   it('calls the validator func with the correct args', async () => {
-    const { typeValidator, stubValidator } = createTestDeps()
-    const validateFn = mockFn<ValidateFunction>()
-    stubValidator.compile.mockReturnValue(validateFn)
+    const { typeValidator, stubValidator, stubValidateFn } = createTestDeps()
+    stubValidator.compile.mockReturnValue(stubValidateFn)
     const expectedBody = randomString('body')
 
     await typeValidator.assert(expectedBody, TypeBuilder.random())
 
-    expect(validateFn).toBeCalledWith(expectedBody)
-  })
-
-  it('does not throw if the data does match the type', async () => {
-    const { typeValidator, stubValidator } = createTestDeps()
-    stubValidator.compile.mockReturnValue(mockFn<ValidateFunction>().mockReturnValue(true))
-
-    await typeValidator.assert(randomString('body'), TypeBuilder.random())
-  })
-
-  it('returns validation messages if the data does not match the type', async () => {
-    const { typeValidator, stubValidator } = createTestDeps()
-    const error1: Partial<ErrorObject> = {
-      dataPath: randomString('.datapath1'),
-      message: randomString('error-message1'),
-    }
-    const error2: Partial<ErrorObject> = {
-      dataPath: '',
-      message: randomString('error-message2'),
-    }
-
-    const validatorFn: ValidateFunction = mockFn<ValidateFunction>().mockReturnValue(false)
-    validatorFn.errors = [error1, error2] as ErrorObject[]
-    stubValidator.compile.mockReturnValue(validatorFn)
-
-    const body = randomString('body')
-    const type = TypeBuilder.random()
-
-    await expect(typeValidator.assert(body, type)).rejects.toThrowColouredError(
-      `<root>${error1.dataPath} ${error1.message}\n<root> ${error2.message}`,
-    )
+    expect(stubValidateFn).toBeCalledWith(expectedBody)
   })
 })

@@ -51,4 +51,4 @@ services:
     environment:
       - GITHUB_TOKEN
       - NPM_TOKEN
-    command: npx semantic-release
+    command: npx semantic-release --no-ci

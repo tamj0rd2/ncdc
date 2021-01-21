@@ -23,5 +23,5 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: docker-compose run $CI_ENV release
         env:
-          GITHUB_TOKEN: ${{ secrets.NCDC_GITHUB_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.NCDC_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

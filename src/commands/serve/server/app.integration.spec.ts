@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { configureApp, verbsMap, PossibleMethod, ReqResLog, GetTypeValidator } from './app'
-import { ResourceBuilder, SupportedMethod } from '~config'
+import { ResourceBuilder, Method } from '~config'
 import { TypeValidator } from '~validation'
 import { mockObj, mockFn, serialiseAsJson, randomString } from '~test-helpers'
 import { NcdcLogger } from '~logger'
@@ -46,7 +46,7 @@ describe('server', () => {
   })
 
   const { HEAD, ...verbsMinusHead } = verbsMap
-  const methodCases = Object.entries(verbsMinusHead) as [SupportedMethod, PossibleMethod][]
+  const methodCases = Object.entries(verbsMinusHead) as [Method, PossibleMethod][]
 
   it.each(methodCases)('handles a basic request with method: %s', async (verb, method) => {
     const {
@@ -79,7 +79,7 @@ describe('server', () => {
     } = createTestDeps()
     mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
     const endpoint = '/api/resource'
-    const resources = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.HEAD).build()]
+    const resources = [new ResourceBuilder().withEndpoint(endpoint).withMethod(Method.HEAD).build()]
 
     const app = configureApp(dummyBaseUrl, resources, mockGetTypeValidator, mockLogger)
 
@@ -101,7 +101,7 @@ describe('server', () => {
       configureApp,
     } = createTestDeps()
     mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
-    const resources = [new ResourceBuilder().withEndpoint(endpoint).withMethod(SupportedMethod.GET).build()]
+    const resources = [new ResourceBuilder().withEndpoint(endpoint).withMethod(Method.GET).build()]
     const app = configureApp(dummyBaseUrl, resources, mockGetTypeValidator, mockLogger)
 
     await request(app)
@@ -276,7 +276,7 @@ describe('server', () => {
         mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder()
-            .withMethod(SupportedMethod.POST)
+            .withMethod(Method.POST)
             .withEndpoint('/config1')
             .withRequestType('number')
             .withResponseCode(401)
@@ -304,7 +304,7 @@ describe('server', () => {
         mockGetTypeValidator.mockResolvedValueOnce(mockTypeValidator)
         const resources = [
           new ResourceBuilder()
-            .withMethod(SupportedMethod.POST)
+            .withMethod(Method.POST)
             .withEndpoint('/config1')
             .withRequestType('number')
             .build(),
@@ -332,7 +332,7 @@ describe('server', () => {
         } = createTestDeps()
         mockGetTypeValidator.mockResolvedValue(mockTypeValidator)
         const resource = new ResourceBuilder()
-          .withMethod(SupportedMethod.POST)
+          .withMethod(Method.POST)
           .withRequestBody({ hello: 'world' })
           .withRequestHeaders({ 'content-type': 'application/x-www-form-urlencoded' })
           .build()

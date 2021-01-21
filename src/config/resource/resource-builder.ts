@@ -1,11 +1,8 @@
-import { NcdcHeaders } from './headers'
-import { Body } from './body'
-import { SupportedMethod } from './method'
-import { Request } from './request'
-import { Response } from './response'
+import { Method } from './method'
 import { randomString } from '~test-helpers'
 import { Resource } from './resource'
-import { Type } from './type'
+import { Request, RequestInput } from './request'
+import { Response, ResponseInput } from './response'
 
 export class ResourceBuilder {
   public static random(): Resource {
@@ -17,77 +14,70 @@ export class ResourceBuilder {
     return ResourceBuilder.random()
   }
 
-  private resource: Resource = {
+  private resourceInput: ResourceInput = {
     name: 'Test',
-    request: new Request({
+    request: {
       endpoint: '/api/resource',
-      method: SupportedMethod.GET,
+      method: Method.GET,
       body: undefined,
       headers: undefined,
       type: undefined,
-    }),
-    response: new Response({ code: 200, body: 'Hello, world!', headers: undefined, type: undefined }),
+    },
+    response: {
+      code: 200,
+      body: 'Hello, world!',
+      headers: undefined,
+      type: undefined,
+    },
   }
 
   public withName(name: string): ResourceBuilder {
-    this.resource.name = name
+    this.resourceInput.name = name
     return this
   }
 
   public withEndpoint(endpoint: string): ResourceBuilder {
-    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, endpoint })
+    this.resourceInput.request = { ...this.resourceInput.request, endpoint }
     return this
   }
 
-  public withMethod(method: SupportedMethod): ResourceBuilder {
-    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, method })
+  public withMethod(method: Method): ResourceBuilder {
+    this.resourceInput.request = { ...this.resourceInput.request, method }
     return this
   }
 
   public withRequestType(type: string): ResourceBuilder {
-    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, type: new Type(type) })
+    this.resourceInput.request = { ...this.resourceInput.request, type }
     return this
   }
 
   public withRequestBody(body: Data): ResourceBuilder {
-    this.resource.request = Request.CreateFromRequest({ ...this.resource.request, body: new Body(body) })
+    this.resourceInput.request = { ...this.resourceInput.request, body }
     return this
   }
 
   public withRequestHeaders(headers: Record<string, string>): ResourceBuilder {
-    this.resource.request = Request.CreateFromRequest({
-      ...this.resource.request,
-      headers: new NcdcHeaders(headers),
-    })
+    this.resourceInput.request = { ...this.resourceInput.request, headers }
     return this
   }
 
   public withResponseCode(code: number): ResourceBuilder {
-    this.resource.response = Response.CreateFromResponse({ ...this.resource.response, code })
+    this.resourceInput.response = { ...this.resourceInput.response, code }
     return this
   }
 
   public withResponseBody(body: Optional<Data>): ResourceBuilder {
-    this.resource.response = Response.CreateFromResponse({
-      ...this.resource.response,
-      body: body ? new Body(body) : undefined,
-    })
+    this.resourceInput.response = { ...this.resourceInput.response, body }
     return this
   }
 
   public withResponseType(type: Optional<string>): ResourceBuilder {
-    this.resource.response = Response.CreateFromResponse({
-      ...this.resource.response,
-      type: type ? new Type(type) : undefined,
-    })
+    this.resourceInput.response = { ...this.resourceInput.response, type }
     return this
   }
 
   public withResponseHeaders(headers: Record<string, string>): ResourceBuilder {
-    this.resource.response = Response.CreateFromResponse({
-      ...this.resource.response,
-      headers: new NcdcHeaders(headers),
-    })
+    this.resourceInput.response = { ...this.resourceInput.response, headers }
     return this
   }
 
@@ -100,6 +90,16 @@ export class ResourceBuilder {
   }
 
   public build(): Resource {
-    return this.resource
+    return {
+      name: this.resourceInput.name,
+      request: new Request(this.resourceInput.request),
+      response: new Response(this.resourceInput.response),
+    }
   }
+}
+
+interface ResourceInput {
+  name: string
+  request: RequestInput
+  response: ResponseInput
 }

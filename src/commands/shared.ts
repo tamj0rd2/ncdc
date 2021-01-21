@@ -4,14 +4,14 @@ import { CommandModule as YargsCommandModule, Argv } from 'yargs'
 
 export type ReportMetric = (operation: string) => OperationResult
 
-interface CommonArgs {
+export interface CommonArgs {
   tsconfigPath: string
   schemaPath?: string
   verbose: boolean
   force: boolean
 }
 
-interface CommonDeps {
+export interface CommonDeps {
   logger: NcdcLogger
   reportMetric: ReportMetric
 }

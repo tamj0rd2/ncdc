@@ -3,6 +3,7 @@
   "version": "2.2.0",
   "description": "A CLI that takes a consumer driven contract defined in yaml and allows you to run tests and/or create a fake server",
   "main": "lib/index.js",
+  "types": "./lib/api/index.d.ts",
   "bin": {
     "ncdc": "./bin/ncdc"
   },
@@ -13,7 +14,7 @@
   "scripts": {
     "clean": "rm -rf ./lib ./coverage/*",
     "typecheck": "tsc -b ./ ./black-box-tests/shared ./black-box-tests/acceptance",
-    "compile": "babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
+    "compile": "tsc -b ./ && babel src --out-dir lib --extensions .ts --ignore 'src/**/*.spec.ts','src/**/*.d.ts' --source-maps inline",
     "test": "jest --runInBand --bail",
     "test:watch": "npm run test -- --watch",
     "test:unit": "TEST_MODE=unit npm run test --",
@@ -113,6 +114,7 @@
     "qs": "^6.9.3",
     "ts-json-schema-generator": "^0.83.2",
     "winston": "^3.2.1",
-    "yargs": "^16.0.2"
+    "yargs": "^16.0.2",
+    "zod": "^2.0.0-beta.30"
   }
 }

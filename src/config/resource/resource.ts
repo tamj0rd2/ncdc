@@ -1,5 +1,5 @@
-import type { Request } from './request'
-import type { Response } from './response'
+import { Request } from './request'
+import { Response } from './response'
 
 export interface Resource {
   name: string

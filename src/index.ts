@@ -1,5 +1,7 @@
+export * from './api'
+
 import mainYargs from 'yargs'
-import { generateCommand, serveCommand, testCommand } from './commands'
+import { generateCommand, migrateCommand, serveCommand, testCommand } from './commands'
 import { opts } from './commands'
 
 export default function run(): void {
@@ -12,6 +14,7 @@ export default function run(): void {
     .command(generateCommand)
     .command(serveCommand)
     .command(testCommand)
+    .command(migrateCommand)
     .example(opts.EXAMPLE_GENERATE_COMMAND, opts.EXAMPLE_GENERATE_DESCRIPTION)
     .example(opts.EXAMPLE_SERVE_COMMAND, opts.EXAMPLE_SERVE_DESCRIPTION)
     .example(opts.EXAMPLE_TEST_COMMAND, opts.EXAMPLE_TEST_DESCRIPTION)

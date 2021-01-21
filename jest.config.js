@@ -7,6 +7,7 @@ const commonSettings = {
   ],
   collectCoverageFrom: [
     '<rootDir>/src/**/*.ts',
+    '!<rootDir>/src/api/**/*.ts',
     '!<rootDir>/src/test-helpers.ts',
     '!<rootDir>/src/metrics.ts',
     '!**/*.spec.ts',

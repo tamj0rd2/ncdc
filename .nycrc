@@ -10,6 +10,7 @@
   "exclude": [
     "src/test-helpers.ts",
     "src/metrics.ts",
+    "src/api/**/*.ts",
     "**/*.spec.ts",
     "**/*.d.ts",
     "**/types.ts",

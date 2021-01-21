@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [master, next, next-major, beta, alpha]
+  pull_request:
+    branches: [master, next, next-major, beta, alpha]
+  schedule:
+    - cron: "0 9 * * *"
+
+jobs:
+  test-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build deps
+        run: docker-compose build release
+      - name: Get codecov env
+        run: echo "::set-env name=CI_ENV::$(eval bash <(curl -s https://codecov.io/env))"
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Tests
+        run: ./tests.sh
+      # - name: Release
+      #   if: ${{ github.event_name != 'pull_request' }}
+      #   run: docker-compose run $CI_ENV release
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.NCDC_GITHUB_RELEASE_TOKEN }}
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,4 +1,4 @@
-FROM node:12.20.2-alpine as base
+FROM node:12.21.0-alpine as base
 
 RUN apk add --no-cache bash
 RUN apk add --no-cache curl

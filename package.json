@@ -113,6 +113,6 @@
     "qs": "^6.9.3",
     "ts-json-schema-generator": "^0.92.0",
     "winston": "^3.2.1",
-    "yargs": "^16.0.2"
+    "yargs": "^17.0.1"
   }
 }

@@ -74,7 +74,7 @@
     "@types/supertest": "^2.0.8",
     "@typescript-eslint/eslint-plugin": "^4.1.0",
     "@typescript-eslint/parser": "^4.1.0",
-    "babel-jest": "^26.0.0",
+    "babel-jest": "^27.0.6",
     "babel-plugin-module-resolver": "^4.0.0",
     "commitizen": "^4.0.4",
     "cz-conventional-changelog": "^3.1.0",

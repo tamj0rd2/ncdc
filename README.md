@@ -2,6 +2,8 @@
 
 # NCDC
 
+**I don't maintain this anymore and don't recommend using it. There are other libraries that can let you create a server based on an open API (swagger) spec. Use one of those instead.**
+
 ![Build Status](https://github.com/tamj0rd2/ncdc/workflows/CI/badge.svg)
 [![npm version](https://badge.fury.io/js/ncdc.svg)](https://badge.fury.io/js/ncdc)
 [![codecov](https://codecov.io/gh/tamj0rd2/ncdc/branch/master/graph/badge.svg)](https://codecov.io/gh/tamj0rd2/ncdc)
